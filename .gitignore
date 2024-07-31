@@ -4,3 +4,4 @@ src/agents/__pycache__
 src/utilities/__pycache__
 src/provider/__pycache__
 src/tests/__pycache__
+/src/ToolAgents.egg-info/
