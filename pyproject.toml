@@ -1,0 +1,39 @@
+[build-system]
+requires = [  "setuptools>=42"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ToolAgents"
+version = "0.0.1"
+description = "ToolAgents is a lightweight and flexible framework for creating function-calling agents with various language models and APIs."
+
+readme = "ReadMe.md"
+dependencies = [
+    "pydantic>=2.5.3",
+    "requests>=2.31.0",
+    "docstring_parser",
+    "aiohttp",
+    "mistral-common",
+    "openai",
+    "transformers",
+    "sentencepiece",
+    "protobuf",
+    "anthropic",
+    "ollama",
+    "groq"
+]
+
+requires-python = ">=3.10"
+classifiers = [ "Programming Language :: Python :: 3", "License :: OSI Approved :: MIT License", "Operating System :: OS Independent" ]
+[[project.authors]]
+name = "Maximilian Winter"
+email = "maximilian.winter.91@gmail.com"
+
+
+[project.urls]
+Homepage = "https://github.com/Maximilian-Winter/ToolAgents"
+"Bug Tracker" = "https://github.com/Maximilian-Winter/ToolAgents/issues"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+

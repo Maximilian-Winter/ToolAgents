@@ -170,4 +170,4 @@ Contributions to ToolAgents are welcome! Please feel free to submit pull request
 
 ## License
 
-MIT License
+ToolAgents is released under the MIT License. See the [LICENSE](LICENSE) file for details.
