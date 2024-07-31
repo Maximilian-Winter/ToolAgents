@@ -1,6 +1,6 @@
-from ToolAgents.agents.mistral_agent import MistralAgent
-from ToolAgents.provider.llama_cpp_server import LlamaCppSamplingSettings, LlamaCppServerProvider
-from ToolAgents.provider.vllm_server import VLLMServerSamplingSettings, \
+from ToolAgents.agents import MistralAgent
+from ToolAgents.provider import LlamaCppSamplingSettings, LlamaCppServerProvider
+from ToolAgents.provider import VLLMServerSamplingSettings, \
     VLLMServerProvider
 from ToolAgents.tests.test_tools import calculator_function_tool, \
     current_datetime_function_tool, get_weather_function_tool
