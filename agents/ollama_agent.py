@@ -2,7 +2,7 @@ import json
 from typing import List, Optional, Dict, Any, Generator
 import ollama
 
-from VirtualGameMasterFunctionCalling.function_calling import FunctionTool
+from ToolAgents import FunctionTool
 
 
 class OllamaAgent:

@@ -2,13 +2,13 @@ from ToolAgents.agents.mistral_agent import MistralAgent
 from ToolAgents.provider.llama_cpp_server import LlamaCppSamplingSettings, LlamaCppServerProvider
 from ToolAgents.provider.vllm_server import VLLMServerSamplingSettings, \
     VLLMServerProvider
-from ToolAgents.utilities.testus_tool import calculator_function_tool, \
+from ToolAgents.tests.test_tools import calculator_function_tool, \
     current_datetime_function_tool, get_weather_function_tool
 
 provider = LlamaCppServerProvider("http://127.0.0.1:8080/")
 
-agent = MistralAgent(llm_provider=provider, debug_output=True,
-                     system_prompt="Always answer as an old drunken pirate."
+agent = MistralAgent(llm_provider=provider, debug_output=False,
+                     system_prompt="You are a crazy, old and drunken pirate."
                      )
 
 settings = LlamaCppSamplingSettings()

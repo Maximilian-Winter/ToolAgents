@@ -1,11 +1,12 @@
 import datetime
+import json
 import os
 from enum import Enum
-from typing import Optional, Union, List
+from typing import Optional, Union, List, Dict, Any
 
 from pydantic import BaseModel, Field
 
-from VirtualGameMasterFunctionCalling.function_calling import FunctionTool
+from ToolAgents import FunctionTool
 
 
 # Simple tool for the agent, to get the current date and time in a specific format.
@@ -154,6 +155,58 @@ def list_files(input_data: ListFilesInput) -> List[str]:
         return [f"Error listing files: {str(e)}"]
 
 
+class FlightTimes(BaseModel):
+    """
+    A class to represent flight times between two locations.
+
+    This class uses Pydantic for data validation and provides a method
+    to retrieve flight information based on departure and arrival locations.
+    """
+
+    departure: str = Field(
+        ...,
+        description="The departure location (airport code)",
+        min_length=3,
+        max_length=3
+    )
+    arrival: str = Field(
+        ...,
+        description="The arrival location (airport code)",
+        min_length=3,
+        max_length=3
+    )
+
+    class Config:
+        """Pydantic configuration class"""
+        json_schema_extra = {
+            "example": {
+                "departure": "NYC",
+                "arrival": "LAX"
+            }
+        }
+
+    def run(self) -> str:
+        """
+        Retrieve flight information for the given departure and arrival locations.
+
+        Returns:
+            str: A JSON string containing flight information including departure time,
+                 arrival time, and flight duration. If no flight is found, returns an error message.
+        """
+        flights: Dict[str, Dict[str, str]] = {
+            'NYC-LAX': {'departure': '08:00 AM', 'arrival': '11:30 AM', 'duration': '5h 30m'},
+            'LAX-NYC': {'departure': '02:00 PM', 'arrival': '10:30 PM', 'duration': '5h 30m'},
+            'LHR-JFK': {'departure': '10:00 AM', 'arrival': '01:00 PM', 'duration': '8h 00m'},
+            'JFK-LHR': {'departure': '09:00 PM', 'arrival': '09:00 AM', 'duration': '7h 00m'},
+            'CDG-DXB': {'departure': '11:00 AM', 'arrival': '08:00 PM', 'duration': '6h 00m'},
+            'DXB-CDG': {'departure': '03:00 AM', 'arrival': '07:30 AM', 'duration': '7h 30m'},
+        }
+
+        key: str = f'{self.departure}-{self.arrival}'.upper()
+        result: Dict[str, Any] = flights.get(key, {'error': 'Flight not found'})
+        return json.dumps(result)
+
+get_flight_times_tool = FunctionTool(FlightTimes)
 calculator_function_tool = FunctionTool(calculator)
 current_datetime_function_tool = FunctionTool(get_current_datetime)
 get_weather_function_tool = FunctionTool.from_openai_tool(open_ai_tool_spec, get_current_weather)

@@ -12,8 +12,7 @@ from mistral_common.protocol.instruct.request import ChatCompletionRequest
 from mistral_common.protocol.instruct.tool_calls import ToolCall, FunctionCall
 from mistral_common.tokens.tokenizers.mistral import MistralTokenizer
 
-from VirtualGameMasterFunctionCalling.function_calling import FunctionTool
-
+from ToolAgents import FunctionTool
 
 
 def generate_id(length=8):
@@ -46,7 +45,7 @@ class MistralAgent:
             self,
             message=None,
             tools: list[FunctionTool] = None,
-            sampling_settings = None,
+            sampling_settings=None,
             messages: list = None,
             override_system_prompt: str = None,
     ):
@@ -86,7 +85,8 @@ class MistralAgent:
             prompt=text,
             settings=sampling_settings if sampling_settings is not None else self.provider.get_provider_default_settings(),
         )["choices"][0]["text"]
-        if result.strip().startswith("[TOOL_CALLS]") or (result.strip().startswith("[{") and result.strip().endswith("}]") and "name" in result and "arguments" in result):
+        if result.strip().startswith("[TOOL_CALLS]") or (result.strip().startswith("[{") and result.strip().endswith(
+                "}]") and "name" in result and "arguments" in result):
             tool_calls = []
             if self.debug_output:
                 print(result, flush=True)
