@@ -17,12 +17,14 @@ settings.top_p = 1.0
 settings.top_k = 0
 settings.min_p = 0.0
 settings.max_tokens = 4096
-settings.stream = False
+
 
 result = agent.get_response("Hello! How are you?", sampling_settings=settings)
 print(result)
 
 tools = [calculator_function_tool, current_datetime_function_tool, get_weather_function_tool]
 
-result = agent.get_response("Perform all the following tasks: Get the current weather in celsius in London, New York and at the North Pole. Solve the following calculations: 42 * 42, 74 + 26, 7 * 26, 4 + 6  and 96/8.", sampling_settings=settings, tools=tools)
-print(result)
+result = agent.get_streaming_response("Perform all the following tasks: Get the current weather in celsius in London, New York and at the North Pole. Solve the following calculations: 42 * 42, 74 + 26, 7 * 26, 4 + 6  and 96/8.", sampling_settings=settings, tools=tools)
+for tok in result:
+    print(tok, end="", flush=True)
+print()

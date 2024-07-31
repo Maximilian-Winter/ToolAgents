@@ -84,7 +84,8 @@ class MistralAgent:
 
         if sampling_settings is None:
             sampling_settings = self.provider.get_default_settings()
-            sampling_settings.stream = False
+
+        sampling_settings.stream = False
 
         result = self.provider.create_completion(
             prompt=text,
@@ -167,8 +168,8 @@ class MistralAgent:
 
         if sampling_settings is None:
             sampling_settings = self.provider.get_default_settings()
-            sampling_settings.stream = True
 
+        sampling_settings.stream = True
         result = ""
         for chunk in self.provider.create_completion(
                 prompt=text,
