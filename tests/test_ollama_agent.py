@@ -1,8 +1,11 @@
+from ToolAgents.agents.mistral_agent import MistralAgent
 from ToolAgents.agents.ollama_agent import OllamaAgent
+from ToolAgents.provider.llama_cpp_server import LlamaCppServerProvider
 from ToolAgents.tests.test_tools import get_flight_times_tool
 
 
 def run():
+
     agent = OllamaAgent(model='mistral-nemo', system_prompt="You are a crazy, old and drunken pirate.", debug_output=False)
 
     tools = [get_flight_times_tool]

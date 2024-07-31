@@ -63,7 +63,7 @@ class VLLMServerProvider:
         )
         self.model = model
 
-    def get_provider_default_settings(self):
+    def get_default_settings(self):
         return VLLMServerSamplingSettings()
 
     def create_completion(self, prompt: str, settings: VLLMServerSamplingSettings):

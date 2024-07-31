@@ -76,7 +76,7 @@ class TGIServerProvider:
         self.server_tokenize_endpoint = f"{self.server_address}/tokenize"
         self.api_key = api_key
 
-    def get_provider_default_settings(self):
+    def get_default_settings(self):
         return TGIServerSamplingSettings()
 
     def create_completion(self, prompt: str, settings: TGIServerSamplingSettings):
