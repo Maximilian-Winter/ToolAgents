@@ -8,7 +8,7 @@ from typing import Type, List, Callable, Any, Union, Tuple, Dict
 from docstring_parser import DocstringStyle, parse
 from pydantic import BaseModel, create_model
 
-from FunkyFlow.utilities.documentation_generation import generate_text_documentation
+from ToolAgents.utilities.documentation_generation import generate_text_documentation
 
 
 def format_model_and_field_name(model_name: str) -> str:

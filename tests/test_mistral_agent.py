@@ -1,8 +1,8 @@
-from FunkyFlow.agents.mistral_agent import MistralAgent
-from FunkyFlow.provider.llama_cpp_server import LlamaCppSamplingSettings, LlamaCppServerProvider
-from FunkyFlow.provider.vllm_server import VLLMServerSamplingSettings, \
+from ToolAgents.agents.mistral_agent import MistralAgent
+from ToolAgents.provider.llama_cpp_server import LlamaCppSamplingSettings, LlamaCppServerProvider
+from ToolAgents.provider.vllm_server import VLLMServerSamplingSettings, \
     VLLMServerProvider
-from FunkyFlow.utilities.testus_tool import calculator_function_tool, \
+from ToolAgents.utilities.testus_tool import calculator_function_tool, \
     current_datetime_function_tool, get_weather_function_tool
 
 provider = LlamaCppServerProvider("http://127.0.0.1:8080/")

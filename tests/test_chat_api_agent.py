@@ -1,8 +1,8 @@
 import os
 
-from FunkyFlow.agents.chat_api_agent import ChatAPIAgent
-from FunkyFlow.utilities.chat_api_with_tools import OpenAIChatAPI, OpenAISettings, AnthropicChatAPI, AnthropicSettings
-from FunkyFlow.utilities.testus_tool import calculator_function_tool, current_datetime_function_tool, get_weather_function_tool
+from ToolAgents.agents.chat_api_agent import ChatAPIAgent
+from ToolAgents.utilities.chat_api_with_tools import OpenAIChatAPI, OpenAISettings, AnthropicChatAPI, AnthropicSettings
+from ToolAgents.utilities.testus_tool import calculator_function_tool, current_datetime_function_tool, get_weather_function_tool
 
 from dotenv import load_dotenv
 

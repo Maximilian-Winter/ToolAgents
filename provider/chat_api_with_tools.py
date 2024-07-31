@@ -5,7 +5,7 @@ from typing import List, Dict, Generator, Optional, Any, Union
 import requests
 from groq import Groq
 
-from FunkyFlow.function_tool import FunctionTool
+from ToolAgents.function_tool import FunctionTool
 import json
 from openai import OpenAI
 from anthropic import Anthropic

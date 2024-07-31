@@ -1,4 +1,4 @@
-from FunkyFlow.agents.ollama_agent import OllamaAgent
+from ToolAgents.agents.ollama_agent import OllamaAgent
 from VirtualGameMasterFunctionCalling.function_calling import FunctionTool
 
 from pydantic import BaseModel, Field

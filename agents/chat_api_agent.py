@@ -3,8 +3,8 @@ import random
 import string
 from typing import Optional, Dict, List, Any
 
-from FunkyFlow import FunctionTool
-from FunkyFlow.utilities.chat_api_with_tools import ChatAPI
+from ToolAgents import FunctionTool
+from ToolAgents.utilities.chat_api_with_tools import ChatAPI
 
 
 def generate_id(length=8):
