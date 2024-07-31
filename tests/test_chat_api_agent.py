@@ -3,7 +3,7 @@ import os
 
 from ToolAgents.agents import ChatAPIAgent
 from ToolAgents.provider import OpenAIChatAPI, OpenAISettings, AnthropicChatAPI, AnthropicSettings
-from ToolAgents.tests.test_tools import calculator_function_tool, current_datetime_function_tool, get_weather_function_tool
+from test_tools import calculator_function_tool, current_datetime_function_tool, get_weather_function_tool
 
 from dotenv import load_dotenv
 

@@ -1,7 +1,7 @@
 from ToolAgents.agents import MistralAgent
 from ToolAgents.agents import OllamaAgent
 from ToolAgents.provider import LlamaCppServerProvider
-from ToolAgents.tests.test_tools import get_flight_times_tool
+from test_tools import get_flight_times_tool
 
 
 def run():
