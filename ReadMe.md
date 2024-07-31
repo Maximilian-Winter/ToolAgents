@@ -10,11 +10,6 @@ FunkyFlow is a lightweight, versatile framework for function calling agents. It 
 - Pydantic model support for type safety
 - Streaming responses (for supported providers)
 
-## Installation
-
-```bash
-pip install funkyflow
-```
 
 ## Quick Start
 
