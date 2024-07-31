@@ -1,0 +1,12 @@
+pydantic>=2.5.3
+requests>=2.31.0
+docstring_parser
+aiohttp
+mistral-common
+openai
+transformers
+sentencepiece
+protobuf
+anthropic
+ollama
+groq
