@@ -22,7 +22,7 @@ ToolAgents is a lightweight and flexible framework for creating function-calling
 
 
 ```bash
-pip install toolagents
+pip install ToolAgents
 ```
 
 ## Usage
@@ -126,12 +126,15 @@ if __name__ == "__main__":
 
 ## Custom Tools
 
-You can create custom tools using Pydantic models or function definitions. Here's an example of a custom calculator tool:
+ToolAgents supports various ways to create custom tools, allowing you to integrate specific functionalities into your agents. Here are different approaches to creating custom tools:
+
+### 1. Pydantic Model-based Tools
+
+You can create tools using Pydantic models, which provide strong typing and automatic validation. Here's an example of a calculator tool:
 
 ```python
 from enum import Enum
 from typing import Union
-
 from pydantic import BaseModel, Field
 from ToolAgents import FunctionTool
 
@@ -163,6 +166,113 @@ class Calculator(BaseModel):
 
 calculator_tool = FunctionTool(Calculator)
 ```
+
+### 2. Function-based Tools
+
+You can also create tools from simple Python functions. Here's an example of a datetime tool:
+
+```python
+import datetime
+from ToolAgents import FunctionTool
+
+def get_current_datetime(output_format: str = '%Y-%m-%d %H:%M:%S'):
+    """
+    Get the current date and time in the given format.
+
+    Args:
+        output_format: formatting string for the date and time, defaults to '%Y-%m-%d %H:%M:%S'
+    """
+    return datetime.datetime.now().strftime(output_format)
+
+current_datetime_tool = FunctionTool(get_current_datetime)
+```
+
+### 3. OpenAI-style Function Specifications
+
+ToolAgents supports creating tools from OpenAI-style function specifications:
+
+```python
+from ToolAgents import FunctionTool
+
+def get_current_weather(location, unit):
+    """Get the current weather in a given location"""
+    # Implementation details...
+
+open_ai_tool_spec = {
+    "type": "function",
+    "function": {
+        "name": "get_current_weather",
+        "description": "Get the current weather in a given location",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "location": {
+                    "type": "string",
+                    "description": "The city and state, e.g. San Francisco, CA",
+                },
+                "unit": {"type": "string", "enum": ["celsius", "fahrenheit"]},
+            },
+            "required": ["location", "unit"],
+        },
+    },
+}
+
+weather_tool = FunctionTool.from_openai_tool(open_ai_tool_spec, get_current_weather)
+```
+
+### The Importance of Good Docstrings and Descriptions
+
+When creating custom tools, it's crucial to provide clear and comprehensive docstrings and descriptions. Here's why they matter:
+
+1. **AI Understanding**: The language model uses these descriptions to understand the purpose and functionality of each tool. Better descriptions lead to more accurate tool selection and usage.
+
+2. **Parameter Clarity**: Detailed descriptions for each parameter help the AI understand what input is expected, reducing errors and improving the quality of the generated calls.
+
+3. **Proper Usage**: Good docstrings guide the AI on how to use the tool correctly, including any specific formats or constraints for the input.
+
+4. **Error Prevention**: By clearly stating the expected input types and any limitations, you can prevent many potential errors before they occur.
+
+Here's an example of a well-documented tool:
+
+```python
+from pydantic import BaseModel, Field
+from ToolAgents import FunctionTool
+
+class FlightTimes(BaseModel):
+    """
+    Retrieve flight information between two locations.
+
+    This tool provides estimated flight times, including departure and arrival times,
+    for flights between major airports. It uses airport codes for input.
+    """
+
+    departure: str = Field(
+        ...,
+        description="The departure airport code (e.g., 'NYC' for New York)",
+        min_length=3,
+        max_length=3
+    )
+    arrival: str = Field(
+        ...,
+        description="The arrival airport code (e.g., 'LAX' for Los Angeles)",
+        min_length=3,
+        max_length=3
+    )
+
+    def run(self) -> str:
+        """
+        Retrieve flight information for the given departure and arrival locations.
+
+        Returns:
+            str: A JSON string containing flight information including departure time,
+                 arrival time, and flight duration. If no flight is found, returns an error message.
+        """
+        # Implementation details...
+
+get_flight_times_tool = FunctionTool(FlightTimes)
+```
+
+In this example, the docstrings and field descriptions provide clear information about the tool's purpose, input requirements, and expected output, enabling both the AI and human developers to use the tool effectively.
 
 ## Contributing
 
