@@ -5,7 +5,7 @@ from test_tools import get_flight_times_tool
 
 def run():
 
-    agent = OllamaAgent(model='mistral-nemo', system_prompt="You are a helpful assistant.", debug_output=False)
+    agent = OllamaAgent(model='llama3.1:8b', system_prompt="You are a helpful assistant.", debug_output=False)
 
     tools = [get_flight_times_tool]
 

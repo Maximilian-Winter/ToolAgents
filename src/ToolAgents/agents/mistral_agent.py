@@ -179,7 +179,7 @@ class MistralAgent:
             yield chunk["choices"][0]["text"]
 
         if result.strip().startswith("[TOOL_CALLS]") or (result.strip().startswith("[{") and result.strip().endswith(
-                "}]") and "name" in result and "arguments" in result):
+                "}]") and "name" in result):
             tool_calls = []
             if self.debug_output:
                 print(result, flush=True)
@@ -189,7 +189,11 @@ class MistralAgent:
             for function_call in function_calls:
                 tool = mistral_tool_mapping[function_call["name"]]
                 cls = tool.model
-                call_parameters = function_call["arguments"]
+
+                if "arguments" in function_call:
+                    call_parameters = function_call["arguments"]
+                else:
+                    call_parameters = {}
                 call = cls(**call_parameters)
                 output = call.run(**tool.additional_parameters)
                 tool_call_id = generate_id(length=9)

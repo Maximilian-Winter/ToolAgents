@@ -6,3 +6,4 @@ src/provider/__pycache__
 src/tests/__pycache__
 /src/ToolAgents.egg-info/
 /dist
+/src/ToolAgents/agents/__pycache__

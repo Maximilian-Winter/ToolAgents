@@ -25,7 +25,7 @@ print(result)
 
 tools = [calculator_function_tool, current_datetime_function_tool, get_weather_function_tool]
 
-result = agent.get_streaming_response("Perform all the following tasks: Get the current weather in celsius in London, New York and at the North Pole. Solve the following calculations: 42 * 42, 74 + 26, 7 * 26, 4 + 6  and 96/8.", sampling_settings=settings, tools=tools)
+result = agent.get_streaming_response("Perform all the following tasks: Get the current weather in celsius in London, New York and at the North Pole. Solve the following calculations: 42 * 42, 74 + 26, 7 * 26, 4 + 6  and 96/8. Retrieve the current date and time.", sampling_settings=settings, tools=tools)
 for tok in result:
     print(tok, end="", flush=True)
 print()
