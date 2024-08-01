@@ -1,9 +1,9 @@
 .env
-src/__pycache__
-src/agents/__pycache__
-src/utilities/__pycache__
-src/provider/__pycache__
-src/tests/__pycache__
+/src/ToolAgents/__pycache__
+/src/ToolAgents/agents/__pycache__
+/src/ToolAgents/utilities/__pycache__
+/src/ToolAgents/provider/__pycache__
+/src/ToolAgents/tests/__pycache__
 /src/ToolAgents.egg-info/
 /dist
-/src/ToolAgents/agents/__pycache__
+
