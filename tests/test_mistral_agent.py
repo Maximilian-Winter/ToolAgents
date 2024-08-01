@@ -9,7 +9,7 @@ from test_tools import calculator_function_tool, \
 provider = LlamaCppServerProvider("http://127.0.0.1:8080/")
 
 agent = MistralAgent(llm_provider=provider, debug_output=False,
-                     system_prompt="You are a crazy, old and drunken pirate."
+                     system_prompt="You are a helpful assistant."
                      )
 
 settings = LlamaCppSamplingSettings()

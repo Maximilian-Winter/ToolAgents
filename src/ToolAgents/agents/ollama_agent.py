@@ -1,6 +1,7 @@
 import json
 from typing import List, Optional, Dict, Any, Generator
 import ollama
+from ollama import Options
 
 from ToolAgents import FunctionTool
 
@@ -47,8 +48,6 @@ class OllamaAgent:
         if message is not None:
             current_messages.append({"role": "user", "content": message})
 
-
-
         # Convert FunctionTools to Ollama-compatible tool format
         ollama_tools = [tool.to_openai_tool() for tool in tools]
 
@@ -56,7 +55,7 @@ class OllamaAgent:
         response = self.client.chat(
             model=self.model,
             messages=current_messages,
-            tools=ollama_tools,
+            tools=ollama_tools
         )
 
         current_messages.append(response['message'])
@@ -69,7 +68,8 @@ class OllamaAgent:
         for tool_call in response['message']['tool_calls']:
             tool = next((t for t in tools if t.model.__name__ == tool_call['function']['name']), None)
             if tool:
-                function_args = json.loads(tool_call['function']['arguments']) if isinstance(tool_call['function']['arguments'], str) else tool_call['function']['arguments']
+                function_args = json.loads(tool_call['function']['arguments']) if isinstance(
+                    tool_call['function']['arguments'], str) else tool_call['function']['arguments']
                 call = tool.model(**function_args)
                 function_response = call.run(**tool.additional_parameters)
                 # Add function response to the conversation
@@ -82,7 +82,8 @@ class OllamaAgent:
                 )
 
         # Second API call: Get final response from the model
-        final_response = self.get_response(messages=current_messages, tools=tools, override_system_prompt=override_system_prompt)
+        final_response = self.get_response(messages=current_messages, tools=tools,
+                                           override_system_prompt=override_system_prompt)
         return final_response
 
     def get_streaming_response(
@@ -140,7 +141,8 @@ class OllamaAgent:
         for tool_call in response['message']['tool_calls']:
             tool = next((t for t in tools if t.model.__name__ == tool_call['function']['name']), None)
             if tool:
-                function_args = json.loads(tool_call['function']['arguments']) if isinstance(tool_call['function']['arguments'], str) else tool_call['function']['arguments']
+                function_args = json.loads(tool_call['function']['arguments']) if isinstance(
+                    tool_call['function']['arguments'], str) else tool_call['function']['arguments']
                 call = tool.model(**function_args)
                 function_response = call.run(**tool.additional_parameters)
                 # Add function response to the conversation
@@ -155,5 +157,6 @@ class OllamaAgent:
         yield "\n"
 
         # Second API call: Get final response from the model
-        for chunk in self.get_streaming_response(messages=current_messages, override_system_prompt=override_system_prompt, tools=tools):
+        for chunk in self.get_streaming_response(messages=current_messages,
+                                                 override_system_prompt=override_system_prompt, tools=tools):
             yield chunk
