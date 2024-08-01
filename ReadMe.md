@@ -32,7 +32,7 @@ pip install ToolAgents
 ```python
 from ToolAgents.agents import MistralAgent
 from ToolAgents.provider import LlamaCppServerProvider, LlamaCppSamplingSettings
-from ToolAgents.tests.test_tools import calculator_function_tool, current_datetime_function_tool, get_weather_function_tool
+from test_tools import calculator_function_tool, current_datetime_function_tool, get_weather_function_tool
 
 # Initialize the provider and agent
 provider = LlamaCppServerProvider("http://127.0.0.1:8080/")
@@ -68,7 +68,7 @@ import os
 from dotenv import load_dotenv
 from ToolAgents.agents import ChatAPIAgent
 from ToolAgents.provider import AnthropicChatAPI, AnthropicSettings
-from ToolAgents.tests.test_tools import calculator_function_tool, current_datetime_function_tool, get_weather_function_tool
+from test_tools import calculator_function_tool, current_datetime_function_tool, get_weather_function_tool
 
 load_dotenv()
 
@@ -99,7 +99,7 @@ print(result)
 
 ```python
 from ToolAgents.agents import OllamaAgent
-from ToolAgents.tests.test_tools import get_flight_times_tool
+from test_tools import get_flight_times_tool
 
 def run():
     agent = OllamaAgent(model='mistral-nemo', system_prompt="You are a helpful assistant.", debug_output=False)
