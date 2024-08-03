@@ -36,7 +36,7 @@ nav:
   - User Guide:
       - Getting Started: user-guide/getting-started.md
       - Installation: user-guide/installation.md
-      - Configuration: user-guide/configuration.md
+      - Configuration: user-guide/usage.md
   - API Reference:
       - Agents:
           - Overview: api/agents/index.md
