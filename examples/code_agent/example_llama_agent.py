@@ -3,7 +3,7 @@ from ToolAgents.provider import LlamaCppSamplingSettings, LlamaCppServerProvider
 from ToolAgents.provider import VLLMServerSamplingSettings, \
     VLLMServerProvider
 from ToolAgents.utilities import ChatHistory
-from code_executer import PythonCodeExecutor
+from code_executer import PythonCodeExecutor, system_message_code_agent
 
 provider = LlamaCppServerProvider("http://127.0.0.1:8080/")
 
@@ -18,8 +18,7 @@ settings.max_tokens = 4096
 settings.stop = ["</s>", "<|eom_id|>", "<|eot_id|>", "assistant", "<|start_header_id|>assistant<|end_header_id|>"]
 
 chat_history = ChatHistory()
-chat_history.add_system_message(
-    "You are advanced AI assistant. You have access to a Python code interpreter, with it you can execute Python code to accomplish your tasks. To use the Python code interpreter write the code you want to execute in a markdown 'python_interpreter' code block, like in the following example:\n\n```python_interpreter\nprint('Hello, World!')\n```")
+chat_history.add_system_message(system_message_code_agent)
 
 python_code_executor = PythonCodeExecutor()
 
