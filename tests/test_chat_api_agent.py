@@ -25,18 +25,17 @@ settings.top_p = 0.85
 # Define the tools
 tools = [calculator_function_tool, current_datetime_function_tool, get_weather_function_tool]
 
-messages = [{"role": "system", "content": "You are a helpful assistant."},
-            {"role": "user", "content": "Perform all the following tasks: Get the current weather in celsius in London, New York and at the North Pole. Solve the following calculations: 42 * 42, 74 + 26, 7 * 26, 4 + 6  and 96/8. Retrieve the current date and time in the format: dd.mm.yyy hh:mm."}]
-
 chat_history = ChatHistory()
-chat_history.add_list_of_dicts(messages)
-chat_history.save_history("./test_chat_history.json")
+chat_history.load_history("./test_tools_chat_history.json")
+
 # Get a response
 result = agent.get_response(
-    messages=messages,
+    messages=chat_history.to_list(),
     tools=tools,
     settings=settings
 )
 
 print(result)
-print(json.dumps(agent.last_messages_buffer, indent=2))
+
+chat_history.add_list_of_dicts(agent.last_messages_buffer)
+chat_history.save_history("./test_chat_history_after_chat_api.json")

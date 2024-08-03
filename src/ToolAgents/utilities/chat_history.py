@@ -68,8 +68,17 @@ class ChatHistory:
     def __init__(self):
         self.messages: List[Message] = []
 
-    def add_message(self, message: Message):
-        self.messages.append(message)
+    def add_message(self, role: str, message: str):
+        self.messages.append(Message(role=role, content=message))
+
+    def add_user_message(self, message: str):
+        self.messages.append(Message(role='user', content=message))
+
+    def add_assistant_message(self, message: str):
+        self.messages.append(Message(role='assistant', content=message))
+
+    def add_system_message(self, message: str):
+        self.messages.append(Message(role='system', content=message))
 
     def to_list(self) -> List[Dict[str, Any]]:
         return [message.to_dict() for message in self.messages]

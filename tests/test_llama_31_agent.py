@@ -2,6 +2,7 @@ from ToolAgents.agents import LlamaAgent
 from ToolAgents.provider import LlamaCppSamplingSettings, LlamaCppServerProvider
 from ToolAgents.provider import VLLMServerSamplingSettings, \
     VLLMServerProvider
+from ToolAgents.utilities import ChatHistory
 
 from test_tools import calculator_function_tool, \
     current_datetime_function_tool, get_weather_function_tool
@@ -25,13 +26,15 @@ print(result)
 
 tools = [calculator_function_tool, current_datetime_function_tool, get_weather_function_tool]
 
-messages = [{"role": "system", "content": "You are a helpful assistant."},
-            {"role": "user", "content": "Perform all the following tasks: Get the current weather in celsius in London, New York and at the North Pole. Solve the following calculations: 42 * 42, 74 + 26, 7 * 26, 4 + 6  and 96/8. Retrieve the current date and time in the format: dd.mm.yyy hh:mm."}]
+chat_history = ChatHistory()
+chat_history.load_history("./test_tools_chat_history.json")
 
 result = agent.get_streaming_response(
-    messages=messages,
+    messages=chat_history.to_list(),
     sampling_settings=settings, tools=tools, add_tool_instructions_to_first_message=True)
 for tok in result:
     print(tok, end="", flush=True)
 print()
-print(json.dumps(agent.last_messages_buffer, indent=2))
+
+chat_history.add_list_of_dicts(agent.last_messages_buffer)
+chat_history.save_history("./test_chat_history_after_llama.json")

@@ -50,12 +50,12 @@ pip install ToolAgents
 ```python
 from ToolAgents.agents import MistralAgent
 from ToolAgents.provider import LlamaCppServerProvider, LlamaCppSamplingSettings
+from ToolAgents.utilities import ChatHistory
 from test_tools import calculator_function_tool, current_datetime_function_tool, get_weather_function_tool
 
 # Initialize the provider and agent
 provider = LlamaCppServerProvider("http://127.0.0.1:8080/")
-agent = MistralAgent(llm_provider=provider, debug_output=False,
-                     system_prompt="You are a helpful assistant.")
+agent = MistralAgent(llm_provider=provider, debug_output=False)
 
 # Configure settings
 settings = LlamaCppSamplingSettings()
@@ -66,10 +66,13 @@ settings.max_tokens = 4096
 # Define tools
 tools = [calculator_function_tool, current_datetime_function_tool, get_weather_function_tool]
 
+# Create chat history and add system message and user message.
+chat_history = ChatHistory()
+chat_history.add_system_message("You are a helpful assistant.")
+chat_history.add_user_message("Perform the following tasks: Get the current weather in Celsius in London, New York, and at the North Pole. Solve these calculations: 42 * 42, 74 + 26, 7 * 26, 4 + 6, and 96/8.")
 # Get a response
 result = agent.get_streaming_response(
-    "Perform the following tasks: Get the current weather in Celsius in London, New York, and at the North Pole. "
-    "Solve these calculations: 42 * 42, 74 + 26, 7 * 26, 4 + 6, and 96/8.",
+    messages=chat_history.to_list(),
     sampling_settings=settings,
     tools=tools
 )
@@ -77,6 +80,12 @@ result = agent.get_streaming_response(
 for token in result:
     print(token, end="", flush=True)
 print()
+
+# Add the generated messages, including tool messages, to the chat history.
+chat_history.add_list_of_dicts(agent.last_messages_buffer)
+
+# Save chat history to file.
+chat_history.save_history("./chat_history.json")
 ```
 
 ### LlamaAgent with llama.cpp Server
@@ -84,6 +93,7 @@ print()
 ```python
 from ToolAgents.agents import LlamaAgent
 from ToolAgents.provider import LlamaCppServerProvider, LlamaCppSamplingSettings
+from ToolAgents.utilities import ChatHistory
 from test_tools import calculator_function_tool, current_datetime_function_tool, get_weather_function_tool
 
 # Initialize the provider and agent
@@ -100,10 +110,15 @@ settings.max_tokens = 4096
 # Define tools
 tools = [calculator_function_tool, current_datetime_function_tool, get_weather_function_tool]
 
+# Create chat history and add system message and user message.
+chat_history = ChatHistory()
+chat_history.add_system_message("You are a helpful assistant.")
+chat_history.add_user_message("Perform the following tasks: Get the current weather in Celsius in London, New York, and at the North Pole. Solve these calculations: 42 * 42, 74 + 26, 7 * 26, 4 + 6, and 96/8.")
+
+
 # Get a response
 result = agent.get_streaming_response(
-    "Perform the following tasks: Get the current weather in Celsius in London, New York, and at the North Pole. "
-    "Solve these calculations: 42 * 42, 74 + 26, 7 * 26, 4 + 6, and 96/8.",
+    messages=chat_history.to_list(),
     sampling_settings=settings,
     tools=tools
 )
@@ -111,6 +126,12 @@ result = agent.get_streaming_response(
 for token in result:
     print(token, end="", flush=True)
 print()
+
+# Add the generated messages, including tool messages, to the chat history.
+chat_history.add_list_of_dicts(agent.last_messages_buffer)
+
+# Save chat history to file.
+chat_history.save_history("./chat_history.json")
 ```
 ### ChatAPIAgent with Anthropic API
 
@@ -119,6 +140,7 @@ import os
 from dotenv import load_dotenv
 from ToolAgents.agents import ChatAPIAgent
 from ToolAgents.provider import AnthropicChatAPI, AnthropicSettings
+from ToolAgents.utilities import ChatHistory
 from test_tools import calculator_function_tool, current_datetime_function_tool, get_weather_function_tool
 
 load_dotenv()
@@ -135,21 +157,33 @@ settings.top_p = 0.85
 # Define tools
 tools = [calculator_function_tool, current_datetime_function_tool, get_weather_function_tool]
 
+# Create chat history and add system message and user message.
+chat_history = ChatHistory()
+chat_history.add_system_message("You are a helpful assistant.")
+chat_history.add_user_message("Perform the following tasks: Get the current weather in Celsius in London, New York, and at the North Pole. Solve these calculations: 42 * 42, 74 + 26, 7 * 26, 4 + 6, and 96/8.")
+
+
 # Get a response
 result = agent.get_response(
-    "Perform the following tasks: Get the current weather in Celsius in London, New York, and at the North Pole. "
-    "Solve these calculations: 42 * 42, 74 + 26, 7 * 26, 4 + 6, and 96/8.",
+    messages=chat_history.to_list(),
     tools=tools,
     settings=settings
 )
 
 print(result)
+
+# Add the generated messages, including tool messages, to the chat history.
+chat_history.add_list_of_dicts(agent.last_messages_buffer)
+
+# Save chat history to file.
+chat_history.save_history("./chat_history.json")
 ```
 
 ### OllamaAgent
 
 ```python
 from ToolAgents.agents import OllamaAgent
+from ToolAgents.utilities import ChatHistory
 from test_tools import get_flight_times_tool
 
 def run():
@@ -157,16 +191,25 @@ def run():
 
     tools = [get_flight_times_tool]
 
+    # Create chat history and add system message and user message.
+    chat_history = ChatHistory()
+    chat_history.add_system_message("You are a helpful assistant.")
+    chat_history.add_user_message("What is the flight time from New York (NYC) to Los Angeles (LAX)?")
+
     response = agent.get_response(
-        message="What is the flight time from New York (NYC) to Los Angeles (LAX)?",
-        tools=tools,
-    )
+            messages=chat_history.to_list(),
+            tools=tools,
+        )
 
     print(response)
-
+    
+    # Add the generated messages, including tool messages, to the chat history.
+    chat_history.add_list_of_dicts(agent.last_messages_buffer)
+    
+    chat_history.add_user_message("What is the flight time from London (LHR) to New York (JFK)?")
     print("\nStreaming response:")
     for chunk in agent.get_streaming_response(
-            message="What is the flight time from London (LHR) to New York (JFK)?",
+            messages=chat_history.to_list(),
             tools=tools,
     ):
         print(chunk, end='', flush=True)

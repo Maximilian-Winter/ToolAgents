@@ -1,4 +1,5 @@
 from ToolAgents.agents import OllamaAgent
+from ToolAgents.utilities import ChatHistory
 
 from test_tools import get_flight_times_tool
 
@@ -19,15 +20,18 @@ def run():
 
     print(response)
 
-    messages = [{"role": "system", "content": "You are a helpful assistant."},
-                {"role": "user", "content": "What is the flight time from London (LHR) to New York (JFK)?"}]
+    chat_history = ChatHistory()
+    chat_history.load_history("./test_tools_chat_history.json")
+
     print("\nStreaming response:")
     for chunk in agent.get_streaming_response(
-            messages=messages,
+            messages=chat_history.to_list(),
             tools=tools,
     ):
         print(chunk, end='', flush=True)
 
+    chat_history.add_list_of_dicts(agent.last_messages_buffer)
+    chat_history.save_history("./test_chat_history_after_ollama.json")
 
 # Run the function
 if __name__ == "__main__":
