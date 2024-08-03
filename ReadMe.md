@@ -98,8 +98,7 @@ from test_tools import calculator_function_tool, current_datetime_function_tool,
 
 # Initialize the provider and agent
 provider = LlamaCppServerProvider("http://127.0.0.1:8080/")
-agent = LlamaAgent(llm_provider=provider, debug_output=False,
-                     system_prompt="You are a helpful assistant.")
+agent = LlamaAgent(llm_provider=provider, debug_output=False)
 
 # Configure settings
 settings = LlamaCppSamplingSettings()
@@ -147,7 +146,7 @@ load_dotenv()
 
 # Initialize the API and agent
 api = AnthropicChatAPI(api_key=os.getenv("ANTHROPIC_API_KEY"), model="claude-3-sonnet-20240229")
-agent = ChatAPIAgent(chat_api=api, system_prompt="You are a helpful assistant.")
+agent = ChatAPIAgent(chat_api=api)
 
 # Configure settings
 settings = AnthropicSettings()
@@ -187,7 +186,7 @@ from ToolAgents.utilities import ChatHistory
 from test_tools import get_flight_times_tool
 
 def run():
-    agent = OllamaAgent(model='mistral-nemo', system_prompt="You are a helpful assistant.", debug_output=False)
+    agent = OllamaAgent(model='mistral-nemo', debug_output=False)
 
     tools = [get_flight_times_tool]
 
