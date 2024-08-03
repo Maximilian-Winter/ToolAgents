@@ -3,6 +3,8 @@ import json
 import os
 from typing import List, Dict, Any
 
+from ToolAgents.utilities.message_template import MessageTemplate
+
 
 class ChatFormatter:
     def __init__(self, template, role_names: Dict[str, str] = None):
@@ -20,6 +22,23 @@ class ChatFormatter:
         return '\n'.join(formatted_chat)
 
 
+class AdvancedChatFormatter:
+    def __init__(self, role_templates: dict[str, str]):
+        self.role_templates: dict[str, MessageTemplate] = {}
+        for key, value in role_templates.items():
+            self.role_templates[key] = MessageTemplate.from_string(value)
+
+    def format_messages(self, messages):
+        formatted_chat = []
+        for message in messages:
+            role = message['role']
+            content = message['content']
+            template = self.role_templates[role]
+            formatted_message = template.generate_message_content(content=content)
+            formatted_chat.append(formatted_message)
+        return ''.join(formatted_chat)
+
+
 class Message:
     def __init__(self, role: str, content: str, **kwargs):
         self.role = role
@@ -34,61 +53,30 @@ class Message:
 
 
 class ChatHistory:
-    def __init__(self, history_folder: str):
+    def __init__(self):
         self.messages: List[Message] = []
-        self.history_folder = history_folder
 
     def add_message(self, message: Message):
         self.messages.append(message)
 
-    def edit_message(self, message_id: int, new_content: str) -> bool:
-        for message in self.messages:
-            if message.id == message_id:
-                message.content = new_content
-                return True
-        return False
-
     def to_list(self) -> List[Dict[str, Any]]:
         return [message.to_dict() for message in self.messages]
 
-    def save_history(self):
-        if not os.path.exists(self.history_folder):
-            os.makedirs(self.history_folder)
+    def save_history(self, filename: str) -> None:
+        if not os.path.exists(os.path.dirname(filename)):
+            os.makedirs(os.path.dirname(filename))
 
-        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-        save_id = f"{timestamp}"
-        filename = f"chat_history_{save_id}.json"
-
-        with open(f"{self.history_folder}/{filename}", "w") as f:
+        with open(filename, "w") as f:
             json.dump(self.to_list(), f, indent=2)
 
-    def load_history(self):
-        if not os.path.exists(self.history_folder):
-            os.makedirs(self.history_folder)
-            print("No chat history found. Starting with an empty history.")
-            self.messages = []
-            return
+    def load_history(self, filename: str) -> None:
+        with open(filename, "r") as f:
+            loaded_messages = json.load(f)
 
-        history_files = [f for f in os.listdir(self.history_folder) if
-                         f.startswith("chat_history_") and f.endswith(".json")]
-
-        if not history_files:
-            print("No chat history found. Starting with an empty history.")
-            self.messages = []
-            return
-
-        # Sort history files based on the timestamp in the filename
-        latest_history = sorted(history_files, reverse=True)[0]
-
-        try:
-            with open(f"{self.history_folder}/{latest_history}", "r") as f:
-                loaded_history = json.load(f)
-                self.messages = [Message(msg['role'], msg['content'], id=msg.get('id')) for msg in loaded_history]
-            print(f"Loaded the most recent chat history: {latest_history}")
-
-        except (FileNotFoundError, json.JSONDecodeError) as e:
-            print(f"Error loading chat history: {e}. Starting with an empty history.")
-            self.messages = []
+        for msg_data in loaded_messages:
+            role = msg_data.pop('role')
+            content = msg_data.pop('content')
+            self.add_message(Message(role, content, **msg_data))
 
     def delete_last_messages(self, k: int) -> int:
         if k >= len(self.messages):
@@ -98,10 +86,3 @@ class ChatHistory:
             deleted = k
             self.messages = self.messages[:-k]
         return deleted
-
-    def delete_message(self, msg_id: int) -> int:
-        for msg in self.messages:
-            if msg.id == msg_id:
-                self.messages.remove(msg)
-                return True
-        return False

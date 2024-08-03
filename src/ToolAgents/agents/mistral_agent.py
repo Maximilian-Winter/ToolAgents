@@ -26,6 +26,7 @@ class MistralAgent:
     def __init__(
             self,
             llm_provider,
+            tokenizer_file: str = None,
             system_prompt: str = None,
             debug_output: bool = False,
     ):
@@ -39,7 +40,10 @@ class MistralAgent:
         self.system_prompt = system_prompt
         if system_prompt is not None:
             self.messages.append(SystemMessage(content=system_prompt))
-        self.tokenizer_v3 = MistralTokenizer.v3()
+        if tokenizer_file is not None:
+            self.tokenizer = MistralTokenizer.from_file(tokenizer_filename=tokenizer_file)
+        else:
+            self.tokenizer = MistralTokenizer.v3()
 
     def get_response(
             self,
@@ -52,6 +56,10 @@ class MistralAgent:
         if tools is None:
             tools = []
 
+        if message is not None:
+            msg = UserMessage(content=message)
+            self.messages.append(msg)
+
         # Use provided messages if available, otherwise use internal messages
         current_messages = messages if messages is not None else self.messages.copy()
 
@@ -59,12 +67,6 @@ class MistralAgent:
         if override_system_prompt is not None:
             current_messages = [msg for msg in current_messages if not isinstance(msg, SystemMessage)]
             current_messages.insert(0, SystemMessage(content=override_system_prompt))
-        elif self.system_prompt is not None and not any(isinstance(msg, SystemMessage) for msg in current_messages):
-            current_messages.insert(0, SystemMessage(content=self.system_prompt))
-
-        if message is not None:
-            msg = UserMessage(content=message)
-            current_messages.append(msg)
 
         mistral_tools = []
         mistral_tool_mapping = {}
@@ -75,7 +77,7 @@ class MistralAgent:
             tools=mistral_tools,
             messages=current_messages
         )
-        tokenized = self.tokenizer_v3.encode_chat_completion(request)
+        tokenized = self.tokenizer.encode_chat_completion(request)
         tokens, text = tokenized.tokens, tokenized.text
         text = text.replace("▁", " ")[3:]
         text = text.replace("<0x0A>", "\n")
@@ -136,6 +138,10 @@ class MistralAgent:
         if tools is None:
             tools = []
 
+        if message is not None:
+            msg = UserMessage(content=message)
+            self.messages.append(msg)
+
         current_messages = messages if messages is not None else self.messages.copy()
 
         if override_system_prompt is not None:
@@ -143,10 +149,6 @@ class MistralAgent:
             current_messages.insert(0, SystemMessage(content=override_system_prompt))
         elif self.system_prompt is not None and not any(isinstance(msg, SystemMessage) for msg in current_messages):
             current_messages.insert(0, SystemMessage(content=self.system_prompt))
-
-        if message is not None:
-            msg = UserMessage(content=message)
-            current_messages.append(msg)
 
         mistral_tools = []
         mistral_tool_mapping = {}
@@ -158,7 +160,7 @@ class MistralAgent:
             tools=mistral_tools,
             messages=current_messages
         )
-        tokenized = self.tokenizer_v3.encode_chat_completion(request)
+        tokenized = self.tokenizer.encode_chat_completion(request)
         tokens, text = tokenized.tokens, tokenized.text
         text = text.replace("▁", " ")[3:]
         text = text.replace("<0x0A>", "\n")
@@ -173,10 +175,13 @@ class MistralAgent:
         result = ""
         for chunk in self.provider.create_completion(
                 prompt=text,
-                settings=sampling_settings ,
+                settings=sampling_settings,
         ):
-            result += chunk["choices"][0]["text"]
-            yield chunk["choices"][0]["text"]
+            ch = chunk["choices"][0]["text"]
+            result += ch
+            if self.debug_output:
+                print(ch, end="", flush=True)
+            yield ch
 
         if result.strip().startswith("[TOOL_CALLS]") or (result.strip().startswith("[{") and result.strip().endswith(
                 "}]") and "name" in result):
