@@ -9,3 +9,4 @@
 
 /examples/code_interpreter/.venv
 /examples/code_interpreter/__pycache__
+/examples/code_agent/__pycache__

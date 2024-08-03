@@ -82,6 +82,9 @@ class ChatHistory:
     def add_system_message(self, message: str):
         self.messages.append(Message(role='system', content=message))
 
+    def add_tool_message(self, message: str, **kwargs):
+        self.messages.append(Message(role='tool', content=message, **kwargs))
+
     def to_list(self) -> List[Dict[str, Any]]:
         return [message.to_dict() for message in self.messages]
 
