@@ -1,0 +1,96 @@
+site_name: ToolAgents Documentation
+site_description: Documentation for the ToolAgents framework
+site_author: Maximilian Winter
+
+theme:
+  name: material
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - toc.integrate
+    - search.suggest
+    - search.highlight
+    - content.tabs.link
+    - content.code.annotation
+    - content.code.copy
+  language: en
+  palette:
+    - scheme: default
+      toggle:
+        icon: material/toggle-switch-off-outline
+        name: Switch to dark mode
+      primary: teal
+      accent: purple
+    - scheme: slate
+      toggle:
+        icon: material/toggle-switch
+        name: Switch to light mode
+      primary: teal
+      accent: lime
+
+repo_name: Maximilian-Winter/ToolAgents
+repo_url: https://github.com/Maximilian-Winter/ToolAgents
+
+nav:
+  - Home: index.md
+  - User Guide:
+      - Getting Started: user-guide/getting-started.md
+      - Installation: user-guide/installation.md
+      - Configuration: user-guide/configuration.md
+  - API Reference:
+      - Agents:
+          - Overview: api/agents/index.md
+          - ChatAPIAgent: api/agents/chat_api_agent.md
+          - Llama31Agent: api/agents/llama_31_agent.md
+          - MistralAgent: api/agents/mistral_agent.md
+          - OllamaAgent: api/agents/ollama_agent.md
+      - Providers:
+          - Overview: api/providers/index.md
+          - ChatAPIWithTools: api/providers/chat_api_with_tools.md
+          - LlamaCppServer: api/providers/llama_cpp_server.md
+          - TGIServer: api/providers/tgi_server.md
+          - VLLMServer: api/providers/vllm_server.md
+      - Utilities:
+          - Overview: api/utilities/index.md
+          - ChatHistory: api/utilities/chat_history.md
+          - DocumentationGeneration: api/utilities/documentation_generation.md
+          - MessageTemplate: api/utilities/message_template.md
+      - FunctionTool: api/function_tool.md
+  - Development:
+      - Contributing: development/contributing.md
+      - Testing: development/testing.md
+  - About:
+      - License: about/license.md
+      - Changelog: about/changelog.md
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - admonition
+  - pymdownx.arithmatex:
+      generic: true
+  - footnotes
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.mark
+  - attr_list
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+
+copyright: |
+  &copy; 2024 <a href="https://github.com/Maximilian-Winter"  target="_blank" rel="noopener">Maximilian Winter</a>
+
+extra:
+  social:
+    - icon: fontawesome/brands/github-alt
+      link: https://github.com/Maximilian-Winter
+    - icon: fontawesome/brands/twitter
+      link: https://x.com/LumpenLue12
+    - icon: fontawesome/brands/linkedin
+      link: https://www.linkedin.com/in/maximilian-winter-663737229/
+
+plugins:
+  - search

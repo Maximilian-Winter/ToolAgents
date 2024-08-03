@@ -2,24 +2,42 @@
 
 ToolAgents is a lightweight and flexible framework for creating function-calling agents with various language models and APIs. It provides a unified interface for integrating different LLM providers and executing function calls seamlessly.
 
+
+## Table of Contents
+
+1. [Features](#features)
+2. [Installation](#installation)
+3. [Usage](#usage)
+  - [MistralAgent with llama.cpp Server](#mistralagent-with-llamacpp-server)
+  - [LlamaAgent with llama.cpp Server](#llamaagent-with-llamacpp-server)
+  - [ChatAPIAgent with Anthropic API](#chatapiagent-with-anthropic-api)
+  - [OllamaAgent](#ollamaagent)
+4. [Custom Tools](#custom-tools)
+  - [Pydantic Model-based Tools](#1-pydantic-model-based-tools)
+  - [Function-based Tools](#2-function-based-tools)
+  - [OpenAI-style Function Specifications](#3-openai-style-function-specifications)
+  - [The Importance of Good Docstrings and Descriptions](#the-importance-of-good-docstrings-and-descriptions)
+5. [Contributing](#contributing)
+6. [License](#license)
+
 ## Features
 
 - Support for multiple LLM providers:
-    - llama.cpp servers
-    - Hugging Face's Text Generation Interface (TGI) servers
-    - vLLM servers
-    - OpenAI API
-    - Anthropic API
-    - Ollama (with Tool calling support)
+  - llama.cpp servers
+  - Hugging Face's Text Generation Interface (TGI) servers
+  - vLLM servers
+  - OpenAI API
+  - Anthropic API
+  - Ollama (with Tool calling support)
 - Easy-to-use interface for passing functions, Pydantic models, and tools to LLMs
 - Streamlined process for function calling and result handling
 - Flexible agent types:
-    - MistralAgent for llama.cpp, TGI, and vLLM servers
-    - ChatAPIAgent for OpenAI and Anthropic APIs
-    - OllamaAgent for Ollama integration
+  - MistralAgent for llama.cpp, TGI, and vLLM servers
+  - LlamaAgent for llama.cpp, TGI and vLLM servers
+  - ChatAPIAgent for OpenAI and Anthropic APIs
+  - OllamaAgent for Ollama integration
 
 ## Installation
-
 
 ```bash
 pip install ToolAgents
@@ -61,6 +79,39 @@ for token in result:
 print()
 ```
 
+### LlamaAgent with llama.cpp Server
+
+```python
+from ToolAgents.agents import LlamaAgent
+from ToolAgents.provider import LlamaCppServerProvider, LlamaCppSamplingSettings
+from test_tools import calculator_function_tool, current_datetime_function_tool, get_weather_function_tool
+
+# Initialize the provider and agent
+provider = LlamaCppServerProvider("http://127.0.0.1:8080/")
+agent = LlamaAgent(llm_provider=provider, debug_output=False,
+                     system_prompt="You are a helpful assistant.")
+
+# Configure settings
+settings = LlamaCppSamplingSettings()
+settings.temperature = 0.3
+settings.top_p = 1.0
+settings.max_tokens = 4096
+
+# Define tools
+tools = [calculator_function_tool, current_datetime_function_tool, get_weather_function_tool]
+
+# Get a response
+result = agent.get_streaming_response(
+    "Perform the following tasks: Get the current weather in Celsius in London, New York, and at the North Pole. "
+    "Solve these calculations: 42 * 42, 74 + 26, 7 * 26, 4 + 6, and 96/8.",
+    sampling_settings=settings,
+    tools=tools
+)
+
+for token in result:
+    print(token, end="", flush=True)
+print()
+```
 ### ChatAPIAgent with Anthropic API
 
 ```python
