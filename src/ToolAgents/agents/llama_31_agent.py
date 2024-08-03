@@ -2,6 +2,7 @@ import json
 import random
 import re
 import string
+from typing import Any
 
 from ToolAgents import FunctionTool
 from ToolAgents.utilities.chat_history import Message, AdvancedChatFormatter
@@ -53,18 +54,10 @@ class LlamaAgent:
     def __init__(
             self,
             llm_provider,
-            system_prompt: str = None,
             debug_output: bool = False,
     ):
-        self.messages: list[Message] = []
-
         self.provider = llm_provider
-
         self.debug_output = debug_output
-        self.system_prompt = system_prompt
-        if system_prompt is not None:
-            self.messages.append(Message(role="system", content=system_prompt))
-
         llama_31_system_template = "<|start_header_id|>system<|end_header_id|>\n\n{content}\n<|eot_id|>"
         llama_31_assistant_template = "<|start_header_id|>assistant<|end_header_id|>\n\n{content}\n<|eot_id|>"
         llama_31_user_template = "<|start_header_id|>user<|end_header_id|>\n\n{content}\n<|eot_id|>"
@@ -75,31 +68,23 @@ class LlamaAgent:
             "assistant": llama_31_assistant_template,
             "tool": llama_31_tool_template,
         })
+        self.last_messages_buffer = []
 
     def get_response(
             self,
-            message=None,
+            messages: list[dict[str, Any]],
             tools: list[FunctionTool] = None,
             sampling_settings=None,
-            messages: list = None,
-            override_system_prompt: str = None,
+            add_tool_instructions_to_first_message: bool = False,
+            reset_last_messages_buffer: bool = True,
     ):
         if tools is None:
             tools = []
 
-        if message is not None:
-            msg = Message(role="user", content=message)
-            self.messages.append(msg)
+        if reset_last_messages_buffer:
+            self.last_messages_buffer = []
 
-        # Use provided messages if available, otherwise use internal messages
-        current_messages = messages if messages is not None else self.messages.copy()
-
-        # Override system prompt if provided
-        if override_system_prompt is not None:
-            current_messages = [msg for msg in current_messages if msg.role != "system"]
-            current_messages.insert(0, Message(role="system", content=override_system_prompt))
-
-        converted_messages = [msg.to_dict() for msg in current_messages]
+        current_messages = messages
 
         tools_llama = []
         tool_mapping = {}
@@ -107,14 +92,14 @@ class LlamaAgent:
             tools_llama.append(tool.to_openai_tool())
             tool_mapping[tool.model.__name__] = tool
 
-        if len(tools_llama) > 0:
-            converted_messages[0]["content"] += f"""\n\nYou have access to the following functions:
+        if len(tools_llama) > 0 and add_tool_instructions_to_first_message:
+            current_messages[0]["content"] += f"""\n\nYou have access to the following functions:
 
 {json.dumps(tools_llama, indent=2)}
 
 """ + system_prompt_part2
 
-        text = self.llama_31_chat_formatter.format_messages(converted_messages)
+        text = self.llama_31_chat_formatter.format_messages(current_messages)
         text += "<|start_header_id|>assistant<|end_header_id|>"
         if self.debug_output:
             print(text, flush=True)
@@ -142,39 +127,35 @@ class LlamaAgent:
                 call_parameters = function_call["arguments"]
                 call = cls(**call_parameters)
                 output = call.run(**tool.additional_parameters)
-                tool_messages.append(Message(role="tool", content=f'Function: "{function_call['function']}"\n\nArguments: "{json.dumps(function_call['arguments'])}"\n\nOutput:\n\n' + str(output) if output is not isinstance(output, dict) else json.dumps(output, indent=2)))
+                tool_messages.append(Message(role="tool",
+                                             content=f'Function: "{function_call['function']}"\n\nArguments: "{json.dumps(function_call['arguments'])}"\n\nOutput:\n\n' + str(
+                                                 output) if output is not isinstance(output, dict) else json.dumps(
+                                                 output, indent=2)).to_dict())
 
-            current_messages.append(Message(role="assistant", content=result))
+            current_messages.append(Message(role="assistant", content=result).to_dict())
             current_messages.extend(tool_messages)
-            return self.get_response(sampling_settings=sampling_settings, tools=tools, messages=current_messages)
+            self.last_messages_buffer.append(Message(role="assistant", content=result).to_dict())
+            self.last_messages_buffer.extend(tool_messages)
+            return self.get_response(sampling_settings=sampling_settings, tools=tools, messages=current_messages,
+                                     reset_last_messages_buffer=False, add_tool_instructions_to_first_message=False)
         else:
-            current_messages.append(Message(role="assistant", content=result.strip()))
+            self.last_messages_buffer.append(result)
             return result.strip()
 
     def get_streaming_response(
             self,
-            message=None,
+            messages: list[dict[str, Any]],
             tools: list[FunctionTool] = None,
             sampling_settings=None,
-            messages: list = None,
-            override_system_prompt: str = None,
-    ):
+            add_tool_instructions_to_first_message: bool = False,
+            reset_last_messages_buffer: bool = True):
         if tools is None:
             tools = []
 
-        if message is not None:
-            msg = Message(role="user", content=message)
-            self.messages.append(msg)
+        if reset_last_messages_buffer:
+            self.last_messages_buffer = []
 
-        # Use provided messages if available, otherwise use internal messages
-        current_messages = messages if messages is not None else self.messages.copy()
-
-        # Override system prompt if provided
-        if override_system_prompt is not None:
-            current_messages = [msg for msg in current_messages if msg.role != "system"]
-            current_messages.insert(0, Message(role="system", content=override_system_prompt))
-
-        converted_messages = [msg.to_dict() for msg in current_messages]
+        current_messages = messages
 
         tools_llama = []
         tool_mapping = {}
@@ -182,14 +163,14 @@ class LlamaAgent:
             tools_llama.append(tool.to_openai_tool())
             tool_mapping[tool.model.__name__] = tool
 
-        if len(tools_llama) > 0:
-            converted_messages[0]["content"] += f"""\n\nYou have access to the following functions:
+        if len(tools_llama) > 0 and add_tool_instructions_to_first_message:
+            current_messages[0]["content"] += f"""\n\nYou have access to the following functions:
 
 {json.dumps(tools_llama, indent=2)}
 
 """ + system_prompt_part2
 
-        text = self.llama_31_chat_formatter.format_messages(converted_messages)
+        text = self.llama_31_chat_formatter.format_messages(current_messages)
         text += "<|start_header_id|>assistant<|end_header_id|>"
 
         if self.debug_output:
@@ -210,7 +191,7 @@ class LlamaAgent:
             yield ch
 
         if result.strip().startswith("[TOOL_CALLS]") or (result.strip().startswith("[{") and result.strip().endswith(
-                    "}]") and "function" in result and "arguments" in result):
+                "}]") and "function" in result and "arguments" in result):
 
             if self.debug_output:
                 print(result, flush=True)
@@ -223,12 +204,17 @@ class LlamaAgent:
                 call_parameters = function_call["arguments"]
                 call = cls(**call_parameters)
                 output = call.run(**tool.additional_parameters)
-                tool_messages.append(Message(role="tool", content=f'Function: "{function_call['function']}"\n\nArguments: "{json.dumps(function_call['arguments'])}"\n\nOutput:\n\n' + str(output) if output is not isinstance(output, dict) else json.dumps(output, indent=2)))
+                tool_messages.append(Message(role="tool",
+                                             content=f'Function: "{function_call['function']}"\n\nArguments: "{json.dumps(function_call['arguments'])}"\n\nOutput:\n\n' + str(
+                                                 output) if output is not isinstance(output, dict) else json.dumps(
+                                                 output, indent=2)).to_dict())
 
-            current_messages.append(Message(role="assistant", content=result))
+            self.last_messages_buffer.append(Message(role="assistant", content=result).to_dict())
+            self.last_messages_buffer.extend(tool_messages)
+            current_messages.append(Message(role="assistant", content=result).to_dict())
             current_messages.extend(tool_messages)
             yield "\n"
             yield from self.get_streaming_response(sampling_settings=sampling_settings, tools=tools,
-                                                   messages=current_messages)
+                                                   messages=current_messages, reset_last_messages_buffer=False, add_tool_instructions_to_first_message=False)
         else:
-            current_messages.append(Message(role="assistant", content=result.strip()))
+            self.last_messages_buffer.append(Message(role="assistant", content=result.strip()).to_dict())

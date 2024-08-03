@@ -1,4 +1,5 @@
 import datetime
+
 import json
 import os
 from typing import List, Dict, Any
@@ -43,13 +44,24 @@ class Message:
     def __init__(self, role: str, content: str, **kwargs):
         self.role = role
         self.content = content
-
         self.__dict__.update(kwargs)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self, filter_keys: list[str] = None) -> Dict[str, Any]:
         result = {"role": self.role, "content": self.content}
-        result.update({k: v for k, v in self.__dict__.items() if k not in ['role', 'content']})
+        if filter_keys is None:
+            filter_keys = ["role", "content"]
+        else:
+            filter_keys.extend(["role", "content"])
+
+        result.update({k: v for k, v in self.__dict__.items() if k not in filter_keys})
         return result
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> 'Message':
+        data = data.copy()
+        role = data.pop('role')
+        content = data.pop('content')
+        return cls(role, content, **data)
 
 
 class ChatHistory:
@@ -74,9 +86,7 @@ class ChatHistory:
             loaded_messages = json.load(f)
 
         for msg_data in loaded_messages:
-            role = msg_data.pop('role')
-            content = msg_data.pop('content')
-            self.add_message(Message(role, content, **msg_data))
+            self.add_message(Message.from_dict(msg_data))
 
     def delete_last_messages(self, k: int) -> int:
         if k >= len(self.messages):
@@ -86,3 +96,8 @@ class ChatHistory:
             deleted = k
             self.messages = self.messages[:-k]
         return deleted
+
+    def add_list_of_dicts(self, message_list: List[Dict[str, Any]]) -> None:
+        msgs = message_list.copy()
+        for msg_data in msgs:
+            self.add_message(Message.from_dict(msg_data))

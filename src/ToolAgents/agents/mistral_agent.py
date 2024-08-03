@@ -1,6 +1,7 @@
 import json
 import random
 import string
+from typing import Any
 
 from mistral_common.protocol.instruct.messages import (
     UserMessage,
@@ -27,46 +28,33 @@ class MistralAgent:
             self,
             llm_provider,
             tokenizer_file: str = None,
-            system_prompt: str = None,
             debug_output: bool = False,
     ):
-        self.messages: list[
-            SystemMessage | UserMessage | AssistantMessage | ToolMessage
-            ] = []
 
         self.provider = llm_provider
 
         self.debug_output = debug_output
-        self.system_prompt = system_prompt
-        if system_prompt is not None:
-            self.messages.append(SystemMessage(content=system_prompt))
+
         if tokenizer_file is not None:
             self.tokenizer = MistralTokenizer.from_file(tokenizer_filename=tokenizer_file)
         else:
             self.tokenizer = MistralTokenizer.v3()
 
+        self.last_messages_buffer = []
+
     def get_response(
             self,
-            message=None,
+            messages: list[dict[str, Any]],
             tools: list[FunctionTool] = None,
             sampling_settings=None,
-            messages: list = None,
-            override_system_prompt: str = None,
+            reset_last_messages_buffer: bool = True,
     ):
         if tools is None:
             tools = []
 
-        if message is not None:
-            msg = UserMessage(content=message)
-            self.messages.append(msg)
-
-        # Use provided messages if available, otherwise use internal messages
-        current_messages = messages if messages is not None else self.messages.copy()
-
-        # Override system prompt if provided
-        if override_system_prompt is not None:
-            current_messages = [msg for msg in current_messages if not isinstance(msg, SystemMessage)]
-            current_messages.insert(0, SystemMessage(content=override_system_prompt))
+        if reset_last_messages_buffer:
+            self.last_messages_buffer = []
+        current_messages = messages
 
         mistral_tools = []
         mistral_tool_mapping = {}
@@ -118,37 +106,31 @@ class MistralAgent:
                     )
                 )
                 tool_messages.append(
-                    ToolMessage(content=str(output), tool_call_id=tool_call_id)
+                    ToolMessage(content=str(output), tool_call_id=tool_call_id).model_dump()
                 )
-            current_messages.append(AssistantMessage(content=None, tool_calls=tool_calls))
+            current_messages.append(AssistantMessage(content=None, tool_calls=tool_calls).model_dump())
             current_messages.extend(tool_messages)
-            return self.get_response(sampling_settings=sampling_settings, tools=tools, messages=current_messages)
+            self.last_messages_buffer.append(AssistantMessage(content=None, tool_calls=tool_calls).model_dump())
+            self.last_messages_buffer.extend(tool_messages)
+            return self.get_response(sampling_settings=sampling_settings, tools=tools, messages=current_messages, reset_last_messages_buffer=False)
         else:
-            current_messages.append(AssistantMessage(content=result.strip()))
+            self.last_messages_buffer.append(AssistantMessage(content=result.strip()).model_dump())
             return result.strip()
 
     def get_streaming_response(
             self,
-            message=None,
+            messages: list[dict[str, Any]],
             tools: list[FunctionTool] = None,
             sampling_settings=None,
-            messages: list = None,
-            override_system_prompt: str = None,
+            reset_last_messages_buffer: bool = True,
     ):
         if tools is None:
             tools = []
 
-        if message is not None:
-            msg = UserMessage(content=message)
-            self.messages.append(msg)
+        if reset_last_messages_buffer:
+            self.last_messages_buffer = []
 
-        current_messages = messages if messages is not None else self.messages.copy()
-
-        if override_system_prompt is not None:
-            current_messages = [msg for msg in current_messages if not isinstance(msg, SystemMessage)]
-            current_messages.insert(0, SystemMessage(content=override_system_prompt))
-        elif self.system_prompt is not None and not any(isinstance(msg, SystemMessage) for msg in current_messages):
-            current_messages.insert(0, SystemMessage(content=self.system_prompt))
+        current_messages = messages
 
         mistral_tools = []
         mistral_tool_mapping = {}
@@ -179,8 +161,6 @@ class MistralAgent:
         ):
             ch = chunk["choices"][0]["text"]
             result += ch
-            if self.debug_output:
-                print(ch, end="", flush=True)
             yield ch
 
         if result.strip().startswith("[TOOL_CALLS]") or (result.strip().startswith("[{") and result.strip().endswith(
@@ -212,12 +192,14 @@ class MistralAgent:
                     )
                 )
                 tool_messages.append(
-                    ToolMessage(content=str(output), tool_call_id=tool_call_id)
+                    ToolMessage(content=str(output), tool_call_id=tool_call_id).model_dump()
                 )
-            current_messages.append(AssistantMessage(content=None, tool_calls=tool_calls))
+            self.last_messages_buffer.append(AssistantMessage(content=None, tool_calls=tool_calls).model_dump())
+            self.last_messages_buffer.extend(tool_messages)
+            current_messages.append(AssistantMessage(content=None, tool_calls=tool_calls).model_dump())
             current_messages.extend(tool_messages)
             yield "\n"
             yield from self.get_streaming_response(sampling_settings=sampling_settings, tools=tools,
-                                                   messages=current_messages)
+                                                   messages=current_messages, reset_last_messages_buffer=False)
         else:
-            current_messages.append(AssistantMessage(content=result.strip()))
+            self.last_messages_buffer.append(AssistantMessage(content=result.strip()).model_dump())
