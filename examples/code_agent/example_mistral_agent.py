@@ -1,4 +1,5 @@
 from ToolAgents.agents import MistralAgent
+from ToolAgents.agents.mistral_agent import generate_id
 from ToolAgents.provider import LlamaCppSamplingSettings, LlamaCppServerProvider
 from ToolAgents.provider import VLLMServerSamplingSettings, \
     VLLMServerProvider
@@ -19,7 +20,7 @@ settings.stop = ["</s>", "<|eom_id|>", "<|eot_id|>", "assistant", "<|start_heade
 
 chat_history = ChatHistory()
 chat_history.add_system_message(
-    "You are advanced AI assistant. You have access to a Python code interpreter, with it you can execute Python code to accomplish your tasks. To use the Python code interpreter write the code you want to execute in a markdown 'python_interpreter' code block, like in the following example:\n\n```python_interpreter\nprint('Hello, World!')\n```")
+    "<system_instructions>\nYou are advanced AI assistant. You have access to a Python code interpreter, with it you can execute Python code to accomplish your tasks. To use the Python code interpreter write the code you want to execute in a markdown 'python_interpreter' code block, like in the following example:\n\n```python_interpreter\nprint('Hello, World!')\n```</system_instructions>")
 
 python_code_executor = PythonCodeExecutor()
 
@@ -36,9 +37,9 @@ def run_code_agent(user):
         full_response += tok
     print()
     while True:
-        chat_history.add_assistant_message(full_response)
+        chat_history.add_assistant_message(message=full_response)
         if "```python_interpreter" in full_response:
-            chat_history.add_tool_message(python_code_executor.run(full_response), tool_call_id="cxxxxxxxx")
+            chat_history.add_user_message("Results of last Code execution:\n" + python_code_executor.run(full_response))
             result_gen = agent.get_streaming_response(
                 messages=chat_history.to_list(),
                 sampling_settings=settings, tools=None)

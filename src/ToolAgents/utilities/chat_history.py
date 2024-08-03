@@ -76,8 +76,8 @@ class ChatHistory:
     def add_user_message(self, message: str):
         self.messages.append(Message(role='user', content=message))
 
-    def add_assistant_message(self, message: str):
-        self.messages.append(Message(role='assistant', content=message))
+    def add_assistant_message(self, message: str, **kwargs):
+        self.messages.append(Message(role='assistant', content=message, **kwargs))
 
     def add_system_message(self, message: str):
         self.messages.append(Message(role='system', content=message))

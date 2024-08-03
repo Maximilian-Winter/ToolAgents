@@ -189,7 +189,7 @@ class MistralAgent:
                             arguments=json.dumps(call_parameters),
                         ),
                         id=tool_call_id,
-                    )
+                    ).model_dump()
                 )
                 tool_messages.append(
                     ToolMessage(content=str(output), tool_call_id=tool_call_id).model_dump()
