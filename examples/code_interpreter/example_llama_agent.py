@@ -15,7 +15,7 @@ settings.top_p = 1.0
 settings.top_k = 0
 settings.min_p = 0.0
 settings.max_tokens = 4096
-
+settings.stop = ["</s>", "<|eom_id|>", "<|eot_id|>", "assistant", "<|start_header_id|>assistant<|end_header_id|>"]
 code_interpreter = CodeInterpreter(venv_path="./.venv")
 
 tools = code_interpreter.get_tools()
@@ -40,7 +40,7 @@ chat_history.add_list_of_dicts(agent.last_messages_buffer)
 chat_history.add_user_message(prompt2)
 result = agent.get_streaming_response(
     messages=chat_history.to_list(),
-    sampling_settings=settings, tools=tools, add_tool_instructions_to_first_message=True)
+    sampling_settings=settings, tools=tools)
 for tok in result:
     print(tok, end="", flush=True)
 print()
@@ -49,7 +49,7 @@ chat_history.add_list_of_dicts(agent.last_messages_buffer)
 chat_history.add_user_message(prompt3)
 result = agent.get_streaming_response(
     messages=chat_history.to_list(),
-    sampling_settings=settings, tools=tools, add_tool_instructions_to_first_message=True)
+    sampling_settings=settings, tools=tools)
 for tok in result:
     print(tok, end="", flush=True)
 print()
