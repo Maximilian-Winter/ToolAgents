@@ -7,3 +7,5 @@
 /src/ToolAgents.egg-info/
 /dist
 
+/examples/code_interpreter/.venv
+/examples/code_interpreter/__pycache__

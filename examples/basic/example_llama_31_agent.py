@@ -4,7 +4,7 @@ from ToolAgents.provider import VLLMServerSamplingSettings, \
     VLLMServerProvider
 from ToolAgents.utilities import ChatHistory
 
-from test_tools import calculator_function_tool, \
+from example_tools import calculator_function_tool, \
     current_datetime_function_tool, get_weather_function_tool
 
 provider = LlamaCppServerProvider("http://127.0.0.1:8080/")

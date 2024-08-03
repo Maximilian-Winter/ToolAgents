@@ -1,0 +1,54 @@
+[
+  {
+    "role": "system",
+    "content": "You are a helpful assistant."
+  },
+  {
+    "role": "user",
+    "content": "Perform all the following tasks: Get the current weather in celsius in London, New York and at the North Pole. Solve the following calculations: 42 * 42, 74 + 26, 7 * 26, 4 + 6  and 96/8. Retrieve the current date and time in the format: dd.mm.yyy hh:mm."
+  },
+  {
+    "role": "assistant",
+    "content": "\n\n[{\"function\": \"get_current_weather\", \"arguments\": {\"location\": \"London, UK\", \"unit\": \"celsius\"}}, {\"function\": \"get_current_weather\", \"arguments\": {\"location\": \"New York, USA\", \"unit\": \"celsius\"}}, {\"function\": \"get_current_weather\", \"arguments\": {\"location\": \"North Pole\", \"unit\": \"celsius\"}}, {\"function\": \"calculator\", \"arguments\": {\"number_one\": 42, \"operation\": \"multiply\", \"number_two\": 42}}, {\"function\": \"calculator\", \"arguments\": {\"number_one\": 74, \"operation\": \"add\", \"number_two\": 26}}, {\"function\": \"calculator\", \"arguments\": {\"number_one\": 7, \"operation\": \"multiply\", \"number_two\": 26}}, {\"function\": \"calculator\", \"arguments\": {\"number_one\": 4, \"operation\": \"add\", \"number_two\": 6}}, {\"function\": \"calculator\", \"arguments\": {\"number_one\": 96, \"operation\": \"divide\", \"number_two\": 8}}, {\"function\": \"get_current_datetime\", \"arguments\": {\"output_format\": \"%d.%m.%Y %H:%M\"}}]"
+  },
+  {
+    "role": "tool",
+    "content": "Function: \"get_current_weather\"\n\nArguments: \"{\"location\": \"London, UK\", \"unit\": \"celsius\"}\"\n\nOutput:\n\nWeather in London, UK: 22\u00b0 celsius"
+  },
+  {
+    "role": "tool",
+    "content": "Function: \"get_current_weather\"\n\nArguments: \"{\"location\": \"New York, USA\", \"unit\": \"celsius\"}\"\n\nOutput:\n\nWeather in New York, USA: 24\u00b0 celsius"
+  },
+  {
+    "role": "tool",
+    "content": "Function: \"get_current_weather\"\n\nArguments: \"{\"location\": \"North Pole\", \"unit\": \"celsius\"}\"\n\nOutput:\n\nWeather in North Pole: -42\u00b0 celsius"
+  },
+  {
+    "role": "tool",
+    "content": "Function: \"calculator\"\n\nArguments: \"{\"number_one\": 42, \"operation\": \"multiply\", \"number_two\": 42}\"\n\nOutput:\n\n1764"
+  },
+  {
+    "role": "tool",
+    "content": "Function: \"calculator\"\n\nArguments: \"{\"number_one\": 74, \"operation\": \"add\", \"number_two\": 26}\"\n\nOutput:\n\n100"
+  },
+  {
+    "role": "tool",
+    "content": "Function: \"calculator\"\n\nArguments: \"{\"number_one\": 7, \"operation\": \"multiply\", \"number_two\": 26}\"\n\nOutput:\n\n182"
+  },
+  {
+    "role": "tool",
+    "content": "Function: \"calculator\"\n\nArguments: \"{\"number_one\": 4, \"operation\": \"add\", \"number_two\": 6}\"\n\nOutput:\n\n10"
+  },
+  {
+    "role": "tool",
+    "content": "Function: \"calculator\"\n\nArguments: \"{\"number_one\": 96, \"operation\": \"divide\", \"number_two\": 8}\"\n\nOutput:\n\n12.0"
+  },
+  {
+    "role": "tool",
+    "content": "Function: \"get_current_datetime\"\n\nArguments: \"{\"output_format\": \"%d.%m.%Y %H:%M\"}\"\n\nOutput:\n\n03.08.2024 22:02"
+  },
+  {
+    "role": "assistant",
+    "content": "The weather in London is 22\u00b0 celsius, in New York it's 24\u00b0 celsius, and at the North Pole it's -42\u00b0 celsius.\n\nThe calculations are as follows:\n- 42 * 42 = 1764\n- 74 + 26 = 100\n- 7 * 26 = 182\n- 4 + 6 = 10\n- 96/8 = 12.0\n\nThe current date and time is: 03.08.2024 22:02"
+  }
+]

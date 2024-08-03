@@ -21,6 +21,7 @@ class OllamaAgent:
             self,
             messages: List[Dict[str, Any]],
             tools: Optional[List[FunctionTool]] = None,
+            options: Optional[Options] = None,
             reset_last_messages_buffer: bool = True,
     ) -> str:
         if tools is None:
@@ -40,6 +41,7 @@ class OllamaAgent:
         response = self.client.chat(
             model=self.model,
             messages=current_messages,
+            options=options,
             tools=ollama_tools
         )
 
@@ -79,6 +81,7 @@ class OllamaAgent:
             self,
             messages: List[Dict[str, Any]],
             tools: Optional[List[FunctionTool]] = None,
+            options: Optional[Options] = None,
             reset_last_messages_buffer: bool = True,
     ) -> Generator[str, None, None]:
         if tools is None:
@@ -99,6 +102,7 @@ class OllamaAgent:
                 model=self.model,
                 messages=current_messages,
                 tools=ollama_tools,
+                options=options,
                 stream=True,
         ):
             ch = chunk['message']['content']

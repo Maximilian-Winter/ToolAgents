@@ -2,6 +2,7 @@ import datetime
 
 import json
 import os
+import pathlib
 from typing import List, Dict, Any
 
 from ToolAgents.utilities.message_template import MessageTemplate
@@ -65,7 +66,8 @@ class Message:
 
 
 class ChatHistory:
-    def __init__(self):
+    def __init__(self, history_folder: str = None) -> None:
+        self.history_folder = history_folder
         self.messages: List[Message] = []
 
     def add_message(self, role: str, message: str):
@@ -84,18 +86,32 @@ class ChatHistory:
         return [message.to_dict() for message in self.messages]
 
     def save_history(self, filename: str) -> None:
-        if not os.path.exists(os.path.dirname(filename)):
-            os.makedirs(os.path.dirname(filename))
-
-        with open(filename, "w") as f:
-            json.dump(self.to_list(), f, indent=2)
+        if self.history_folder is None:
+            with open(filename, "w") as f:
+                json.dump(self.to_list(), f, indent=2)
+        else:
+            if not os.path.exists(self.history_folder):
+                os.makedirs(self.history_folder)
+                full_filename = os.path.join(self.history_folder, filename)
+                with open(full_filename, "w") as f:
+                    json.dump(self.to_list(), f, indent=2)
 
     def load_history(self, filename: str) -> None:
-        with open(filename, "r") as f:
-            loaded_messages = json.load(f)
+        if self.history_folder is not None:
+            full_filename = os.path.join(self.history_folder, filename)
+        else:
+            full_filename = filename
 
-        for msg_data in loaded_messages:
-            self.add_message(Message.from_dict(msg_data))
+        try:
+            with open(full_filename, "r") as f:
+                loaded_messages = json.load(f)
+
+            for msg_data in loaded_messages:
+                self.messages.append(Message.from_dict(msg_data))
+        except FileNotFoundError:
+            print(f"History file not found: {full_filename}")
+        except json.JSONDecodeError:
+            print(f"Error decoding JSON from file: {full_filename}")
 
     def delete_last_messages(self, k: int) -> int:
         if k >= len(self.messages):
@@ -109,4 +125,4 @@ class ChatHistory:
     def add_list_of_dicts(self, message_list: List[Dict[str, Any]]) -> None:
         msgs = message_list.copy()
         for msg_data in msgs:
-            self.add_message(Message.from_dict(msg_data))
+            self.messages.append(Message.from_dict(msg_data))

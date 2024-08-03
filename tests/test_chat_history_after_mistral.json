@@ -1,0 +1,149 @@
+[
+  {
+    "role": "system",
+    "content": "You are a helpful assistant."
+  },
+  {
+    "role": "user",
+    "content": "Perform all the following tasks: Get the current weather in celsius in London, New York and at the North Pole. Solve the following calculations: 42 * 42, 74 + 26, 7 * 26, 4 + 6  and 96/8. Retrieve the current date and time in the format: dd.mm.yyy hh:mm."
+  },
+  {
+    "role": "assistant",
+    "content": null,
+    "tool_calls": [
+      {
+        "id": "3Rdw1yNZi",
+        "type": "function",
+        "function": {
+          "name": "get_current_weather",
+          "arguments": "{\"location\": \"London\", \"unit\": \"celsius\"}"
+        }
+      },
+      {
+        "id": "KZQ8yiYt0",
+        "type": "function",
+        "function": {
+          "name": "get_current_weather",
+          "arguments": "{\"location\": \"New York\", \"unit\": \"celsius\"}"
+        }
+      },
+      {
+        "id": "kPgrJEKGC",
+        "type": "function",
+        "function": {
+          "name": "get_current_weather",
+          "arguments": "{\"location\": \"North Pole\", \"unit\": \"celsius\"}"
+        }
+      },
+      {
+        "id": "97LegCAuO",
+        "type": "function",
+        "function": {
+          "name": "calculator",
+          "arguments": "{\"number_one\": 42, \"operation\": \"multiply\", \"number_two\": 42}"
+        }
+      },
+      {
+        "id": "83IrCAv8q",
+        "type": "function",
+        "function": {
+          "name": "calculator",
+          "arguments": "{\"number_one\": 74, \"operation\": \"add\", \"number_two\": 26}"
+        }
+      },
+      {
+        "id": "4WixWH8NY",
+        "type": "function",
+        "function": {
+          "name": "calculator",
+          "arguments": "{\"number_one\": 7, \"operation\": \"multiply\", \"number_two\": 26}"
+        }
+      },
+      {
+        "id": "OEP4eed2q",
+        "type": "function",
+        "function": {
+          "name": "calculator",
+          "arguments": "{\"number_one\": 4, \"operation\": \"add\", \"number_two\": 6}"
+        }
+      },
+      {
+        "id": "Ed8HC79p3",
+        "type": "function",
+        "function": {
+          "name": "calculator",
+          "arguments": "{\"number_one\": 96, \"operation\": \"divide\", \"number_two\": 8}"
+        }
+      },
+      {
+        "id": "yjAZhUhmU",
+        "type": "function",
+        "function": {
+          "name": "get_current_datetime",
+          "arguments": "{\"output_format\": \"%d.%m.%Y %H:%M\"}"
+        }
+      }
+    ],
+    "prefix": false
+  },
+  {
+    "role": "tool",
+    "content": "Weather in London: 22\u00b0 celsius",
+    "tool_call_id": "3Rdw1yNZi",
+    "name": null
+  },
+  {
+    "role": "tool",
+    "content": "Weather in New York: 24\u00b0 celsius",
+    "tool_call_id": "KZQ8yiYt0",
+    "name": null
+  },
+  {
+    "role": "tool",
+    "content": "Weather in North Pole: -42\u00b0 celsius",
+    "tool_call_id": "kPgrJEKGC",
+    "name": null
+  },
+  {
+    "role": "tool",
+    "content": "1764",
+    "tool_call_id": "97LegCAuO",
+    "name": null
+  },
+  {
+    "role": "tool",
+    "content": "100",
+    "tool_call_id": "83IrCAv8q",
+    "name": null
+  },
+  {
+    "role": "tool",
+    "content": "182",
+    "tool_call_id": "4WixWH8NY",
+    "name": null
+  },
+  {
+    "role": "tool",
+    "content": "10",
+    "tool_call_id": "OEP4eed2q",
+    "name": null
+  },
+  {
+    "role": "tool",
+    "content": "12.0",
+    "tool_call_id": "Ed8HC79p3",
+    "name": null
+  },
+  {
+    "role": "tool",
+    "content": "03.08.2024 22:00",
+    "tool_call_id": "yjAZhUhmU",
+    "name": null
+  },
+  {
+    "role": "assistant",
+    "content": "Here are the results:\n\n- Weather in London: 22\u00b0 celsius\n- Weather in New York: 24\u00b0 celsius\n- Weather in North Pole: -42\u00b0 celsius\n- 42 * 42 = 1764\n- 74 + 26 = 100\n- 7 * 26 = 182\n- 4 + 6 = 10\n- 96 / 8 = 12.0\n- Current date and time: 03.08.2024 22:00",
+    "tool_calls": null,
+    "prefix": false
+  }
+]
