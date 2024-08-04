@@ -242,7 +242,7 @@ class AnthropicChatAPI(ChatAPI):
             temperature=self.settings.temperature if settings is None else settings.temperature,
             top_p=self.settings.top_p if settings is None else settings.top_p,
             max_tokens=self.settings.max_tokens if settings is None else settings.max_tokens,
-            tools=anthropic_tools
+            tools=anthropic_tools if anthropic_tools else []
         )
 
         current_tool_call = None
