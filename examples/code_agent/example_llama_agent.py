@@ -4,7 +4,7 @@ from ToolAgents.provider import VLLMServerSamplingSettings, \
     VLLMServerProvider
 from ToolAgents.utilities import ChatHistory
 from example_tools import get_weather_function_tool, calculator_function_tool, current_datetime_function_tool
-from code_executer import PythonCodeExecutor, system_message_code_agent
+from code_executer import PythonCodeExecutor, system_message_code_agent, run_code_agent
 
 provider = LlamaCppServerProvider("http://127.0.0.1:8080/")
 
@@ -40,54 +40,20 @@ example_function(example_parameter=10.0)
 
 python_code_executor = PythonCodeExecutor([get_weather_function_tool, calculator_function_tool, current_datetime_function_tool])
 
+prompt_function_calling = "Get the current weather in New York in Celsius. Get the current weather in London in Celsius. Get the current weather on the North Pole in Celsius. Calculate 5215 * 6987. Get the current date and time in the format: dd-mm-yyyy hh:mm"
 
-def run_code_agent(user):
-    chat_history.add_user_message(user)
-    result_gen = agent.get_streaming_response(
-        messages=chat_history.to_list(),
-        sampling_settings=settings, tools=None)
-
-    full_response = ""
-    for tok in result_gen:
-        print(tok, end="", flush=True)
-        full_response += tok
-    print()
-    while True:
-        chat_history.add_assistant_message(full_response)
-        if "```python_interpreter" in full_response:
-            chat_history.add_tool_message(python_code_executor.run(full_response))
-            result_gen = agent.get_streaming_response(
-                messages=chat_history.to_list(),
-                sampling_settings=settings, tools=None)
-            full_response = ""
-            for tok in result_gen:
-                print(tok, end="", flush=True)
-                full_response += tok
-            print()
-        else:
-            break
-
-
-prom = "Get the current weather in New York in Celsius."
-run_code_agent(prom)
-
-prom = "Get the current weather in London in Celsius."
-run_code_agent(prom)
-
-prom = "Get the current weather on the North Pole in Celsius."
-run_code_agent(prom)
-
-prom2 = "Get the current date and time in the format: dd-mm-yyyy hh:mm"
-prom3 = "Calculate 5215 * 6987"
 prompt = r"""Create a graph of x^2 + 5 with your Python Code Interpreter and save it as an image."""
 prompt2 = r"""Create an interesting and engaging random 3d scatter plot with your Python Code Interpreter and save it as an image."""
 prompt3 = r"""Analyze and visualize the dataset "./input.csv" with your Python code interpreter as a interesting and visually appealing scatterplot matrix."""
 
+run_code_agent(agent=agent, settings=settings, chat_history=chat_history, user_input=prompt_function_calling,
+               python_code_executor=python_code_executor)
 
-run_code_agent(prom2)
-run_code_agent(prom3)
-run_code_agent(prompt)
-run_code_agent(prompt2)
-run_code_agent(prompt3)
+run_code_agent(agent=agent, settings=settings, chat_history=chat_history, user_input=prompt,
+               python_code_executor=python_code_executor)
+run_code_agent(agent=agent, settings=settings, chat_history=chat_history, user_input=prompt2,
+               python_code_executor=python_code_executor)
+run_code_agent(agent=agent, settings=settings, chat_history=chat_history, user_input=prompt3,
+               python_code_executor=python_code_executor)
 
 chat_history.save_history("./test_chat_history_after_llama.json")
