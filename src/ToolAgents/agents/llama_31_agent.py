@@ -139,7 +139,7 @@ class LlamaAgent:
             return self.get_response(sampling_settings=sampling_settings, tools=tools, messages=current_messages,
                                      reset_last_messages_buffer=False, add_tool_instructions_to_first_message=False)
         else:
-            self.last_messages_buffer.append(result)
+            self.last_messages_buffer.append(Message(role="assistant", content=result).to_dict())
             return result.strip()
 
     def get_streaming_response(
