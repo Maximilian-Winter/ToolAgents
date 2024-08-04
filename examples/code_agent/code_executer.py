@@ -1,13 +1,36 @@
+import ast
+import io
 import re
 import sys
-import io
-import contextlib
+from typing import List
+
+from ToolAgents import FunctionTool
 
 
 class PythonCodeExecutor:
-    def __init__(self):
+    def __init__(self, tools: List[FunctionTool] = None):
         self.code_pattern = re.compile(r'```python_interpreter\n(.*?)```', re.DOTALL)
         self.global_context = {}
+        self.predefined_functions = {}
+        if tools:
+            for tool in tools:
+                self.predefined_functions[tool.model.__name__] = tool
+
+        self._setup_predefined_functions()
+
+    def _setup_predefined_functions(self):
+        for func_name, func_tool in self.predefined_functions.items():
+            self.global_context[func_name] = self._create_wrapped_function(func_tool)
+
+    def _create_wrapped_function(self, func_tool):
+        def wrapped_function(*args, **kwargs):
+            if isinstance(func_tool.model, type):
+                instance = func_tool.model(*args, **kwargs)
+                return instance.run(**func_tool.additional_parameters)
+            else:
+                return func_tool.model(*args, **kwargs, **func_tool.additional_parameters)
+
+        return wrapped_function
 
     def extract_code(self, response):
         match = self.code_pattern.search(response)
@@ -16,22 +39,34 @@ class PythonCodeExecutor:
         return None
 
     def execute_code(self, code):
-        # Redirect stdout and stderr
         old_stdout = sys.stdout
         old_stderr = sys.stderr
         redirected_output = sys.stdout = io.StringIO()
         redirected_error = sys.stderr = io.StringIO()
-
+        global_context = self.global_context.copy()
         try:
-            # Execute the code within the global context
-            exec(code, self.global_context)
+            # Parse the code into an AST
+            tree = ast.parse(code)
+
+            # Execute all statements except the last one
+            for stmt in tree.body[:-1]:
+                exec(ast.unparse(stmt), global_context)
+
+            # For the last statement, we'll evaluate it and print the result if it's an expression
+            last_stmt = tree.body[-1]
+            if isinstance(last_stmt, ast.Expr):
+                result = eval(ast.unparse(last_stmt), global_context)
+                if result is not None:
+                    print(repr(result))
+            else:
+                exec(ast.unparse(last_stmt), global_context)
+
             output = redirected_output.getvalue()
             error = redirected_error.getvalue()
             return output, error
         except Exception as e:
             return "", str(e)
         finally:
-            # Restore stdout and stderr
             sys.stdout = old_stdout
             sys.stderr = old_stderr
 
@@ -63,112 +98,4 @@ To use the Python code interpreter, write the code you want to execute in a mark
 
 ```python_interpreter
 print('Hello, World!')
-```
-## Function Definitions and Calling
-
-You can define functions and call them within the same code block or in subsequent blocks. Here's an example:
-
-```python_interpreter
-def greet(name):
-    return f"Hello, {name}! Welcome to the AI assistant."
-
-# Call the function
-result = greet("User")
-print(result)
-```
-
-## Accessing External Libraries
-
-You have access to various Python libraries that can be imported and used. Here are some examples:
-
-1. Using `os` for system operations:
-```python_interpreter
-import os
-
-# List files in the current directory
-files = os.listdir('.')
-print(f"Files in the current directory: {files}")
-```
-
-2. Using `requests` for HTTP requests:
-```python_interpreter
-import requests
-
-response = requests.get('https://api.example.com/data')
-if response.status_code == 200:
-    print(f"Data received: {response.json()}")
-else:
-    print(f"Error: {response.status_code}")
-```
-
-3. Using `pandas` for data analysis:
-```python_interpreter
-import pandas as pd
-
-# Create a sample dataframe
-data = {'Name': ['Alice', 'Bob', 'Charlie'],
-        'Age': [25, 30, 35],
-        'City': ['New York', 'San Francisco', 'London']}
-df = pd.DataFrame(data)
-
-# Display basic statistics
-print(df.describe())
-```
-
-## Error Handling
-
-Always include proper error handling in your code to manage potential issues:
-
-```python_interpreter
-try:
-    # Your code here
-    result = 10 / 0  # This will raise a ZeroDivisionError
-except Exception as e:
-    print(f"An error occurred: {str(e)}")
-```
-
-## Persistent Variables
-
-Variables defined in one code block can be accessed in subsequent blocks within the same conversation. Use this feature to build on previous computations:
-
-```python_interpreter
-# First code block
-x = 5
-y = 10
-
-# Second code block
-z = x + y
-print(f"The sum of x and y is: {z}")
 ```"""
-# Example usage
-if __name__ == "__main__":
-    executor = PythonCodeExecutor()
-
-    # First execution
-    response1 = '''
-```python_interpreter
-x = 10
-y = 20
-print(f"x + y = {x + y}")
-```
-    '''
-    print("First execution:")
-    print(executor.run(response1))
-
-    # Second execution, using the context from the first
-    response2 = '''
-```python_interpreter
-z = x * y
-print(f"x * y = {z}")
-```
-    '''
-    print("\nSecond execution:")
-    print(executor.run(response2))
-
-    # Check the value of a specific variable
-    print("\nValue of z:")
-    print(executor.get_variable('z'))
-
-    # Print the entire context
-    print("\nEntire context:")
-    print(executor.get_context())

@@ -8,7 +8,7 @@ from typing import Type, List, Callable, Any, Union, Tuple, Dict
 from docstring_parser import DocstringStyle, parse
 from pydantic import BaseModel, create_model
 
-from ToolAgents.utilities.documentation_generation import generate_text_documentation
+from ToolAgents.utilities.documentation_generation import generate_text_documentation, generate_function_definition
 
 
 def format_model_and_field_name(model_name: str) -> str:
@@ -408,8 +408,11 @@ class FunctionTool:
     def set_name(self, new_name: str):
         self.model.__name__ = new_name
 
-    def get_documentation(self):
-        return generate_text_documentation([self.model], "Function", "Parameters")
+    def get_python_documentation(self):
+        return generate_function_definition(self.model, self.model.__name__, self.model.__doc__)
+
+    def get_text_documentation(self):
+        return generate_text_documentation([self.model], self.model.__name__, self.model.__doc__)
 
 
     @staticmethod

@@ -7,12 +7,50 @@ from typing import get_args, get_origin, Union, Any
 from pydantic import BaseModel
 
 
+def generate_function_definition(
+        model: type[BaseModel],
+        function_name: str,
+        description: str = "",
+) -> str:
+    """
+    Generate a Python-like function definition for a Pydantic model.
+
+    Args:
+        model (type[BaseModel]): The Pydantic model class.
+        function_name (str): The name of the function.
+        description (str, optional): A description of the function. Defaults to "".
+
+    Returns:
+        str: A string representation of the function definition.
+    """
+    parameters = []
+    for name, field_type in model.__annotations__.items():
+        field_info = model.model_fields.get(name)
+        field_description = field_info.description if field_info and field_info.description else ""
+        parameters.append(f"{name}: {field_type.__name__}")
+
+    function_def = f"def {function_name}({', '.join(parameters)}):\n"
+    function_def += f'    """\n'
+    function_def += f'    {description}\n\n' if description else ''
+    function_def += f'    Args:\n'
+
+    for name, field_type in model.__annotations__.items():
+        field_info = model.model_fields.get(name)
+        field_description = field_info.description if field_info and field_info.description else "No description provided."
+        function_def += f'        {name} ({field_type.__name__}): {field_description}\n'
+
+    function_def += f'    """\n'
+    function_def += f'    # Implementation omitted for brevity\n'
+    function_def += f'    pass\n'
+    return function_def
+
+
 def generate_markdown_documentation(
-    pydantic_models: list[type[BaseModel]],
-    model_prefix="Model",
-    fields_prefix="Fields",
-    documentation_with_field_description=True,
-    ordered_json_mode=False,
+        pydantic_models: list[type[BaseModel]],
+        model_prefix="Model",
+        fields_prefix="Fields",
+        documentation_with_field_description=True,
+        ordered_json_mode=False,
 ) -> str:
     """
     Generate markdown documentation for a list of Pydantic models.
@@ -62,7 +100,7 @@ def generate_markdown_documentation(
                     element_types = get_args(field_type)
                     for element_type in element_types:
                         if isclass(element_type) and issubclass(
-                            element_type, BaseModel
+                                element_type, BaseModel
                         ):
                             pyd_models.append((element_type, False))
                 documentation += generate_field_markdown(
@@ -83,9 +121,9 @@ def generate_markdown_documentation(
             documentation += "\n"
 
         if (
-            hasattr(model, "Config")
-            and hasattr(model.Config, "json_schema_extra")
-            and "example" in model.Config.json_schema_extra
+                hasattr(model, "Config")
+                and hasattr(model.Config, "json_schema_extra")
+                and "example" in model.Config.json_schema_extra
         ):
             documentation += f"  Expected Example Output for {model.__name__}:\n"
             json_example = json.dumps(model.Config.json_schema_extra["example"])
@@ -95,11 +133,11 @@ def generate_markdown_documentation(
 
 
 def generate_field_markdown(
-    field_name: str,
-    field_type: type[Any],
-    model: type[BaseModel],
-    depth=1,
-    documentation_with_field_description=True,
+        field_name: str,
+        field_type: type[Any],
+        model: type[BaseModel],
+        depth=1,
+        documentation_with_field_description=True,
 ) -> str:
     """
     Generate markdown documentation for a Pydantic model field.
@@ -170,12 +208,11 @@ def generate_field_markdown(
     elif field_description != "":
         field_text += field_description + "\n"
 
-
     # Check for and include field-specific examples if available
     if (
-        hasattr(model, "Config")
-        and hasattr(model.Config, "json_schema_extra")
-        and "example" in model.Config.json_schema_extra
+            hasattr(model, "Config")
+            and hasattr(model.Config, "json_schema_extra")
+            and "example" in model.Config.json_schema_extra
     ):
         field_example = model.Config.json_schema_extra["example"].get(field_name)
         if field_example is not None:
@@ -215,11 +252,11 @@ def format_json_example(example: dict[str, Any], depth: int) -> str:
 
 
 def generate_text_documentation(
-    pydantic_models: list[BaseModel],
-    model_prefix="Output Model",
-    fields_prefix="Fields",
-    documentation_with_field_description=True,
-    ordered_json_mode=False,
+        pydantic_models: list[BaseModel],
+        model_prefix="Output Model",
+        fields_prefix="Fields",
+        documentation_with_field_description=True,
+        ordered_json_mode=False,
 ) -> str:
     """
     Generate markdown documentation for a list of Pydantic models.
@@ -267,31 +304,31 @@ def generate_text_documentation(
                     if isclass(element_type) and issubclass(element_type, BaseModel):
                         pyd_models.append((element_type, False))
                     if get_origin(element_type) == Union or isinstance(
-                        element_type, UnionType
+                            element_type, UnionType
                     ):
                         element_types = get_args(element_type)
                         for element_type in element_types:
                             if isclass(element_type) and issubclass(
-                                element_type, BaseModel
+                                    element_type, BaseModel
                             ):
                                 pyd_models.append((element_type, False))
                             if get_origin(element_type) == list:
                                 element_type = get_args(element_type)[0]
                                 if isclass(element_type) and issubclass(
-                                    element_type, BaseModel
+                                        element_type, BaseModel
                                 ):
                                     pyd_models.append((element_type, False))
                 if get_origin(field_type) == Union or isinstance(field_type, UnionType):
                     element_types = get_args(field_type)
                     for element_type in element_types:
                         if isclass(element_type) and issubclass(
-                            element_type, BaseModel
+                                element_type, BaseModel
                         ):
                             pyd_models.append((element_type, False))
                         if get_origin(element_type) == list:
                             element_type = get_args(element_type)[0]
                             if isclass(element_type) and issubclass(
-                                element_type, BaseModel
+                                    element_type, BaseModel
                             ):
                                 pyd_models.append((element_type, False))
                 if isclass(field_type) and issubclass(field_type, BaseModel):
@@ -314,9 +351,9 @@ def generate_text_documentation(
             documentation += "\n"
 
         if (
-            hasattr(model, "Config")
-            and hasattr(model.Config, "json_schema_extra")
-            and "example" in model.Config.json_schema_extra
+                hasattr(model, "Config")
+                and hasattr(model.Config, "json_schema_extra")
+                and "example" in model.Config.json_schema_extra
         ):
             documentation += f"  Expected Example Output for {model.__name__}:\n"
             json_example = json.dumps(model.Config.json_schema_extra["example"])
@@ -326,12 +363,12 @@ def generate_text_documentation(
 
 
 def generate_field_text(
-    field_name: str,
-    field_real_name: str,
-    field_type: type[Any],
-    model: type[BaseModel],
-    depth=1,
-    documentation_with_field_description=True,
+        field_name: str,
+        field_real_name: str,
+        field_type: type[Any],
+        model: type[BaseModel],
+        depth=1,
+        documentation_with_field_description=True,
 ) -> str:
     """
     Generate markdown documentation for a Pydantic model field.
@@ -459,9 +496,9 @@ def generate_field_text(
 
     # Check for and include field-specific examples if available
     if (
-        hasattr(model, "Config")
-        and hasattr(model.Config, "json_schema_extra")
-        and "example" in model.Config.json_schema_extra
+            hasattr(model, "Config")
+            and hasattr(model.Config, "json_schema_extra")
+            and "example" in model.Config.json_schema_extra
     ):
         field_example = model.Config.json_schema_extra["example"].get(field_real_name)
         if field_example is not None:

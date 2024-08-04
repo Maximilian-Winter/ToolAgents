@@ -3,6 +3,7 @@ from ToolAgents.provider import LlamaCppSamplingSettings, LlamaCppServerProvider
 from ToolAgents.provider import VLLMServerSamplingSettings, \
     VLLMServerProvider
 from ToolAgents.utilities import ChatHistory
+from example_tools import get_weather_function_tool, calculator_function_tool, current_datetime_function_tool
 from code_executer import PythonCodeExecutor, system_message_code_agent
 
 provider = LlamaCppServerProvider("http://127.0.0.1:8080/")
@@ -18,9 +19,26 @@ settings.max_tokens = 4096
 settings.stop = ["</s>", "<|eom_id|>", "<|eot_id|>", "assistant", "<|start_header_id|>assistant<|end_header_id|>"]
 
 chat_history = ChatHistory()
-chat_history.add_system_message(system_message_code_agent)
+chat_history.add_system_message(system_message_code_agent+ f"""\n\n## Predefined Functions
 
-python_code_executor = PythonCodeExecutor()
+You have access to the following predefined functions in Python:
+
+```python
+{get_weather_function_tool.get_python_documentation()}
+
+{calculator_function_tool.get_python_documentation()}
+
+{current_datetime_function_tool.get_python_documentation()}
+```
+
+You can call these predefined functions in Python like this:
+
+```python_interpreter
+example_function(example_parameter=10.0)
+```
+""")
+
+python_code_executor = PythonCodeExecutor([get_weather_function_tool, calculator_function_tool, current_datetime_function_tool])
 
 
 def run_code_agent(user):
@@ -50,10 +68,24 @@ def run_code_agent(user):
             break
 
 
+prom = "Get the current weather in New York in Celsius."
+run_code_agent(prom)
+
+prom = "Get the current weather in London in Celsius."
+run_code_agent(prom)
+
+prom = "Get the current weather on the North Pole in Celsius."
+run_code_agent(prom)
+
+prom2 = "Get the current date and time in the format: dd-mm-yyyy hh:mm"
+prom3 = "Calculate 5215 * 6987"
 prompt = r"""Create a graph of x^2 + 5 with your Python Code Interpreter and save it as an image."""
 prompt2 = r"""Create an interesting and engaging random 3d scatter plot with your Python Code Interpreter and save it as an image."""
 prompt3 = r"""Analyze and visualize the dataset "./input.csv" with your Python code interpreter as a interesting and visually appealing scatterplot matrix."""
 
+
+run_code_agent(prom2)
+run_code_agent(prom3)
 run_code_agent(prompt)
 run_code_agent(prompt2)
 run_code_agent(prompt3)
