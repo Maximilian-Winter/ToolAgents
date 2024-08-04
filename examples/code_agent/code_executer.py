@@ -24,11 +24,20 @@ class PythonCodeExecutor:
 
     def _create_wrapped_function(self, func_tool):
         def wrapped_function(*args, **kwargs):
-            if isinstance(func_tool.model, type):
-                instance = func_tool.model(*args, **kwargs)
-                return instance.run(**func_tool.additional_parameters)
-            else:
-                return func_tool.model(*args, **kwargs, **func_tool.additional_parameters)
+            model_class = func_tool.model
+
+            # Convert args to kwargs if any
+            if args:
+                arg_names = []
+                for field_key, field_info in model_class.model_fields.items():
+                    arg_names.append(field_key)
+
+                kwargs.update(zip(arg_names, args))
+
+            # Instantiate the model using only keyword arguments
+            instance = model_class(**kwargs)
+
+            return instance.run(**func_tool.additional_parameters)
 
         return wrapped_function
 
@@ -43,23 +52,21 @@ class PythonCodeExecutor:
         old_stderr = sys.stderr
         redirected_output = sys.stdout = io.StringIO()
         redirected_error = sys.stderr = io.StringIO()
-        global_context = self.global_context.copy()
+        global_context = self.global_context
         try:
             # Parse the code into an AST
             tree = ast.parse(code)
 
-            # Execute all statements except the last one
-            for stmt in tree.body[:-1]:
-                exec(ast.unparse(stmt), global_context)
-
-            # For the last statement, we'll evaluate it and print the result if it's an expression
-            last_stmt = tree.body[-1]
-            if isinstance(last_stmt, ast.Expr):
-                result = eval(ast.unparse(last_stmt), global_context)
-                if result is not None:
-                    print(repr(result))
-            else:
-                exec(ast.unparse(last_stmt), global_context)
+            # Execute all statements
+            for stmt in tree.body:
+                if isinstance(stmt, ast.Expr):
+                    # If it's an expression, evaluate it and print the result if it's not None
+                    result = eval(ast.unparse(stmt), global_context)
+                    if result is not None:
+                        print(repr(result))
+                else:
+                    # For other statements, just execute them
+                    exec(ast.unparse(stmt), global_context)
 
             output = redirected_output.getvalue()
             error = redirected_error.getvalue()

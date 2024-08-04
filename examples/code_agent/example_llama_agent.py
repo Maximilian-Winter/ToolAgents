@@ -19,7 +19,7 @@ settings.max_tokens = 4096
 settings.stop = ["</s>", "<|eom_id|>", "<|eot_id|>", "assistant", "<|start_header_id|>assistant<|end_header_id|>"]
 
 chat_history = ChatHistory()
-chat_history.add_system_message(system_message_code_agent+ f"""\n\n## Predefined Functions
+chat_history.add_system_message(system_message_code_agent + f"""\n\n## Predefined Functions
 
 You have access to the following predefined functions in Python:
 
