@@ -41,6 +41,8 @@ python_code_executor = PythonCodeExecutor(
 
 def run_code_agent(agent: MistralAgent, settings, chat_history: ChatHistory, user_input: str,
                    python_code_executor: PythonCodeExecutor):
+    print("User: " + user_input)
+    print("Response: ", end="")
     chat_history.add_user_message(user_input)
     result_gen = agent.get_streaming_response(
         messages=chat_history.to_list(),
@@ -55,7 +57,11 @@ def run_code_agent(agent: MistralAgent, settings, chat_history: ChatHistory, use
         chat_history.add_assistant_message(message=full_response)
         if "```python_interpreter" in full_response:
             code_ex = python_code_executor.run(full_response)
+            print("Python Execution Output: ")
+            print(code_ex)
             chat_history.add_user_message("Results of last Code execution:\n" + code_ex)
+
+            print("Response: ", end="")
             result_gen = agent.get_streaming_response(
                 messages=chat_history.to_list(),
                 sampling_settings=settings, tools=None)
