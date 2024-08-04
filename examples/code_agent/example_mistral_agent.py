@@ -1,4 +1,4 @@
-from ToolAgents.agents import MistralAgent, ChatAPIAgent
+from ToolAgents.agents import MistralAgent
 from ToolAgents.provider import LlamaCppSamplingSettings, LlamaCppServerProvider
 from ToolAgents.utilities import ChatHistory
 from example_tools import get_weather_function_tool, calculator_function_tool, current_datetime_function_tool
