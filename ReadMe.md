@@ -119,7 +119,8 @@ chat_history.add_user_message("Perform the following tasks: Get the current weat
 result = agent.get_streaming_response(
     messages=chat_history.to_list(),
     sampling_settings=settings,
-    tools=tools
+    tools=tools,
+    add_tool_instructions_to_first_message=True
 )
 
 for token in result:
