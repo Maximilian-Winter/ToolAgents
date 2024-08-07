@@ -2,6 +2,7 @@ import json
 import re
 from typing import List, Dict, Any
 
+from ToolAgents import ToolRegistry
 from ToolAgents.interfaces import LLMToolCallHandler
 from ToolAgents.interfaces.llm_tokenizer import HuggingFaceTokenizer
 
@@ -83,3 +84,6 @@ class NousHermesProToolCallHandler(LLMToolCallHandler):
 class NousHermesProTokenizer(HuggingFaceTokenizer):
     def __init__(self):
         super().__init__("NousResearch/Hermes-2-Pro-Llama-3-8B")
+
+    def apply_template(self, messages: List[Dict[str, str]], tools: ToolRegistry) -> str:
+        return self.tokenizer.apply_chat_template(conversation=messages, tools=tools.get_nous_hermes_pro_tools() if len(tools.tools) > 0 else None, chat_template="tool_use" if len(tools.tools) > 0 else "default", tokenize=False, add_generation_prompt=True).replace("<|begin_of_text|>", "")

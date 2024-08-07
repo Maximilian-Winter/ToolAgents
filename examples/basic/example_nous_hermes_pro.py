@@ -1,4 +1,4 @@
-from ToolAgents.agents import MistralAgent
+from ToolAgents.agents import NousHermesProAgent
 from ToolAgents.provider import LlamaCppServerProvider
 from ToolAgents.utilities import ChatHistory
 
@@ -7,7 +7,7 @@ from example_tools import calculator_function_tool, \
 
 provider = LlamaCppServerProvider("http://127.0.0.1:8080/")
 
-agent = MistralAgent(provider=provider, debug_output=False)
+agent = NousHermesProAgent(provider=provider, debug_output=False)
 
 settings = provider.get_default_settings()
 settings.neutralize_all_samplers()

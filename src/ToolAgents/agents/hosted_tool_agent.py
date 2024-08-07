@@ -3,15 +3,15 @@ from typing import Any
 from ToolAgents import FunctionTool
 from ToolAgents.function_tool import ToolRegistry
 
-from ToolAgents.interfaces import LLMProvider
+from ToolAgents.interfaces import HostedLLMProvider
 from ToolAgents.interfaces import LLMTokenizer
 from ToolAgents.interfaces import LLMToolCallHandler
 
 
-class LLMToolAgent:
+class HostedToolAgent:
     def __init__(
             self,
-            provider: LLMProvider,
+            provider: HostedLLMProvider,
             tokenizer: LLMTokenizer,
             tool_call_handler: LLMToolCallHandler,
             debug_output: bool = False,

@@ -1,14 +1,10 @@
 import json
 from typing import List, Dict, Any
 
-from mistral_common.protocol.instruct.messages import AssistantMessage, ToolMessage
-from mistral_common.protocol.instruct.tool_calls import FunctionCall, ToolCall
-from mistral_common.tokens.tokenizers.mistral import MistralTokenizer as MistralTokenizerOfficial
-from mistral_common.protocol.instruct.request import ChatCompletionRequest
-
 from ToolAgents.function_tool import ToolRegistry
 from ToolAgents.interfaces.llm_tool_call import LLMToolCallHandler, LLMToolCall, GenericToolCall, generate_id
 from ToolAgents.interfaces.llm_tokenizer import LLMTokenizer, HuggingFaceTokenizer
+from ToolAgents.utilities.chat_history import Message
 
 jinja2_template = """{%- if custom_tools is defined %}
     {%- set tools = custom_tools %}
@@ -68,17 +64,14 @@ When you receive a tool call response, use the output to format an answer to the
         {{- '<|start_header_id|>' + message['role'] + '<|end_header_id|>\n\n'+ message['content'] | trim + '<|eot_id|>' }}
     {%- elif message.role == "tool" or message.role == "ipython" %}
         {{- "<|start_header_id|>ipython<|end_header_id|>\n\n" }}
-        {%- if message.content is mapping or message.content is iterable %}
-            {{- message.content | tojson }}
-        {%- else %}
-            {{- message.content }}
-        {%- endif %}
+        {{- message.content }}
         {{- "<|eot_id|>" }}
     {%- endif %}
 {%- endfor %}
 {%- if add_generation_prompt %}
     {{- '<|start_header_id|>assistant<|end_header_id|>\n\n' }}
 {%- endif %}"""
+
 
 class Llama31ToolCallHandler(LLMToolCallHandler):
     def __init__(self, debug_mode=False):
@@ -120,12 +113,13 @@ class Llama31ToolCallHandler(LLMToolCallHandler):
             tool_call_dict = tool_call.to_dict()
             del tool_call_dict["id"]
             tool_call_messages.append(tool_call_dict)
-        return AssistantMessage(content=json.dumps(tool_call_messages)).model_dump()
+        return Message(role="assistant", content=json.dumps(tool_call_messages)).to_dict()
 
     def get_tool_call_result_messages(self, tool_calls: List[GenericToolCall], tool_call_results: List[Any]) -> Dict[str, Any] | List[Dict[str, Any]]:
-        return [ToolMessage(
-            content=str(tool_call_result) if not isinstance(tool_call_result, dict) else json.dumps(tool_call_result),
-            tool_call_id=tool_call.get_tool_call_id()).model_dump()
+        return [Message(role="tool",
+                        content=str(tool_call_result) if not isinstance(tool_call_result, dict) else json.dumps(
+                            tool_call_result),
+                        tool_call_id=tool_call.get_tool_call_id()).to_dict()
                 for tool_call, tool_call_result in zip(tool_calls, tool_call_results)]
 
     def execute_tool_calls(self, tool_calls: List[GenericToolCall], tool_registry: ToolRegistry) -> List[Any]:

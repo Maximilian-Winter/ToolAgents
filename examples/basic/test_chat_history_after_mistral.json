@@ -12,7 +12,7 @@
     "content": null,
     "tool_calls": [
       {
-        "id": "JoGfXL0iW",
+        "id": "f1qA5Ji6A",
         "type": "function",
         "function": {
           "name": "get_current_weather",
@@ -20,7 +20,7 @@
         }
       },
       {
-        "id": "vx04Q3Pui",
+        "id": "DYHn0F89w",
         "type": "function",
         "function": {
           "name": "get_current_weather",
@@ -28,7 +28,7 @@
         }
       },
       {
-        "id": "fg9utoRvp",
+        "id": "Etbo6qjyO",
         "type": "function",
         "function": {
           "name": "get_current_weather",
@@ -36,7 +36,7 @@
         }
       },
       {
-        "id": "9x2N3ua2F",
+        "id": "an8vg1u3U",
         "type": "function",
         "function": {
           "name": "calculator",
@@ -44,7 +44,7 @@
         }
       },
       {
-        "id": "QOdT7QNDI",
+        "id": "6rbkbwOb4",
         "type": "function",
         "function": {
           "name": "calculator",
@@ -52,7 +52,7 @@
         }
       },
       {
-        "id": "M0SDF4e5R",
+        "id": "3R6ZqcOno",
         "type": "function",
         "function": {
           "name": "calculator",
@@ -60,7 +60,7 @@
         }
       },
       {
-        "id": "iwpTavi4P",
+        "id": "EvBPYRvzH",
         "type": "function",
         "function": {
           "name": "calculator",
@@ -68,7 +68,7 @@
         }
       },
       {
-        "id": "cqq3mssQq",
+        "id": "KCHPZhrSh",
         "type": "function",
         "function": {
           "name": "calculator",
@@ -76,7 +76,7 @@
         }
       },
       {
-        "id": "F0WTeX7gh",
+        "id": "eiXN1EwfX",
         "type": "function",
         "function": {
           "name": "get_current_datetime",
@@ -89,61 +89,59 @@
   {
     "role": "tool",
     "content": "Weather in London: 22\u00b0 celsius",
-    "tool_call_id": "JoGfXL0iW",
+    "tool_call_id": "f1qA5Ji6A",
     "name": null
   },
   {
     "role": "tool",
     "content": "Weather in New York: 24\u00b0 celsius",
-    "tool_call_id": "vx04Q3Pui",
+    "tool_call_id": "DYHn0F89w",
     "name": null
   },
   {
     "role": "tool",
     "content": "Weather in North Pole: -42\u00b0 celsius",
-    "tool_call_id": "fg9utoRvp",
+    "tool_call_id": "Etbo6qjyO",
     "name": null
   },
   {
     "role": "tool",
     "content": "1764",
-    "tool_call_id": "9x2N3ua2F",
+    "tool_call_id": "an8vg1u3U",
     "name": null
   },
   {
     "role": "tool",
     "content": "100",
-    "tool_call_id": "QOdT7QNDI",
+    "tool_call_id": "6rbkbwOb4",
     "name": null
   },
   {
     "role": "tool",
     "content": "182",
-    "tool_call_id": "M0SDF4e5R",
+    "tool_call_id": "3R6ZqcOno",
     "name": null
   },
   {
     "role": "tool",
     "content": "10",
-    "tool_call_id": "iwpTavi4P",
+    "tool_call_id": "EvBPYRvzH",
     "name": null
   },
   {
     "role": "tool",
     "content": "12.0",
-    "tool_call_id": "cqq3mssQq",
+    "tool_call_id": "KCHPZhrSh",
     "name": null
   },
   {
     "role": "tool",
-    "content": "04.08.2024 00:34",
-    "tool_call_id": "F0WTeX7gh",
+    "content": "08.08.2024 00:49",
+    "tool_call_id": "eiXN1EwfX",
     "name": null
   },
   {
     "role": "assistant",
-    "content": "Here are the results:\n\n- Weather in London: 22\u00b0 celsius\n- Weather in New York: 24\u00b0 celsius\n- Weather in North Pole: -42\u00b0 celsius\n- 42 * 42 = 1764\n- 74 + 26 = 100\n- 7 * 26 = 182\n- 4 + 6 = 10\n- 96 / 8 = 12.0\n- Current date and time: 04.08.2024 00:34",
-    "tool_calls": null,
-    "prefix": false
+    "content": "Here are the results:\n\n- Weather in London: 22\u00b0 celsius\n- Weather in New York: 24\u00b0 celsius\n- Weather in North Pole: -42\u00b0 celsius\n- 42 * 42 = 1764\n- 74 + 26 = 100\n- 7 * 26 = 182\n- 4 + 6 = 10\n- 96 / 8 = 12.0\n- Current date and time: 08.08.2024 00:49"
   }
 ]

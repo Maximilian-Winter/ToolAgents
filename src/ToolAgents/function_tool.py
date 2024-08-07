@@ -486,6 +486,44 @@ class FunctionTool:
             "input_schema": function["parameters"]
         }
 
+    def to_nous_hermes_pro_tool(self):
+        root = pydantic_model_to_openai_function_definition(self.model)
+        function = root["function"]
+
+        nous_hermes_pro_tool = {
+            "type": "function",
+            "function": {
+                "name": function["name"],
+                "description": function["description"],
+                "parameters": {
+                    "type": "object",
+                    "properties": {},
+                    "required": function["parameters"].get("required", [])
+                }
+            }
+        }
+
+        for prop_name, prop_info in function["parameters"]["properties"].items():
+            nous_hermes_pro_tool["function"]["parameters"]["properties"][prop_name] = {
+                "type": prop_info.get("type", "string"),
+                "description": prop_info.get("description", "")
+            }
+
+            # Handle enum types
+            if "enum" in prop_info:
+                nous_hermes_pro_tool["function"]["parameters"]["properties"][prop_name]["enum"] = prop_info["enum"]
+
+            # Handle array types
+            if prop_info.get("type") == "array" and "items" in prop_info:
+                nous_hermes_pro_tool["function"]["parameters"]["properties"][prop_name]["items"] = {
+                    "type": prop_info["items"].get("type", "string")
+                }
+                if "enum" in prop_info["items"]:
+                    nous_hermes_pro_tool["function"]["parameters"]["properties"][prop_name]["items"]["enum"] = \
+                    prop_info["items"]["enum"]
+
+        return nous_hermes_pro_tool
+
     def execute(self, parameters):
         instance = self.model(**parameters)
         return instance.run(**self.additional_parameters)
@@ -517,3 +555,6 @@ class ToolRegistry:
 
     def get_anthropic_tools(self):
         return [tool.to_openai_tool() for tool in self.tools.values()]
+
+    def get_nous_hermes_pro_tools(self):
+        return [tool.to_nous_hermes_pro_tool() for tool in self.tools.values()]

@@ -1,22 +1,19 @@
-from ToolAgents.agents import LlamaAgent
-from ToolAgents.provider import LlamaCppSamplingSettings, LlamaCppServerProvider
-from ToolAgents.provider import VLLMServerSamplingSettings, \
-    VLLMServerProvider
+from ToolAgents.agents import Llama31Agent
+from ToolAgents.provider import LlamaCppServerProvider
+
 from ToolAgents.utilities import ChatHistory
 from example_tools import get_weather_function_tool, calculator_function_tool, current_datetime_function_tool
 from code_executer import PythonCodeExecutor, system_message_code_agent, run_code_agent
 
 provider = LlamaCppServerProvider("http://127.0.0.1:8080/")
 
-agent = LlamaAgent(llm_provider=provider, debug_output=True)
+agent = Llama31Agent(provider=provider, debug_output=True)
 
-settings = LlamaCppSamplingSettings()
-settings.temperature = 0.3
-settings.top_p = 1.0
-settings.top_k = 0
-settings.min_p = 0.0
-settings.max_tokens = 4096
-settings.stop = ["</s>", "<|eom_id|>", "<|eot_id|>", "assistant", "<|start_header_id|>assistant<|end_header_id|>"]
+settings = provider.get_default_settings()
+settings.neutralize_all_samplers()
+settings.temperature = 0.1
+settings.set_stop_tokens(["assistant", "<|eot_id|>", "<|start_header_id|>"], None)
+settings.set_max_new_tokens(4096)
 
 chat_history = ChatHistory()
 chat_history.add_system_message(system_message_code_agent + f"""\n\n## Predefined Functions

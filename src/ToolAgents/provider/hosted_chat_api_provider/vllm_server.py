@@ -6,7 +6,7 @@ from copy import deepcopy
 from openai import OpenAI
 from transformers import AutoTokenizer
 
-from ToolAgents.interfaces.llm_provider import LLMSamplingSettings, LLMProvider
+from ToolAgents.interfaces.llm_provider import LLMSamplingSettings, HostedLLMProvider
 from ToolAgents.interfaces.llm_tokenizer import LLMTokenizer
 
 
@@ -73,7 +73,7 @@ class VLLMServerSamplingSettings(LLMSamplingSettings):
         self.min_p = 0.0
 
 
-class VLLMServerProvider(LLMProvider):
+class VLLMServerProvider(HostedLLMProvider):
     def __init__(self, base_url: str, model: str, huggingface_model: str, api_key: str = None):
         self.tokenizer = AutoTokenizer.from_pretrained(huggingface_model)
         self.client = OpenAI(

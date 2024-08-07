@@ -4,7 +4,7 @@ import json
 import requests
 from copy import deepcopy
 
-from ToolAgents.interfaces.llm_provider import LLMSamplingSettings, LLMProvider
+from ToolAgents.interfaces.llm_provider import LLMSamplingSettings, HostedLLMProvider
 from ToolAgents.interfaces.llm_tokenizer import LLMTokenizer
 
 
@@ -84,7 +84,7 @@ class LlamaCppSamplingSettings(LLMSamplingSettings):
         self.typical_p = 1.0
 
 
-class LlamaCppServerProvider(LLMProvider):
+class LlamaCppServerProvider(HostedLLMProvider):
     def __init__(self, server_address: str, api_key: str = None):
         self.server_address = server_address
         self.server_completion_endpoint = f"{self.server_address}/completion"

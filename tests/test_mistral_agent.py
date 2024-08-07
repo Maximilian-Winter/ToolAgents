@@ -10,7 +10,7 @@ from test_tools import calculator_function_tool, \
 
 # provider = VLLMServerProvider("http://localhost:8000/v1", api_key="token-abc123", model="solidrust/Mistral-7B-Instruct-v0.3-AWQ", huggingface_model="solidrust/Mistral-7B-Instruct-v0.3-AWQ")
 provider = LlamaCppServerProvider("http://127.0.0.1:8080/")
-agent = MistralAgent(llm_provider=provider, debug_output=False)
+agent = MistralAgent(provider=provider, debug_output=False)
 
 settings = provider.get_default_settings()
 settings.neutralize_all_samplers()

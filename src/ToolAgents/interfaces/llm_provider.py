@@ -37,7 +37,7 @@ class LLMSamplingSettings(abc.ABC):
         pass
 
 
-class LLMProvider(abc.ABC):
+class HostedLLMProvider(abc.ABC):
     @abc.abstractmethod
     def get_default_settings(self) -> LLMSamplingSettings:
         pass

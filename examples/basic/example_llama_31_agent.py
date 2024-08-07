@@ -1,11 +1,9 @@
 from ToolAgents.agents import Llama31Agent
-from ToolAgents.provider import LlamaCppSamplingSettings, LlamaCppServerProvider
-from ToolAgents.provider import VLLMServerSamplingSettings, \
-    VLLMServerProvider
+from ToolAgents.provider import LlamaCppServerProvider
+
 from ToolAgents.utilities import ChatHistory
 
-from example_tools import calculator_function_tool, \
-    current_datetime_function_tool, get_weather_function_tool
+from example_tools import calculator_function_tool, current_datetime_function_tool, get_weather_function_tool
 
 provider = LlamaCppServerProvider("http://127.0.0.1:8080/")
 
@@ -15,7 +13,7 @@ settings = provider.get_default_settings()
 settings.neutralize_all_samplers()
 settings.temperature = 0.1
 settings.set_stop_tokens(["assistant", "<|eot_id|>", "<|start_header_id|>"], None)
-settings.max_tokens = 4096
+settings.set_max_new_tokens(4096)
 
 messages = [{"role": "system", "content": "You are a helpful assistant."},
             {"role": "user", "content": "Hello! How are you?"}]

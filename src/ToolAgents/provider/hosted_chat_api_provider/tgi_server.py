@@ -5,7 +5,7 @@ from copy import deepcopy
 
 import requests
 
-from ToolAgents.interfaces import LLMSamplingSettings, LLMProvider
+from ToolAgents.interfaces import LLMSamplingSettings, HostedLLMProvider
 from ToolAgents.interfaces import LLMTokenizer
 
 
@@ -75,7 +75,7 @@ class TGIServerSamplingSettings(LLMSamplingSettings):
         self.typical_p = 1.0
 
 
-class TGIServerProvider(LLMProvider):
+class TGIServerProvider(HostedLLMProvider):
     def __init__(self, server_address: str, api_key: str = None):
         self.server_address = server_address
         self.server_completion_endpoint = f"{self.server_address}/generate"
