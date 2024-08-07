@@ -44,7 +44,7 @@ prompt = r"""Create a graph of x^2 + 5 with your Python Code Interpreter and sav
 prompt2 = r"""Create an interesting and engaging random 3d scatter plot with your Python Code Interpreter and save it as an image."""
 prompt3 = r"""Analyze and visualize the dataset "./input.csv" with your Python code interpreter as a interesting and visually appealing scatterplot matrix."""
 
-run_code_agent(agent=agent, settings=settings, chat_history=chat_history, user_input=promo,
+run_code_agent(agent=agent, settings=settings, chat_history=chat_history, user_input=prompt_function_calling,
                python_code_executor=python_code_executor)
 
 run_code_agent(agent=agent, settings=settings, chat_history=chat_history, user_input=prompt,
