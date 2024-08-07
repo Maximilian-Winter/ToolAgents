@@ -1,7 +1,6 @@
-from ToolAgents.agents import LlamaAgent
-from ToolAgents.provider import LlamaCppSamplingSettings, LlamaCppServerProvider
-from ToolAgents.provider import VLLMServerSamplingSettings, \
-    VLLMServerProvider
+from ToolAgents.agents import Llama31Agent
+from ToolAgents.provider import LlamaCppServerProvider
+
 from ToolAgents.utilities import ChatHistory
 
 from test_tools import calculator_function_tool, \
@@ -9,14 +8,15 @@ from test_tools import calculator_function_tool, \
 
 provider = LlamaCppServerProvider("http://127.0.0.1:8080/")
 
-agent = LlamaAgent(llm_provider=provider, debug_output=True)
+agent = Llama31Agent(provider=provider, debug_output=True)
 
-settings = LlamaCppSamplingSettings()
-settings.temperature = 10.0
-settings.top_p = 1.0
-settings.top_k = 0
-settings.min_p = 0.0
-settings.max_tokens = 4096
+settings = provider.get_default_settings()
+settings.neutralize_all_samplers()
+
+settings.temperature = 0.6
+
+settings.set_max_new_tokens(4096)
+settings.set_stop_tokens(["assistant"], None)
 
 messages = [{"role": "system", "content": "You are a helpful assistant."},
             {"role": "user", "content": "Hello! How are you?"}]
@@ -31,7 +31,7 @@ chat_history.load_history("./test_tools_chat_history.json")
 
 result = agent.get_streaming_response(
     messages=chat_history.to_list(),
-    sampling_settings=settings, tools=tools, add_tool_instructions_to_first_message=True)
+    sampling_settings=settings, tools=tools)
 for tok in result:
     print(tok, end="", flush=True)
 print()

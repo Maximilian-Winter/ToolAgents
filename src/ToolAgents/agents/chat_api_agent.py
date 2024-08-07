@@ -4,20 +4,16 @@ import string
 from typing import Optional, Dict, List, Any
 
 from ToolAgents import FunctionTool
-from ToolAgents.provider.chat_api_with_tools import ChatAPI
+from ToolAgents.interfaces.llm_tool_call import generate_id
+from ToolAgents.provider.chat_api_provider.chat_api_with_tools import ChatAPIProvider
 
 
-def generate_id(length=8):
-    # Characters to use in the ID
-    characters = string.ascii_letters + string.digits
-    # Random choice of characters
-    return "".join(random.choice(characters) for _ in range(length))
 
 
 class ChatAPIAgent:
     def __init__(
             self,
-            chat_api: ChatAPI,
+            chat_api: ChatAPIProvider,
             debug_output: bool = False,
     ):
         self.chat_api = chat_api

@@ -500,8 +500,20 @@ class ToolRegistry:
         for tool in tools:
             self.tools[tool.model.__name__] = tool
 
+    def add_tool(self, tool: FunctionTool):
+        self.tools[tool.model.__name__] = tool
+
+    def remove(self, tool_name: str):
+        del self.tools[tool_name]
+
     def get_tool(self, name: str) -> FunctionTool:
         return self.tools[name]
 
     def get_mistral_tools(self):
         return [tool.to_mistral_tool() for tool in self.tools.values()]
+
+    def get_openai_tools(self):
+        return [tool.to_openai_tool() for tool in self.tools.values()]
+
+    def get_anthropic_tools(self):
+        return [tool.to_openai_tool() for tool in self.tools.values()]

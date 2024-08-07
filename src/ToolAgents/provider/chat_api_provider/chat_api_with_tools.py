@@ -21,7 +21,7 @@ def clean_history_messages(history_messages: List[dict]) -> List[dict]:
     return clean_messages
 
 
-class ChatAPI(ABC):
+class ChatAPIProvider(ABC):
     @abstractmethod
     def get_response(self, messages: List[Dict[str, str]], settings=None,
                      tools: Optional[List[FunctionTool]] = None) -> str:
@@ -53,7 +53,7 @@ class OpenAISettings:
         self.max_tokens = 1024
 
 
-class OpenAIChatAPI(ChatAPI):
+class OpenAIChatAPI(ChatAPIProvider):
 
     def __init__(self, api_key: str, base_url: str, model: str):
         self.client = OpenAI(api_key=api_key, base_url=base_url)
@@ -169,7 +169,7 @@ class AnthropicSettings:
         self.max_tokens = 1024
 
 
-class AnthropicChatAPI(ChatAPI):
+class AnthropicChatAPI(ChatAPIProvider):
     def __init__(self, api_key: str, model: str):
         self.client = Anthropic(api_key=api_key)
         self.model = model
@@ -335,7 +335,7 @@ class OpenRouterSettings:
         self.allow_fallback_ = False
 
 
-class OpenRouterAPI(ChatAPI):
+class OpenRouterAPI(ChatAPIProvider):
     def __init__(self, api_key: str, model: str, tool_return_value_role: str = "ipython"):
         self.api_key = api_key
         self.model = model
@@ -570,7 +570,7 @@ class GroqSettings:
         self.max_tokens = 4096
 
 
-class GroqChatAPI(ChatAPI):
+class GroqChatAPI(ChatAPIProvider):
     def __init__(self, api_key: str, model: str):
         self.client = Groq(api_key=api_key)
         self.model = model

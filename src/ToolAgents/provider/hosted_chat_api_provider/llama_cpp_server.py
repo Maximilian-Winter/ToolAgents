@@ -1,18 +1,20 @@
-from dataclasses import dataclass
-
-import requests
+from dataclasses import dataclass, asdict
 from typing import List, Dict, Union
-from copy import deepcopy
 import json
+import requests
+from copy import deepcopy
+
+from ToolAgents.interfaces.llm_provider import LLMSamplingSettings, LLMProvider
+from ToolAgents.interfaces.llm_tokenizer import LLMTokenizer
 
 
 @dataclass
-class LlamaCppSamplingSettings:
-    temperature: float = 0.3
+class LlamaCppSamplingSettings(LLMSamplingSettings):
+    temperature: float = 1.0
     top_k: int = 0
     top_p: float = 1.0
     min_p: float = 0.0
-    max_tokens: int = -1
+    n_predict: int = -1
     n_keep: int = 0
     stream: bool = True
     stop: List[str] = None
@@ -32,45 +34,57 @@ class LlamaCppSamplingSettings:
     ignore_eos: bool = False
     samplers: List[str] = None
 
-    def is_streaming(self):
-        return self.stream
+    def save_to_file(self, settings_file: str):
+        with open(settings_file, 'w') as f:
+            json.dump(self.as_dict(), f, indent=2)
 
-    @staticmethod
-    def load_from_dict(settings: dict) -> "LlamaCppSamplingSettings":
-        return LlamaCppSamplingSettings(**settings)
+    def load_from_file(self, settings_file: str):
+        with open(settings_file, 'r') as f:
+            data = json.load(f)
+        for key, value in data.items():
+            setattr(self, key, value)
 
-    def as_dict(self) -> dict:
-        return self.__dict__
+    def as_dict(self):
+        return asdict(self)
 
-    def to_dict(self) -> dict:
-        return {
-            'temperature': self.temperature,
-            'top_k': self.top_k,
-            'top_p': self.top_p,
-            'min_p': self.min_p,
-            'max_tokens': self.max_tokens,
-            'n_keep': self.n_keep,
-            'stream': self.stream,
-            'stop': self.stop,
-            'tfs_z': self.tfs_z,
-            'typical_p': self.typical_p,
-            'repeat_penalty': self.repeat_penalty,
-            'repeat_last_n': self.repeat_last_n,
-            'penalize_nl': self.penalize_nl,
-            'presence_penalty': self.presence_penalty,
-            'frequency_penalty': self.frequency_penalty,
-            'penalty_prompt': self.penalty_prompt,
-            'mirostat_mode': self.mirostat_mode,
-            'mirostat_tau': self.mirostat_tau,
-            'mirostat_eta': self.mirostat_eta,
-            'cache_prompt': self.cache_prompt,
-            'seed': self.seed,
-            'ignore_eos': self.ignore_eos,
-            'samplers': self.samplers
-        }
+    def set_stop_tokens(self, tokens: List[str], tokenizer: LLMTokenizer = None):
+        self.stop = tokens
+
+    def set_max_new_tokens(self, max_new_tokens: int):
+        self.n_predict = max_new_tokens
+
+    def set(self, setting_key: str, setting_value: str):
+        if hasattr(self, setting_key):
+            setattr(self, setting_key, setting_value)
+        else:
+            raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{setting_key}'")
+
+    def neutralize_sampler(self, sampler_name: str):
+        if sampler_name == "temperature":
+            self.temperature = 1.0
+        elif sampler_name == "top_k":
+            self.top_k = 0
+        elif sampler_name == "top_p":
+            self.top_p = 1.0
+        elif sampler_name == "min_p":
+            self.min_p = 0.0
+        elif sampler_name == "tfs_z":
+            self.tfs_z = 1.0
+        elif sampler_name == "typical_p":
+            self.typical_p = 1.0
+        else:
+            raise ValueError(f"Unknown sampler: {sampler_name}")
+
+    def neutralize_all_samplers(self):
+        self.temperature = 1.0
+        self.top_k = 0
+        self.top_p = 1.0
+        self.min_p = 0.0
+        self.tfs_z = 1.0
+        self.typical_p = 1.0
 
 
-class LlamaCppServerProvider:
+class LlamaCppServerProvider(LLMProvider):
     def __init__(self, server_address: str, api_key: str = None):
         self.server_address = server_address
         self.server_completion_endpoint = f"{self.server_address}/completion"
@@ -103,15 +117,6 @@ class LlamaCppServerProvider:
 
         response = requests.post(self.server_chat_completion_endpoint, headers=headers, json=data)
         return response.json()
-
-    def tokenize(self, prompt: str) -> list[int]:
-        headers = self._get_headers()
-        response = requests.post(self.server_tokenize_endpoint, headers=headers, json={"content": prompt})
-        if response.status_code == 200:
-            return response.json()["tokens"]
-        else:
-            raise Exception(
-                f"Tokenization request failed. Status code: {response.status_code}\nResponse: {response.text}")
 
     def _get_headers(self):
         headers = {"Content-Type": "application/json"}

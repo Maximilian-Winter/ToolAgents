@@ -1,73 +1,81 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, asdict
+from typing import List, Dict, Optional
+import json
+from copy import deepcopy
 
 import requests
-import json
-from typing import List, Dict, Optional
-from copy import deepcopy
+
+from ToolAgents.interfaces import LLMSamplingSettings, LLMProvider
+from ToolAgents.interfaces import LLMTokenizer
 
 
 @dataclass
-class TGIServerSamplingSettings:
-    """
-    TGIServerSamplingSettings dataclass
-    """
-
+class TGIServerSamplingSettings(LLMSamplingSettings):
     best_of: Optional[int] = field(default=None, metadata={"minimum": 0})
     decoder_input_details: bool = False
     details: bool = True
     do_sample: bool = False
-    frequency_penalty: Optional[float] = field(
-        default=None, metadata={"exclusiveMinimum": -2}
-    )
+    frequency_penalty: Optional[float] = field(default=None, metadata={"exclusiveMinimum": -2})
     grammar: Optional[dict] = None
     max_new_tokens: Optional[int] = field(default=None, metadata={"minimum": 0})
-    repetition_penalty: Optional[float] = field(
-        default=None, metadata={"exclusiveMinimum": 0}
-    )
+    repetition_penalty: Optional[float] = field(default=None, metadata={"exclusiveMinimum": 0})
     return_full_text: Optional[bool] = field(default=None)
     seed: Optional[int] = field(default=None, metadata={"minimum": 0})
     stop: Optional[List[str]] = field(default_factory=list)
     temperature: Optional[float] = field(default=None, metadata={"exclusiveMinimum": 0})
     top_k: Optional[int] = field(default=None, metadata={"exclusiveMinimum": 0})
-    top_n_tokens: Optional[int] = field(
-        default=None, metadata={"minimum": 0, "exclusiveMinimum": 0}
-    )
-    top_p: Optional[float] = field(
-        default=None, metadata={"maximum": 1, "exclusiveMinimum": 0}
-    )
+    top_n_tokens: Optional[int] = field(default=None, metadata={"minimum": 0, "exclusiveMinimum": 0})
+    top_p: Optional[float] = field(default=None, metadata={"maximum": 1, "exclusiveMinimum": 0})
     truncate: Optional[int] = field(default=None, metadata={"minimum": 0})
-    typical_p: Optional[float] = field(
-        default=None, metadata={"maximum": 1, "exclusiveMinimum": 0}
-    )
+    typical_p: Optional[float] = field(default=None, metadata={"maximum": 1, "exclusiveMinimum": 0})
     watermark: bool = False
     stream: bool = False
 
-    def is_streaming(self):
-        return self.stream
+    def save_to_file(self, settings_file: str):
+        with open(settings_file, 'w') as f:
+            json.dump(self.as_dict(), f, indent=2)
 
-    @staticmethod
-    def load_from_dict(settings: dict) -> "TGIServerSamplingSettings":
-        """
-        Load the settings from a dictionary.
+    def load_from_file(self, settings_file: str):
+        with open(settings_file, 'r') as f:
+            data = json.load(f)
+        for key, value in data.items():
+            setattr(self, key, value)
 
-        Args:
-            settings (dict): The dictionary containing the settings.
+    def as_dict(self):
+        return asdict(self)
 
-        Returns:
-            LlamaCppSamplingSettings: The loaded settings.
-        """
-        return TGIServerSamplingSettings(**settings)
+    def set_stop_tokens(self, tokens: List[str], tokenizer: LLMTokenizer = None):
+        self.stop = tokens
 
-    def as_dict(self) -> dict:
-        """
-        Convert the settings to a dictionary.
+    def set_max_new_tokens(self, max_new_tokens: int):
+        self.max_new_tokens = max_new_tokens
 
-        Returns:
-            dict: The dictionary representation of the settings.
-        """
-        return self.__dict__
+    def set(self, setting_key: str, setting_value: str):
+        if hasattr(self, setting_key):
+            setattr(self, setting_key, setting_value)
+        else:
+            raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{setting_key}'")
 
-class TGIServerProvider:
+    def neutralize_sampler(self, sampler_name: str):
+        if sampler_name == "temperature":
+            self.temperature = 1.0
+        elif sampler_name == "top_k":
+            self.top_k = None
+        elif sampler_name == "top_p":
+            self.top_p = 1.0
+        elif sampler_name == "typical_p":
+            self.typical_p = 1.0
+        else:
+            raise ValueError(f"Unknown sampler: {sampler_name}")
+
+    def neutralize_all_samplers(self):
+        self.temperature = 1.0
+        self.top_k = None
+        self.top_p = 1.0
+        self.typical_p = 1.0
+
+
+class TGIServerProvider(LLMProvider):
     def __init__(self, server_address: str, api_key: str = None):
         self.server_address = server_address
         self.server_completion_endpoint = f"{self.server_address}/generate"
@@ -106,16 +114,6 @@ class TGIServerProvider:
 
         response = requests.post(self.server_chat_completion_endpoint, headers=headers, json=data)
         return response.json()
-
-    def tokenize(self, prompt: str) -> list[int]:
-        headers = self._get_headers()
-        response = requests.post(self.server_tokenize_endpoint, headers=headers, json={"inputs": prompt})
-        if response.status_code == 200:
-            tokens = response.json()
-            return [tok["id"] for tok in tokens]
-        else:
-            raise Exception(
-                f"Tokenization request failed. Status code: {response.status_code}\nResponse: {response.text}")
 
     def _get_headers(self):
         headers = {"Content-Type": "application/json"}

@@ -1,2 +1,2 @@
-from .function_tool import FunctionTool
+from .function_tool import FunctionTool, ToolRegistry
 

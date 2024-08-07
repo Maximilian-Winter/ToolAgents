@@ -12,3 +12,7 @@
 /examples/code_agent/__pycache__
 /examples/llm_computer_interface/venv_agent
 /examples/llm_computer_interface/__pycache__
+/src/ToolAgents/provider/chat_api_provider/__pycache__
+/src/ToolAgents/provider/hosted_chat_api_provider/__pycache__
+/tests/__pycache__
+/src/ToolAgents/interfaces/__pycache__

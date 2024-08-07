@@ -1,18 +1,19 @@
-from dataclasses import dataclass, field
+import json
+from dataclasses import dataclass, field, asdict
 from typing import List, Dict, Optional
 from copy import deepcopy
+
 from openai import OpenAI
 from transformers import AutoTokenizer
 
+from ToolAgents.interfaces.llm_provider import LLMSamplingSettings, LLMProvider
+from ToolAgents.interfaces.llm_tokenizer import LLMTokenizer
+
 
 @dataclass
-class VLLMServerSamplingSettings:
-    """
-    VLLMServerSamplingSettings dataclass
-    """
-
+class VLLMServerSamplingSettings(LLMSamplingSettings):
     best_of: Optional[int] = None
-    use_beam_search = False
+    use_beam_search: bool = False
     top_k: float = -1
     top_p: float = 1
     min_p: float = 0.0
@@ -28,33 +29,51 @@ class VLLMServerSamplingSettings:
     spaces_between_special_tokens: Optional[bool] = True
     stream: bool = False
 
-    def is_streaming(self):
-        return self.stream
+    def save_to_file(self, settings_file: str):
+        with open(settings_file, 'w') as f:
+            json.dump(self.as_dict(), f, indent=2)
 
-    @staticmethod
-    def load_from_dict(settings: dict) -> "VLLMServerSamplingSettings":
-        """
-        Load the settings from a dictionary.
+    def load_from_file(self, settings_file: str):
+        with open(settings_file, 'r') as f:
+            data = json.load(f)
+        for key, value in data.items():
+            setattr(self, key, value)
 
-        Args:
-            settings (dict): The dictionary containing the settings.
+    def as_dict(self):
+        return asdict(self)
 
-        Returns:
-            LlamaCppSamplingSettings: The loaded settings.
-        """
-        return VLLMServerSamplingSettings(**settings)
+    def set_stop_tokens(self, tokens: List[str], tokenizer: LLMTokenizer):
+        self.stop_token_ids = [tokenizer.tokenize(token) for token in tokens]
 
-    def as_dict(self) -> dict:
-        """
-        Convert the settings to a dictionary.
+    def set_max_new_tokens(self, max_new_tokens: int):
+        self.max_tokens = max_new_tokens
 
-        Returns:
-            dict: The dictionary representation of the settings.
-        """
-        return self.__dict__
+    def set(self, setting_key: str, setting_value: str):
+        if hasattr(self, setting_key):
+            setattr(self, setting_key, setting_value)
+        else:
+            raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{setting_key}'")
+
+    def neutralize_sampler(self, sampler_name: str):
+        if sampler_name == "temperature":
+            self.temperature = 1.0
+        elif sampler_name == "top_k":
+            self.top_k = -1
+        elif sampler_name == "top_p":
+            self.top_p = 1.0
+        elif sampler_name == "min_p":
+            self.min_p = 0.0
+        else:
+            raise ValueError(f"Unknown sampler: {sampler_name}")
+
+    def neutralize_all_samplers(self):
+        self.temperature = 1.0
+        self.top_k = -1
+        self.top_p = 1.0
+        self.min_p = 0.0
 
 
-class VLLMServerProvider:
+class VLLMServerProvider(LLMProvider):
     def __init__(self, base_url: str, model: str, huggingface_model: str, api_key: str = None):
         self.tokenizer = AutoTokenizer.from_pretrained(huggingface_model)
         self.client = OpenAI(
@@ -118,6 +137,3 @@ class VLLMServerProvider:
             else:
                 content = result.choices[0].text
             return {"choices": [{"text": content}]}
-
-    def tokenize(self, prompt: str) -> list[int]:
-        return self.tokenizer.encode(text=prompt)
