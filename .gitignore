@@ -10,3 +10,5 @@
 /examples/code_interpreter/.venv
 /examples/code_interpreter/__pycache__
 /examples/code_agent/__pycache__
+/examples/llm_computer_interface/venv_agent
+/examples/llm_computer_interface/__pycache__

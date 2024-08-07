@@ -404,7 +404,6 @@ class FunctionTool:
             additional_parameters if additional_parameters else {}
         )
 
-
     def set_name(self, new_name: str):
         self.model.__name__ = new_name
 
@@ -413,7 +412,6 @@ class FunctionTool:
 
     def get_text_documentation(self):
         return generate_text_documentation([self.model], self.model.__name__, self.model.__doc__)
-
 
     @staticmethod
     def from_pydantic_model_and_callable(
@@ -487,3 +485,23 @@ class FunctionTool:
             "description": function["description"],
             "input_schema": function["parameters"]
         }
+
+    def execute(self, parameters):
+        instance = self.model(**parameters)
+        return instance.run(**self.additional_parameters)
+
+
+class ToolRegistry:
+    def __init__(self):
+        self.tools: Dict[str, FunctionTool] = {}
+
+    def register_tools(self, tools: List[FunctionTool]):
+        self.tools = {}
+        for tool in tools:
+            self.tools[tool.model.__name__] = tool
+
+    def get_tool(self, name: str) -> FunctionTool:
+        return self.tools[name]
+
+    def get_mistral_tools(self):
+        return [tool.to_mistral_tool() for tool in self.tools.values()]

@@ -43,10 +43,8 @@ class PythonCodeExecutor:
         return wrapped_function
 
     def extract_code(self, response):
-        match = self.code_pattern.search(response)
-        if match:
-            return match.group(1).strip()
-        return None
+        matches = self.code_pattern.findall(response)
+        return '\n'.join(match.strip() for match in matches)
 
     def execute_code(self, code):
         old_stdout = sys.stdout
