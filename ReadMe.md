@@ -55,7 +55,7 @@ from test_tools import calculator_function_tool, current_datetime_function_tool,
 
 # Initialize the provider and agent
 provider = LlamaCppServerProvider("http://127.0.0.1:8080/")
-agent = MistralAgent(llm_provider=provider, debug_output=False)
+agent = MistralAgent(provider=provider, debug_output=False)
 
 # Configure settings
 settings = LlamaCppSamplingSettings()
@@ -91,14 +91,14 @@ chat_history.save_history("./chat_history.json")
 ### LlamaAgent with llama.cpp Server
 
 ```python
-from ToolAgents.agents import LlamaAgent
+from ToolAgents.agents import Llama31Agent
 from ToolAgents.provider import LlamaCppServerProvider, LlamaCppSamplingSettings
 from ToolAgents.utilities import ChatHistory
 from test_tools import calculator_function_tool, current_datetime_function_tool, get_weather_function_tool
 
 # Initialize the provider and agent
 provider = LlamaCppServerProvider("http://127.0.0.1:8080/")
-agent = LlamaAgent(llm_provider=provider, debug_output=False)
+agent = Llama31Agent(provider=provider, debug_output=False)
 
 # Configure settings
 settings = LlamaCppSamplingSettings()
@@ -119,8 +119,7 @@ chat_history.add_user_message("Perform the following tasks: Get the current weat
 result = agent.get_streaming_response(
     messages=chat_history.to_list(),
     sampling_settings=settings,
-    tools=tools,
-    add_tool_instructions_to_first_message=True
+    tools=tools
 )
 
 for token in result:
