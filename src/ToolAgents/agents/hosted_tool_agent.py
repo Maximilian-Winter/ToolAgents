@@ -140,15 +140,14 @@ class HostedToolAgent:
                 yield ch
 
         if tool_calls is not None:
-            self.handle_function_calling_response(result, messages)
+            self.handle_function_calling_response(tool_calls, messages)
             yield "\n"
             yield from self.get_streaming_response(sampling_settings=sampling_settings, tools=tools,
                                                    messages=messages, reset_last_messages_buffer=False)
         else:
             self.last_messages_buffer.append({"role": "assistant", "content": result.strip()})
 
-    def handle_function_calling_response(self, result, current_messages):
-        tool_calls = self.tool_call_handler.parse_tool_calls(response=result)
+    def handle_function_calling_response(self, tool_calls, current_messages):
         assistant_tool_call_message = self.tool_call_handler.get_tool_call_messages(tool_calls=tool_calls)
 
         tool_call_results = self.tool_call_handler.execute_tool_calls(tool_calls=tool_calls,
