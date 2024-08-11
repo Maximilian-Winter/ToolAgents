@@ -411,7 +411,7 @@ class FunctionTool:
         return generate_function_definition(self.model, self.model.__name__, self.model.__doc__)
 
     def get_text_documentation(self):
-        return generate_text_documentation([self.model], self.model.__name__, self.model.__doc__)
+        return generate_text_documentation([self.model], "Tool", "Arguments")
 
     @staticmethod
     def from_pydantic_model_and_callable(
