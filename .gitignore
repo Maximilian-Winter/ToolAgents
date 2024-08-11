@@ -16,3 +16,5 @@
 /src/ToolAgents/provider/hosted_chat_api_provider/__pycache__
 /tests/__pycache__
 /src/ToolAgents/interfaces/__pycache__
+/src/ToolAgents/agent_memory/__pycache__
+/tests/__pycache__
