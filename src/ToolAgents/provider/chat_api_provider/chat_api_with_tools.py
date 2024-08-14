@@ -166,7 +166,9 @@ class AnthropicSettings:
     def __init__(self):
         self.temperature = 0.7
         self.top_p = 1.0
+        self.top_k = 0.0
         self.max_tokens = 1024
+        self.stop_sequences = []
 
 
 class AnthropicChatAPI(ChatAPIProvider):
@@ -199,7 +201,9 @@ class AnthropicChatAPI(ChatAPIProvider):
             messages=other_messages,
             temperature=self.settings.temperature if settings is None else settings.temperature,
             top_p=self.settings.top_p if settings is None else settings.top_p,
+            top_k=self.settings.top_k if settings is None else settings.top_k,
             max_tokens=self.settings.max_tokens if settings is None else settings.max_tokens,
+            stop_sequences=self.settings.stop_sequences if settings is None else settings.stop_sequences,
             tools=anthropic_tools
         )
         if tools and (response.content[0].type == 'tool_use' or (

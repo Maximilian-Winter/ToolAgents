@@ -17,7 +17,7 @@ api = AnthropicChatAPI(api_key=os.getenv("ANTHROPIC_API_KEY"), model="claude-3-5
 settings = AnthropicSettings()
 
 # Create the ChatAPIAgent
-agent = ChatAPIAgent(chat_api=api, debug_output=False)
+agent = ChatAPIAgent(chat_api=api, debug_output=True)
 
 settings.temperature = 0.45
 settings.top_p = 0.85
@@ -29,13 +29,15 @@ chat_history = ChatHistory()
 chat_history.load_history("./test_tools_chat_history.json")
 
 # Get a response
-result = agent.get_response(
+result = agent.get_streaming_response(
     messages=chat_history.to_list(),
     tools=tools,
     settings=settings
 )
 
-print(result)
+for res in result:
+    print(res, end="", flush=True)
+print()
 
 chat_history.add_list_of_dicts(agent.last_messages_buffer)
 chat_history.save_history("./test_chat_history_after_chat_api.json")

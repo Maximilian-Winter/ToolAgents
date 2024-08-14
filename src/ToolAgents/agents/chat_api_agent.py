@@ -8,8 +8,6 @@ from ToolAgents.interfaces.llm_tool_call import generate_id
 from ToolAgents.provider.chat_api_provider.chat_api_with_tools import ChatAPIProvider
 
 
-
-
 class ChatAPIAgent:
     def __init__(
             self,
@@ -76,7 +74,8 @@ class ChatAPIAgent:
                     {"role": "assistant", "content": parsed_result["content"], "tool_calls": tool_calls_prepared})
             self.last_messages_buffer.extend(tool_messages)
             current_messages.extend(tool_messages)
-            return self.get_response(settings=settings, tools=tools, messages=current_messages, reset_last_messages_buffer=False)
+            return self.get_response(settings=settings, tools=tools, messages=current_messages,
+                                     reset_last_messages_buffer=False)
         else:
             self.last_messages_buffer.append({"role": "assistant", "content": result})
             return result
@@ -99,25 +98,20 @@ class ChatAPIAgent:
 
         if self.debug_output:
             print("Input messages:", json.dumps(current_messages, indent=2))
-
-        for chunk in self.chat_api.get_streaming_response(current_messages, settings=settings, tools=tools):
-            yield chunk
-
-        # After streaming is complete, update the message history
         last_message = {"role": "assistant", "content": ""}
         for chunk in self.chat_api.get_streaming_response(current_messages, settings=settings, tools=tools):
-            try:
-                parsed_chunk = json.loads(chunk)
-                if "tool_calls" in parsed_chunk:
-                    last_message["tool_calls"] = parsed_chunk["tool_calls"]
-                    if parsed_chunk.get("content"):
-                        last_message["content"] += parsed_chunk["content"]
-                else:
-                    last_message["content"] += chunk
-            except json.JSONDecodeError:
+            yield chunk
+            if "tool_calls" in chunk:
+                if "tool_calls" not in last_message:
+                    last_message["tool_calls"] = []
+                last_message["tool_calls"].append(chunk)
+            else:
                 last_message["content"] += chunk
 
         if "tool_calls" in last_message:
+            if self.debug_output:
+                print("Tool Calls Message: " + json.dumps(last_message))
+            last_message["tool_calls"] = [json.loads(tool_call)["tool_calls"][0] for tool_call in last_message["tool_calls"]]
             tool_messages = []
             tool_calls_prepared = []
             for tool_call in last_message["tool_calls"]:
@@ -152,6 +146,7 @@ class ChatAPIAgent:
             self.last_messages_buffer.extend(tool_messages)
             current_messages.extend(tool_messages)
             yield "\n"
-            yield from self.get_streaming_response(settings=settings, tools=tools, messages=current_messages, reset_last_messages_buffer=False)
+            yield from self.get_streaming_response(settings=settings, tools=tools, messages=current_messages,
+                                                   reset_last_messages_buffer=False)
         else:
             self.last_messages_buffer.append({"role": "assistant", "content": last_message["content"]})

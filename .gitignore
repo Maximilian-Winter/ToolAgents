@@ -18,3 +18,5 @@
 /src/ToolAgents/interfaces/__pycache__
 /src/ToolAgents/agent_memory/__pycache__
 /tests/__pycache__
+/src/ToolAgents/gbnf_grammar_generator/__pycache__
+/src/ToolAgents/json_schema_generator/__pycache__

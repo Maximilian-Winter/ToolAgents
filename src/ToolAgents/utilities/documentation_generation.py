@@ -1,10 +1,11 @@
 import json
 from enum import Enum
 from inspect import isclass, getdoc
-from types import UnionType, GenericAlias
+from types import UnionType, GenericAlias, NoneType
 from typing import get_args, get_origin, Union, Any
 
 from pydantic import BaseModel
+from pydantic_core import PydanticUndefined
 
 
 def generate_function_definition(
@@ -13,7 +14,7 @@ def generate_function_definition(
         description: str = "",
 ) -> str:
     """
-    Generate a Python-like function definition for a Pydantic model.
+    Generate a Python function definition with class definitions for BaseModel parameters.
 
     Args:
         model (type[BaseModel]): The Pydantic model class.
@@ -21,28 +22,125 @@ def generate_function_definition(
         description (str, optional): A description of the function. Defaults to "".
 
     Returns:
-        str: A string representation of the function definition.
+        str: A string representation of the function definition with class definitions for BaseModel parameters.
     """
+    output = ""
     parameters = []
     for name, field_type in model.__annotations__.items():
-        field_info = model.model_fields.get(name)
-        field_description = field_info.description if field_info and field_info.description else ""
-        parameters.append(f"{name}: {field_type.__name__}")
+        if isclass(field_type) and issubclass(field_type, BaseModel):
+            output += generate_class_definition(field_type, field_type.__name__)
+        elif get_origin(field_type) == Union or isinstance(field_type, UnionType):
+            element_types = get_args(field_type)
+            for typ in element_types:
+                if isclass(typ) and issubclass(typ, BaseModel):
+                    output += generate_class_definition(typ, typ.__name__)
+        parameters.append(f"{name}: {get_type_annotation(field_type)}")
 
     function_def = f"def {function_name}({', '.join(parameters)}):\n"
     function_def += f'    """\n'
-    function_def += f'    {description}\n\n' if description else ''
+    function_def += f'    {description}\n' if description else ''
     function_def += f'    Args:\n'
 
     for name, field_type in model.__annotations__.items():
         field_info = model.model_fields.get(name)
         field_description = field_info.description if field_info and field_info.description else "No description provided."
-        function_def += f'        {name} ({field_type.__name__}): {field_description}\n'
+        function_def += f'        {name} ({get_type_annotation(field_type)}): {field_description}\n'
 
     function_def += f'    """\n'
     function_def += f'    # Implementation omitted for brevity\n'
     function_def += f'    pass\n'
-    return function_def
+
+    output += function_def
+    return output
+
+
+def generate_class_definition(model: type[BaseModel], class_name: str) -> str:
+    """
+    Generate a simple class definition for a BaseModel parameter, including enum definitions.
+
+    Args:
+        model (type[BaseModel]): The Pydantic model class.
+        class_name (str): The name of the class.
+
+    Returns:
+        str: A string representation of the class definition with enum definitions.
+    """
+    output = ""
+    enum_definitions = ""
+    class_def = f"class {class_name}:\n"
+    class_doc = getdoc(model)
+    base_class_doc = getdoc(BaseModel)
+    class_description = class_doc if class_doc and class_doc != base_class_doc else "A class representing the parameters."
+    class_def += f'    """\n    {class_description}\n    Attributes:\n'
+
+    for name, field_type in model.__annotations__.items():
+        field_info = model.model_fields.get(name)
+        field_description = field_info.description if field_info and field_info.description else "No description provided."
+        type_annotation = get_type_annotation(field_type)
+        if field_info.default is not PydanticUndefined and field_info.default is not None:
+            continue
+        class_def += f'        {name} ({type_annotation}): {field_description}\n'
+
+        if isclass(field_type) and issubclass(field_type, Enum):
+            enum_definitions += generate_enum_definition(field_type)
+
+    class_def += '    """\n'
+    class_def += '    # Implementation omitted for brevity\n'
+    class_def += '    pass\n\n'
+
+
+    output = enum_definitions + class_def
+    return output
+
+
+def generate_enum_definition(enum_class: type[Enum]) -> str:
+    """
+    Generate a string representation of an Enum class definition.
+
+    Args:
+        enum_class (type[Enum]): The Enum class to define.
+
+    Returns:
+        str: A string representation of the Enum class definition.
+    """
+    enum_def = f"class {enum_class.__name__}(Enum):\n"
+    for member in enum_class:
+        enum_def += f"    {member.name} = {member.value!r}\n"
+    enum_def += "\n"
+    return enum_def
+
+
+def get_type_annotation(field_type: type[Any]) -> str:
+    """
+    Get a string representation of the type annotation for a field.
+
+    Args:
+        field_type (type[Any]): The type of the field.
+
+    Returns:
+        str: A string representation of the type annotation.
+    """
+    if get_origin(field_type) == list:
+        element_type = get_args(field_type)[0]
+        return f"list[{get_type_annotation(element_type)}]"
+    elif get_origin(field_type) == Union or isinstance(field_type, UnionType):
+        element_types = get_args(field_type)
+        if len(element_types) == 2:
+            if isclass(element_types[1]) and issubclass(NoneType, element_types[1]):
+                return f"Optional[{get_type_annotation(element_types[0])}]"
+
+        types = [get_type_annotation(t) for t in element_types]
+        return f"Union[{', '.join(types)}]"
+    elif isinstance(field_type, GenericAlias):
+        if field_type.__origin__ == dict:
+            key_type, value_type = get_args(field_type)
+            return f"dict[{get_type_annotation(key_type)}, {get_type_annotation(value_type)}]"
+    elif isclass(field_type) and issubclass(field_type, Enum):
+        return field_type.__name__
+    elif isclass(field_type) and issubclass(field_type, BaseModel):
+        return field_type.__name__
+    else:
+        return field_type.__name__
 
 
 def generate_markdown_documentation(
@@ -276,7 +374,7 @@ def generate_text_documentation(
         if add_prefix:
             documentation += f"{model_prefix}: {model.__name__}\n"
         else:
-            documentation += f"Model: {model.__name__}\n"
+            documentation += f"Class: {model.__name__}\n"
 
         # Handling multi-line model description with proper indentation
 
@@ -293,7 +391,7 @@ def generate_text_documentation(
             # Indenting the fields section
             documentation += f"  {fields_prefix}:\n"
         else:
-            documentation += f"  Fields:\n"
+            documentation += f"  Attributes:\n"
         if isclass(model) and issubclass(model, BaseModel):
             count = 1
             for name, field_type in model.__annotations__.items():
@@ -469,7 +567,7 @@ def generate_field_text(
                 field_text += ": "
             else:
                 field_text += "\n"
-    elif issubclass(field_type, Enum):
+    elif isclass(field_type) and issubclass(field_type, Enum):
         enum_values = [f"'{str(member.value)}'" for member in field_type]
         is_enum = True
         field_text = f"{indent}{field_name} (enum)"

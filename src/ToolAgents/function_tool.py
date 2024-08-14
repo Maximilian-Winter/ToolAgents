@@ -1,3 +1,4 @@
+import dataclasses
 import inspect
 import re
 
@@ -7,7 +8,12 @@ from typing import Type, List, Callable, Any, Union, Tuple, Dict
 
 from docstring_parser import DocstringStyle, parse
 from pydantic import BaseModel, create_model
+from pydantic_core import PydanticUndefined
+from pydantic_settings import BaseSettings
 
+from ToolAgents.gbnf_grammar_generator.gbnf_grammar_from_pydantic_models import \
+    generate_gbnf_grammar_from_pydantic_models
+from ToolAgents.json_schema_generator import generate_json_schemas
 from ToolAgents.utilities.documentation_generation import generate_text_documentation, generate_function_definition
 
 
@@ -304,8 +310,8 @@ def get_openai_type(py_type):
     elif hasattr(py_type, "__origin__"):
         if py_type.__origin__ is Union:
             # Filter out NoneType to handle optional fields
-            non_none_types = [t for t in py_type.__args__ if t is not type(None)]
-            return get_openai_type(non_none_types[0])
+            non_none_types = [get_openai_type(t) for t in py_type.__args__ if t is not type(None)]
+            return non_none_types
         elif py_type.__origin__ is List or py_type.__origin__ is list:
             # Handle lists by identifying the type of list items
             return {"type": "array", "items": get_openai_type(py_type.__args__[0])}
@@ -344,13 +350,19 @@ def pydantic_model_to_openai_function_definition(pydantic_model: Type[BaseModel]
         field_description = (
             field_info.description if field_info and field_info.description else ""
         )
-        if isinstance(openai_type, dict) and "union" in openai_type.get("type", ""):
+        if isinstance(openai_type,
+                      dict) and field_info.default is not PydanticUndefined and field_info.default is not None:
+            continue
+        if isinstance(openai_type, list) and len(openai_type) > 1:
             # Handling Union types specifically
             function_definition["function"]["parameters"]["properties"][prop_name] = {
                 "type": "union",
-                "options": openai_type["options"],
+                "options": openai_type,
                 "description": field_description,
             }
+        elif isinstance(openai_type, list):
+            # Handling Union types specifically
+            function_definition["function"]["parameters"]["properties"][prop_name] = openai_type[0]
         else:
             function_definition["function"]["parameters"]["properties"][prop_name] = {
                 **openai_type,
@@ -411,7 +423,7 @@ class FunctionTool:
         return generate_function_definition(self.model, self.model.__name__, self.model.__doc__)
 
     def get_text_documentation(self):
-        return generate_text_documentation([self.model], "Tool", "Arguments")
+        return generate_text_documentation([self.model], "Function", "Arguments")
 
     @staticmethod
     def from_pydantic_model_and_callable(
@@ -520,7 +532,7 @@ class FunctionTool:
                 }
                 if "enum" in prop_info["items"]:
                     nous_hermes_pro_tool["function"]["parameters"]["properties"][prop_name]["items"]["enum"] = \
-                    prop_info["items"]["enum"]
+                        prop_info["items"]["enum"]
 
         return nous_hermes_pro_tool
 
@@ -530,11 +542,14 @@ class FunctionTool:
 
 
 class ToolRegistry:
-    def __init__(self):
+    def __init__(self, guided_sampling_enabled: bool = False):
         self.tools: Dict[str, FunctionTool] = {}
+        self.guided_sampling_enabled = guided_sampling_enabled
 
-    def register_tools(self, tools: List[FunctionTool]):
+    def reset_registry(self):
         self.tools = {}
+
+    def add_tools(self, tools: List[FunctionTool]):
         for tool in tools:
             self.tools[tool.model.__name__] = tool
 
@@ -558,3 +573,17 @@ class ToolRegistry:
 
     def get_nous_hermes_pro_tools(self):
         return [tool.to_nous_hermes_pro_tool() for tool in self.tools.values()]
+
+    def get_guided_sampling_grammar(self):
+        return generate_gbnf_grammar_from_pydantic_models(models=[tool.model for tool in self.tools.values()],
+                                                          outer_object_name="name", outer_object_content="arguments",
+                                                          list_of_outputs=True, add_inner_thoughts=False,
+                                                          allow_only_inner_thoughts=False, add_request_heartbeat=False)
+
+    def get_guided_sampling_json_schema(self):
+        return generate_json_schemas(models=[tool.model for tool in self.tools.values()], outer_object_name="name",
+                                     allow_list=True, outer_object_properties_name="arguments")
+
+    def get_tools_documentation(self):
+        return generate_text_documentation([tool.model for tool in self.tools.values()], model_prefix="Tool",
+                                           fields_prefix="Arguments")

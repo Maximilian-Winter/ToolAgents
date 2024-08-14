@@ -1,6 +1,8 @@
 import abc
 from typing import List, Dict
 
+from ToolAgents import ToolRegistry
+
 
 class LLMSamplingSettings(abc.ABC):
 
@@ -43,9 +45,9 @@ class HostedLLMProvider(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def create_completion(self, prompt, settings: LLMSamplingSettings):
+    def create_completion(self, prompt, settings: LLMSamplingSettings, tool_registry: ToolRegistry = None):
         pass
 
     @abc.abstractmethod
-    def create_chat_completion(self, messages: List[Dict[str, str]], settings: LLMSamplingSettings):
+    def create_chat_completion(self, messages: List[Dict[str, str]], settings: LLMSamplingSettings, tool_registry: ToolRegistry = None):
         pass

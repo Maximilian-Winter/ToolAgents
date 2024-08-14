@@ -28,33 +28,34 @@ class HostedToolAgent:
     def step(
             self,
             messages: list[dict[str, Any]],
-            tools: list[FunctionTool] = None,
-            sampling_settings=None,
+            tool_registry: ToolRegistry = None,
+            settings=None,
             reset_last_messages_buffer: bool = True,
     ):
-        if tools is None:
-            tools = []
+        if tool_registry is None:
+            tool_registry = ToolRegistry()
 
         if reset_last_messages_buffer:
             self.last_messages_buffer = []
 
         current_messages = messages
 
-        self.tool_registry.register_tools(tools)
+        self.tool_registry = tool_registry
 
         text = self.tokenizer.apply_template(current_messages, self.tool_registry)
 
         if self.debug_output:
             print(text, flush=True)
 
-        if sampling_settings is None:
-            sampling_settings = self.provider.get_default_settings()
+        if settings is None:
+            settings = self.provider.get_default_settings()
 
-        sampling_settings.stream = False
+        settings.stream = False
 
         result = self.provider.create_completion(
             prompt=text,
-            settings=sampling_settings,
+            settings=settings,
+            tool_registry=tool_registry
         )["choices"][0]["text"]
         if self.tool_call_handler.contains_tool_calls(result):
 
@@ -65,33 +66,34 @@ class HostedToolAgent:
     def stream_step(
             self,
             messages: list[dict[str, Any]],
-            tools: list[FunctionTool] = None,
-            sampling_settings=None,
+            tool_registry: ToolRegistry = None,
+            settings=None,
             reset_last_messages_buffer: bool = True,
     ):
-        if tools is None:
-            tools = []
+        if tool_registry is None:
+            tool_registry = ToolRegistry()
 
         if reset_last_messages_buffer:
             self.last_messages_buffer = []
 
         current_messages = messages
 
-        self.tool_registry.register_tools(tools)
+        self.tool_registry = tool_registry
 
         text = self.tokenizer.apply_template(current_messages, self.tool_registry)
 
         if self.debug_output:
             print(text, flush=True)
 
-        if sampling_settings is None:
-            sampling_settings = self.provider.get_default_settings()
+        if settings is None:
+            settings = self.provider.get_default_settings()
 
-        sampling_settings.stream = True
+        settings.stream = True
         result = ""
         for chunk in self.provider.create_completion(
                 prompt=text,
-                settings=sampling_settings,
+                settings=settings,
+                tool_registry=tool_registry
         ):
             ch = chunk["choices"][0]["text"]
             result += ch
@@ -103,14 +105,14 @@ class HostedToolAgent:
     def get_response(
             self,
             messages: list[dict[str, Any]],
-            tools: list[FunctionTool] = None,
-            sampling_settings=None,
+            tool_registry: ToolRegistry = None,
+            settings=None,
             reset_last_messages_buffer: bool = True,
     ):
-        result, contains_tool_call = self.step(messages, tools, sampling_settings, reset_last_messages_buffer)
+        result, contains_tool_call = self.step(messages, tool_registry, settings, reset_last_messages_buffer)
         if contains_tool_call:
             self.handle_function_calling_response(result, messages)
-            return self.get_response(sampling_settings=sampling_settings, tools=tools, messages=messages,
+            return self.get_response(settings=settings, tool_registry=tool_registry, messages=messages,
                                      reset_last_messages_buffer=False)
         else:
             self.last_messages_buffer.append({"role": "assistant", "content": result.strip()})
@@ -119,8 +121,8 @@ class HostedToolAgent:
     def get_streaming_response(
             self,
             messages: list[dict[str, Any]],
-            tools: list[FunctionTool] = None,
-            sampling_settings=None,
+            tool_registry: ToolRegistry = None,
+            settings=None,
             reset_last_messages_buffer: bool = True,
     ):
 
@@ -128,8 +130,8 @@ class HostedToolAgent:
         tool_calls = None
         for chunk, contains_tool_call in self.stream_step(
                 messages=messages,
-                tools=tools,
-                sampling_settings=sampling_settings,
+                tool_registry=tool_registry,
+                settings=settings,
                 reset_last_messages_buffer=reset_last_messages_buffer
         ):
             if contains_tool_call:
@@ -142,7 +144,7 @@ class HostedToolAgent:
         if tool_calls is not None:
             self.handle_function_calling_response(tool_calls, messages)
             yield "\n"
-            yield from self.get_streaming_response(sampling_settings=sampling_settings, tools=tools,
+            yield from self.get_streaming_response(settings=settings, tool_registry=tool_registry,
                                                    messages=messages, reset_last_messages_buffer=False)
         else:
             self.last_messages_buffer.append({"role": "assistant", "content": result.strip()})

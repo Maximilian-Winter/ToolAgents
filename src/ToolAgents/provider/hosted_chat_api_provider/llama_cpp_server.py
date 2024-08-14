@@ -4,6 +4,7 @@ import json
 import requests
 from copy import deepcopy
 
+from ToolAgents import ToolRegistry
 from ToolAgents.interfaces.llm_provider import LLMSamplingSettings, HostedLLMProvider
 from ToolAgents.interfaces.llm_tokenizer import LLMTokenizer
 
@@ -95,10 +96,13 @@ class LlamaCppServerProvider(HostedLLMProvider):
     def get_default_settings(self):
         return LlamaCppSamplingSettings()
 
-    def create_completion(self, prompt: str, settings: LlamaCppSamplingSettings):
+    def create_completion(self, prompt: str, settings: LlamaCppSamplingSettings, tool_registry: ToolRegistry = None):
         settings = deepcopy(settings.as_dict())
         headers = self._get_headers()
         data = self._prepare_data(settings, prompt=prompt)
+
+        if tool_registry is not None and tool_registry.guided_sampling_enabled:
+            data["grammar"] = tool_registry.get_guided_sampling_grammar()
 
         if settings.get('stream', False):
             return self._get_response_stream(headers, data, self.server_completion_endpoint)
@@ -107,10 +111,13 @@ class LlamaCppServerProvider(HostedLLMProvider):
         data = response.json()
         return {"choices": [{"text": data["content"]}]}
 
-    def create_chat_completion(self, messages: List[Dict[str, str]], settings: LlamaCppSamplingSettings):
+    def create_chat_completion(self, messages: List[Dict[str, str]], settings: LlamaCppSamplingSettings, tool_registry: ToolRegistry = None):
         settings = deepcopy(settings.as_dict())
         headers = self._get_headers()
         data = self._prepare_data(settings, messages=messages)
+
+        if tool_registry is not None and tool_registry.guided_sampling_enabled:
+            data["grammar"] = tool_registry.get_guided_sampling_grammar()
 
         if settings.get('stream', False):
             return self._get_response_stream(headers, data, self.server_chat_completion_endpoint)

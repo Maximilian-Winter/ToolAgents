@@ -35,9 +35,9 @@ class calculator(BaseModel):
     """
     Perform a math operation on two numbers.
     """
-    number_one: Union[int, float] = Field(..., description="First number.")
+    number_one: float = Field(..., description="First number.")
     operation: MathOperation = Field(..., description="Math operation to perform.")
-    number_two: Union[int, float] = Field(..., description="Second number.")
+    number_two: float = Field(..., description="Second number.")
 
     def run(self):
         if self.operation == MathOperation.ADD:
