@@ -1,11 +1,36 @@
 import json
 
 from .retrieval_memory import RetrievalMemory
+from .. import FunctionTool
 
 
 class RetrievalMemoryManager:
     def __init__(self, retrieval_memory: RetrievalMemory):
         self.retrieval_memory = retrieval_memory
+
+        def archival_memory_search(query: str, page: int = 0):
+            """
+            Search archival memory using semantic (embedding-based) search.
+            Args:
+                query (str): Search query.
+                page (int, optional): Page number. Defaults to 0.
+            """
+            return self.retrieve_memories(query, page=page)
+
+        def archival_memory_insert(memory: str, importance: float):
+            """
+            Add to archival memory.
+            Args:
+                memory (str): The archival memory to insert.
+                importance (float): The importance of the archival memory.
+            """
+            return self.add_memory_to_retrieval(
+                memory, importance
+            )
+        self.tools = [FunctionTool(archival_memory_insert), FunctionTool(archival_memory_search)]
+
+    def get_tools(self):
+        return self.tools
 
     def add_memory_to_retrieval(self, description: str, importance: float = 1.0) -> str:
         """

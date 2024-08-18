@@ -7,6 +7,10 @@ from typing import get_args, get_origin, Union, Any
 from pydantic import BaseModel
 from pydantic_core import PydanticUndefined
 
+import inspect
+from typing import Optional
+from pydantic import BaseModel
+
 
 def generate_function_definition(
         model: type[BaseModel],
@@ -14,7 +18,8 @@ def generate_function_definition(
         description: str = "",
 ) -> str:
     """
-    Generate a Python function definition with class definitions for BaseModel parameters.
+    Generate a Python function definition with class definitions for BaseModel parameters,
+    using the docstring from the model's run method if available.
 
     Args:
         model (type[BaseModel]): The Pydantic model class.
@@ -27,28 +32,24 @@ def generate_function_definition(
     output = ""
     parameters = []
     for name, field_type in model.__annotations__.items():
-        if isclass(field_type) and issubclass(field_type, BaseModel):
-            output += generate_class_definition(field_type, field_type.__name__)
-        elif get_origin(field_type) == Union or isinstance(field_type, UnionType):
-            element_types = get_args(field_type)
-            for typ in element_types:
-                if isclass(typ) and issubclass(typ, BaseModel):
-                    output += generate_class_definition(typ, typ.__name__)
         parameters.append(f"{name}: {get_type_annotation(field_type)}")
 
     function_def = f"def {function_name}({', '.join(parameters)}):\n"
-    function_def += f'    """\n'
-    function_def += f'    {description}\n' if description else ''
-    function_def += f'    Args:\n'
 
-    for name, field_type in model.__annotations__.items():
-        field_info = model.model_fields.get(name)
-        field_description = field_info.description if field_info and field_info.description else "No description provided."
-        function_def += f'        {name} ({get_type_annotation(field_type)}): {field_description}\n'
+    # Check if the model has a run method and if it has a docstring
+    run_method = getattr(model, 'run', None)
+    if run_method and inspect.getdoc(run_method):
+        function_def += f'    """\n{inspect.getdoc(run_method)}\n    """\n'
+    else:
+        function_def += f'    """\n'
+        function_def += f'    {description}\n' if description else ''
+        function_def += f'    Args:\n'
 
-    function_def += f'    """\n'
-    function_def += f'    # Implementation omitted for brevity\n'
-    function_def += f'    pass\n'
+        for name, field_type in model.__annotations__.items():
+            field_info = model.model_fields.get(name)
+            field_description = field_info.description if field_info and field_info.description else "No description provided."
+            function_def += f'        {name} ({get_type_annotation(field_type)}): {field_description}\n'
+        function_def += f'    """\n'
 
     output += function_def
     return output
@@ -87,7 +88,6 @@ def generate_class_definition(model: type[BaseModel], class_name: str) -> str:
     class_def += '    """\n'
     class_def += '    # Implementation omitted for brevity\n'
     class_def += '    pass\n\n'
-
 
     output = enum_definitions + class_def
     return output

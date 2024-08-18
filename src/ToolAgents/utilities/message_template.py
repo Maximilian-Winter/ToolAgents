@@ -39,7 +39,7 @@ class MessageTemplate:
             )
 
     @classmethod
-    def from_string(cls, template_string):
+    def from_string(cls, template_string) -> 'MessageTemplate':
         """
         Create a PromptTemplate instance from a string.
 
@@ -52,7 +52,7 @@ class MessageTemplate:
         return cls(template_string=template_string)
 
     @classmethod
-    def from_file(cls, template_file):
+    def from_file(cls, template_file) -> 'MessageTemplate':
         """
         Create a PromptTemplate instance from a file.
 

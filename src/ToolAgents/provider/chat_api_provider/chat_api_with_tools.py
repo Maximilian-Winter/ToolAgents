@@ -169,6 +169,9 @@ class AnthropicSettings:
         self.top_k = 0.0
         self.max_tokens = 1024
         self.stop_sequences = []
+        self.cache_system_prompt = True
+        self.cache_user_messages = False
+        self.cache_recent_messages = 10
 
 
 class AnthropicChatAPI(ChatAPIProvider):
@@ -177,25 +180,42 @@ class AnthropicChatAPI(ChatAPIProvider):
         self.model = model
         self.settings = AnthropicSettings()
 
-    def prepare_messages(self, messages: List[Dict[str, str]]) -> tuple:
+    def prepare_messages(self, settings: AnthropicSettings, messages: List[Dict[str, str]]) -> tuple:
         system_message = None
         other_messages = []
         cleaned_messages = clean_history_messages(messages)
-        for message in cleaned_messages:
+        for i, message in enumerate(cleaned_messages):
             if message['role'] == 'system':
-                system_message = message['content']
+                system_message = [
+                    {"type": "text", "text": message['content']}
+                ]
+                if settings.cache_system_prompt:
+                    system_message[0]["cache_control"] = {"type": "ephemeral"}
             else:
-                other_messages.append({
+                msg = {
                     'role': message['role'],
-                    'content': message['content']
-                })
+                    'content': [
+                        {
+                            "type": "text",
+                            "text": message["content"]
+                        }
+                    ],
+                }
+                if settings.cache_user_messages:
+                    if i >= len(cleaned_messages) - settings.cache_recent_messages:
+                        msg["content"][0]["cache_control"] = {"type": "ephemeral"}
+
+                other_messages.append(msg)
         return system_message, other_messages
 
     def get_response(self, messages: List[Dict[str, str]], settings=None,
                      tools: Optional[List[FunctionTool]] = None) -> str:
-        system, other_messages = self.prepare_messages(messages)
+        system, other_messages = self.prepare_messages(self.settings if settings is None else settings, messages)
         anthropic_tools = [tool.to_anthropic_tool() for tool in tools] if tools else None
         response = self.client.messages.create(
+            extra_headers={
+                "anthropic-beta": "prompt-caching-2024-07-31"
+            } if self.settings.cache_system_prompt or (settings is not None and settings.cache_system_prompt) else None,
             model=self.model,
             system=system if system else [],
             messages=other_messages,
@@ -234,11 +254,13 @@ class AnthropicChatAPI(ChatAPIProvider):
 
     def get_streaming_response(self, messages: List[Dict[str, str]], settings=None,
                                tools: Optional[List[FunctionTool]] = None) -> Generator[str, None, None]:
-        system, other_messages = self.prepare_messages(messages)
+        system, other_messages = self.prepare_messages(self.settings if settings is None else settings, messages)
         anthropic_tools = [tool.to_anthropic_tool() for tool in tools] if tools else None
 
-        print(json.dumps(anthropic_tools, indent=4))
         stream = self.client.messages.create(
+            extra_headers={
+                "anthropic-beta": "prompt-caching-2024-07-31"
+            } if self.settings.cache_system_prompt or (settings is not None and settings.cache_system_prompt) else None,
             model=self.model,
             system=system if system else [],
             messages=other_messages,

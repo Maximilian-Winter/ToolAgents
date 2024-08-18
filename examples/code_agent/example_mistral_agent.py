@@ -6,7 +6,7 @@ from code_executer import PythonCodeExecutor, system_message_code_agent, run_cod
 
 provider = LlamaCppServerProvider("http://127.0.0.1:8080/")
 
-agent = MistralAgent(provider=provider, debug_output=False)
+agent = MistralAgent(provider=provider, debug_output=True)
 
 settings = provider.get_default_settings()
 settings.neutralize_all_samplers()
@@ -14,31 +14,14 @@ settings.temperature = 0.1
 settings.set_stop_tokens(["</s>"], None)
 settings.set_max_new_tokens(4096)
 
-chat_history = ChatHistory()
-chat_history.add_system_message("<system_instructions>\n" + system_message_code_agent + f"""\n\n## Predefined Functions
 
-You have access to the following predefined functions in Python:
-
-```python
-{get_weather_function_tool.get_python_documentation()}
-
-{calculator_function_tool.get_python_documentation()}
-
-{current_datetime_function_tool.get_python_documentation()}
-```
-
-You can call these predefined functions in Python like this:
-
-```python_interpreter
-example_function(example_parameter=10.0)
-```
-""" + "\n</system_instructions>")
 python_code_executor = PythonCodeExecutor(
     [get_weather_function_tool, calculator_function_tool, current_datetime_function_tool])
 
-prompt_function_calling = "Get the current weather in New York in Celsius. Get the current weather in London in Celsius. Get the current weather on the North Pole in Celsius. Calculate 5215 * 6987. Get the current date and time in the format: dd-mm-yyyy hh:mm"
+chat_history = ChatHistory()
+chat_history.add_system_message(python_code_executor.get_python_interpreter_system_message())
 
-promo = "Implement the Runge Kutta method in C++."
+prompt_function_calling = "Get the current weather in New York in Celsius. Get the current weather in London in Celsius. Get the current weather on the North Pole in Celsius. Calculate 5215 * 6987. Get the current date and time in the format: dd-mm-yyyy hh:mm"
 
 prompt = r"""Create a graph of x^2 + 5 with your Python Code Interpreter and save it as an image."""
 prompt2 = r"""Create an interesting and engaging random 3d scatter plot with your Python Code Interpreter and save it as an image."""

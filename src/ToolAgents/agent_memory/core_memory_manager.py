@@ -9,9 +9,6 @@ def create_enum(enum_name, enum_values):
     return Enum(enum_name, {value: value for value in enum_values})
 
 
-
-
-
 class CoreMemoryManager:
     def __init__(self, core_memory_keys: list[str], core_memory: dict):
         self.core_memory = core_memory
@@ -43,14 +40,17 @@ class CoreMemoryManager:
 
             if key in self.core_memory:
                 if old_content in self.core_memory[key]:
-                    self.core_memory[key] = new_content
+                    self.core_memory[key].replace(old_content, new_content)
                     self.last_modified = datetime.datetime.now().strftime("%d/%m/%Y, %H:%M:%S")
+                    return f"Old content replaced. Key: {key}."
                 else:
                     return f"Old content is not present in key: {key}."
-                return f"Old content replaced. Key: {key}."
+
             else:
                 return f"Key not found in Core memory. Key: {key}."
+
         self.tools = [FunctionTool(append_core_memory), FunctionTool(replace_in_core_memory)]
+
     def build_core_memory_context(self):
         context = ""
         for key, item in self.core_memory.items():

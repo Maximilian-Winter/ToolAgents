@@ -1,11 +1,17 @@
-import datetime
-
 import json
 import os
-import pathlib
-from typing import List, Dict, Any
+from enum import Enum
+
+from typing import List, Dict, Any, Optional
 
 from ToolAgents.utilities.message_template import MessageTemplate
+
+
+class ChatMessageRole(str, Enum):
+    System = "system"
+    User = "user"
+    Assistant = "assistant"
+    Tool = "tool"
 
 
 class ChatFormatter:
@@ -85,8 +91,8 @@ class ChatHistory:
     def add_tool_message(self, message: str, **kwargs):
         self.messages.append(Message(role='tool', content=message, **kwargs))
 
-    def to_list(self) -> List[Dict[str, Any]]:
-        return [message.to_dict() for message in self.messages]
+    def to_list(self, message_filter_keys: Optional[List[str]] = None) -> List[Dict[str, Any]]:
+        return [message.to_dict(message_filter_keys) for message in self.messages]
 
     def save_history(self, filename: str) -> None:
         if self.history_folder is None:
