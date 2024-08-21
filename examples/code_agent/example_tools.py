@@ -52,16 +52,21 @@ class calculator(BaseModel):
             raise ValueError("Unknown operation.")
 
 
+class unit(Enum):
+    celsius = "celsius"
+    fahrenheit = "fahrenheit"
+
+
 # Example function based on an OpenAI example.
 # llama-cpp-agent supports OpenAI like schemas for function definition.
-def get_current_weather(location, unit):
+def get_current_weather(location, unit_of_measurement: unit):
     """Get the current weather in a given location"""
     if "London" in location:
-        return f"Weather in {location}: {22}° {unit.value}"
+        return f"Weather in {location}: {22}° {unit_of_measurement.value}"
     elif "New York" in location:
-        return f"Weather in {location}: {24}° {unit.value}"
+        return f"Weather in {location}: {24}° {unit_of_measurement.value}"
     elif "North Pole" in location:
-        return f"Weather in {location}: {-42}° {unit.value}"
+        return f"Weather in {location}: {-42}° {unit_of_measurement.value}"
     else:
         return f"Weather in {location}: unknown"
 
@@ -79,9 +84,11 @@ open_ai_tool_spec = {
                     "type": "string",
                     "description": "The city and state, e.g. San Francisco, CA",
                 },
-                "unit": {"type": "string", "description": "The unit of measurement. Should be celsius or fahrenheit", "enum": ["celsius", "fahrenheit"]},
+                "unit_of_measurement": {"type": "string",
+                                        "description": "The unit of measurement. Should be celsius or fahrenheit",
+                                        "enum": ["celsius", "fahrenheit"]},
             },
-            "required": ["location", "unit"],
+            "required": ["location", "unit_of_measurement"],
         },
     },
 }
@@ -205,6 +212,7 @@ class FlightTimes(BaseModel):
         key: str = f'{self.departure}-{self.arrival}'.upper()
         result: Dict[str, Any] = flights.get(key, {'error': 'Flight not found'})
         return json.dumps(result)
+
 
 get_flight_times_tool = FunctionTool(FlightTimes)
 calculator_function_tool = FunctionTool(calculator)

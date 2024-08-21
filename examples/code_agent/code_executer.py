@@ -9,20 +9,19 @@ from typing import List, Dict, Any
 from pydantic import BaseModel
 from ToolAgents import FunctionTool
 from ToolAgents.utilities import ChatHistory
-from ToolAgents.utilities.documentation_generation import generate_function_definition, generate_class_definition
+from ToolAgents.utilities.documentation_generation import generate_function_definition, generate_class_definition, \
+    generate_type_definitions
 from ToolAgents.utilities.message_template import MessageTemplate
 
-system_message_code_agent = """You are an advanced AI assistant with Python code execution capabilities. You have access to a Python interpreter that allows you to run code in real-time, enabling you to perform a wide range of tasks from simple calculations to complex data analysis and system interactions.
+system_message_code_agent = """You are an advanced AI assistant with the ability to execute Python code. You have access to a Python code interpreter that allows you to execute Python code to accomplish various tasks. This capability enables you to perform a wide range of operations, from simple calculations to complex data analysis and system interactions.
 
 ## Using the Python Interpreter
 
-To execute Python code, enclose it within a markdown code block tagged as Python. For example:
+To use the Python code interpreter, write the code you want to execute in a markdown python code block. For example to print 'Hello World!' do the following:
 
 ```python
 print('Hello, World!')
 ```
-
-After writing the code, it will be automatically executed, and the output will be displayed.
 
 ## Available Resources
 
@@ -30,7 +29,7 @@ You have access to the following pre-defined resources. These are already import
 
 ### Predefined Types
 
-The following are class stubs. These define the structure and attributes of available custom types, but do not include method implementations. You can use these types in your code, but you don't need to (and shouldn't) implement their methods or modify their structure.
+The following are class stubs. These define the structure and attributes of available custom types, but don't show implementation details.
 
 ```python
 {predefined_types}
@@ -38,7 +37,7 @@ The following are class stubs. These define the structure and attributes of avai
 
 ### Predefined Functions
 
-The following are function stubs. These define the interface and purpose of available functions, but do not include the actual implementation. You can use these functions in your code, but you don't need to (and shouldn't) implement them yourself.
+The following are function stubs. These define the interface and purpose of available functions, but do not include the actual implementation. You can use these functions in your code as they are, don't redefine them.
 
 ```python
 {predefined_functions}
@@ -46,15 +45,17 @@ The following are function stubs. These define the interface and purpose of avai
 
 ### Predefined Variables
 
-The following are predefined variables available in the environment. These variables are already initialized and can be used directly in your code. Do not attempt to reinitialize or modify these variables unless explicitly instructed to do so.
+The following are predefined variables available in the environment. These variables are already initialized and can be used directly in your code.
 
 ```python
 {predefined_variables}
-```"""
+```
+
+Remember, your goal is to assist users effectively while working within the constraints of this Python environment. Good luck!"""
 
 
 class PythonCodeExecutor:
-    def __init__(self, predefined_functions: List[FunctionTool] = None, predefined_types: list = None,
+    def __init__(self, predefined_types: list = None, predefined_functions: List[FunctionTool] = None,
                  predefined_variables: list = None):
         self.code_pattern = re.compile(r'```python\n(.*?)```', re.DOTALL)
         self.global_context = {}
@@ -69,24 +70,29 @@ class PythonCodeExecutor:
         if predefined_types:
             for predefined_type in predefined_types:
                 self.predefined_types[predefined_type.__name__] = predefined_type
-                if issubclass(predefined_type, BaseModel):
-                    predefined_types.append(generate_class_definition(predefined_type, predefined_type.__name__))
+            predefined_types_docs = generate_type_definitions(predefined_types)
+        else:
+            predefined_types_docs.append("None")
 
         if predefined_functions:
             for function in predefined_functions:
                 self.predefined_functions[function.model.__name__] = function
                 predefined_functions_docs.append(function.get_python_documentation())
+        else:
+            predefined_functions_docs.append("None")
 
         if predefined_variables:
             for variable in predefined_variables:
                 self.predefined_variables[variable.__name__] = variable
                 predefined_variables_docs.append(variable.__name__)
+        else:
+            predefined_variables_docs.append("None")
 
         template = MessageTemplate.from_string(system_message_code_agent)
         self.system_message_code_agent = template.generate_message_content(
             predefined_types='\n\n'.join(predefined_types_docs),
             predefined_functions='\n\n'.join(predefined_functions_docs),
-            predefined_variables='\n'.join(predefined_functions_docs))
+            predefined_variables='\n'.join(predefined_variables_docs))
         self._setup_predefined_types()
         self._setup_predefined_functions()
         self._setup_predefined_variables()
@@ -114,6 +120,10 @@ class PythonCodeExecutor:
             if args:
                 arg_names = list(model_class.model_fields.keys())
                 kwargs.update(zip(arg_names, args))
+
+            for kwarg_name, kwarg_value in kwargs.items():
+                if isinstance(kwarg_value, Enum):
+                    kwargs[kwarg_name] = kwarg_value.value
 
             # Instantiate the model using only keyword arguments
             instance = model_class(**kwargs)
@@ -220,13 +230,13 @@ def run_code_agent(agent, settings, chat_history: ChatHistory, user_input: str,
     print()
     while True:
         chat_history.add_assistant_message(message=full_response)
-        if "```python_interpreter" in full_response:
+        if "```python" in full_response:
             full_response += "\n```\n"
             code_ex, has_error = python_code_executor.run(full_response)
             print("Python Execution Output: ")
             print(code_ex)
             chat_history.add_message("user",
-                                     "This is an automatic response from the Python Interpreter:\n\nResults of last Code execution:\n" + code_ex)
+                                     "Results of last Code execution:\n" + code_ex)
 
             print("Response: ", end="")
             result_gen = agent.get_streaming_response(

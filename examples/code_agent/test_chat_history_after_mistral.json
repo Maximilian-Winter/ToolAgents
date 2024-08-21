@@ -1,0 +1,22 @@
+[
+  {
+    "role": "system",
+    "content": "You are an advanced AI assistant with the ability to execute Python code. You have access to a Python code interpreter that allows you to execute Python code to accomplish various tasks. This capability enables you to perform a wide range of operations, from simple calculations to complex data analysis and system interactions.\n\n## Using the Python Interpreter\n\nTo use the Python code interpreter, write the code you want to execute in a markdown python code block. For example to print 'Hello World!' do the following:\n\n```python\nprint('Hello, World!')\n```\n\n## Available Resources\n\nYou have access to the following pre-defined resources. These are already imported and ready to use - you don't need to import or define them again.\n\n### Predefined Types\n\nThe following are class stubs. These define the structure and attributes of available custom types, but don't show implementation details.\n\n```python\nclass unit(Enum):\n    celsius = 'celsius'\n    fahrenheit = 'fahrenheit'\n\nclass MathOperation(Enum):\n    ADD = 'add'\n    SUBTRACT = 'subtract'\n    MULTIPLY = 'multiply'\n    DIVIDE = 'divide'\n```\n\n### Predefined Functions\n\nThe following are function stubs. These define the interface and purpose of available functions, but do not include the actual implementation. You can use these functions in your code as they are, don't redefine them.\n\n```python\ndef get_current_weather(location: str, unit_of_measurement: unit_of_measurement):\n    \"\"\"\n    Get the current weather in a given location\n    Args:\n        location (str): The city and state, e.g. San Francisco, CA\n        unit_of_measurement (unit_of_measurement): The unit of measurement. Should be celsius or fahrenheit\n    \n    \"\"\"\n\n\ndef calculator(number_one: Union[int, float], operation: MathOperation, number_two: Union[int, float]):\n    \"\"\"\n    \n    Perform a math operation on two numbers.\n    \n    Args:\n        number_one (Union[int, float]): First number.\n        operation (MathOperation): Math operation to perform.\n        number_two (Union[int, float]): Second number.\n    \n    \"\"\"\n\n\ndef get_current_datetime(output_format: Optional[str]):\n    \"\"\"\n    Get the current date and time in the given format.\n\n    Args:\n        output_format (Optional[str]): formatting string for the date and time, defaults to '%Y-%m-%d %H:%M:%S'\n    \n    \"\"\"\n\n```\n\n### Predefined Variables\n\nThe following are predefined variables available in the environment. These variables are already initialized and can be used directly in your code.\n\n```python\nNone\n```\n\nRemember, your goal is to assist users effectively while working within the constraints of this Python environment. Good luck!"
+  },
+  {
+    "role": "user",
+    "content": "Get the current weather in New York in Celsius. Get the current weather in London in Celsius. Get the current weather on the North Pole in Celsius. Calculate 5215 * 6987. Get the current date and time in the format: dd-mm-yyyy hh:mm"
+  },
+  {
+    "role": "assistant",
+    "content": "```python\nfrom datetime import datetime\n\n# Get the current weather in New York, London, and North Pole in Celsius\nprint(get_current_weather('New York', unit.celsius))\nprint(get_current_weather('London', unit.celsius))\nprint(get_current_weather('North Pole', unit.celsius))\n\n# Calculate 5215 * 6987\nresult = calculator(5215, MathOperation.MULTIPLY, 6987)\nprint(result)\n\n# Get the current date and time in the format: dd-mm-yyyy hh:mm\ncurrent_datetime = get_current_datetime('%d-%m-%Y %H:%M')\nprint(current_datetime)\n```"
+  },
+  {
+    "role": "user",
+    "content": "Results of last Code execution:\n1. Codeblock Output: Weather in New York: 24\u00b0 celsius\nWeather in London: 22\u00b0 celsius\nWeather in North Pole: -42\u00b0 celsius\n36437205\n19-08-2024 00:35\n\n"
+  },
+  {
+    "role": "assistant",
+    "content": "Here are the results of the executed code:\n\n1. **Current Weather:**\n   - New York: 24\u00b0C\n   - London: 22\u00b0C\n   - North Pole: -42\u00b0C\n\n2. **Multiplication Result:** The product of 5215 and 6987 is 36,437,205.\n\n3. **Current Date and Time:** Today's date and time is 19-08-2024 at 00:35 (in the format dd-mm-yyyy hh:mm)."
+  }
+]

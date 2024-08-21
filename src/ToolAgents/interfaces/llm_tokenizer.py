@@ -5,6 +5,7 @@ from transformers import AutoTokenizer
 
 
 from ToolAgents.function_tool import ToolRegistry
+from ToolAgents.utilities.chat_history import AdvancedChatFormatter
 
 
 class LLMTokenizer(abc.ABC):
@@ -33,3 +34,13 @@ class HuggingFaceTokenizer(LLMTokenizer):
         return self.tokenizer.encode(text, add_special_tokens=False)
 
 
+class TemplateTokenizer(LLMTokenizer):
+    def __init__(self, advanced_chat_formatter: AdvancedChatFormatter, generation_prompt: str = None):
+        self.chat_formatter = advanced_chat_formatter
+        self.generation_prompt = generation_prompt
+
+    def apply_template(self, messages: List[Dict[str, str]], tools: ToolRegistry) -> str:
+        return self.chat_formatter.format_messages(messages=messages) + (self.generation_prompt if self.generation_prompt else "")
+
+    def tokenize(self, text: str) -> List[int]:
+        raise NotImplemented()

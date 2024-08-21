@@ -31,19 +31,31 @@ class ChatFormatter:
 
 
 class AdvancedChatFormatter:
-    def __init__(self, role_templates: dict[str, str]):
+    def __init__(self, role_templates: dict[str, str], include_system_message_in_first_user_message: bool = False):
+        self.include_system_message_in_first_user_message = include_system_message_in_first_user_message
         self.role_templates: dict[str, MessageTemplate] = {}
         for key, value in role_templates.items():
             self.role_templates[key] = MessageTemplate.from_string(value)
 
     def format_messages(self, messages):
         formatted_chat = []
+        system_message = None
         for message in messages:
             role = message['role']
             content = message['content']
             template = self.role_templates[role]
-            formatted_message = template.generate_message_content(content=content)
-            formatted_chat.append(formatted_message)
+
+            if self.include_system_message_in_first_user_message and role == "system":
+                formatted_message = template.generate_message_content(content=content)
+                system_message = formatted_message
+            elif self.include_system_message_in_first_user_message and role == "user" and system_message is not None:
+                formatted_message = template.generate_message_content(content=system_message+content)
+                system_message = None
+                formatted_chat.append(formatted_message)
+            else:
+                formatted_message = template.generate_message_content(content=content)
+                formatted_chat.append(formatted_message)
+
         return ''.join(formatted_chat)
 
 
