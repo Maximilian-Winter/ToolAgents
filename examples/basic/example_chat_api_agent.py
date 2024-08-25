@@ -17,7 +17,7 @@ api = AnthropicChatAPI(api_key=os.getenv("ANTHROPIC_API_KEY"), model="claude-3-5
 settings = AnthropicSettings()
 
 # Create the ChatAPIAgent
-agent = ChatAPIAgent(chat_api=api, debug_output=False)
+agent = ChatAPIAgent(chat_api=api, debug_output=True)
 
 settings.temperature = 0.45
 settings.top_p = 0.85

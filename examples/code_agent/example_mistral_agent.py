@@ -20,11 +20,11 @@ advanced_chat_formatter = AdvancedChatFormatter({
 }, include_system_message_in_first_user_message=True)
 
 # agent = MistralAgent(provider=provider, debug_output=True)
-agent = TemplateAgent(provider, advanced_chat_formatter=advanced_chat_formatter, generation_prompt=None, debug_output=True)
+agent = TemplateAgent(provider, advanced_chat_formatter=advanced_chat_formatter, generation_prompt=None, debug_output=False)
 
 settings = provider.get_default_settings()
 settings.neutralize_all_samplers()
-settings.temperature = 0.3
+settings.temperature = 0.1
 settings.set_stop_tokens(["</s>"], None)
 settings.set_max_new_tokens(4096)
 

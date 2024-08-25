@@ -357,17 +357,20 @@ def pydantic_model_to_openai_function_definition(pydantic_model: Type[BaseModel]
             # Handling Union types specifically
             function_definition["function"]["parameters"]["properties"][prop_name] = {
                 "type": "union",
-                "options": openai_type,
-                "description": field_description,
+                "options": openai_type
             }
+            if len(field_description) > 0:
+                function_definition["function"]["parameters"]["properties"][prop_name]["description"] = field_description
         elif isinstance(openai_type, list):
-            # Handling Union types specifically
+            if len(field_description) > 0:
+                openai_type[0]["description"] = field_description
             function_definition["function"]["parameters"]["properties"][prop_name] = openai_type[0]
         else:
             function_definition["function"]["parameters"]["properties"][prop_name] = {
-                **openai_type,
-                "description": field_description,
+                **openai_type
             }
+            if len(field_description) > 0:
+                function_definition["function"]["parameters"]["properties"][prop_name]["description"] = field_description
 
     return function_definition
 
@@ -569,7 +572,7 @@ class ToolRegistry:
         return [tool.to_openai_tool() for tool in self.tools.values()]
 
     def get_anthropic_tools(self):
-        return [tool.to_openai_tool() for tool in self.tools.values()]
+        return [tool.to_anthropic_tool() for tool in self.tools.values()]
 
     def get_nous_hermes_pro_tools(self):
         return [tool.to_nous_hermes_pro_tool() for tool in self.tools.values()]

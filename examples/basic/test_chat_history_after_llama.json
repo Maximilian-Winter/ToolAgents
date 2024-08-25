@@ -9,55 +9,6 @@
   },
   {
     "role": "assistant",
-    "content": "[{\"name\": \"get_current_weather\", \"arguments\": {\"location\": \"London, UK\", \"unit\": \"celsius\"}}, {\"name\": \"get_current_weather\", \"arguments\": {\"location\": \"New York, USA\", \"unit\": \"celsius\"}}, {\"name\": \"get_current_weather\", \"arguments\": {\"location\": \"North Pole\", \"unit\": \"celsius\"}}, {\"name\": \"calculator\", \"arguments\": {\"number_one\": 42, \"operation\": \"multiply\", \"number_two\": 42}}, {\"name\": \"calculator\", \"arguments\": {\"number_one\": 74, \"operation\": \"add\", \"number_two\": 26}}, {\"name\": \"calculator\", \"arguments\": {\"number_one\": 7, \"operation\": \"multiply\", \"number_two\": 26}}, {\"name\": \"calculator\", \"arguments\": {\"number_one\": 4, \"operation\": \"add\", \"number_two\": 6}}, {\"name\": \"calculator\", \"arguments\": {\"number_one\": 96, \"operation\": \"divide\", \"number_two\": 8}}, {\"name\": \"get_current_datetime\", \"arguments\": {\"output_format\": \"%d.%m.%Y %H:%M\"}}]"
-  },
-  {
-    "role": "tool",
-    "content": "Weather in London, UK: 22\u00b0 celsius",
-    "tool_call_id": "uabzbYbTd"
-  },
-  {
-    "role": "tool",
-    "content": "Weather in New York, USA: 24\u00b0 celsius",
-    "tool_call_id": "ZUEstCUfp"
-  },
-  {
-    "role": "tool",
-    "content": "Weather in North Pole: -42\u00b0 celsius",
-    "tool_call_id": "2voFOkCEp"
-  },
-  {
-    "role": "tool",
-    "content": "1764",
-    "tool_call_id": "MUkyAKnJ0"
-  },
-  {
-    "role": "tool",
-    "content": "100",
-    "tool_call_id": "1jGbCcGbp"
-  },
-  {
-    "role": "tool",
-    "content": "182",
-    "tool_call_id": "634JCV87K"
-  },
-  {
-    "role": "tool",
-    "content": "10",
-    "tool_call_id": "I8NXol4OZ"
-  },
-  {
-    "role": "tool",
-    "content": "12.0",
-    "tool_call_id": "0XSXX5fyH"
-  },
-  {
-    "role": "tool",
-    "content": "08.08.2024 00:27",
-    "tool_call_id": "seSfe4VPG"
-  },
-  {
-    "role": "assistant",
-    "content": "The final answer is:\n\nWeather in London, UK: 22\u00b0 celsius\nWeather in New York, USA: 24\u00b0 celsius\nWeather in North Pole: -42\u00b0 celsius\n1764\n100\n182\n10\n12.0\n08.08.2024 00:27"
+    "content": "[{\"function\": \"get_current_weather\", \"arguments\": {\"location\": \"London, UK\", \"unit\": \"celsius\"}},\n {\"function\": \"get_current_weather\", \"arguments\": {\"location\": \"New York, NY\", \"unit\": \"celsius\"}},\n {\"function\": \"get_current_weather\", \"arguments\": {\"location\": \"North Pole\", \"unit\": \"celsius\"}},\n {\"function\": \"calculator\", \"arguments\": {\"number_one\": 42, \"operation\": \"multiply\", \"number_two\": 42}},\n {\"function\": \"calculator\", \"arguments\": {\"number_one\": 74, \"operation\": \"add\", \"number_two\": 26}},\n {\"function\": \"calculator\", \"arguments\": {\"number_one\": 7, \"operation\": \"multiply\", \"number_two\": 26}},\n {\"function\": \"calculator\", \"arguments\": {\"number_one\": 4, \"operation\": \"add\", \"number_two\": 6}},\n {\"function\": \"calculator\", \"arguments\": {\"number_one\": 96, \"operation\": \"divide\", \"number_two\": 8}},\n {\"function\": \"get_current_datetime\", \"arguments\": {}}]\n\nHere are the results of your requests:\n\n1. London, UK: [Current weather data for London, UK in Celsius]\n2. New York, NY: [Current weather data for New York, NY in Celsius]\n3. North Pole: [Current weather data for the North Pole in Celsius]\n4. Calculations:\n   - 42 * 42 = 1764\n   - 74 + 26 = 100\n   - 7 * 26 = 182\n   - 4 + 6 = 10\n   - 96 / 8 = 12\n5. Current date and time: [Current date and time in the format dd.mm.yyy hh:mm]"
   }
 ]

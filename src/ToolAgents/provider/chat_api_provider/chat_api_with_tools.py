@@ -166,7 +166,7 @@ class AnthropicSettings:
     def __init__(self):
         self.temperature = 0.7
         self.top_p = 1.0
-        self.top_k = 0.0
+        self.top_k = 0
         self.max_tokens = 1024
         self.stop_sequences = []
         self.cache_system_prompt = True
@@ -194,12 +194,7 @@ class AnthropicChatAPI(ChatAPIProvider):
             else:
                 msg = {
                     'role': message['role'],
-                    'content': [
-                        {
-                            "type": "text",
-                            "text": message["content"]
-                        }
-                    ],
+                    'content': message["content"],
                 }
                 if settings.cache_user_messages:
                     if i >= len(cleaned_messages) - settings.cache_recent_messages:
