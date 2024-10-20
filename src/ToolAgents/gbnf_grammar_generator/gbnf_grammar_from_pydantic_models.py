@@ -22,10 +22,7 @@ from typing import (
 from docstring_parser import parse
 from pydantic import BaseModel, Field, create_model
 
-from llama_cpp_agent.llm_documentation import (
-    generate_markdown_documentation,
-    generate_text_documentation,
-)
+from ToolAgents.llm_documentation import generate_markdown_documentation, generate_text_documentation
 
 if TYPE_CHECKING:
     from types import GenericAlias

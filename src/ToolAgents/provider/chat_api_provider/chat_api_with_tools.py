@@ -50,7 +50,7 @@ class OpenAISettings:
     def __init__(self):
         self.temperature = 0.4
         self.top_p = 1
-        self.max_tokens = 1024
+        self.max_tokens = 8192
 
 
 class OpenAIChatAPI(ChatAPIProvider):
@@ -90,17 +90,27 @@ class OpenAIChatAPI(ChatAPIProvider):
     def get_streaming_response(self, messages: List[Dict[str, str]], settings=None,
                                tools: Optional[List[FunctionTool]] = None) -> Generator[str, None, None]:
         openai_tools = [tool.to_openai_tool() for tool in tools] if tools else None
-        stream = self.client.chat.completions.create(
-            model=self.model,
-            messages=clean_history_messages(messages),
-            max_tokens=self.settings.max_tokens,
-            stream=True,
-            temperature=self.settings.temperature if settings is None else settings.temperature,
-            top_p=self.settings.top_p if settings is None else settings.top_p,
-            tools=openai_tools,
-            tool_choice="auto" if tools else None
-        )
 
+        if openai_tools is None:
+            stream = self.client.chat.completions.create(
+                model=self.model,
+                messages=clean_history_messages(messages),
+                max_tokens=self.settings.max_tokens,
+                stream=True,
+                temperature=self.settings.temperature if settings is None else settings.temperature,
+                top_p=self.settings.top_p if settings is None else settings.top_p
+            )
+        else:
+            stream = self.client.chat.completions.create(
+                model=self.model,
+                messages=clean_history_messages(messages),
+                max_tokens=self.settings.max_tokens,
+                stream=True,
+                temperature=self.settings.temperature if settings is None else settings.temperature,
+                top_p=self.settings.top_p if settings is None else settings.top_p,
+                tools=openai_tools,
+                tool_choice="auto"
+            )
         current_content = ""
         current_tool_calls = []
         alt_index = 0

@@ -1,4 +1,5 @@
-from ToolAgents.agents import LlamaAgent
+from ToolAgents import ToolRegistry
+from ToolAgents.agents import Llama31Agent
 from ToolAgents.provider import LlamaCppSamplingSettings, LlamaCppServerProvider
 from ToolAgents.provider import VLLMServerSamplingSettings, \
     VLLMServerProvider
@@ -7,7 +8,7 @@ from code_interpreter import CodeInterpreter
 
 provider = LlamaCppServerProvider("http://127.0.0.1:8080/")
 
-agent = LlamaAgent(llm_provider=provider, debug_output=True)
+agent = Llama31Agent(provider=provider, debug_output=True)
 
 settings = LlamaCppSamplingSettings()
 settings.temperature = 0.3
@@ -31,7 +32,7 @@ prompt3 = r"""Analyze and visualize the dataset "./input.csv" with your Python c
 chat_history.add_user_message(prompt)
 result = agent.get_streaming_response(
     messages=chat_history.to_list(),
-    sampling_settings=settings, tools=tools, add_tool_instructions_to_first_message=True)
+    settings=settings, tool_registry=ToolRegistry(tools))
 for tok in result:
     print(tok, end="", flush=True)
 print()
@@ -40,7 +41,7 @@ chat_history.add_list_of_dicts(agent.last_messages_buffer)
 chat_history.add_user_message(prompt2)
 result = agent.get_streaming_response(
     messages=chat_history.to_list(),
-    sampling_settings=settings, tools=tools)
+    settings=settings, tool_registry=ToolRegistry(tools))
 for tok in result:
     print(tok, end="", flush=True)
 print()
@@ -49,7 +50,7 @@ chat_history.add_list_of_dicts(agent.last_messages_buffer)
 chat_history.add_user_message(prompt3)
 result = agent.get_streaming_response(
     messages=chat_history.to_list(),
-    sampling_settings=settings, tools=tools)
+    settings=settings, tool_registry=ToolRegistry(tools))
 for tok in result:
     print(tok, end="", flush=True)
 print()

@@ -4,8 +4,6 @@ from enum import Enum
 from typing import Union, get_origin, get_args, List, Set, Dict, Any
 from types import NoneType
 
-from llama_cpp_agent.llm_documentation import generate_text_documentation
-
 
 def custom_json_schema(model: BaseModel):
     def get_type_str(annotation):

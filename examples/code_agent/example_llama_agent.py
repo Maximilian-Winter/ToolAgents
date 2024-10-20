@@ -35,7 +35,7 @@ example_function(example_parameter=10.0)
 ```
 """)
 
-python_code_executor = PythonCodeExecutor([get_weather_function_tool, calculator_function_tool, current_datetime_function_tool])
+python_code_executor = PythonCodeExecutor(predefined_functions=[get_weather_function_tool, calculator_function_tool, current_datetime_function_tool])
 
 prompt_function_calling = "Get the current weather in New York in Celsius. Get the current weather in London in Celsius. Get the current weather on the North Pole in Celsius. Calculate 5215 * 6987. Get the current date and time in the format: dd-mm-yyyy hh:mm"
 
