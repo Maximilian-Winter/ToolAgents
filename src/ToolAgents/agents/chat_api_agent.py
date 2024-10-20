@@ -128,13 +128,21 @@ class ChatAPIAgent:
                                                                 tool_call_id=tool_call_id,
                                                                 tool_name=tool_call["function"]["name"],
                                                                 tool_args=call_parameters))
-                    tool_messages.append(
-                        self.chat_api.generate_tool_response_message(
-                            tool_call_id=tool_call_id,
-                            tool_name=tool_call["function"]["name"],
-                            tool_response=str(output)
+                    if "role" in tool_calls_prepared[0]:
+                        tool_calls_prepared.append(
+                            self.chat_api.generate_tool_response_message(
+                                tool_call_id=tool_call_id,
+                                tool_name=tool_call["function"]["name"],
+                                tool_response=str(output)
+                            )
                         )
-                    )
+                    else:
+                        tool_messages.append(
+                            self.chat_api.generate_tool_response_message(
+                                tool_call_id=tool_call_id,
+                                tool_name=tool_call["function"]["name"],
+                                tool_response=str(output)
+                            ))
             if "role" in tool_calls_prepared[0]:
                 self.last_messages_buffer.extend(tool_calls_prepared)
                 current_messages.extend(tool_calls_prepared)
@@ -143,8 +151,8 @@ class ChatAPIAgent:
                     {"role": "assistant", "content": last_message["content"], "tool_calls": tool_calls_prepared})
                 current_messages.append(
                     {"role": "assistant", "content": last_message["content"], "tool_calls": tool_calls_prepared})
-            self.last_messages_buffer.extend(tool_messages)
-            current_messages.extend(tool_messages)
+                self.last_messages_buffer.extend(tool_messages)
+                current_messages.extend(tool_messages)
             yield "\n"
             yield from self.get_streaming_response(settings=settings, tools=tools, messages=current_messages,
                                                    reset_last_messages_buffer=False)

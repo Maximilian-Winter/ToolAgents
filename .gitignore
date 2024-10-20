@@ -21,3 +21,4 @@
 /src/ToolAgents/gbnf_grammar_generator/__pycache__
 /src/ToolAgents/json_schema_generator/__pycache__
 /examples/basic/__pycache__
+/src/ToolAgents/llm_documentation/__pycache__

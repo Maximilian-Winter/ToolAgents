@@ -179,7 +179,7 @@ class AnthropicSettings:
         self.top_k = 0
         self.max_tokens = 1024
         self.stop_sequences = []
-        self.cache_system_prompt = True
+        self.cache_system_prompt = False
         self.cache_user_messages = False
         self.cache_recent_messages = 10
 
