@@ -31,11 +31,12 @@ class ChatFormatter:
 
 
 class AdvancedChatFormatter:
-    def __init__(self, role_templates: dict[str, str], include_system_message_in_first_user_message: bool = False):
+    def __init__(self, role_templates: dict[str, str], generation_add: str = None, include_system_message_in_first_user_message: bool = False):
         self.include_system_message_in_first_user_message = include_system_message_in_first_user_message
         self.role_templates: dict[str, MessageTemplate] = {}
         for key, value in role_templates.items():
             self.role_templates[key] = MessageTemplate.from_string(value)
+        self.generation_add = generation_add
 
     def format_messages(self, messages):
         formatted_chat = []
@@ -55,8 +56,10 @@ class AdvancedChatFormatter:
             else:
                 formatted_message = template.generate_message_content(content=content)
                 formatted_chat.append(formatted_message)
-
-        return ''.join(formatted_chat)
+        if self.generation_add is not None:
+            return ''.join(formatted_chat) + self.generation_add
+        else:
+            return ''.join(formatted_chat)
 
 
 class Message:

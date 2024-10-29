@@ -21,7 +21,7 @@ class MistralToolCallHandler(LLMToolCallHandler):
                                                                    and "name" in response and "arguments" in response
                                                                    )
         if self.debug:
-            print("Response is tool call" if result else "Response is not tool call", flush=True)
+            print("\nResponse is tool call" if result else "\nResponse is not tool call", flush=True)
         return result
 
     def parse_tool_calls(self, response: str) -> List[LLMToolCall]:

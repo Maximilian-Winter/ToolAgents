@@ -63,15 +63,24 @@ class OpenAIChatAPI(ChatAPIProvider):
     def get_response(self, messages: List[Dict[str, str]], settings=None,
                      tools: Optional[List[FunctionTool]] = None) -> str:
         openai_tools = [tool.to_openai_tool() for tool in tools] if tools else None
-        response = self.client.chat.completions.create(
-            model=self.model,
-            messages=clean_history_messages(messages),
-            max_tokens=self.settings.max_tokens,
-            temperature=self.settings.temperature if settings is None else settings.temperature,
-            top_p=self.settings.top_p if settings is None else settings.top_p,
-            tools=openai_tools,
-            tool_choice="auto" if tools else None
-        )
+        if openai_tools is None:
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=clean_history_messages(messages),
+                max_tokens=self.settings.max_tokens,
+                temperature=self.settings.temperature if settings is None else settings.temperature,
+                top_p=self.settings.top_p if settings is None else settings.top_p
+            )
+        else:
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=clean_history_messages(messages),
+                max_tokens=self.settings.max_tokens,
+                temperature=self.settings.temperature if settings is None else settings.temperature,
+                top_p=self.settings.top_p if settings is None else settings.top_p,
+                tools=openai_tools,
+                tool_choice="auto"
+            )
         if tools and response.choices[0].message.tool_calls:
             return json.dumps({
                 "content": response.choices[0].message.content,
@@ -181,7 +190,7 @@ class AnthropicSettings:
         self.stop_sequences = []
         self.cache_system_prompt = False
         self.cache_user_messages = False
-        self.cache_recent_messages = 10
+        self.cache_recent_messages = 4
 
 
 class AnthropicChatAPI(ChatAPIProvider):
@@ -217,20 +226,30 @@ class AnthropicChatAPI(ChatAPIProvider):
                      tools: Optional[List[FunctionTool]] = None) -> str:
         system, other_messages = self.prepare_messages(self.settings if settings is None else settings, messages)
         anthropic_tools = [tool.to_anthropic_tool() for tool in tools] if tools else None
-        response = self.client.messages.create(
-            extra_headers={
-                "anthropic-beta": "prompt-caching-2024-07-31"
-            } if self.settings.cache_system_prompt or (settings is not None and settings.cache_system_prompt) else None,
-            model=self.model,
-            system=system if system else [],
-            messages=other_messages,
-            temperature=self.settings.temperature if settings is None else settings.temperature,
-            top_p=self.settings.top_p if settings is None else settings.top_p,
-            top_k=self.settings.top_k if settings is None else settings.top_k,
-            max_tokens=self.settings.max_tokens if settings is None else settings.max_tokens,
-            stop_sequences=self.settings.stop_sequences if settings is None else settings.stop_sequences,
-            tools=anthropic_tools
-        )
+        if (settings is not None and (settings.cache_system_prompt or settings.cache_system_prompt)) or (self.settings.cache_user_messages or self.settings.cache_system_prompt):
+            response = self.client.beta.prompt_caching.messages.create(
+                model=self.model,
+                system=system if system else [],
+                messages=other_messages,
+                temperature=self.settings.temperature if settings is None else settings.temperature,
+                top_p=self.settings.top_p if settings is None else settings.top_p,
+                top_k=self.settings.top_k if settings is None else settings.top_k,
+                max_tokens=self.settings.max_tokens if settings is None else settings.max_tokens,
+                stop_sequences=self.settings.stop_sequences if settings is None else settings.stop_sequences,
+                tools=anthropic_tools
+            )
+        else:
+            response = self.client.messages.create(
+                model=self.model,
+                system=system if system else [],
+                messages=other_messages,
+                temperature=self.settings.temperature if settings is None else settings.temperature,
+                top_p=self.settings.top_p if settings is None else settings.top_p,
+                top_k=self.settings.top_k if settings is None else settings.top_k,
+                max_tokens=self.settings.max_tokens if settings is None else settings.max_tokens,
+                stop_sequences=self.settings.stop_sequences if settings is None else settings.stop_sequences,
+                tools=anthropic_tools
+            )
         if tools and (response.content[0].type == 'tool_use' or (
                 len(response.content) > 1 and response.content[1].type == 'tool_use')):
             if response.content[0].type == 'tool_use':
@@ -261,21 +280,28 @@ class AnthropicChatAPI(ChatAPIProvider):
                                tools: Optional[List[FunctionTool]] = None) -> Generator[str, None, None]:
         system, other_messages = self.prepare_messages(self.settings if settings is None else settings, messages)
         anthropic_tools = [tool.to_anthropic_tool() for tool in tools] if tools else None
-
-        stream = self.client.messages.create(
-            extra_headers={
-                "anthropic-beta": "prompt-caching-2024-07-31"
-            } if self.settings.cache_system_prompt or (settings is not None and settings.cache_system_prompt) else None,
-            model=self.model,
-            system=system if system else [],
-            messages=other_messages,
-            stream=True,
-            temperature=self.settings.temperature if settings is None else settings.temperature,
-            top_p=self.settings.top_p if settings is None else settings.top_p,
-            max_tokens=self.settings.max_tokens if settings is None else settings.max_tokens,
-            tools=anthropic_tools if anthropic_tools else []
-        )
-
+        if (settings is not None and (settings.cache_system_prompt or settings.cache_system_prompt)) or (self.settings.cache_user_messages or self.settings.cache_system_prompt):
+            stream = self.client.beta.prompt_caching.messages.create(
+                model=self.model,
+                system=system if system else [],
+                messages=other_messages,
+                stream=True,
+                temperature=self.settings.temperature if settings is None else settings.temperature,
+                top_p=self.settings.top_p if settings is None else settings.top_p,
+                max_tokens=self.settings.max_tokens if settings is None else settings.max_tokens,
+                tools=anthropic_tools if anthropic_tools else []
+            )
+        else:
+            stream = self.client.messages.create(
+                model=self.model,
+                system=system if system else [],
+                messages=other_messages,
+                stream=True,
+                temperature=self.settings.temperature if settings is None else settings.temperature,
+                top_p=self.settings.top_p if settings is None else settings.top_p,
+                max_tokens=self.settings.max_tokens if settings is None else settings.max_tokens,
+                tools=anthropic_tools if anthropic_tools else []
+            )
         current_tool_call = None
         content = ""
         for chunk in stream:
