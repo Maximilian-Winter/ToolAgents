@@ -38,7 +38,7 @@ class AdvancedChatFormatter:
             self.role_templates[key] = MessageTemplate.from_string(value)
         self.generation_add = generation_add
 
-    def format_messages(self, messages):
+    def format_messages(self, messages, tools):
         formatted_chat = []
         system_message = None
         for message in messages:

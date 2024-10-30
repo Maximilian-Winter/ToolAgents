@@ -6,6 +6,7 @@ from copy import deepcopy
 from openai import OpenAI
 from transformers import AutoTokenizer
 
+from ToolAgents import ToolRegistry
 from ToolAgents.interfaces.llm_provider import LLMSamplingSettings, HostedLLMProvider
 from ToolAgents.interfaces.llm_tokenizer import LLMTokenizer
 
@@ -85,17 +86,19 @@ class VLLMServerProvider(HostedLLMProvider):
     def get_default_settings(self):
         return VLLMServerSamplingSettings()
 
-    def create_completion(self, prompt: str, settings: VLLMServerSamplingSettings):
+    def create_completion(self, prompt: str, settings: VLLMServerSamplingSettings, tool_registry: ToolRegistry = None):
         return self._create_completion_or_chat(prompt=prompt, settings=settings)
 
-    def create_chat_completion(self, messages: List[Dict[str, str]], settings: VLLMServerSamplingSettings):
+    def create_chat_completion(self, messages: List[Dict[str, str]], settings: VLLMServerSamplingSettings, tool_registry: ToolRegistry = None):
         return self._create_completion_or_chat(messages=messages, settings=settings)
 
     def _create_completion_or_chat(self, settings: VLLMServerSamplingSettings, prompt: str = None,
-                                   messages: List[Dict[str, str]] = None):
+                                   messages: List[Dict[str, str]] = None, tool_registry: ToolRegistry = None):
         settings = deepcopy(settings.as_dict())
         is_chat = messages is not None
-
+        grammar = None
+        if tool_registry is not None and tool_registry.guided_sampling_enabled:
+            grammar = tool_registry.get_guided_sampling_json_schema()
         completion_settings = {
             "model": self.model,
             "top_p": settings.get('top_p'),
@@ -107,6 +110,9 @@ class VLLMServerProvider(HostedLLMProvider):
         extra_body = deepcopy(settings)
         for key in ['top_p', 'stream', 'temperature', 'max_tokens']:
             extra_body.pop(key, None)
+
+        if grammar is not None:
+            extra_body["guided_json"] = grammar
 
         completion_settings['extra_body'] = extra_body
 
@@ -120,8 +126,8 @@ class VLLMServerProvider(HostedLLMProvider):
         if settings.get('stream', False):
             result = method(**completion_settings)
 
-            def generate_chunks():
-                for chunk in result:
+            def generate_chunks(res):
+                for chunk in res:
                     if is_chat:
                         content = chunk.choices[0].delta.content
                     else:
@@ -129,7 +135,7 @@ class VLLMServerProvider(HostedLLMProvider):
                     if content is not None:
                         yield {"choices": [{"text": content}]}
 
-            return generate_chunks()
+            return generate_chunks(result)
         else:
             result = method(**completion_settings)
             if is_chat:

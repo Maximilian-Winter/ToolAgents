@@ -1,12 +1,11 @@
 from typing import List
 
 from sqlalchemy.orm import Session
-from .event_memory import ChatMessageDB
-import datetime
+from datetime import datetime
 import json
 
 from ToolAgents.utilities.chat_history import ChatMessageRole, ChatHistory
-from .. import FunctionTool
+from ToolAgents import FunctionTool
 
 
 class EventMemoryManager:
@@ -88,7 +87,7 @@ class EventMemoryManager:
     def add_event_to_queue(self, event_type: ChatMessageRole, content: str, metadata: dict):
         new_event = ChatMessageDB(
             event_type=event_type,
-            timestamp=datetime.datetime.now(),
+            timestamp=datetime.now(),
             content=content,
             event_keywords=json.dumps(metadata),
         )
@@ -127,8 +126,8 @@ class EventMemoryManager:
     def query_events(
             self,
             event_types: list = None,
-            start_date: datetime.datetime = None,
-            end_date: datetime.datetime = None,
+            start_date: datetime = None,
+            end_date: datetime = None,
             content_keywords: list = None,
             keywords: list = None,
             page: int = 1,

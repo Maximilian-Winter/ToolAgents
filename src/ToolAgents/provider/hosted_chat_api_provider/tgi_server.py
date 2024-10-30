@@ -5,6 +5,7 @@ from copy import deepcopy
 
 import requests
 
+from ToolAgents import ToolRegistry
 from ToolAgents.interfaces import LLMSamplingSettings, HostedLLMProvider
 from ToolAgents.interfaces import LLMTokenizer
 
@@ -87,14 +88,19 @@ class TGIServerProvider(HostedLLMProvider):
     def get_default_settings(self):
         return TGIServerSamplingSettings()
 
-    def create_completion(self, prompt: str, settings: TGIServerSamplingSettings):
+    def create_completion(self, prompt: str, settings: TGIServerSamplingSettings, tool_registry: ToolRegistry = None):
         settings = deepcopy(settings.as_dict())
         headers = self._get_headers()
         data = {
             "parameters": settings,
             "inputs": prompt
         }
+        grammar = None
+        if tool_registry is not None and tool_registry.guided_sampling_enabled:
+            grammar = tool_registry.get_guided_sampling_json_schema()
 
+        if grammar is not None:
+            data["parameters"]["grammar"] = {"type": "json", "value": grammar}
         if settings.get('stream', False):
             return self._get_response_stream(headers, data, self.server_streaming_completion_endpoint)
 
@@ -102,12 +108,19 @@ class TGIServerProvider(HostedLLMProvider):
         data = response.json()
         return {"choices": [{"text": data["generated_text"]}]}
 
-    def create_chat_completion(self, messages: List[Dict[str, str]], settings: TGIServerSamplingSettings):
+    def create_chat_completion(self, messages: List[Dict[str, str]], settings: TGIServerSamplingSettings, tool_registry: ToolRegistry = None):
         settings = deepcopy(settings.as_dict())
         headers = self._get_headers()
         data = deepcopy(settings)
         data["messages"] = messages
         data["model"] = "tgi"
+
+        grammar = None
+        if tool_registry is not None and tool_registry.guided_sampling_enabled:
+            grammar = tool_registry.get_guided_sampling_json_schema()
+
+        if grammar is not None:
+            data["parameters"]["grammar"] = {"type": "json", "value": grammar}
 
         if settings.get('stream', False):
             return self._get_response_stream(headers, data, self.server_chat_completion_endpoint)

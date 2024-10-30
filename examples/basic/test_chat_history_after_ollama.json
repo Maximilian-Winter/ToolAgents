@@ -14,6 +14,10 @@
   },
   {
     "role": "assistant",
-    "content": "The flight time from London (LHR) to New York (JFK) is approximately 8 hours and 0 minutes."
+    "content": "The flight time from London (LHR) to New York (JFK) is approximately 7 hours and 60 minutes, with an arrival time of 1pm."
+  },
+  {
+    "role": "assistant",
+    "content": "{\"name\": \"FlightTimes\", \"parameters\": {\"arrival\": \"JFK\", \"departure\": \"LHR\"}}"
   }
 ]

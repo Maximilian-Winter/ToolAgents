@@ -1,0 +1,19 @@
+[
+  {
+    "role": "system",
+    "content": "You are a helpful assistant."
+  },
+  {
+    "role": "user",
+    "content": "Hello! Can you help me?"
+  },
+  {
+    "role": "assistant",
+    "content": "Of course! What can I help you with?"
+  },
+  {
+    "role": "tool",
+    "content": "Calculator result: 42",
+    "tool_name": "calculator"
+  }
+]

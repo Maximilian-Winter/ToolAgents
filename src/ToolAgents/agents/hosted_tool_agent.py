@@ -1,22 +1,18 @@
 from typing import Any
 
-from ToolAgents import FunctionTool
 from ToolAgents.function_tool import ToolRegistry
 
 from ToolAgents.interfaces import HostedLLMProvider
 from ToolAgents.interfaces import LLMTokenizer
 from ToolAgents.interfaces import LLMToolCallHandler
+from ToolAgents.interfaces.base_llm_agent import BaseToolAgent
 
 
-class HostedToolAgent:
-    def __init__(
-            self,
-            provider: HostedLLMProvider,
-            tokenizer: LLMTokenizer,
-            tool_call_handler: LLMToolCallHandler,
-            debug_output: bool = False,
-    ):
+class HostedToolAgent(BaseToolAgent):
+    def __init__(self, provider: HostedLLMProvider, tokenizer: LLMTokenizer, tool_call_handler: LLMToolCallHandler,
+                 debug_output: bool = False):
 
+        super().__init__()
         self.provider = provider
         self.tokenizer = tokenizer
         self.tool_call_handler = tool_call_handler
