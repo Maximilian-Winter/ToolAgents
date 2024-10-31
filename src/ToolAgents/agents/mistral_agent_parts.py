@@ -35,7 +35,7 @@ class MistralToolCallHandler(LLMToolCallHandler):
         return results
 
     def get_tool_call_messages(self, tool_calls: List[LLMToolCall]) -> Dict[str, Any] | List[Dict[str, Any]]:
-        return AssistantMessage( content=None, tool_calls=[ToolCall(
+        return AssistantMessage(content=None, tool_calls=[ToolCall(
             function=FunctionCall(
                 name=function_call.get_tool_name(),
                 arguments=json.dumps(function_call.get_tool_call_arguments()),
@@ -48,7 +48,7 @@ class MistralToolCallHandler(LLMToolCallHandler):
                                                                                                             List[Dict[
                                                                                                                 str, Any]]:
 
-        return [ToolMessage(content=str(tool_call_result) if not isinstance(tool_call_result, dict) else json.dumps(tool_call_result), tool_call_id=tool_call.get_tool_call_id()).model_dump() for tool_call, tool_call_result in zip(tool_calls, tool_call_results)]
+        return [ToolMessage(content=str(tool_call_result) if not isinstance(tool_call_result, dict) else json.dumps(tool_call_result), tool_call_id=tool_call.get_tool_call_id(), name=tool_call.get_tool_name()).model_dump() for tool_call, tool_call_result in zip(tool_calls, tool_call_results)]
 
     def execute_tool_calls(self, tool_calls: List[LLMToolCall], tool_registry: ToolRegistry) -> List[Any]:
         results = []

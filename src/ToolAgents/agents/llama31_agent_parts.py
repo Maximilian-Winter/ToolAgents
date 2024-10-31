@@ -2,8 +2,8 @@ import json
 from typing import List, Dict, Any
 
 from ToolAgents.function_tool import ToolRegistry
-from ToolAgents.interfaces.llm_tool_call import LLMToolCallHandler, LLMToolCall, GenericToolCall, generate_id
-from ToolAgents.interfaces.llm_tokenizer import LLMTokenizer, HuggingFaceTokenizer
+from ToolAgents.interfaces.llm_tool_call import LLMToolCallHandler, GenericToolCall, generate_id
+from ToolAgents.interfaces.llm_tokenizer import HuggingFaceTokenizer
 from ToolAgents.utilities.chat_history import Message
 
 jinja2_template = """{%- if custom_tools is defined %}

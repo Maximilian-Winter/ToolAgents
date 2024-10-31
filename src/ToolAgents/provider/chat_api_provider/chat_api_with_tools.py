@@ -183,7 +183,7 @@ class OpenAIChatAPI(ChatAPIProvider):
 
 class AnthropicSettings:
     def __init__(self):
-        self.temperature = 0.7
+        self.temperature = 1.0
         self.top_p = 1.0
         self.top_k = 0
         self.max_tokens = 1024

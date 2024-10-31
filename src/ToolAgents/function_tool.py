@@ -1,5 +1,6 @@
 import dataclasses
 import inspect
+import json
 import re
 
 import typing
@@ -290,6 +291,7 @@ def py_type_to_json_type(schema):
         int: {"type": "integer"},
         bool: {"type": "boolean"},
         list: {"type": "array"},
+        dict: {"type": "object"},
     }
     return type_map[schema]
 
@@ -393,7 +395,7 @@ class FunctionTool:
 
     def __init__(
             self,
-            function_tool: Union[BaseModel, Callable, Tuple[Dict[str, Any], Callable]],
+            function_tool: Union[BaseModel, Callable, Tuple[Dict[str, Any], Callable]], debug_mode: bool = False,
             **additional_parameters,
     ):
         # Determine the type of function_tool and set up the appropriate handling
@@ -415,6 +417,7 @@ class FunctionTool:
         else:
             raise ValueError("Invalid function_tool type provided")
 
+        self.debug_mode = debug_mode
         self.additional_parameters = (
             additional_parameters if additional_parameters else {}
         )
@@ -540,6 +543,9 @@ class FunctionTool:
         return nous_hermes_pro_tool
 
     def execute(self, parameters):
+        if self.debug_mode:
+            print(json.dumps(parameters, indent=4))
+
         instance = self.model(**parameters)
         return instance.run(**self.additional_parameters)
 
@@ -564,6 +570,9 @@ class ToolRegistry:
 
     def get_tool(self, name: str) -> FunctionTool:
         return self.tools[name]
+
+    def get_tools(self):
+        return self.tools.values()
 
     def get_mistral_tools(self):
         return [tool.to_mistral_tool() for tool in self.tools.values()]

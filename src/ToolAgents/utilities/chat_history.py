@@ -1,3 +1,4 @@
+import copy
 import json
 import os
 from enum import Enum
@@ -31,16 +32,23 @@ class ChatFormatter:
 
 
 class AdvancedChatFormatter:
-    def __init__(self, role_templates: dict[str, str], generation_add: str = None, include_system_message_in_first_user_message: bool = False):
+    def __init__(self, role_templates: dict[str, str], message_layout_template: str = None, tools_template: str = None,
+                 generation_add: str = None, include_system_message_in_first_user_message: bool = False):
         self.include_system_message_in_first_user_message = include_system_message_in_first_user_message
         self.role_templates: dict[str, MessageTemplate] = {}
         for key, value in role_templates.items():
             self.role_templates[key] = MessageTemplate.from_string(value)
         self.generation_add = generation_add
+        self.message_layout_template = MessageTemplate.from_string(message_layout_template)
+        self.tools_template = MessageTemplate.from_string(tools_template)
 
-    def format_messages(self, messages, tools):
+    def format_messages(self, messages, tools: list = None):
         formatted_chat = []
         system_message = None
+        tool_system_message = None
+        if tools is not None and self.tools_template is not None and self.message_layout_template is not None:
+            tools_open_ai = [tool.to_openai_tool() for tool in tools]
+            tool_system_message = self.tools_template.generate_message_content(tools=tools_open_ai)
         for message in messages:
             role = message['role']
             content = message['content']
@@ -50,16 +58,36 @@ class AdvancedChatFormatter:
                 formatted_message = template.generate_message_content(content=content)
                 system_message = formatted_message
             elif self.include_system_message_in_first_user_message and role == "user" and system_message is not None:
-                formatted_message = template.generate_message_content(content=system_message+content)
+                formatted_message = template.generate_message_content(content=system_message + content)
                 system_message = None
                 formatted_chat.append(formatted_message)
             else:
+                if content is None:
+                    msg_copy = copy.deepcopy(message)
+                    msg_copy.pop('role')
+                    msg_copy.pop('content')
+                    content = json.dumps(msg_copy)
+                if role == "tool":
+                    msg_copy = copy.deepcopy(message)
+                    msg_copy.pop('role')
+                    result = msg_copy.pop('content')
+                    msg_copy["result"] = result
+                    content = json.dumps(msg_copy)
+
                 formatted_message = template.generate_message_content(content=content)
                 formatted_chat.append(formatted_message)
         if self.generation_add is not None:
-            return ''.join(formatted_chat) + self.generation_add
+            if tool_system_message:
+                sys = formatted_chat.pop(0)
+                return self.message_layout_template.generate_message_content(sys_prompt=sys, prompt=''.join(formatted_chat), tools=tool_system_message) + self.generation_add
+            else:
+                return ''.join(formatted_chat) + self.generation_add
         else:
-            return ''.join(formatted_chat)
+            if tool_system_message:
+                sys = formatted_chat.pop(0)
+                return self.message_layout_template.generate_message_content(sys_prompt=sys, prompt=''.join(formatted_chat), tools=tool_system_message)
+            else:
+                return ''.join(formatted_chat)
 
 
 class Message:

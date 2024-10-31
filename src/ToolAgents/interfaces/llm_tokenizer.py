@@ -40,7 +40,7 @@ class TemplateTokenizer(LLMTokenizer):
         self.generation_prompt = generation_prompt
 
     def apply_template(self, messages: List[Dict[str, str]], tools: ToolRegistry) -> str:
-        return self.chat_formatter.format_messages(messages=messages) + (self.generation_prompt if self.generation_prompt else "")
+        return self.chat_formatter.format_messages(messages=messages, tools=tools.get_tools()) + (self.generation_prompt if self.generation_prompt else "")
 
     def tokenize(self, text: str) -> List[int]:
         raise NotImplemented()

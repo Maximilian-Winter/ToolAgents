@@ -1,5 +1,6 @@
 from ToolAgents import ToolRegistry
 from ToolAgents.agents.hosted_tool_agents import TemplateAgent, AdvancedChatFormatter
+from ToolAgents.interfaces.llm_tool_call import TemplateToolCallHandler
 from ToolAgents.provider import LlamaCppServerProvider
 from ToolAgents.utilities import ChatHistory
 
@@ -8,18 +9,18 @@ from example_tools import calculator_function_tool, \
 
 provider = LlamaCppServerProvider("http://127.0.0.1:8080/")
 
-system_template = "<system_instructions>\n{content}\n</system_instructions>\n\n"
-assistant_template = "{content}</s>"
-user_template = "[INST] {content} [/INST]"
+system_template = "<|im_start|>system\n{content}<|im_end|>\n"
+assistant_template = "<|im_start|>assistant\n{content}<|im_end|>\n"
+user_template = "<|im_start|>user\n{content}<|im_end|>\n"
 
 advanced_chat_formatter = AdvancedChatFormatter({
     "system": system_template,
     "user": user_template,
     "assistant": assistant_template,
-    "tool": "[TOOL_RESULTS]{content}[/TOOL_RESULTS]"
-}, tools_template="[AVAILABLE_TOOLS]{tools}[/AVAILABLE_TOOLS]", message_layout_template="{tools}{prompt}", include_system_message_in_first_user_message=True)
+    "tool": "<|im_start|>tool\n{content}<|im_end|>\n"
+}, tools_template="<|im_start|>available_tools\n{tools}<|im_end|>\n", message_layout_template="{sys_prompt}{tools}{prompt}", include_system_message_in_first_user_message=False)
 
-agent = TemplateAgent(provider, advanced_chat_formatter=advanced_chat_formatter, generation_prompt=None,
+agent = TemplateAgent(provider, advanced_chat_formatter=advanced_chat_formatter, tool_call_handler=TemplateToolCallHandler(), generation_prompt="<|im_start|>assistant",
                       debug_output=True)
 
 settings = provider.get_default_settings()

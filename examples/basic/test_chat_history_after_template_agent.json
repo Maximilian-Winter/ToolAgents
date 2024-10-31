@@ -1,14 +1,63 @@
 [
   {
     "role": "system",
-    "content": "You are a helpful assistant."
+    "content": "You are Funky, an AI assistant specialized in interpreting user requests and generating appropriate function calls. Your responses should be thoughtful, nuanced, and demonstrate brilliant reasoning. Your primary task is to analyze user requests and, when necessary, create function calls in JSON format to perform the requested tasks.\nChoose the appropriate function based on the task you want to perform. Provide your function calls in JSON format. Here is an example for how your function calls should look like: ``[{\"name\": \"get_location_news\", \"arguments\": {\"location\": \"London, Great Britain\"}}, {\"name\": \"get_location_news\", \"arguments\": {\"location\": \"Berlin, Germany\"}}]"
   },
   {
     "role": "user",
-    "content": "Perform all the following tasks: Get the current weather in celsius in London, New York and at the North Pole. Solve the following calculations: 42 * 42, 74 + 26, 7 * 26, 4 + 6  and 96/8. Retrieve the current date and time in the format: dd.mm.yyy hh:mm."
+    "content": "Perform all the following tasks: Get the current weather in celsius in the city of London, Great Britain, New York City, New York and at the North Pole, Arctica. Solve the following calculations: 42 * 42, 74 + 26, 7 * 26, 4 + 6  and 96/8. And retrieve the date and time in the format: dd.mm.yy hh:mm."
   },
   {
     "role": "assistant",
-    "content": "**Weather:**\n\n- London: 15\u00b0C\n- New York: 21\u00b0C\n- North Pole: -35\u00b0C\n\n**Calculations:**\n\n- 42 * 42 = 1764\n- 74 + 26 = 100\n- 7 * 26 = 182\n- 4 + 6 = 10\n- 96 / 8 = 12\n\n**Current Date and Time:** 22.03.2023 14:30"
+    "content": "[{\"name\": \"get_current_weather\", \"arguments\": {\"location\": \"London, Great Britain\", \"unit\": \"celsius\"}}, {\"name\": \"get_current_weather\", \"arguments\": {\"location\": \"New York City, New York\", \"unit\": \"celsius\"}}, {\"name\": \"get_current_weather\", \"arguments\": {\"location\": \"North Pole, Arctica\", \"unit\": \"celsius\"}}, {\"name\": \"calculator\", \"arguments\": {\"number_one\": 42, \"operation\": \"multiply\", \"number_two\": 42}}, {\"name\": \"calculator\", \"arguments\": {\"number_one\": 74, \"operation\": \"add\", \"number_two\": 26}}, {\"name\": \"calculator\", \"arguments\": {\"number_one\": 7, \"operation\": \"multiply\", \"number_two\": 26}}, {\"name\": \"calculator\", \"arguments\": {\"number_one\": 4, \"operation\": \"add\", \"number_two\": 6}}, {\"name\": \"calculator\", \"arguments\": {\"number_one\": 96, \"operation\": \"divide\", \"number_two\": 8}}, {\"name\": \"get_current_datetime\", \"arguments\": {\"output_format\": \"%d.%m.%y %H:%M\"}}]"
+  },
+  {
+    "role": "tool",
+    "content": "Weather in London, Great Britain: 22\u00b0 celsius",
+    "tool_call_id": "GdKUStFGY"
+  },
+  {
+    "role": "tool",
+    "content": "Weather in New York City, New York: 24\u00b0 celsius",
+    "tool_call_id": "8VZUnfnjx"
+  },
+  {
+    "role": "tool",
+    "content": "Weather in North Pole, Arctica: -42\u00b0 celsius",
+    "tool_call_id": "7c4qLbK8y"
+  },
+  {
+    "role": "tool",
+    "content": "1764.0",
+    "tool_call_id": "ltnSKpHN0"
+  },
+  {
+    "role": "tool",
+    "content": "100.0",
+    "tool_call_id": "RgJ6nn2Y7"
+  },
+  {
+    "role": "tool",
+    "content": "182.0",
+    "tool_call_id": "FmIjOpfaL"
+  },
+  {
+    "role": "tool",
+    "content": "10.0",
+    "tool_call_id": "0k0WqaraW"
+  },
+  {
+    "role": "tool",
+    "content": "12.0",
+    "tool_call_id": "JoYB302gP"
+  },
+  {
+    "role": "tool",
+    "content": "30.10.24 16:52",
+    "tool_call_id": "Iupq3EPwX"
+  },
+  {
+    "role": "assistant",
+    "content": "Here are the results:\n\n- Weather in London, Great Britain: 22\u00b0 celsius\n- Weather in New York City, New York: 24\u00b0 celsius\n- Weather in North Pole, Arctica: -42\u00b0 celsius\n\n- 42 * 42 = 1764.0\n- 74 + 26 = 100.0\n- 7 * 26 = 182.0\n- 4 + 6 = 10.0\n- 96 / 8 = 12.0\n\n- Current date and time: 30.10.24 16:52<|im_end|>"
   }
 ]
