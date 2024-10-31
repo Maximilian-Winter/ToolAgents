@@ -17,14 +17,14 @@ advanced_chat_formatter = AdvancedChatFormatter({
     "user": user_template,
     "assistant": assistant_template,
     "tool": "[TOOL_RESULTS]{content}[/TOOL_RESULTS]"
-}, tools_template="[AVAILABLE_TOOLS]{tools}[/AVAILABLE_TOOLS]", message_layout_template="{tools}{prompt}", include_system_message_in_first_user_message=True)
+}, tools_template="[AVAILABLE_TOOLS]{tools}[/AVAILABLE_TOOLS]", message_layout_template="{tools}{sys_prompt}{prompt}", include_system_message_in_first_user_message=True)
 
 agent = TemplateAgent(provider, advanced_chat_formatter=advanced_chat_formatter, generation_prompt=None,
                       debug_output=True)
 
 settings = provider.get_default_settings()
 settings.neutralize_all_samplers()
-settings.temperature = 0.8
+settings.temperature = 0.4
 settings.set_stop_tokens(["</s>"], None)
 settings.set_max_new_tokens(4096)
 

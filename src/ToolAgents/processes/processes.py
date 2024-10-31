@@ -148,24 +148,6 @@ class ChainableProcess(BaseProcess[InputType, OutputType, ConfigType]):
         pass
 
 
-class ParallelProcess(BaseProcess[InputType, OutputType, ConfigType]):
-    """A process that processes inputs in parallel"""
-
-    def __init__(self, config: ConfigType, transformers: list[BaseProcess]):
-        super().__init__(config)
-        self.transformers = transformers
-
-    def _validate_config(self) -> None:
-        pass
-
-    async def transform(self,
-                        input_data: InputType,
-                        context: ExecutionContext) -> ProcessResult[OutputType]:
-        tasks = [t.transform(input_data, context) for t in self.transformers]
-        results = await asyncio.gather(*tasks, return_exceptions=True)
-        return self._aggregate_results(results, context)
-
-
 class FeedbackProcess(ChainableProcess[InputType, OutputType, ConfigType]):
     """A transformer that can learn from its outputs"""
 
@@ -255,27 +237,96 @@ class ExecutionStage:
 
 
 class ExecutionPlan:
-    """Represents an optimized plan for executing processes"""
-
     def __init__(self):
         self.stages: List[ExecutionStage] = []
         self.error_handlers: Dict[str, Callable] = {}
+        self.fallback_stages: Dict[str, ExecutionStage] = {}
+        self.current_retries: Dict[str, int] = {}
 
-    async def execute(self, input_data: Any, context: ExecutionContext) -> ProcessResult:
-        results = []
-        for stage in self.stages:
-            try:
-                stage_result = await stage.execute(input_data, context)
-                results.append(stage_result)
-            except Exception as e:
-                if stage.error_policy == "retry":
-                    results.append(await self._handle_retry(stage, input_data, context))
-                elif stage.error_policy == "fallback":
-                    results.append(await self._execute_fallback(stage, input_data, context))
+    def _aggregate_results(self, results: List[ProcessResult]) -> ProcessResult:
+        """Aggregate results from multiple stages"""
+        if not results:
+            return ProcessResult(
+                output=None,
+                context=None,
+                metrics={},
+                errors=["No results to aggregate"]
+            )
+
+        # Combine metrics and errors
+        combined_metrics = {}
+        all_errors = []
+        last_context = results[-1].context
+
+        for result in results:
+            # Merge metrics
+            for key, value in result.metrics.items():
+                if key in combined_metrics:
+                    if isinstance(value, (int, float)):
+                        combined_metrics[key] += value
+                    elif isinstance(value, list):
+                        combined_metrics[key].extend(value)
+                    else:
+                        combined_metrics[key] = value
                 else:
-                    raise e
+                    combined_metrics[key] = value
 
-        return self._aggregate_results(results)
+            # Collect errors
+            all_errors.extend(result.errors)
+
+        # Create final output by combining all stage outputs
+        combined_output = [r.output for r in results if r.output is not None]
+
+        return ProcessResult(
+            output=combined_output,
+            context=last_context,
+            metrics=combined_metrics,
+            errors=all_errors
+        )
+
+    async def _handle_retry(self,
+                            stage: ExecutionStage,
+                            input_data: Any,
+                            context: ExecutionContext) -> ProcessResult:
+        """Handle retry logic for failed stages"""
+        stage_id = stage.config.stage_name
+
+        if stage_id not in self.current_retries:
+            self.current_retries[stage_id] = 0
+
+        self.current_retries[stage_id] += 1
+
+        if self.current_retries[stage_id] > stage.config.max_retries:
+            raise Exception(f"Max retries ({stage.config.max_retries}) exceeded for stage {stage_id}")
+
+        # Exponential backoff
+        retry_delay = stage.config.retry_delay * (2 ** (self.current_retries[stage_id] - 1))
+        await asyncio.sleep(retry_delay)
+
+        # Retry the stage execution
+        return await stage.execute(input_data, context)
+
+    async def _execute_fallback(self,
+                                stage: ExecutionStage,
+                                input_data: Any,
+                                context: ExecutionContext) -> ProcessResult:
+        """Execute fallback logic when a stage fails"""
+        stage_id = stage.config.stage_name
+
+        if stage_id not in self.fallback_stages:
+            raise Exception(f"No fallback defined for stage {stage_id}")
+
+        fallback_stage = self.fallback_stages[stage_id]
+
+        # Create a new context for the fallback execution
+        fallback_context = ExecutionContext(
+            trace_id=f"{context.trace_id}_fallback",
+            timestamp=asyncio.get_event_loop().time(),
+            metadata={**context.metadata, "is_fallback": True},
+            parent_context=context
+        )
+
+        return await fallback_stage.execute(input_data, fallback_context)
 
 
 class CompositionType(Enum):
@@ -329,50 +380,49 @@ class ParallelProcess:
 
 
 class AdvancedCompositionStrategy:
-    def _analyze_dependencies(self, process: BaseProcess) -> Set[BaseProcess]:
-        """Analyze process dependencies"""
-        dependencies = set()
+    def __init__(self):
+        self.execution_graph = {}
+        self.cache = {}
+        self.metrics = {}
+        self.cache_config = {
+            "max_size": 1000,
+            "ttl": 3600  # 1 hour
+        }
 
-        # If it's a chainable process, add its next process
-        if isinstance(process, ChainableProcess) and process.next:
-            dependencies.add(process.next)
+    def _should_cache(self, input_data: Any, context: ExecutionContext) -> bool:
+        """Determine if result should be cached"""
+        # Don't cache if input is too large
+        input_str = str(input_data)
+        if len(input_str) > 1000:  # Configure this threshold as needed
+            return False
 
-        # If it's a composite process, add all its transformers
-        if isinstance(process, CompositeProcess):
-            dependencies.update(process.transformers)
+        # Don't cache if context indicates no caching
+        if context.metadata.get("no_cache", False):
+            return False
 
-        return dependencies
+        # Don't cache if cache is full
+        if len(self.cache) >= self.cache_config["max_size"]:
+            self._evict_old_entries()
 
-    async def _execute_plan(self,
-                            plan: ExecutionPlan,
-                            input_data: Any,
-                            context: ExecutionContext) -> ProcessResult:
-        """Execute the plan"""
-        start_time = asyncio.get_event_loop().time()
+        return True
 
-        try:
-            result = await plan.execute(input_data, context)
+    def _cache_key(self, input_data: Any) -> str:
+        """Generate cache key for input data"""
+        # This is a simple implementation - you might want to use a more
+        # sophisticated hashing mechanism for your specific use case
+        return str(hash(str(input_data)))
 
-            # Update metrics
-            execution_time = asyncio.get_event_loop().time() - start_time
-            self.metrics[context.trace_id] = {
-                "execution_time": execution_time,
-                "status": "success"
-            }
+    def _evict_old_entries(self):
+        """Remove old entries from cache"""
+        current_time = asyncio.get_event_loop().time()
+        keys_to_remove = []
 
-            # Cache result if needed
-            if self._should_cache(input_data, context):
-                self.cache[self._cache_key(input_data)] = result
+        for key, (timestamp, _) in self.cache.items():
+            if current_time - timestamp > self.cache_config["ttl"]:
+                keys_to_remove.append(key)
 
-            return result
-
-        except Exception as e:
-            self.metrics[context.trace_id] = {
-                "execution_time": asyncio.get_event_loop().time() - start_time,
-                "status": "error",
-                "error": str(e)
-            }
-            raise
+        for key in keys_to_remove:
+            del self.cache[key]
 
 
 class CompositeProcess(BaseProcess[InputType, OutputType, ConfigType]):

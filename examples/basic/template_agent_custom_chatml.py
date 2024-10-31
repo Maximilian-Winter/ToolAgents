@@ -25,8 +25,8 @@ agent = TemplateAgent(provider, advanced_chat_formatter=advanced_chat_formatter,
 
 settings = provider.get_default_settings()
 settings.neutralize_all_samplers()
-settings.temperature = 0.8
-settings.set_stop_tokens(["</s>"], None)
+settings.temperature = 0.1
+settings.set_stop_tokens(["</s>", "<|im_end|>"], None)
 settings.set_max_new_tokens(4096)
 
 tools = [calculator_function_tool, current_datetime_function_tool, get_weather_function_tool]
