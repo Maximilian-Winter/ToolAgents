@@ -314,6 +314,9 @@ def get_openai_type(py_type):
             # Filter out NoneType to handle optional fields
             non_none_types = [get_openai_type(t) for t in py_type.__args__ if t is not type(None)]
             return non_none_types
+        elif py_type.__origin__ is Dict or py_type.__origin__ is dict:
+            # Handle lists by identifying the type of list items
+            return {"type": "object"}
         elif py_type.__origin__ is List or py_type.__origin__ is list:
             # Handle lists by identifying the type of list items
             return {"type": "array", "items": get_openai_type(py_type.__args__[0])}
