@@ -92,9 +92,13 @@ class LlamaCppServerProvider(HostedLLMProvider):
         self.server_chat_completion_endpoint = f"{self.server_address}/v1/chat/completions"
         self.server_tokenize_endpoint = f"{self.server_address}/tokenize"
         self.api_key = api_key
+        self.default_settings = LlamaCppSamplingSettings()
 
-    def get_default_settings(self):
-        return LlamaCppSamplingSettings()
+    def get_default_settings(self) -> LlamaCppSamplingSettings:
+        return self.default_settings
+
+    def set_default_settings(self, settings: LlamaCppSamplingSettings):
+        self.default_settings = settings
 
     def create_completion(self, prompt: str, settings: LlamaCppSamplingSettings, tool_registry: ToolRegistry = None):
         settings = deepcopy(settings.as_dict())

@@ -1,3 +1,4 @@
+from abc import ABC
 from typing import Any
 
 from ToolAgents.function_tool import ToolRegistry
@@ -8,7 +9,7 @@ from ToolAgents.interfaces import LLMToolCallHandler
 from ToolAgents.interfaces.base_llm_agent import BaseToolAgent
 
 
-class HostedToolAgent(BaseToolAgent):
+class HostedToolAgent(BaseToolAgent, ABC):
     def __init__(self, provider: HostedLLMProvider, tokenizer: LLMTokenizer, tool_call_handler: LLMToolCallHandler,
                  debug_output: bool = False):
 

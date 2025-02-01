@@ -659,6 +659,10 @@ class KnowledgeGraph:
         # Write to GraphML
         nx.write_graphml(graph_copy, filename)
 
+    def import_from_graphml(self, filename: str) -> None:
+
+        self.graph = nx.read_graphml(filename)
+
     def visualize_interactive_plotly(self, layout: str = 'spring',
                                      title: str = 'Interactive Knowledge Graph',
                                      node_size_factor: float = 10,

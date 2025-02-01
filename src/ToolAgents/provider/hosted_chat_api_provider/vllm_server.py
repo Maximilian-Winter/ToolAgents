@@ -82,9 +82,13 @@ class VLLMServerProvider(HostedLLMProvider):
             api_key=api_key if api_key else "xxx-xxxxxxxx",
         )
         self.model = model
+        self.default_settings = VLLMServerSamplingSettings()
 
     def get_default_settings(self):
-        return VLLMServerSamplingSettings()
+        return self.default_settings
+
+    def set_default_settings(self, settings: VLLMServerSamplingSettings):
+        self.default_settings = settings
 
     def create_completion(self, prompt: str, settings: VLLMServerSamplingSettings, tool_registry: ToolRegistry = None):
         return self._create_completion_or_chat(prompt=prompt, settings=settings)

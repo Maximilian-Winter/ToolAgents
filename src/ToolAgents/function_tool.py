@@ -398,7 +398,7 @@ class FunctionTool:
 
     def __init__(
             self,
-            function_tool: Union[BaseModel, Callable, Tuple[Dict[str, Any], Callable]], debug_mode: bool = False,
+            function_tool: Union[BaseModel, Callable, Tuple[Dict[str, Any], Callable]], pre_processor: Callable[[dict[str, Any]], dict[str, Any]] = None, post_processor: Callable[[Any], Any] = None, debug_mode: bool = False,
             **additional_parameters,
     ):
         # Determine the type of function_tool and set up the appropriate handling
@@ -415,10 +415,12 @@ class FunctionTool:
             models = create_dynamic_models_from_dictionaries([function_tool[0]])
             self.model = add_run_method_to_dynamic_model(models[0], function_tool[1])
         elif callable(function_tool):
-            # Handle simple callable
             self.model = create_dynamic_model_from_function(function_tool)
         else:
             raise ValueError("Invalid function_tool type provided")
+
+        self.pre_processor = pre_processor
+        self.post_processor = post_processor
 
         self.debug_mode = debug_mode
         self.additional_parameters = (
@@ -427,6 +429,9 @@ class FunctionTool:
 
     def set_name(self, new_name: str):
         self.model.__name__ = new_name
+
+    def set_keyword_argument(self, key: str, value: Any):
+        self.additional_parameters[key] = value
 
     def get_python_documentation(self):
         return generate_function_definition(self.model, self.model.__name__, self.model.__doc__)
@@ -548,9 +553,13 @@ class FunctionTool:
     def execute(self, parameters):
         if self.debug_mode:
             print(json.dumps(parameters, indent=4))
-
+        if self.pre_processor:
+            parameters = self.pre_processor(parameters)
         instance = self.model(**parameters)
-        return instance.run(**self.additional_parameters)
+        result = instance.run(**self.additional_parameters)
+        if self.post_processor:
+            result = self.post_processor(result)
+        return result
 
 
 class ToolRegistry:

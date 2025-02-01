@@ -1,1 +1,1 @@
-from ToolAgents.provider.chat_api_provider.chat_api_with_tools import AnthropicChatAPI, AnthropicSettings, OpenAIChatAPI, OpenAISettings
+from ToolAgents.provider.chat_api_provider.utilities import AnthropicChatAPI, AnthropicSettings, OpenAIChatAPI, OpenAISettings

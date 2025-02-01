@@ -84,9 +84,13 @@ class TGIServerProvider(HostedLLMProvider):
         self.server_chat_completion_endpoint = f"{self.server_address}/v1/chat/completions"
         self.server_tokenize_endpoint = f"{self.server_address}/tokenize"
         self.api_key = api_key
+        self.default_settings = TGIServerSamplingSettings()
 
     def get_default_settings(self):
-        return TGIServerSamplingSettings()
+        return self.default_settings
+
+    def set_default_settings(self, settings: TGIServerSamplingSettings):
+        self.default_settings = settings
 
     def create_completion(self, prompt: str, settings: TGIServerSamplingSettings, tool_registry: ToolRegistry = None):
         settings = deepcopy(settings.as_dict())

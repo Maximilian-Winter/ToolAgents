@@ -25,7 +25,7 @@ agent = TemplateAgent(provider, advanced_chat_formatter=advanced_chat_formatter,
 
 settings = provider.get_default_settings()
 settings.neutralize_all_samplers()
-settings.temperature = 0.1
+settings.temperature = 0.4
 settings.set_stop_tokens(["</s>", "<|im_end|>"], None)
 settings.set_max_new_tokens(4096)
 

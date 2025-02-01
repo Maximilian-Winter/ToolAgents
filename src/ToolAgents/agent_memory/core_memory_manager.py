@@ -17,20 +17,20 @@ class CoreMemoryManager:
 
         def append_core_memory(key: CoreMemoryKey, content: str):
             """
-            Appends content to a key section.
+            Appends content to a core memory section.
             Args:
                 key (CoreMemoryKey): The key section to append the content to.
                 content (str): The content to append to the key section.
             """
-            if key in self.core_memory:
-                self.core_memory[key] += content
+            if key.value in self.core_memory:
+                self.core_memory[key.value] += content
                 self.last_modified = datetime.datetime.now().strftime("%d/%m/%Y, %H:%M:%S")
-                return f"Content appended successfully to key: {key}"
-            return f"Key not found in Core memory. Key: {key}."
+                return f"Content appended successfully to key: {key.value}"
+            return f"Key not found in Core memory. Key: {key.value}."
 
         def replace_in_core_memory(key: CoreMemoryKey, old_content: str, new_content: str) -> str:
             """
-            Replaces existing content in a key section with new content.
+            Replaces existing content in a core memory with new content.
 
             Args:
                 key (CoreMemoryKey): The key section in which the content gets replace.
@@ -38,16 +38,16 @@ class CoreMemoryManager:
                 new_content (str): The new content to replace with.
             """
 
-            if key in self.core_memory:
-                if old_content in self.core_memory[key]:
-                    self.core_memory[key].replace(old_content, new_content)
+            if key.value in self.core_memory:
+                if old_content in self.core_memory[key.value]:
+                    self.core_memory[key.value].replace(old_content, new_content)
                     self.last_modified = datetime.datetime.now().strftime("%d/%m/%Y, %H:%M:%S")
-                    return f"Old content replaced. Key: {key}."
+                    return f"Old content replaced. Key: {key.value}."
                 else:
-                    return f"Old content is not present in key: {key}."
+                    return f"Old content is not present in key: {key.value}."
 
             else:
-                return f"Key not found in Core memory. Key: {key}."
+                return f"Key not found in Core memory. Key: {key.value}."
 
         self.tools = [FunctionTool(append_core_memory), FunctionTool(replace_in_core_memory)]
 

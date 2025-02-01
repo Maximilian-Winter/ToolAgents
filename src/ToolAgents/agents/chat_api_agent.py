@@ -1,19 +1,21 @@
 import json
 from typing import Optional, Dict, List, Any, Tuple
-
+from ToolAgents.utilities import ChatHistory
 from ToolAgents import ToolRegistry
 from ToolAgents.interfaces.base_llm_agent import BaseToolAgent
 from ToolAgents.interfaces.llm_tool_call import generate_id
-from ToolAgents.provider.chat_api_provider.chat_api_with_tools import ChatAPIProvider
+from ToolAgents.provider.chat_api_provider.utilities import ChatAPIProvider
 
 
 class ChatAPIAgent(BaseToolAgent):
+
     def __init__(self, chat_api: ChatAPIProvider, debug_output: bool = False):
         super().__init__()
         self.chat_api = chat_api
         self.debug_output = debug_output
         self.last_messages_buffer = []
         self.tool_registry = ToolRegistry()
+        self.last_response_has_tool_calls = False
 
     def step(
             self,
@@ -175,9 +177,12 @@ class ChatAPIAgent(BaseToolAgent):
         Returns:
             The final response string
         """
+        if reset_last_messages_buffer:
+            self.last_response_has_tool_calls = False
         result, contains_tool_calls = self.step(messages, tool_registry, settings, reset_last_messages_buffer)
 
         if contains_tool_calls:
+            self.last_response_has_tool_calls = True
             self.handle_function_calling_response(result, messages)
             return self.get_response(
                 messages=messages,
@@ -208,6 +213,9 @@ class ChatAPIAgent(BaseToolAgent):
         Yields:
             Response chunks
         """
+        if reset_last_messages_buffer:
+            self.last_response_has_tool_calls = False
+
         if tool_registry is None:
             tool_registry = ToolRegistry()
 
@@ -230,6 +238,7 @@ class ChatAPIAgent(BaseToolAgent):
         if "tool_calls" in last_message:
             if self.debug_output:
                 print("Tool Calls Message:", json.dumps(last_message))
+            self.last_response_has_tool_calls = True
 
             last_message["tool_calls"] = [
                 json.loads(tool_call)["tool_calls"][0]
@@ -299,3 +308,6 @@ class ChatAPIAgent(BaseToolAgent):
             )
         else:
             self.last_messages_buffer.append({"role": "assistant", "content": last_message["content"]})
+
+    def last_response_contains_tool_calls(self) -> bool:
+        return self.last_response_has_tool_calls

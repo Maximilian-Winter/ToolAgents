@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from datetime import datetime
 import json
 
+from ToolAgents.agent_memory.event import Event
 from ToolAgents.utilities.chat_history import ChatMessageRole, ChatHistory
 from ToolAgents import FunctionTool
 
@@ -11,7 +12,7 @@ from ToolAgents import FunctionTool
 class EventMemoryManager:
     def __init__(self, session: Session, event_queue_limit: int = 10):
         self.session = session
-        self.event_queue: list[ChatMessageDB] = []
+        self.event_queue: list[Event] = []
         self.event_queue_limit = event_queue_limit
 
         def conversation_search(keywords: List[str], page: int = 0):
@@ -74,7 +75,7 @@ class EventMemoryManager:
     def build_event_memory_context(self):
         messages = []
         for event in self.event_queue:
-            messages.append({"role": event.role.value, "content": event.content})
+            messages.append({"role": event.event_type.value, "content": event.content})
         return messages
 
     def build_chat_history(self):
@@ -85,7 +86,7 @@ class EventMemoryManager:
         return history
 
     def add_event_to_queue(self, event_type: ChatMessageRole, content: str, metadata: dict):
-        new_event = ChatMessageDB(
+        new_event = Event(
             event_type=event_type,
             timestamp=datetime.now(),
             content=content,
@@ -133,19 +134,19 @@ class EventMemoryManager:
             page: int = 1,
             page_size: int = 5,
     ) -> str:
-        query = self.session.query(ChatMessageDB)
+        query = self.session.query(Event)
 
         # Filtering based on provided criteria
         if event_types:
-            query = query.filter(ChatMessageDB.role.in_(event_types))
+            query = query.filter(Event.event_type.in_(event_types))
         if start_date and end_date:
-            query = query.filter(ChatMessageDB.timestamp.between(start_date, end_date))
+            query = query.filter(Event.timestamp.between(start_date, end_date))
         if content_keywords:
             for keyword in content_keywords:
-                query = query.filter(ChatMessageDB.content.contains(keyword))
+                query = query.filter(Event.content.contains(keyword))
         if keywords:
             for value in keywords:
-                query = query.filter(ChatMessageDB.message_keywords.contains(value))
+                query = query.filter(Event.event_keywords.contains(value))
 
         # Calculate offset for paging
         offset_value = (page - 1) * page_size
@@ -173,5 +174,5 @@ class EventMemoryManager:
     def load_event_queue(self, filepath):
         with open(filepath, "r") as file:
             self.event_queue = [
-                ChatMessageDB.from_dict(event_dict) for event_dict in json.load(file)
+                Event.from_dict(event_dict) for event_dict in json.load(file)
             ]

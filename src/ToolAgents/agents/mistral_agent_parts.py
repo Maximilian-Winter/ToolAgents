@@ -1,4 +1,5 @@
 import json
+from enum import Enum
 from typing import List, Dict, Any
 
 from mistral_common.protocol.instruct.messages import AssistantMessage, ToolMessage
@@ -48,7 +49,10 @@ class MistralToolCallHandler(LLMToolCallHandler):
                                                                                                             List[Dict[
                                                                                                                 str, Any]]:
 
-        return [ToolMessage(content=str(tool_call_result) if not isinstance(tool_call_result, dict) else json.dumps(tool_call_result), tool_call_id=tool_call.get_tool_call_id(), name=tool_call.get_tool_name()).model_dump() for tool_call, tool_call_result in zip(tool_calls, tool_call_results)]
+        return [ToolMessage(
+            content=str(tool_call_result) if not isinstance(tool_call_result, dict) else json.dumps(tool_call_result),
+            tool_call_id=tool_call.get_tool_call_id(), name=tool_call.get_tool_name()).model_dump() for
+                tool_call, tool_call_result in zip(tool_calls, tool_call_results)]
 
     def execute_tool_calls(self, tool_calls: List[LLMToolCall], tool_registry: ToolRegistry) -> List[Any]:
         results = []
@@ -60,12 +64,27 @@ class MistralToolCallHandler(LLMToolCallHandler):
         return results
 
 
+class MistralTokenizerVersion(Enum):
+    v1 = 0
+    v2 = 1
+    v3 = 2
+    v7 = 3
+
+
 class MistralTokenizer(LLMTokenizer):
-    def __init__(self, tokenizer_file: str = None):
+    def __init__(self, tokenizer_file: str = None,
+                 tokenizer_version: MistralTokenizerVersion = MistralTokenizerVersion.v7):
         if tokenizer_file is not None:
             self.tokenizer = MistralTokenizerOfficial.from_file(tokenizer_filename=tokenizer_file)
         else:
-            self.tokenizer = MistralTokenizerOfficial.v3()
+            if tokenizer_version == MistralTokenizerVersion.v1:
+                self.tokenizer = MistralTokenizerOfficial.v1()
+            elif tokenizer_version == MistralTokenizerVersion.v2:
+                self.tokenizer = MistralTokenizerOfficial.v2()
+            elif tokenizer_version == MistralTokenizerVersion.v3:
+                self.tokenizer = MistralTokenizerOfficial.v3()
+            elif tokenizer_version == MistralTokenizerVersion.v7:
+                self.tokenizer = MistralTokenizerOfficial.v7()
 
     def apply_template(self, messages: List[Dict[str, str]], tools: ToolRegistry) -> str:
         request = ChatCompletionRequest(
@@ -80,5 +99,3 @@ class MistralTokenizer(LLMTokenizer):
 
     def tokenize(self, text: str) -> List[int]:
         return self.tokenizer.instruct_tokenizer.tokenizer.encode(text, False, False)
-
-

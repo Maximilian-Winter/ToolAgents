@@ -91,6 +91,7 @@ def topological_sort(processes: List[BaseProcess],
 
     return sorted_nodes
 
+
 def weighted_vote(results: List[ProcessResult],
                   weights: List[float]) -> ProcessResult:
     """Aggregate results using weighted voting"""
@@ -99,7 +100,7 @@ def weighted_vote(results: List[ProcessResult],
 
     # Normalize weights
     total_weight = sum(weights)
-    normalized_weights = [w/total_weight for w in weights]
+    normalized_weights = [w / total_weight for w in weights]
 
     # Combine metrics and errors
     combined_metrics = {}
@@ -121,6 +122,8 @@ def weighted_vote(results: List[ProcessResult],
         metrics=combined_metrics,
         errors=all_errors
     )
+
+
 class ChainableProcess(BaseProcess[InputType, OutputType, ConfigType]):
     """A process that can be chained with others"""
 
