@@ -4,7 +4,7 @@ from ToolAgents.utilities import ChatHistory
 from ToolAgents import ToolRegistry
 from ToolAgents.interfaces.base_llm_agent import BaseToolAgent
 from ToolAgents.interfaces.llm_tool_call import generate_id
-from ToolAgents.provider.chat_api_provider.utilities import ChatAPIProvider
+from ToolAgents.interfaces.llm_provider import ChatAPIProvider
 
 
 class ChatAPIAgent(BaseToolAgent):

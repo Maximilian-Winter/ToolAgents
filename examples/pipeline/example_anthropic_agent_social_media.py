@@ -1,19 +1,26 @@
+import os
 
-from ToolAgents.agents import MistralAgent
-from ToolAgents.pipelines.pipeline import ProcessStep, Process, Pipeline, SequentialProcess
-from ToolAgents.provider import LlamaCppServerProvider
+from dotenv import load_dotenv
 
-provider = LlamaCppServerProvider("http://127.0.0.1:8080/")
+from ToolAgents.agents import ChatAPIAgent
+from ToolAgents.pipelines.pipeline import ProcessStep, Pipeline, SequentialProcess
 
-agent = MistralAgent(provider=provider, debug_output=True)
+from ToolAgents.provider.chat_api_provider.anthropic import AnthropicChatAPI, AnthropicSettings
 
-settings = provider.get_default_settings()
+
+load_dotenv()
+
+api = AnthropicChatAPI(api_key=os.getenv("ANTHROPIC_API_KEY"), model="claude-3-5-sonnet-20241022")
+
+# Create the ChatAPIAgent
+agent = ChatAPIAgent(chat_api=api, debug_output=True)
+
+settings = api.get_default_settings()
 settings.neutralize_all_samplers()
 settings.temperature = 0.3
 
 settings.set_max_new_tokens(4096)
-
-provider.set_default_settings(settings)
+api.set_default_settings(settings)
 
 article_summary = ProcessStep(
     step_name="article_summary",
