@@ -77,14 +77,14 @@ class PersistentChatHistory:
             )
             session.add(message)
 
-    def add_user_message(self, session_id: int, content: str):
-        self.add_message(session_id, "user", content)
+    def add_user_message(self, session_id: int, content: str, **kwargs):
+        self.add_message(session_id, "user", content, **kwargs)
 
     def add_assistant_message(self, session_id: int, content: str, **kwargs):
         self.add_message(session_id, "assistant", content, **kwargs)
 
-    def add_system_message(self, session_id: int, content: str):
-        self.add_message(session_id, "system", content)
+    def add_system_message(self, session_id: int, content: str, **kwargs):
+        self.add_message(session_id, "system", content, **kwargs)
 
     def add_tool_message(self, session_id: int, content: str, **kwargs):
         self.add_message(session_id, "tool", content, **kwargs)

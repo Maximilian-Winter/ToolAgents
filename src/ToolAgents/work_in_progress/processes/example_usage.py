@@ -1,10 +1,9 @@
 import asyncio
 from dataclasses import dataclass
-from typing import Any
 import time
 import random
 
-from ToolAgents.processes.processes import BaseProcess, ExecutionContext, ProcessResult, ChainableProcess, \
+from ToolAgents.work_in_progress.processes.processes import BaseProcess, ExecutionContext, ProcessResult, ChainableProcess, \
     CompositionPatterns, ExecutionStage, StageConfig, ExecutionPlan, AdvancedCompositionStrategy
 
 

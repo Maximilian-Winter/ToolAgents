@@ -18,9 +18,6 @@ class AnthropicSettings(LLMSamplingSettings):
         self.top_k = 0
         self.max_tokens = 1024
         self.stop_sequences = []
-        self.cache_system_prompt = False
-        self.cache_user_messages = False
-        self.cache_recent_messages = 4
 
     def save_to_file(self, settings_file: str):
         with open(settings_file, 'w') as f:
@@ -79,16 +76,11 @@ class AnthropicChatAPI(ChatAPIProvider):
                 system_message = [
                     {"type": "text", "text": message['content']}
                 ]
-                if settings.cache_system_prompt:
-                    system_message[0]["cache_control"] = {"type": "ephemeral"}
             else:
                 msg = {
                     'role': message['role'],
                     'content': message["content"],
                 }
-                if settings.cache_user_messages:
-                    if i >= len(cleaned_messages) - settings.cache_recent_messages:
-                        msg["content"][0]["cache_control"] = {"type": "ephemeral"}
 
                 other_messages.append(msg)
         return system_message, other_messages
