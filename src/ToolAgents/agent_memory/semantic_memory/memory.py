@@ -149,6 +149,7 @@ class SemanticMemory:
 
             pattern_embedding = self.encoder.encode(pattern['content']).tolist()
 
+            self.working.delete(ids=[t["memory_id"] for t in [working_memories['metadatas'][i] for i in cluster]])
             # Check for duplicates
             existing = self.long_term.query(
                 query_embeddings=[pattern_embedding],
