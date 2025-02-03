@@ -3,6 +3,7 @@ import uuid
 
 import chromadb
 import numpy as np
+from chromadb.api.types import IncludeEnum
 from chromadb.utils import embedding_functions
 from scipy.spatial.distance import cosine
 
@@ -57,7 +58,7 @@ class RetrievalMemory:
         query_result = self.collection.query(
             query_embedding,
             n_results=k * 4,
-            include=["metadatas", "embeddings", "documents", "distances"],
+            include=[IncludeEnum.metadatas, IncludeEnum.embeddings, IncludeEnum.documents, IncludeEnum.distances],
         )  # Increase candidate pool size
         if len(query_result["metadatas"][0]) == 0:
             return []

@@ -4,7 +4,7 @@ from typing import Optional, Dict, Any
 
 import networkx as nx
 
-from ToolAgents.agent_memory.knowledge_graphs.knowledge_graph import GeneralizedKnowledgeGraph
+from ToolAgents.work_in_progress.knowledge_graphs.knowledge_graph import GeneralizedKnowledgeGraph
 
 
 class TimeDecayWeightedKnowledgeGraph(GeneralizedKnowledgeGraph):

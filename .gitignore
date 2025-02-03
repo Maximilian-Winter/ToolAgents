@@ -23,3 +23,5 @@
 /examples/basic/__pycache__
 /src/ToolAgents/llm_documentation/__pycache__
 /src/ToolAgents/pipelines/__pycache__
+/src/ToolAgents/agent_memory/knowledge_graphs/__pycache__
+/src/ToolAgents/agent_memory/knowledge_graphs/__pycache__
