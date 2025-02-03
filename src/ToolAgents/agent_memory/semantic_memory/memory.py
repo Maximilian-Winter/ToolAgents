@@ -17,7 +17,7 @@ if os.path.exists(persist_directory):
     shutil.rmtree(persist_directory)
 
 class SemanticMemory:
-    def __init__(self, persist_directory: str = "./memory", sentence_transformer_model_path: str = "Snowflake/snowflake-arctic-embed-l-v2.0", trust_remote_code: bool = False, device: str = "cpu"):
+    def __init__(self, persist_directory: str = "./memory", sentence_transformer_model_path: str = "all-MiniLM-L6-v2", trust_remote_code: bool = False, device: str = "cpu"):
         """Initialize the semantic memory system"""
         self.encoder = SentenceTransformer(sentence_transformer_model_path, trust_remote_code=trust_remote_code, device=device)
         self.client = chromadb.PersistentClient(path=persist_directory)

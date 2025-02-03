@@ -25,3 +25,5 @@
 /src/ToolAgents/pipelines/__pycache__
 /src/ToolAgents/agent_memory/knowledge_graphs/__pycache__
 /src/ToolAgents/agent_memory/knowledge_graphs/__pycache__
+/examples/memory/test_semantic_memory
+/src/ToolAgents/agent_memory/semantic_memory/__pycache__
