@@ -1,3 +1,4 @@
+import abc
 import uuid
 
 
@@ -11,13 +12,78 @@ import json
 import shutil
 import os
 
+from torch import Tensor
+
 # Clean up any existing test database
 persist_directory = "./test_semantic_memory"
 if os.path.exists(persist_directory):
     shutil.rmtree(persist_directory)
 
+class ExtractPatternStrategy(abc.ABC):
+    @abc.abstractmethod
+    def extract_pattern(self, pattern_id, documents: List[str],
+                         metadatas: List[Dict], timestamp = datetime.now().isoformat()) -> Dict:
+        pass
+
+class SimpleExtractPatternStrategy(ExtractPatternStrategy):
+    def extract_pattern(self, pattern_id, documents: List[str],
+                         metadatas: List[Dict], timestamp = datetime.now().isoformat()) -> Dict:
+        """Extract pattern from cluster of similar memories"""
+        counters = [m['access_count'] for m in metadatas]
+        pattern_metadata = {
+            "type": "pattern",
+            "timestamp": timestamp,
+            "pattern_id": pattern_id,
+            "last_access_timestamp": timestamp,
+            "access_count": sum(counters),
+            "source_count": len(documents),
+            "source_timestamps": json.dumps([m['timestamp'] for m in metadatas])
+        }
+
+        return {
+            "content": '\n'.join(documents),
+            "metadata": pattern_metadata
+        }
+
+class ClusterEmbeddingsStrategy(abc.ABC):
+    @abc.abstractmethod
+    def cluster_embeddings(self, embeddings: List[np.ndarray], minimum_cluster_similarity: float = 0.75) -> List[List[int]]:
+        pass
+
+class SimpleClusterEmbeddingsStrategy(ClusterEmbeddingsStrategy):
+    def cluster_embeddings(self, embeddings: List[np.ndarray | Tensor], minimum_cluster_similarity: float = 0.75) -> List[List[int]]:
+        """Cluster embeddings using cosine similarity"""
+        embeddings_array = np.stack(embeddings)
+
+        # Compute cosine similarity
+        norms = np.linalg.norm(embeddings_array, axis=1)
+        norms[norms == 0] = 1  # Avoid division by zero
+        normalized = embeddings_array / norms[:, np.newaxis]
+        similarity_matrix = np.dot(normalized, normalized.T)
+
+        clusters = []
+        used_indices = set()
+
+        for i in range(len(embeddings)):
+            if i in used_indices:
+                continue
+
+            cluster = [i]
+            used_indices.add(i)
+
+            for j in range(i + 1, len(embeddings)):
+                if j not in used_indices and similarity_matrix[i, j] > minimum_cluster_similarity:
+                    cluster.append(j)
+                    used_indices.add(j)
+
+            clusters.append(cluster)
+
+        return clusters
+
+
 class SemanticMemory:
-    def __init__(self, persist_directory: str = "./memory", sentence_transformer_model_path: str = "all-MiniLM-L6-v2", trust_remote_code: bool = False, device: str = "cpu"):
+    def __init__(self, persist_directory: str = "./memory", sentence_transformer_model_path: str = "all-MiniLM-L6-v2", trust_remote_code: bool = False, device: str = "cpu",
+                 extract_pattern_strategy: ExtractPatternStrategy = SimpleExtractPatternStrategy(), cluster_embeddings_strategy: ClusterEmbeddingsStrategy = SimpleClusterEmbeddingsStrategy()):
         """Initialize the semantic memory system"""
         self.encoder = SentenceTransformer(sentence_transformer_model_path, trust_remote_code=trust_remote_code, device=device)
         self.client = chromadb.PersistentClient(path=persist_directory)
@@ -26,6 +92,9 @@ class SemanticMemory:
         self.query_result_multiplier = 4
         self.minimum_cluster_size = 2
         self.minimum_cluster_similarity = 0.7
+
+        self._extract_pattern = extract_pattern_strategy.extract_pattern
+        self._cluster_embeddings = cluster_embeddings_strategy.cluster_embeddings
 
         # Create collections with cosine similarity
         self.working = self.client.get_or_create_collection(
@@ -98,13 +167,16 @@ class SemanticMemory:
                 results.extend(future.result())
 
         # Deduplicate & sort results
-        seen_contents = set()
+        seen_contents = ""
         unique_results = []
         for result in results:
             if result['content'] not in seen_contents:
-                seen_contents.add(result['content'])
-                result["rank_score"] = self.compute_memory_score(result["metadata"], result["similarity"], current_date, alpha_recency, alpha_relevance, alpha_frequency)
+                seen_contents += result['content'] + '\n'
+                result["rank_score"] = self.compute_memory_score(result["metadata"], result["similarity"], current_date,
+                                                                 alpha_recency, alpha_relevance, alpha_frequency)
                 unique_results.append(result)
+
+
 
         unique_results.sort(key=lambda x: x['rank_score'], reverse=True)
         unique_results = unique_results[:n_results]
@@ -131,7 +203,7 @@ class SemanticMemory:
             for doc in working_memories['documents']
         ]
 
-        clusters = self._cluster_embeddings(embeddings)
+        clusters = self._cluster_embeddings(embeddings, self.minimum_cluster_similarity)
 
         # Process immediate to working memory
         for cluster_idx, cluster in enumerate(clusters):
@@ -149,7 +221,7 @@ class SemanticMemory:
 
             pattern_embedding = self.encoder.encode(pattern['content']).tolist()
 
-            self.working.delete(ids=[t["memory_id"] for t in [working_memories['metadatas'][i] for i in cluster]])
+            # self.working.delete(ids=[t["memory_id"] for t in [working_memories['metadatas'][i] for i in cluster]])
             # Check for duplicates
             existing = self.long_term.query(
                 query_embeddings=[pattern_embedding],
@@ -164,54 +236,6 @@ class SemanticMemory:
                 embeddings=[pattern_embedding],
                 ids=[pattern_id]
             )
-
-    def _cluster_embeddings(self, embeddings: List[np.ndarray]) -> List[List[int]]:
-        """Cluster embeddings using cosine similarity"""
-        embeddings_array = np.stack(embeddings)
-
-        # Compute cosine similarity
-        norms = np.linalg.norm(embeddings_array, axis=1)
-        norms[norms == 0] = 1  # Avoid division by zero
-        normalized = embeddings_array / norms[:, np.newaxis]
-        similarity_matrix = np.dot(normalized, normalized.T)
-
-        clusters = []
-        used_indices = set()
-
-        for i in range(len(embeddings)):
-            if i in used_indices:
-                continue
-
-            cluster = [i]
-            used_indices.add(i)
-
-            for j in range(i + 1, len(embeddings)):
-                if j not in used_indices and similarity_matrix[i, j] > self.minimum_cluster_similarity:
-                    cluster.append(j)
-                    used_indices.add(j)
-
-            clusters.append(cluster)
-
-        return clusters
-
-    def _extract_pattern(self, pattern_id, documents: List[str],
-                         metadatas: List[Dict], timestamp = datetime.now().isoformat()) -> Dict:
-        """Extract pattern from cluster of similar memories"""
-
-        pattern_metadata = {
-            "type": "pattern",
-            "timestamp": timestamp,
-            "pattern_id": pattern_id,
-            "last_access_timestamp": timestamp,
-            "access_count": 1,
-            "source_count": len(documents),
-            "source_timestamps": json.dumps([m['timestamp'] for m in metadatas])
-        }
-
-        return {
-            "content": '\n'.join(documents),
-            "metadata": pattern_metadata
-        }
 
     def _format_results(self, results: Dict, memory_type: str) -> List[Dict]:
         """Format query results"""
