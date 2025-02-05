@@ -12,12 +12,13 @@ from ToolAgents.interfaces.base_llm_agent import BaseToolAgent
 class AgentConfig:
     system_message: str = "You are a helpful assistant."
     save_dir: str = "./default_agent"
-    initial_state_file: str = None
+    initial_app_state_file: str = None
     max_chat_history_length: int = -1
-    use_semantic_memory: bool = False
+    use_semantic_chat_history_memory: bool = False
+    save_on_creation: bool = False
 
 
-class ConfigurableAdvancedAgent:
+class AdvancedAgent:
     def __init__(self, agent: BaseToolAgent, tool_registry: ToolRegistry = None, agent_config: AgentConfig = None):
         if agent_config is None:
             agent_config = AgentConfig()
@@ -26,14 +27,14 @@ class ConfigurableAdvancedAgent:
         self.agent = agent
 
         save_dir = agent_config.save_dir
-        initial_state_file = agent_config.initial_state_file
+        initial_state_file = agent_config.initial_app_state_file
         system_message = agent_config.system_message
 
-        self.use_semantic_memory = agent_config.use_semantic_memory
+        self.use_semantic_memory = agent_config.use_semantic_chat_history_memory
         self.max_chat_history_length = agent_config.max_chat_history_length
 
         load = True
-        if not os.path.isdir(save_dir):
+        if not os.path.isdir(save_dir) and agent_config.save_on_creation:
             os.makedirs(save_dir)
             load = False
 
@@ -53,9 +54,11 @@ class ConfigurableAdvancedAgent:
             if initial_state_file:
                 self.has_app_state = True
                 self.app_state = ContextAppState(initial_state_file)
-
-            self.save_agent()
+            if agent_config.save_on_creation:
+                self.save_agent()
         if self.use_semantic_memory:
+            if not os.path.isdir(self.save_dir):
+                os.makedirs(self.save_dir)
             self.semantic_memory = SemanticMemory(self.semantic_memory_path)
 
     def set_tool_registry(self, tool_registry: ToolRegistry):
@@ -68,36 +71,11 @@ class ConfigurableAdvancedAgent:
     def remove_all_tools(self):
         self.tool_registry = None
 
-    def _before_run(self, chat_input):
-        user = chat_input
-        if not self.has_app_state:
-            chat_history = [{"role": "system", "content": self.system_message}]
-        else:
-            chat_history = [{"role": "system",
-                             "content": self.system_message.format(app_state=self.app_state.get_app_state_string())}]
-        chat_history.extend(self.chat_history[self.chat_history_index:])
 
-        if self.use_semantic_memory:
-            results = self.semantic_memory.recall(user, 3)
-            additional_context = "\n--- Additional Context From Past Interactions ---\n"
-            for r in results:
-                additional_context += f"Memories: {r['content']}\n\n---\n\n"
-            user += '\n' + additional_context.strip()
 
-        chat_history.append({"role": "user", "content": user})
-        return chat_history
-
-    def _after_run(self, chat_input):
-        # Add all messages to chat history
-        self.chat_history.append(chat_input)
-        self.chat_history.extend(self.agent.last_messages_buffer)
-        self.tool_usage_history[self.chat_history_index] = len(self.agent.last_messages_buffer)
-        if len(self.chat_history) > self.max_chat_history_length and self.max_chat_history_length > -1:
-            self.chat_history_index += self.tool_usage_history.get(self.chat_history_index, 1)
-
-    def chat_with_agent(self, chat_input: str, settings: LLMSamplingSettings = None):
+    def chat_with_agent(self, chat_input: str, tool_registry: ToolRegistry = None, settings: LLMSamplingSettings = None):
         chat_history = self._before_run(chat_input)
-        result = self.agent.get_response(chat_history, self.tool_registry, settings=settings)
+        result = self.agent.get_response(chat_history, self.tool_registry if tool_registry is None else tool_registry, settings=settings)
         self._after_run(chat_input)
         return result
 
@@ -126,6 +104,8 @@ class ConfigurableAdvancedAgent:
             self.app_state.load_json(self.app_state_path)
 
     def save_agent(self):
+        if not os.path.isdir(self.save_dir):
+            os.makedirs(self.save_dir)
         with open(self.agent_config_path, "w") as f:
             save_data = {
                 "system_message": self.system_message,
@@ -141,3 +121,31 @@ class ConfigurableAdvancedAgent:
         if self.has_app_state:
             self.app_state.save_json(self.app_state_path)
 
+
+    def _before_run(self, chat_input):
+        user = chat_input
+        if not self.has_app_state:
+            chat_history = [{"role": "system", "content": self.system_message}]
+        else:
+            chat_history = [{"role": "system",
+                             "content": self.system_message.format(app_state=self.app_state.get_app_state_string())}]
+        chat_history.extend(self.chat_history[self.chat_history_index:])
+
+        if self.use_semantic_memory:
+            results = self.semantic_memory.recall(user, 3)
+            if len(results) > 0:
+                additional_context = "\n--- Additional Context From Past Interactions ---\n"
+                for r in results:
+                    additional_context += f"Memories: {r['content']}\n\n---\n\n"
+                user += '\n' + additional_context.strip()
+
+        chat_history.append({"role": "user", "content": user})
+        return chat_history
+
+    def _after_run(self, chat_input):
+        # Add all messages to chat history
+        self.chat_history.append(chat_input)
+        self.chat_history.extend(self.agent.last_messages_buffer)
+        self.tool_usage_history[self.chat_history_index] = len(self.agent.last_messages_buffer)
+        if len(self.chat_history) > self.max_chat_history_length and self.max_chat_history_length > -1:
+            self.chat_history_index += self.tool_usage_history.get(self.chat_history_index, 1)

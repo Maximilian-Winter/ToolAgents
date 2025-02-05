@@ -1,9 +1,7 @@
 from ToolAgents.agent_memory.context_app_state import ContextAppState
-from ToolAgents import ToolRegistry
-from ToolAgents.agents.hosted_tool_agents import TemplateAgent, AdvancedChatFormatter, MistralAgent
-from ToolAgents.interfaces.llm_tool_call import TemplateToolCallHandler
+from ToolAgents.agents.hosted_tool_agents import MistralAgent
+
 from ToolAgents.provider import LlamaCppServerProvider
-from ToolAgents.utilities import ChatHistory
 
 provider = LlamaCppServerProvider("http://127.0.0.1:8080/")
 
