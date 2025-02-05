@@ -1,24 +1,12 @@
 import dataclasses
 import json
 import os
-from enum import Enum
-from typing import Any
 
 from ToolAgents import ToolRegistry, FunctionTool
 from ToolAgents.agent_memory.context_app_state import ContextAppState
 from ToolAgents.agent_memory.semantic_memory.memory import SemanticMemory
 from ToolAgents.interfaces import LLMSamplingSettings
 from ToolAgents.interfaces.base_llm_agent import BaseToolAgent
-
-class AgentOutputType(Enum):
-    STDOUT = "stdout"
-    FILE = "file"
-    FUNCTION = "function"
-
-@dataclasses.dataclass
-class AgentOutputSettings:
-    output_type: AgentOutputType = AgentOutputType.STDOUT
-    additional_settings: dict[str, Any] = dataclasses.field(default_factory=dict)
 
 @dataclasses.dataclass
 class AgentConfig:
@@ -30,12 +18,9 @@ class AgentConfig:
 
 
 class ConfigurableAdvancedAgent:
-    def __init__(self, agent: BaseToolAgent, tool_registry: ToolRegistry = None, output_settings: AgentOutputSettings = None, agent_config: AgentConfig = None):
+    def __init__(self, agent: BaseToolAgent, tool_registry: ToolRegistry = None, agent_config: AgentConfig = None):
         if agent_config is None:
             agent_config = AgentConfig()
-
-        if output_settings is None:
-            self.output_settings = AgentOutputSettings()
 
         self.tool_registry = tool_registry
         self.agent = agent
@@ -61,7 +46,7 @@ class ConfigurableAdvancedAgent:
         self.app_state = None
         self.chat_history_index = 0
         self.chat_history = []
-
+        self.tool_usage_history = {}
         if load:
             self.load_agent()
         else:
@@ -83,28 +68,45 @@ class ConfigurableAdvancedAgent:
     def remove_all_tools(self):
         self.tool_registry = None
 
-    def chat_with_agent(self, chat_input: str, settings: LLMSamplingSettings = None):
+    def _before_run(self, chat_input):
         user = chat_input
         if not self.has_app_state:
             chat_history = [{"role": "system", "content": self.system_message}]
         else:
-            chat_history = [{"role": "system", "content": self.system_message.format(app_state=self.app_state.get_app_state_string())}]
+            chat_history = [{"role": "system",
+                             "content": self.system_message.format(app_state=self.app_state.get_app_state_string())}]
         chat_history.extend(self.chat_history[self.chat_history_index:])
+
         if self.use_semantic_memory:
             results = self.semantic_memory.recall(user, 3)
-
             additional_context = "\n--- Additional Context From Past Interactions ---\n"
             for r in results:
                 additional_context += f"Memories: {r['content']}\n\n---\n\n"
-
             user += '\n' + additional_context.strip()
-        chat_history.append({"role": "user", "content": user})
-        result = self.agent.get_response(chat_history, self.tool_registry, settings=settings)
 
+        chat_history.append({"role": "user", "content": user})
+        return chat_history
+
+    def _after_run(self, chat_input):
+        # Add all messages to chat history
+        self.chat_history.append(chat_input)
+        self.chat_history.extend(self.agent.last_messages_buffer)
+        self.tool_usage_history[self.chat_history_index] = len(self.agent.last_messages_buffer)
         if len(self.chat_history) > self.max_chat_history_length and self.max_chat_history_length > -1:
-            self.chat_history_index = self.chat_history_index + 1
+            self.chat_history_index += self.tool_usage_history.get(self.chat_history_index, 1)
+
+    def chat_with_agent(self, chat_input: str, settings: LLMSamplingSettings = None):
+        chat_history = self._before_run(chat_input)
+        result = self.agent.get_response(chat_history, self.tool_registry, settings=settings)
+        self._after_run(chat_input)
         return result
 
+    def stream_chat_with_agent(self, chat_input: str, settings: LLMSamplingSettings = None):
+        chat_history = self._before_run(chat_input)
+        result = self.agent.get_streaming_response(chat_history, self.tool_registry, settings=settings)
+        for tok in result:
+            yield tok
+        self._after_run(chat_input)
 
     def load_agent(self):
         if not os.path.isfile(self.agent_config_path):
@@ -117,6 +119,7 @@ class ConfigurableAdvancedAgent:
         self.chat_history_index = loaded_data["chat_history_index"]
         self.max_chat_history_length = loaded_data["max_chat_history_length"]
         self.use_semantic_memory = loaded_data["use_semantic_memory"]
+        self.tool_usage_history = loaded_data["tool_usage_history"]
 
         if self.has_app_state:
             self.app_state = ContextAppState()
@@ -131,7 +134,9 @@ class ConfigurableAdvancedAgent:
                 "chat_history_index": self.chat_history_index,
                 "max_chat_history_length": self.max_chat_history_length,
                 "use_semantic_memory": self.use_semantic_memory,
+                "tool_usage_history": self.tool_usage_history,
             }
+            # noinspection PyTypeChecker
             json.dump(save_data, fp=f)
         if self.has_app_state:
             self.app_state.save_json(self.app_state_path)
