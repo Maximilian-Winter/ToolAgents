@@ -6,7 +6,7 @@ from ToolAgents.provider import LlamaCppServerProvider
 
 provider = LlamaCppServerProvider(server_address="http://127.0.0.1:8080/")
 
-agent = MistralAgent(provider=provider, debug_output=True)
+agent = MistralAgent(provider=provider)
 
 settings = provider.get_default_settings()
 settings.neutralize_all_samplers()
