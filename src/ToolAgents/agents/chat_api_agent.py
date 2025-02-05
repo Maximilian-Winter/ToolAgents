@@ -309,5 +309,3 @@ class ChatAPIAgent(BaseToolAgent):
         else:
             self.last_messages_buffer.append({"role": "assistant", "content": last_message["content"]})
 
-    def last_response_contains_tool_calls(self) -> bool:
-        return self.last_response_has_tool_calls

@@ -8,7 +8,7 @@ import typing
 from typing import Type, List, Callable, Any, Union, Tuple, Dict
 
 from docstring_parser import DocstringStyle, parse
-from pydantic import BaseModel, create_model
+from pydantic import BaseModel, create_model, Field
 from pydantic_core import PydanticUndefined
 from pydantic_settings import BaseSettings
 
@@ -378,6 +378,79 @@ def pydantic_model_to_openai_function_definition(pydantic_model: Type[BaseModel]
                 function_definition["function"]["parameters"]["properties"][prop_name]["description"] = field_description
 
     return function_definition
+
+
+def add_field_to_model(
+        model_class: Type[BaseModel],
+        field_name: str,
+        field_type: Type[Any],
+        default: Any = None,
+        required: bool = True
+) -> Type[BaseModel]:
+    """
+    Adds a new field to an existing Pydantic model class.
+
+    Args:
+        model_class: The original Pydantic model class
+        field_name: Name of the field to add
+        field_type: Type of the field (e.g., str, int, etc.)
+        default: Default value for the field (None if not provided)
+        required: Whether the field is required (True by default)
+
+    Returns:
+        A new Pydantic model class with the added field
+
+    Example:
+        class UserBase(BaseModel):
+            name: str
+            age: int
+
+        UpdatedUser = add_field_to_model(
+            UserBase,
+            "email",
+            str,
+            default="user@example.com",
+            required=False
+        )
+    """
+    # Get existing model fields
+    existing_fields = model_class.__annotations__
+
+    # Create field configuration
+    field_config = {}
+    if not required:
+        if default is not None:
+            field_config["default"] = default
+        else:
+            field_config["default"] = None
+    elif default is not None:
+        field_config["default"] = default
+
+    # Create the new field with Field configuration
+    new_field = Field(**field_config)
+
+    # Create new annotations dictionary with the added field
+    new_annotations = {
+        **existing_fields,
+        field_name: field_type
+    }
+
+    # Create new namespace for the model
+    namespace = {
+        "__annotations__": new_annotations,
+        field_name: new_field,
+        **{k: v for k, v in model_class.__dict__.items()
+           if not k.startswith("_") and k != "model_fields"}
+    }
+
+    # Create new model class
+    new_model = type(
+        f"{model_class.__name__}With{field_name.title()}",
+        (BaseModel,),
+        namespace
+    )
+
+    return new_model
 
 
 class FunctionTool:
