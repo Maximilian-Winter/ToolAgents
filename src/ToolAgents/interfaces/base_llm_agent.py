@@ -1,5 +1,6 @@
 import json
 from abc import ABC, abstractmethod
+
 from typing import Optional, Dict, List, Any, Tuple
 
 from ToolAgents import ToolRegistry
@@ -7,7 +8,7 @@ from ToolAgents import ToolRegistry
 
 class BaseToolAgent(ABC):
     def __init__(self):
-        pass
+        self.last_messages_buffer = []
 
     @abstractmethod
     def step(
