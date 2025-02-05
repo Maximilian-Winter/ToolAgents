@@ -15,9 +15,9 @@ import os
 from torch import Tensor
 
 # Clean up any existing test database
-persist_directory = "./test_semantic_memory"
-if os.path.exists(persist_directory):
-    shutil.rmtree(persist_directory)
+#persist_directory = "./test_semantic_memory"
+#if os.path.exists(persist_directory):
+#    shutil.rmtree(persist_directory)
 
 class ExtractPatternStrategy(abc.ABC):
     @abc.abstractmethod

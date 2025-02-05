@@ -7,8 +7,9 @@ from typing import Dict, Any
 
 
 class ContextAppState:
-    def __init__(self, initial_state_file: str):
-        self.template_fields = self.load_yaml_initial_app_state(initial_state_file)
+    def __init__(self, initial_state_file: str = None):
+        if initial_state_file is not None:
+            self.template_fields = self.load_yaml_initial_app_state(initial_state_file)
 
     def load_yaml_initial_app_state(self, file_path: str) -> Dict[str, Any]:
         if not os.path.exists(file_path):
