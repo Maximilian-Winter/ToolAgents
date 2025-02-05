@@ -25,7 +25,9 @@ class AgentWithMemory:
             self.load_agent()
         else:
             if initial_state_file:
-                self.
+                self.has_app_state = True
+                self.app_state = ContextAppState(initial_state_file)
+
             self.save_agent()
 
     def load_agent(self):
@@ -48,3 +50,5 @@ class AgentWithMemory:
                 "chat_history_index": self.chat_history_index
             }
             json.dump(save_data, fp=f)
+        if self.has_app_state:
+            self.app_state.save_json(self.app_state_path)
