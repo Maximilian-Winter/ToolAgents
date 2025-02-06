@@ -17,6 +17,11 @@ settings.set_max_new_tokens(4096)
 
 provider.set_default_settings(settings)
 
+summarizer_settings = provider.get_default_settings()
+summarizer_settings.neutralize_all_samplers()
+summarizer_settings.temperature = 0.0
+summarizer_settings.set_max_new_tokens(4096)
+
 agent_config = AgentConfig()
 
 agent_config.system_message = "You are an helpful assistant. The last user message will contain additional context based on past interactions, only refer to the additional context if necessary.\n\n\nThe following is your current app state which contains important information for about you and the user, always keep these things in mind!\n\n{app_state}"
@@ -27,7 +32,9 @@ agent_config.give_agent_edit_tool = True
 agent_config.initial_app_state_file = "example_app_state.yaml"
 agent_config.semantic_chat_history_config = semantic_memory_nomic_text_gpu_config
 agent_config.semantic_chat_history_config.debug_mode = True
-agent_config.semantic_chat_history_config.extract_pattern_strategy = SummarizationExtractPatternStrategy(agent=agent, debug_mode=True)
+agent_config.semantic_chat_history_config.extract_pattern_strategy = SummarizationExtractPatternStrategy(agent=agent,summarizer_settings=summarizer_settings, debug_mode=True)
+
+
 configurable_agent = AdvancedAgent(agent=agent, agent_config=agent_config)
 configurable_agent.add_to_chat_history_from_json("./test_chat_history.json")
 configurable_agent.process_chat_history(max_chat_history_length=0)
