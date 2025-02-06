@@ -33,10 +33,12 @@ class AdvancedAgent:
         self.use_semantic_memory = agent_config.use_semantic_chat_history_memory
         self.max_chat_history_length = agent_config.max_chat_history_length
 
-        load = True
+        load = False
+
+
         if not os.path.isdir(save_dir) and agent_config.save_on_creation:
             os.makedirs(save_dir)
-            load = False
+
 
         self.save_dir = save_dir
         self.has_app_state = False
@@ -44,6 +46,9 @@ class AdvancedAgent:
         self.agent_config_path = os.path.join(self.save_dir, "agent_config.json")
         self.app_state_path = os.path.join(save_dir, "app_state.json")
         self.semantic_memory_path = os.path.join(save_dir, "semantic_memory")
+        if os.path.exists(save_dir) and os.path.exists(self.agent_config_path) and os.path.exists(self.app_state_path) and os.path.exists(self.semantic_memory_path):
+            load = True
+
         self.app_state = None
         self.chat_history_index = 0
         self.chat_history = []
