@@ -1,10 +1,11 @@
 import dataclasses
 import json
 import os
+from typing import Any
 
 from ToolAgents import ToolRegistry, FunctionTool
 from ToolAgents.agent_memory.context_app_state import ContextAppState
-from ToolAgents.agent_memory.semantic_memory.memory import SemanticMemory
+from ToolAgents.agent_memory.semantic_memory.memory import SemanticMemory, SemanticMemoryConfig
 from ToolAgents.interfaces import LLMSamplingSettings
 from ToolAgents.interfaces.base_llm_agent import BaseToolAgent
 
@@ -17,6 +18,7 @@ class AgentConfig:
     max_chat_history_length: int = -1
     use_semantic_chat_history_memory: bool = False
     save_on_creation: bool = False
+    semantic_chat_history_config: SemanticMemoryConfig = dataclasses.field(default_factory=SemanticMemoryConfig)
 
 
 class AdvancedAgent:
@@ -64,7 +66,8 @@ class AdvancedAgent:
         if self.use_semantic_memory:
             if not os.path.isdir(self.save_dir):
                 os.makedirs(self.save_dir)
-            self.semantic_memory = SemanticMemory(self.semantic_memory_path)
+            agent_config.semantic_chat_history_config.persist_directory = self.semantic_memory_path
+            self.semantic_memory = SemanticMemory(agent_config.semantic_chat_history_config)
 
         if self.tool_registry is not None and initial_state_file and self.give_agent_edit_tool:
             self.tool_registry.add_tool(self.app_state.get_edit_tool())
@@ -146,6 +149,13 @@ class AdvancedAgent:
         if self.has_app_state:
             self.app_state.save_json(self.app_state_path)
 
+    def add_to_chat_history(self, messages: list[dict[str, Any]]):
+        self.chat_history.extend(messages)
+
+    def add_to_chat_history_from_json(self, file_path: str):
+        with open(file_path, "r") as f:
+            loaded_data = json.load(fp=f)
+        self.chat_history.extend(loaded_data)
 
     def _before_run(self, chat_input):
         user = chat_input
@@ -173,8 +183,13 @@ class AdvancedAgent:
         self.chat_history.append({"role": "user", "content": chat_input})
         self.tool_usage_history[len(self.chat_history)] = len(self.agent.last_messages_buffer)
         self.chat_history.extend(self.agent.last_messages_buffer)
-        if (len(self.chat_history) - self.chat_history_index) > self.max_chat_history_length and self.max_chat_history_length > -1:
-            while (len(self.chat_history) - self.chat_history_index) > self.max_chat_history_length:
+        self.process_chat_history()
+
+    def process_chat_history(self, max_chat_history_length: int = None):
+        if max_chat_history_length is None:
+            max_chat_history_length = self.max_chat_history_length
+        if (len(self.chat_history) - self.chat_history_index) > max_chat_history_length and max_chat_history_length > -1:
+            while (len(self.chat_history) - self.chat_history_index) > max_chat_history_length:
                 msg_count = self.tool_usage_history.get(self.chat_history_index, 1)
                 msg_count += self.tool_usage_history.get(self.chat_history_index + 1, 1)
                 message = {}

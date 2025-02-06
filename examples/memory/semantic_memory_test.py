@@ -1,10 +1,7 @@
-from ToolAgents.agent_memory.context_app_state import ContextAppState
-from ToolAgents import ToolRegistry
-from ToolAgents.agent_memory.semantic_memory.memory import SemanticMemory
-from ToolAgents.agents.hosted_tool_agents import TemplateAgent, AdvancedChatFormatter, MistralAgent
-from ToolAgents.interfaces.llm_tool_call import TemplateToolCallHandler
+from ToolAgents.agent_memory import SemanticMemory, semantic_memory_nomic_text_gpu_config
+from ToolAgents.agent_memory.semantic_memory.hdbscan_cluster_embeddings_strategy import HDBSCANClusterEmbeddingsStrategy
+from ToolAgents.agents.hosted_tool_agents import MistralAgent
 from ToolAgents.provider import LlamaCppServerProvider
-from ToolAgents.utilities import ChatHistory
 
 provider = LlamaCppServerProvider("http://127.0.0.1:8080/")
 
@@ -18,8 +15,9 @@ settings.set_max_new_tokens(4096)
 
 pair = []
 pair_list = []
-
-memory = SemanticMemory("./test_semantic_memory")
+memory_config = semantic_memory_nomic_text_gpu_config
+memory_config.cluster_embeddings_strategy = HDBSCANClusterEmbeddingsStrategy()
+memory = SemanticMemory(memory_config)
 
 system_prompt = f"""You are are personal AI assistant. Your task is to engage in interesting conversations with the user. You have access to a memory system, which will remember information not in your current context. The most recent user message will contain additional context information from past interactions that are not part of the current context."""
 

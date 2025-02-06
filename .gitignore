@@ -30,3 +30,5 @@
 /examples/advanced/default_agent/
 /examples/advanced/example_agent/
 /examples/high_level_abstractions/example_agent
+/examples/memory/memory/
+/examples/high_level_abstractions/test_agent
