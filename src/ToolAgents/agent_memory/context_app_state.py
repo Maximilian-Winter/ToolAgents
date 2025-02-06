@@ -20,31 +20,38 @@ class ContextAppState:
         if initial_state_file is not None:
             self.template_fields = self.load_yaml_initial_app_state(initial_state_file)
 
-        def edit_app_state( state_name: str, operation: AppStateOperation, field_name: str, content: str = None):
+        def app_state_append_to_field( state_name: str, field_name: str, content: str = None):
             """
-            Operation to perform on the app state. Can be 'create', 'replace', 'append' or 'delete'.
+            Appends content to a field in an app state.
             Args:
-                state_name(str): Name of app state to edit.
-                operation(AppStateOperation): Operation to perform on the app state. Can be 'create', 'replace', 'append' or 'delete'.
-                field_name(str): Name of field on app state to edit.
-                content(str): Optional content(required for 'create', 'replace' and 'append' operations).
+                state_name: The name of the app state.
+                field_name: The name of the field to append.
+                content: The content to append.
             """
-            if operation == AppStateOperation.create:
-                if content is None:
-                    raise ValueError("Content for 'create' operation requires 'content' argument.")
-                self.template_fields[state_name] = content
-            elif operation == AppStateOperation.replace:
-                if content is None:
-                    raise ValueError("Content for 'replace' operation requires 'content' argument.")
-                self.template_fields[state_name] = content
-            elif operation == AppStateOperation.append:
-                if content is None:
-                    raise ValueError("Content for 'append' operation requires 'content' argument.")
-                self.template_fields[state_name] += "\n" + content
-            elif operation == AppStateOperation.delete:
-                del self.template_fields[state_name]
+            if state_name not in self.template_fields:
+                self.template_fields[state_name] = {}
+                self.template_fields[state_name][field_name] = content
+            elif field_name not in self.template_fields[state_name]:
+                self.template_fields[state_name][field_name] = content
+            elif field_name in self.template_fields[state_name]:
+                self.template_fields[state_name][field_name] += content
+
             return "App state edited successfully."
-        self.edit_app_state_tool = FunctionTool(edit_app_state)
+
+        def app_state_replace_field(state_name: str, field_name: str, content: str = None):
+            """
+            Replaces content of a field in an app state.
+            Args:
+                state_name: The name of the app state.
+                field_name: The name of the field to replace.
+                content: The new content.
+            """
+            self.template_fields[state_name][field_name] = content
+
+            return "App state edited successfully."
+
+        self.app_state_append_to_field_tool = FunctionTool(app_state_append_to_field)
+        self.app_state_replace_field_tool = FunctionTool(app_state_replace_field)
 
     def load_yaml_initial_app_state(self, file_path: str) -> Dict[str, Any]:
         if not os.path.exists(file_path):
@@ -52,7 +59,7 @@ class ContextAppState:
         try:
             with open(file_path, 'r') as file:
                 yaml_content = yaml.safe_load(file)
-                return self._process_yaml_content(yaml_content)
+                return yaml_content #self._process_yaml_content(yaml_content)
         except yaml.YAMLError as e:
             print(f"Error parsing YAML file: {e}")
             return {}
@@ -152,17 +159,21 @@ class ContextAppState:
     def set_fields(self, fields: dict[str, str]) -> None:
         self.template_fields.update(fields)
 
-    def get_app_state_string(self, begin_section_marker: str = "<{section_name}>\n", end_section_marker: str = "\n</{section_name}>") -> str:
+    def get_app_state_string(self, begin_section_marker: str = "<{section_name}>\n",
+                             end_section_marker: str = "\n</{section_name}>") -> str:
         output = ""
         for key, value in self.template_fields.items():
             output += begin_section_marker.format(section_name=key)
-            output += value
-            output += end_section_marker.format(section_name=key)
-            output += "\n\n"
+            for k, v in value.items():
+                output += f"  {begin_section_marker.format(section_name=k).rstrip()}\n"
+                output += f"    {str(v)}\n"
+                output += f"  {end_section_marker.format(section_name=k).strip()}\n"
+            output += end_section_marker.format(section_name=key).lstrip()
+            output += "\n"
         return output
 
-    def get_edit_tool(self):
-        return self.edit_app_state_tool
+    def get_edit_tools(self):
+        return [self.app_state_append_to_field_tool, self.app_state_replace_field_tool]
 
     def __str__(self) -> str:
         return f"ContextAppState(fields: {len(self.template_fields)})"

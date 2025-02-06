@@ -3,8 +3,6 @@ import os
 
 from ToolAgents import ToolRegistry
 from ToolAgents.agents import ChatAPIAgent
-from ToolAgents.provider import AnthropicChatAPI, AnthropicSettings
-from ToolAgents.provider.chat_api_provider import CerebrasChatAPI, CerebrasSettings
 from ToolAgents.provider.chat_api_provider.mistral import MistralChatAPI, MistralSettings
 from ToolAgents.utilities import ChatHistory
 from example_tools import calculator_function_tool, current_datetime_function_tool, get_weather_function_tool
@@ -30,7 +28,7 @@ settings.temperature = 0.45
 settings.top_p = 0.85
 
 # Define the tools
-tools = [get_weather_function_tool]
+tools = [calculator_function_tool, current_datetime_function_tool, get_weather_function_tool]
 tool_registry = ToolRegistry()
 
 tool_registry.add_tools(tools)

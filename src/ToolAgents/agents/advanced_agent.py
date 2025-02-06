@@ -70,18 +70,18 @@ class AdvancedAgent:
             self.semantic_memory = SemanticMemory(agent_config.semantic_chat_history_config)
 
         if self.tool_registry is not None and initial_state_file and self.give_agent_edit_tool:
-            self.tool_registry.add_tool(self.app_state.get_edit_tool())
+            self.tool_registry.add_tools(self.app_state.get_edit_tools())
 
     def set_tool_registry(self, tool_registry: ToolRegistry):
         self.tool_registry = tool_registry
         if self.tool_registry is not None and self.give_agent_edit_tool:
-            self.tool_registry.add_tool(self.app_state.get_edit_tool())
+            self.tool_registry.add_tools(self.app_state.get_edit_tools())
 
     def set_tools(self, tools: list[FunctionTool]):
         self.tool_registry = ToolRegistry()
         self.tool_registry.add_tools(tools)
         if self.tool_registry is not None and self.give_agent_edit_tool:
-            self.tool_registry.add_tool(self.app_state.get_edit_tool())
+            self.tool_registry.add_tools(self.app_state.get_edit_tools())
 
     def remove_all_tools(self):
         self.tool_registry = None
@@ -89,11 +89,11 @@ class AdvancedAgent:
     def chat_with_agent(self, chat_input: str, tool_registry: ToolRegistry = None, settings: LLMSamplingSettings = None):
         chat_history = self._before_run(chat_input)
         if tool_registry is not None and self.give_agent_edit_tool:
-            tool_registry.add_tool(self.app_state.get_edit_tool())
+            tool_registry.add_tools(self.app_state.get_edit_tools())
 
         if self.tool_registry is None and tool_registry is None and self.give_agent_edit_tool:
             tool_registry = ToolRegistry()
-            tool_registry.add_tool(self.app_state.get_edit_tool())
+            tool_registry.add_tools(self.app_state.get_edit_tools())
 
         result = self.agent.get_response(chat_history, self.tool_registry if tool_registry is None else tool_registry, settings=settings)
         self._after_run(chat_input)
@@ -102,11 +102,11 @@ class AdvancedAgent:
     def stream_chat_with_agent(self, chat_input: str, tool_registry: ToolRegistry = None, settings: LLMSamplingSettings = None):
         chat_history = self._before_run(chat_input)
         if tool_registry is not None and self.give_agent_edit_tool:
-            tool_registry.add_tool(self.app_state.get_edit_tool())
+            tool_registry.add_tools(self.app_state.get_edit_tools())
 
         if self.tool_registry is None and tool_registry is None and self.give_agent_edit_tool:
             tool_registry = ToolRegistry()
-            tool_registry.add_tool(self.app_state.get_edit_tool())
+            tool_registry.add_tools(self.app_state.get_edit_tools())
 
         result = self.agent.get_streaming_response(chat_history, self.tool_registry if tool_registry is None else tool_registry, settings=settings)
         for tok in result:
