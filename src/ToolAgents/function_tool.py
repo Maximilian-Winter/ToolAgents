@@ -645,10 +645,13 @@ class ToolRegistry:
 
     def add_tools(self, tools: List[FunctionTool]):
         for tool in tools:
-            self.tools[tool.model.__name__] = tool
+            if tool.model.__name__ not in self.tools:
+                self.tools[tool.model.__name__] = tool
 
     def add_tool(self, tool: FunctionTool):
-        self.tools[tool.model.__name__] = tool
+        if tool.model.__name__ not in self.tools:
+            self.tools[tool.model.__name__] = tool
+
 
     def remove(self, tool_name: str):
         del self.tools[tool_name]
