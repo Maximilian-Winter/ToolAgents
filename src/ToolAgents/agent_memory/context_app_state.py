@@ -1,20 +1,54 @@
+import enum
 import os
 import yaml
 import json
 import xml.etree.ElementTree as ET
 import re
 from typing import Dict, Any
+from ToolAgents import FunctionTool
 
+
+class AppStateOperation(enum.Enum):
+    create = "create"
+    replace = "replace"
+    append = "append"
+    delete = "delete"
 
 class ContextAppState:
     def __init__(self, initial_state_file: str = None):
+        self.template_fields = {}
         if initial_state_file is not None:
             self.template_fields = self.load_yaml_initial_app_state(initial_state_file)
+
+        def edit_app_state( state_name: str, operation: AppStateOperation, field_name: str, content: str = None):
+            """
+            Operation to perform on the app state. Can be 'create', 'replace', 'append' or 'delete'.
+            Args:
+                state_name(str): Name of app state to edit.
+                operation(AppStateOperation): Operation to perform on the app state. Can be 'create', 'replace', 'append' or 'delete'.
+                field_name(str): Name of field on app state to edit.
+                content(str): Optional content(required for 'create', 'replace' and 'append' operations).
+            """
+            if operation == AppStateOperation.create:
+                if content is None:
+                    raise ValueError("Content for 'create' operation requires 'content' argument.")
+                self.template_fields[state_name] = content
+            elif operation == AppStateOperation.replace:
+                if content is None:
+                    raise ValueError("Content for 'replace' operation requires 'content' argument.")
+                self.template_fields[state_name] = content
+            elif operation == AppStateOperation.append:
+                if content is None:
+                    raise ValueError("Content for 'append' operation requires 'content' argument.")
+                self.template_fields[state_name] += "\n" + content
+            elif operation == AppStateOperation.delete:
+                del self.template_fields[state_name]
+            return "App state edited successfully."
+        self.edit_app_state_tool = FunctionTool(edit_app_state)
 
     def load_yaml_initial_app_state(self, file_path: str) -> Dict[str, Any]:
         if not os.path.exists(file_path):
             return {}
-
         try:
             with open(file_path, 'r') as file:
                 yaml_content = yaml.safe_load(file)
@@ -127,5 +161,9 @@ class ContextAppState:
             output += "\n\n"
         return output
 
+    def get_edit_tool(self):
+        return self.edit_app_state_tool
+
     def __str__(self) -> str:
         return f"ContextAppState(fields: {len(self.template_fields)})"
+
