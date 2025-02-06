@@ -54,9 +54,12 @@ agent_config.initial_app_state_file = "example_app_state.yaml"
 agent_config.semantic_chat_history_config = semantic_memory_nomic_text_gpu_config
 agent_config.semantic_chat_history_config.debug_mode = False
 agent_config.semantic_chat_history_config.extract_pattern_strategy = SummarizationExtractPatternStrategy(agent=agent, summarizer_settings=summarizer_settings, debug_mode=True)
+
 configurable_agent = AdvancedAgent(agent=agent, agent_config=agent_config)
 configurable_agent.add_to_chat_history_from_json("./test_chat_history_2.json")
 configurable_agent.process_chat_history(max_chat_history_length=0)
+
+
 semantic_memory_test_questions = [
     # 🎵 Music & Books
     "What’s my favorite music genre?",
