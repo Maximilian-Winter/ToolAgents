@@ -13,6 +13,7 @@ import json
 
 from torch import Tensor
 
+from ToolAgents.interfaces import LLMSamplingSettings
 from ToolAgents.interfaces.base_llm_agent import BaseToolAgent
 
 
@@ -51,12 +52,13 @@ class SimpleExtractPatternStrategy(ExtractPatternStrategy):
         }
 
 class SummarizationExtractPatternStrategy(ExtractPatternStrategy):
-    def __init__(self, agent: BaseToolAgent, system_prompt_and_prefix: tuple[str, str] = None, pattern_type: str = "other", debug_mode: bool = False):
+    def __init__(self, agent: BaseToolAgent, summarizer_settings: LLMSamplingSettings, system_prompt_and_prefix: tuple[str, str] = None, pattern_type: str = "other", debug_mode: bool = False):
         self.agent = agent
         self.system_prompt = system_prompt_and_prefix
         if self.system_prompt is None:
             self.system_prompt = self.get_dynamic_prompt(pattern_type)
         self.debug_mode = debug_mode
+        self.summarizer_settings = summarizer_settings
 
 
     @staticmethod
@@ -68,7 +70,7 @@ class SummarizationExtractPatternStrategy(ExtractPatternStrategy):
         elif pattern_type == "conversation":
             return "Extract key discussion points from this chat history.", "Conversation:\n"
         else:
-            return "Summarize the information from different chat turns into one summary while keeping information **as close to the original as possible**. Only summarize what is explicitly mentioned. Keep the context (a chat) in which the information appeared clear in your summary!", "Chat turns:\n"
+            return "Summarize the information from different chat turns into one summary while keeping information as close to the original as possible. Only summarize what is explicitly mentioned. Keep the context (a chat) in which the information appeared clear in your summary!", "Chat turns:\n"
 
     def extract_pattern(self, pattern_id, documents: List[str],
                         metadatas: List[Dict], timestamp=datetime.now().isoformat()) -> Dict:
@@ -94,7 +96,8 @@ class SummarizationExtractPatternStrategy(ExtractPatternStrategy):
             docs_prompt += doc + "\n---\n"
 
         result = self.agent.get_response(messages=[{"role": "system", "content": self.system_prompt[0] },
-                                                   {"role": "user", "content": docs_prompt}])
+                                                   {"role": "user", "content": docs_prompt}],
+                                         settings=self.summarizer_settings)
         if self.debug_mode:
             print(result, flush=True)
         return {
