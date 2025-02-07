@@ -86,6 +86,7 @@ class SimpleExtractPatternStrategy(ExtractPatternStrategy):
         }
 
 
+
 class SummarizationExtractPatternStrategy(ExtractPatternStrategy):
     """
     An extraction strategy that uses a language model (via a provided agent)
@@ -93,7 +94,7 @@ class SummarizationExtractPatternStrategy(ExtractPatternStrategy):
     """
 
     def __init__(self, agent: BaseToolAgent, summarizer_settings: LLMSamplingSettings,
-                 system_prompt_and_prefix: tuple[str, str] = None, pattern_type: str = "other",
+                 system_prompt_and_prefix: tuple[str, str] = None, pattern_type: str = "chat",
                  debug_mode: bool = False):
         """
         Initialize the summarization extraction strategy.
@@ -130,6 +131,15 @@ class SummarizationExtractPatternStrategy(ExtractPatternStrategy):
             return "Condense these observations into a high-level summary.", "Observations:\n"
         elif pattern_type == "conversation":
             return "Extract key discussion points from this chat history.", "Conversation:\n"
+        elif pattern_type == "chat":
+            prompt = """Your task is to create a concise but detailed summary of these chat messages that:
+1. Preserves specific facts, preferences, and details mentioned
+2. Maintains the temporal sequence of information
+3. Keeps concrete information that might be needed later
+4. Avoids generalizations or abstractions that might lose details
+
+""".strip()
+            return prompt, "Chat Messages to Summarize:\n"
         else:
             return ("Summarize the information from different chat turns into one summary while keeping "
                     "information as close to the original as possible. Only summarize what is explicitly mentioned. "

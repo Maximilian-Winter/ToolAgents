@@ -5,7 +5,8 @@ from typing import Any
 
 from ToolAgents import ToolRegistry, FunctionTool
 from ToolAgents.agent_memory.context_app_state import ContextAppState
-from ToolAgents.agent_memory.semantic_memory.memory import SemanticMemory, SemanticMemoryConfig
+from ToolAgents.agent_memory.semantic_memory.memory import SemanticMemory, SemanticMemoryConfig, \
+    SummarizationExtractPatternStrategy
 from ToolAgents.interfaces import LLMSamplingSettings
 from ToolAgents.interfaces.base_llm_agent import BaseToolAgent
 
@@ -32,6 +33,7 @@ class AgentConfig:
     max_chat_history_length: int = -1
     use_semantic_chat_history_memory: bool = False
     save_on_creation: bool = False
+    summarize_chat_pairs_before_storing: bool = False
     semantic_chat_history_config: SemanticMemoryConfig = dataclasses.field(default_factory=SemanticMemoryConfig)
 
 
@@ -44,7 +46,7 @@ class AdvancedAgent:
     to interact with the underlying language model.
     """
 
-    def __init__(self, agent: BaseToolAgent, tool_registry: ToolRegistry = None, agent_config: AgentConfig = None):
+    def __init__(self, agent: BaseToolAgent, tool_registry: ToolRegistry = None, agent_config: AgentConfig = None, user_name: str = None, assistant_name: str = None):
         """
         Initialize the AdvancedAgent.
 
@@ -59,7 +61,7 @@ class AdvancedAgent:
 
         self.tool_registry = tool_registry
         self.agent = agent
-
+        self.summarization_prompt = None
         # Extract configuration parameters for easier access
         save_dir = agent_config.save_dir
         initial_state_file = agent_config.initial_app_state_file
@@ -68,6 +70,16 @@ class AdvancedAgent:
         self.give_agent_edit_tool = agent_config.give_agent_edit_tool
         self.use_semantic_memory = agent_config.use_semantic_chat_history_memory
         self.max_chat_history_length = agent_config.max_chat_history_length
+        self.summarize_chat_pairs_before_storing = agent_config.summarize_chat_pairs_before_storing
+        if user_name is None:
+            self.user_name = "User"
+        else:
+            self.user_name = user_name
+
+        if assistant_name is None:
+            self.assistant_name = "Assistant"
+        else:
+            self.assistant_name = assistant_name
 
         load = False  # Flag to indicate whether to load an existing agent state
 
@@ -84,8 +96,7 @@ class AdvancedAgent:
         self.semantic_memory_path = os.path.join(save_dir, "semantic_memory")
 
         # Determine if we should load an existing agent state based on file existence
-        if (os.path.exists(save_dir) and os.path.exists(self.agent_config_path) and
-                os.path.exists(self.app_state_path) and os.path.exists(self.semantic_memory_path)):
+        if os.path.exists(save_dir) and os.path.exists(self.agent_config_path):
             load = True
 
         # Initialize chat history and state tracking variables
@@ -240,6 +251,8 @@ class AdvancedAgent:
         self.use_semantic_memory = loaded_data["use_semantic_memory"]
         self.tool_usage_history = loaded_data["tool_usage_history"]
         self.give_agent_edit_tool = loaded_data["give_agent_edit_tool"]
+        self.assistant_name = loaded_data["assistant_name"]
+        self.user_name = loaded_data["user_name"]
         # If an application state is maintained, load it from the corresponding file
         if self.has_app_state:
             self.app_state = ContextAppState()
@@ -263,11 +276,24 @@ class AdvancedAgent:
                 "use_semantic_memory": self.use_semantic_memory,
                 "tool_usage_history": self.tool_usage_history,
                 "give_agent_edit_tool": self.give_agent_edit_tool,
+                "assistant_name": self.assistant_name,
+                "user_name": self.user_name,
             }
             json.dump(save_data, fp=f)
         # If the agent has an application state, save it separately
         if self.has_app_state:
             self.app_state.save_json(self.app_state_path)
+
+    def get_current_chat_history(self):
+        if not self.has_app_state:
+            chat_history = [{"role": "system", "content": self.system_message}]
+        else:
+            # Format system message with app state if needed
+            chat_history = [{"role": "system",
+                             "content": self.system_message.format(app_state=self.app_state.get_app_state_string())}]
+        # Add any existing chat history beyond the current index
+        chat_history.extend(self.chat_history[self.chat_history_index:])
+        return chat_history
 
     def add_to_chat_history(self, messages: list[dict[str, Any]]):
         """
@@ -288,6 +314,9 @@ class AdvancedAgent:
         with open(file_path, "r") as f:
             loaded_data = json.load(fp=f)
         self.chat_history.extend(loaded_data)
+
+    def set_summarization_prompt(self, prompt: tuple[str, str]):
+        self.summarization_prompt = prompt
 
     def _before_run(self, chat_input: str):
         """
@@ -358,6 +387,7 @@ class AdvancedAgent:
         Args:
             max_chat_history_length (int, optional): The maximum number of chat messages to retain.
                 Defaults to the instance's max_chat_history_length.
+            summarize_with_agent (bool, optional): If True, the message pairs get summarized by the agent before storing them.
         """
         if max_chat_history_length is None:
             max_chat_history_length = self.max_chat_history_length
@@ -379,8 +409,21 @@ class AdvancedAgent:
                     message2 = self.chat_history[self.chat_history_index + (msg_count - 1)]
                 # If there are at least two messages to consolidate, build a memory string and store it
                 if self.use_semantic_memory and msg_count >= 2:
-                    memory = f"<{message['role'].capitalize()}> {message['content']} </{message['role'].capitalize()}>\n"
-                    memory += f"<{message2['role'].capitalize()}> {message2['content']} </{message2['role'].capitalize()}>"
+                    memory = f"<{self.user_name}> {message['content']} </{self.user_name}>\n"
+                    memory += f"<{self.assistant_name}> {message2['content']} </{self.assistant_name}>"
+
+                    if self.summarize_chat_pairs_before_storing:
+                        if self.summarization_prompt is None:
+                            prompt = SummarizationExtractPatternStrategy.get_dynamic_prompt("chat")
+                        else:
+                            prompt = self.summarization_prompt
+                        summarization_history = [{"role": "system", "content": prompt[0]},
+                                                 {"role": "user", "content": prompt[1] + memory}]
+                        settings = self.agent.get_default_settings()
+                        settings.neutralize_all_samplers()
+                        settings.temperature = 0.0
+                        memory = self.agent.get_response(summarization_history, settings=settings)
+                        print(memory)
                     self.semantic_memory.store(memory)
                 # Move the chat history index forward by the number of messages consolidated
                 self.chat_history_index += msg_count

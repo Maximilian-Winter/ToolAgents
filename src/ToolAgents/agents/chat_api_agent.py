@@ -9,6 +9,8 @@ from ToolAgents.interfaces.llm_provider import ChatAPIProvider
 
 class ChatAPIAgent(BaseToolAgent):
 
+
+
     def __init__(self, chat_api: ChatAPIProvider, debug_output: bool = False):
         super().__init__()
         self.chat_api = chat_api
@@ -16,6 +18,9 @@ class ChatAPIAgent(BaseToolAgent):
         self.last_messages_buffer = []
         self.tool_registry = ToolRegistry()
         self.last_response_has_tool_calls = False
+
+    def get_default_settings(self):
+        return self.chat_api.get_default_settings()
 
     def step(
             self,

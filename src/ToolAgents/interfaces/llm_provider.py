@@ -28,7 +28,7 @@ class LLMSamplingSettings(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def set(self, setting_key: str, setting_value: str):
+    def set(self, setting_key: str, setting_value: Any):
         pass
 
     @abc.abstractmethod

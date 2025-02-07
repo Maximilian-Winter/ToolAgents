@@ -46,7 +46,7 @@ class AdvancedChatFormatter:
         formatted_chat = []
         system_message = None
         tool_system_message = None
-        if tools is not None and self.tools_template is not None and self.message_layout_template is not None:
+        if tools is not None and len(tools) > 0 and self.tools_template is not None and self.message_layout_template is not None:
             tools_open_ai = [tool.to_openai_tool() for tool in tools]
             tool_system_message = self.tools_template.generate_message_content(tools=tools_open_ai)
         for message in messages:

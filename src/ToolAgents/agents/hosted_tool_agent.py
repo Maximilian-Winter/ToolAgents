@@ -22,6 +22,9 @@ class HostedToolAgent(BaseToolAgent, ABC):
         self.tool_registry = ToolRegistry()
         self.last_messages_buffer = []
 
+    def get_default_settings(self):
+        return self.provider.get_default_settings()
+
     def step(
             self,
             messages: list[dict[str, Any]],

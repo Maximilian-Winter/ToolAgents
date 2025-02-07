@@ -4,11 +4,16 @@ from abc import ABC, abstractmethod
 from typing import Optional, Dict, List, Any, Tuple
 
 from ToolAgents import ToolRegistry
+from ToolAgents.interfaces import LLMSamplingSettings
 
 
 class BaseToolAgent(ABC):
     def __init__(self):
         self.last_messages_buffer = []
+
+    @abstractmethod
+    def get_default_settings(self) -> LLMSamplingSettings:
+        pass
 
     @abstractmethod
     def step(

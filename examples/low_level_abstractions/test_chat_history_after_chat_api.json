@@ -1,262 +1,146 @@
 [
   {
     "role": "system",
-    "content": "You are a helpful assistant."
+    "content": "You are Funky, an AI assistant specialized in interpreting user requests and generating appropriate function calls. Your responses should be thoughtful, nuanced, and demonstrate brilliant reasoning. Your primary task is to analyze user requests and, when necessary, create function calls in JSON format to perform the requested tasks.\nChoose the appropriate function based on the task you want to perform. Provide your function calls in JSON format. Here is an example for how your function calls should look like: [{\"name\": \"get_location_news\", \"arguments\": {\"location\": \"London, Great Britain\"}}, {\"name\": \"get_location_news\", \"arguments\": {\"location\": \"Berlin, Germany\"}}]"
   },
   {
     "role": "user",
-    "content": "Perform all the following tasks: Get the current weather in celsius in London, New York and at the North Pole. Solve the following calculations: 42 * 42, 74 + 26, 7 * 26, 4 + 6  and 96/8. Retrieve the current date and time in the format: dd.mm.yyy hh:mm."
+    "content": "Perform all the following tasks: Get the current weather in celsius in the city of London, Great Britain, New York City, New York and at the North Pole, Arctica. Solve the following calculations: 42 * 42, 74 + 26, 7 * 26, 4 + 6  and 96/8. And retrieve the date and time in the format: %Y-%m-%d %H:%M:%S."
   },
   {
     "role": "assistant",
-    "content": [
+    "content": "",
+    "tool_calls": [
       {
-        "type": "text",
-        "text": "I'll help you with all these tasks.\n\n1. First, let's get the weather for the three locations:"
+        "id": "W9hUhr9oR",
+        "function": {
+          "name": "get_current_weather",
+          "arguments": "{\"location\": \"London, Great Britain\", \"unit\": \"celsius\"}"
+        },
+        "type": "function"
       },
       {
-        "type": "tool_use",
-        "id": "toolu_01Y5hsQ31RMUm2wWya3qoDua",
-        "name": "get_current_weather",
-        "input": {
-          "location": "London, UK",
-          "unit": "celsius"
-        }
-      }
-    ]
-  },
-  {
-    "role": "user",
-    "content": [
-      {
-        "type": "tool_result",
-        "tool_use_id": "toolu_01Y5hsQ31RMUm2wWya3qoDua",
-        "content": "Weather in London, UK: 22\u00b0 celsius"
-      }
-    ]
-  },
-  {
-    "role": "assistant",
-    "content": [
-      {
-        "type": "tool_use",
-        "id": "toolu_01NXNqqXKQNHEKByXLw6oFtE",
-        "name": "get_current_weather",
-        "input": {
-          "location": "New York, NY",
-          "unit": "celsius"
-        }
-      }
-    ]
-  },
-  {
-    "role": "user",
-    "content": [
-      {
-        "type": "tool_result",
-        "tool_use_id": "toolu_01NXNqqXKQNHEKByXLw6oFtE",
-        "content": "Weather in New York, NY: 24\u00b0 celsius"
-      }
-    ]
-  },
-  {
-    "role": "assistant",
-    "content": [
-      {
-        "type": "tool_use",
-        "id": "toolu_01RaYZHYxYSRoNCSpyVqwnxZ",
-        "name": "get_current_weather",
-        "input": {
-          "location": "North Pole",
-          "unit": "celsius"
-        }
-      }
-    ]
-  },
-  {
-    "role": "user",
-    "content": [
-      {
-        "type": "tool_result",
-        "tool_use_id": "toolu_01RaYZHYxYSRoNCSpyVqwnxZ",
-        "content": "Weather in North Pole: -42\u00b0 celsius"
-      }
-    ]
-  },
-  {
-    "role": "assistant",
-    "content": [
-      {
-        "type": "text",
-        "text": "2. Now, let's solve all the calculations:\n\n42 * 42:"
+        "id": "ovFCNB1SC",
+        "function": {
+          "name": "get_current_weather",
+          "arguments": "{\"location\": \"New York City, New York\", \"unit\": \"celsius\"}"
+        },
+        "type": "function"
       },
       {
-        "type": "tool_use",
-        "id": "toolu_0139Dj3pWFpaJ6QygeyG9j74",
-        "name": "calculator",
-        "input": {
-          "number_one": 42,
-          "number_two": 42,
-          "operation": "multiply"
-        }
-      }
-    ]
-  },
-  {
-    "role": "user",
-    "content": [
-      {
-        "type": "tool_result",
-        "tool_use_id": "toolu_0139Dj3pWFpaJ6QygeyG9j74",
-        "content": "1764.0"
-      }
-    ]
-  },
-  {
-    "role": "assistant",
-    "content": [
-      {
-        "type": "text",
-        "text": "74 + 26:"
+        "id": "awAFTn9Uz",
+        "function": {
+          "name": "get_current_weather",
+          "arguments": "{\"location\": \"North Pole, Arctica\", \"unit\": \"celsius\"}"
+        },
+        "type": "function"
       },
       {
-        "type": "tool_use",
-        "id": "toolu_01SFzHLHkkMuyBsUyUpFuBPo",
-        "name": "calculator",
-        "input": {
-          "number_one": 74,
-          "number_two": 26,
-          "operation": "add"
-        }
-      }
-    ]
-  },
-  {
-    "role": "user",
-    "content": [
-      {
-        "type": "tool_result",
-        "tool_use_id": "toolu_01SFzHLHkkMuyBsUyUpFuBPo",
-        "content": "100.0"
-      }
-    ]
-  },
-  {
-    "role": "assistant",
-    "content": [
-      {
-        "type": "text",
-        "text": "7 * 26:"
+        "id": "axme1V5d4",
+        "function": {
+          "name": "calculator",
+          "arguments": "{\"number_one\": 42, \"number_two\": 42, \"operation\": \"multiply\"}"
+        },
+        "type": "function"
       },
       {
-        "type": "tool_use",
-        "id": "toolu_01Ks2GHZQfrJnxvy1ezZTbSz",
-        "name": "calculator",
-        "input": {
-          "number_one": 7,
-          "number_two": 26,
-          "operation": "multiply"
-        }
-      }
-    ]
-  },
-  {
-    "role": "user",
-    "content": [
-      {
-        "type": "tool_result",
-        "tool_use_id": "toolu_01Ks2GHZQfrJnxvy1ezZTbSz",
-        "content": "182.0"
-      }
-    ]
-  },
-  {
-    "role": "assistant",
-    "content": [
-      {
-        "type": "text",
-        "text": "4 + 6:"
+        "id": "nSjjY4rSd",
+        "function": {
+          "name": "calculator",
+          "arguments": "{\"number_one\": 74, \"number_two\": 26, \"operation\": \"add\"}"
+        },
+        "type": "function"
       },
       {
-        "type": "tool_use",
-        "id": "toolu_018criC2zPJFWw5NergJREu5",
-        "name": "calculator",
-        "input": {
-          "number_one": 4,
-          "number_two": 6,
-          "operation": "add"
-        }
-      }
-    ]
-  },
-  {
-    "role": "user",
-    "content": [
-      {
-        "type": "tool_result",
-        "tool_use_id": "toolu_018criC2zPJFWw5NergJREu5",
-        "content": "10.0"
-      }
-    ]
-  },
-  {
-    "role": "assistant",
-    "content": [
-      {
-        "type": "text",
-        "text": "96/8:"
+        "id": "0l6KKObzy",
+        "function": {
+          "name": "calculator",
+          "arguments": "{\"number_one\": 7, \"number_two\": 26, \"operation\": \"multiply\"}"
+        },
+        "type": "function"
       },
       {
-        "type": "tool_use",
-        "id": "toolu_01DppWkMxcuHsT5LUPKHLz6k",
-        "name": "calculator",
-        "input": {
-          "number_one": 96,
-          "number_two": 8,
-          "operation": "divide"
-        }
-      }
-    ]
-  },
-  {
-    "role": "user",
-    "content": [
-      {
-        "type": "tool_result",
-        "tool_use_id": "toolu_01DppWkMxcuHsT5LUPKHLz6k",
-        "content": "12.0"
-      }
-    ]
-  },
-  {
-    "role": "assistant",
-    "content": [
-      {
-        "type": "text",
-        "text": "3. Finally, let's get the current date and time in the requested format:"
+        "id": "RCvNQIJDR",
+        "function": {
+          "name": "calculator",
+          "arguments": "{\"number_one\": 4, \"number_two\": 6, \"operation\": \"add\"}"
+        },
+        "type": "function"
       },
       {
-        "type": "tool_use",
-        "id": "toolu_01VNd9fuWxSTED4gtjWacBxs",
-        "name": "get_current_datetime",
-        "input": {
-          "output_format": "%d.%m.%Y %H:%M"
-        }
+        "id": "Z0fyEk3XU",
+        "function": {
+          "name": "calculator",
+          "arguments": "{\"number_one\": 96, \"number_two\": 8, \"operation\": \"divide\"}"
+        },
+        "type": "function"
+      },
+      {
+        "id": "t8rzgf9SQ",
+        "function": {
+          "name": "get_current_datetime",
+          "arguments": "{\"output_format\": \"%Y-%m-%d %H:%M:%S\"}"
+        },
+        "type": "function"
       }
     ]
   },
   {
-    "role": "user",
-    "content": [
-      {
-        "type": "tool_result",
-        "tool_use_id": "toolu_01VNd9fuWxSTED4gtjWacBxs",
-        "content": "30.10.2024 03:56"
-      }
-    ]
+    "role": "tool",
+    "content": "Weather in London, Great Britain: 22\u00b0 celsius",
+    "tool_call_id": "W9hUhr9oR",
+    "name": "get_current_weather"
+  },
+  {
+    "role": "tool",
+    "content": "Weather in New York City, New York: 24\u00b0 celsius",
+    "tool_call_id": "ovFCNB1SC",
+    "name": "get_current_weather"
+  },
+  {
+    "role": "tool",
+    "content": "Weather in North Pole, Arctica: -42\u00b0 celsius",
+    "tool_call_id": "awAFTn9Uz",
+    "name": "get_current_weather"
+  },
+  {
+    "role": "tool",
+    "content": "1764.0",
+    "tool_call_id": "axme1V5d4",
+    "name": "calculator"
+  },
+  {
+    "role": "tool",
+    "content": "100.0",
+    "tool_call_id": "nSjjY4rSd",
+    "name": "calculator"
+  },
+  {
+    "role": "tool",
+    "content": "182.0",
+    "tool_call_id": "0l6KKObzy",
+    "name": "calculator"
+  },
+  {
+    "role": "tool",
+    "content": "10.0",
+    "tool_call_id": "RCvNQIJDR",
+    "name": "calculator"
+  },
+  {
+    "role": "tool",
+    "content": "12.0",
+    "tool_call_id": "Z0fyEk3XU",
+    "name": "calculator"
+  },
+  {
+    "role": "tool",
+    "content": "2025-02-06 23:15:53",
+    "tool_call_id": "t8rzgf9SQ",
+    "name": "get_current_datetime"
   },
   {
     "role": "assistant",
-    "content": "Here's a summary of all results:\n\nWeather:\n- London: 22\u00b0C\n- New York: 24\u00b0C\n- North Pole: -42\u00b0C\n\nCalculations:\n- 42 * 42 = 1764\n- 74 + 26 = 100\n- 7 * 26 = 182\n- 4 + 6 = 10\n- 96/8 = 12\n\nCurrent date and time: 30.10.2024 03:56"
+    "content": "Here are the results of the tasks you requested:\n\nWeather in London, Great Britain: 22\u00b0 celsius\n\nWeather in New York City, New York: 24\u00b0 celsius\n\nWeather in North Pole, Arctica: -42\u00b0 celsius\n\nCalculations:\n\n42 * 42 = 1764.0\n\n74 + 26 = 100.0\n\n7 * 26 = 182.0\n\n4 + 6 = 10.0\n\n96/8 = 12.0\n\nCurrent date and time: 2025-02-06 23:15:53"
   }
 ]
