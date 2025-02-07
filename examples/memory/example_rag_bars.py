@@ -96,7 +96,7 @@ def create_query_extension(query_extension: QueryExtension):
     output_settings = query_extension
 
 # Define a query extension agent which will extend the query with additional queries.
-system_message = "You are a world class query extension algorithm capable of extending queries by writing new queries. Do not answer the queries, simply provide a list of additional queries in JSON format."
+system_message = "You are a world class query extension algorithm capable of extending queries by writing new queries. Do not answer the queries, use your 'create_query_extension' tool to create new queries."
 
 
 chat_history = [{"role": "system", "content": system_message},
