@@ -1,10 +1,12 @@
 import uuid
 import chromadb
+from chromadb.api.types import IncludeEnum
 from chromadb.utils import embedding_functions
 from ragatouille import RAGPretrainedModel
+from sentence_transformers import CrossEncoder
 
 
-class RAGColbertReranker:
+class RAGWithReranking:
     """
     Represents a chromadb vector database with a Colbert reranker.
     """
@@ -16,7 +18,7 @@ class RAGColbertReranker:
         collection_name="retrieval_memory_collection",
         persistent: bool = True,
     ):
-        self.RAG = RAGPretrainedModel.from_pretrained("colbert-ir/colbertv2.0")
+        self.cross_encoder = CrossEncoder("mixedbread-ai/mxbai-rerank-xsmall-v1")
         if persistent:
             self.client = chromadb.PersistentClient(path=persistent_db_path)
         else:
@@ -47,12 +49,12 @@ class RAGColbertReranker:
         query_result = self.collection.query(
             query_embedding,
             n_results=k,
-            include=["metadatas", "embeddings", "documents", "distances"],
+            include=[IncludeEnum.metadatas, IncludeEnum.embeddings, IncludeEnum.documents, IncludeEnum.distances],
         )
         documents = []
         for doc in query_result["documents"][0]:
             documents.append(doc)
-        results = self.RAG.rerank(query=query, documents=documents, k=k)
+        results = self.cross_encoder.rank(query, documents, return_documents=True, top_k=k)
         return results
 
     @staticmethod
