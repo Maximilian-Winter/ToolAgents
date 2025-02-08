@@ -354,7 +354,7 @@ class PythonExecutor:
 
 
 def run_llm_code_agent(agent, settings, chat_history: ChatHistory, user_input: str,
-                       executor: LLMFriendlyExecutor):
+                       executor: PythonExecutor):
     """Run the code agent with LLM interaction."""
     print("User: " + user_input)
     print("Response: ", end="")

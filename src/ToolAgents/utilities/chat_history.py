@@ -39,7 +39,12 @@ class AdvancedChatFormatter:
         for key, value in role_templates.items():
             self.role_templates[key] = MessageTemplate.from_string(value)
         self.generation_add = generation_add
+        if message_layout_template is None:
+            message_layout_template = "{sys_prompt}{prompt}"
         self.message_layout_template = MessageTemplate.from_string(message_layout_template)
+
+        if tools_template is None:
+            tools_template = "{tools}"
         self.tools_template = MessageTemplate.from_string(tools_template)
 
     def format_messages(self, messages, tools: list = None):

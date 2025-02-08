@@ -7,13 +7,6 @@ import re
 from typing import Dict, Any
 from ToolAgents import FunctionTool
 
-
-class AppStateOperation(enum.Enum):
-    create = "create"
-    replace = "replace"
-    append = "append"
-    delete = "delete"
-
 class ContextAppState:
     def __init__(self, initial_state_file: str = None):
         self.template_fields = {}

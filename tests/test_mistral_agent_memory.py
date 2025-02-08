@@ -1,13 +1,6 @@
-import json
-
-from ToolAgents.agent_memory.core_memory_manager import CoreMemoryManager
+from ToolAgents.outdated.core_memory_manager import CoreMemoryManager
 from ToolAgents.agents import MistralAgent
 from ToolAgents.provider import LlamaCppServerProvider
-from ToolAgents.provider import VLLMServerProvider
-from ToolAgents.utilities import ChatHistory
-
-from test_tools import calculator_function_tool, \
-    current_datetime_function_tool, get_weather_function_tool
 
 # provider = VLLMServerProvider("http://localhost:8000/v1", api_key="token-abc123", model="solidrust/Mistral-7B-Instruct-v0.3-AWQ", huggingface_model="solidrust/Mistral-7B-Instruct-v0.3-AWQ")
 provider = LlamaCppServerProvider("http://127.0.0.1:8080/")

@@ -25,15 +25,19 @@ class MistralToolCallHandler(LLMToolCallHandler):
             print("\nResponse is tool call" if result else "\nResponse is not tool call", flush=True)
         return result
 
-    def parse_tool_calls(self, response: str) -> List[LLMToolCall]:
+    def parse_tool_calls(self, response: str) -> [List[LLMToolCall], bool]:
         if self.debug:
             print(response, flush=True)
         result = response.replace("[TOOL_CALLS]", "")
-        function_calls = json.loads(result.strip())
+        try:
+            function_calls = json.loads(result.strip())
+        except json.decoder.JSONDecodeError:
+            function_calls = []
+            return "Error parsing tool calls", False
         results = [GenericToolCall(tool_call_id=generate_id(length=9), name=tool_call["name"],
                                    arguments=tool_call["arguments"]) for tool_call in
                    function_calls]
-        return results
+        return results, True
 
     def get_tool_call_messages(self, tool_calls: List[LLMToolCall]) -> Dict[str, Any] | List[Dict[str, Any]]:
         return AssistantMessage(content=None, tool_calls=[ToolCall(

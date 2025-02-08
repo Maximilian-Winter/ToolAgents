@@ -1,5 +1,5 @@
 from ToolAgents import ToolRegistry
-from ToolAgents.agent_memory.core_memory_manager import CoreMemoryManager
+from ToolAgents.outdated.core_memory_manager import CoreMemoryManager
 from ToolAgents.agents import MistralAgent
 from ToolAgents.provider import LlamaCppServerProvider
 

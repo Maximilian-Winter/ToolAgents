@@ -59,7 +59,7 @@ class HostedToolAgent(BaseToolAgent, ABC):
         )["choices"][0]["text"]
         if self.tool_call_handler.contains_tool_calls(result):
 
-            return self.tool_call_handler.parse_tool_calls(result), True
+            return self.tool_call_handler.parse_tool_calls(result)
         else:
             return result.strip(), False
 
@@ -100,7 +100,7 @@ class HostedToolAgent(BaseToolAgent, ABC):
             yield ch, False
 
         if self.tool_call_handler.contains_tool_calls(result):
-            yield self.tool_call_handler.parse_tool_calls(result), True
+            yield self.tool_call_handler.parse_tool_calls(result)
 
     def get_response(
             self,

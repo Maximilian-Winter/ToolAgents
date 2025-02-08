@@ -2,7 +2,6 @@ import uuid
 import chromadb
 from chromadb.api.types import IncludeEnum
 from chromadb.utils import embedding_functions
-from ragatouille import RAGPretrainedModel
 from sentence_transformers import CrossEncoder
 
 
@@ -49,7 +48,7 @@ class RAGWithReranking:
         query_result = self.collection.query(
             query_embedding,
             n_results=k,
-            include=[IncludeEnum.metadatas, IncludeEnum.embeddings, IncludeEnum.documents, IncludeEnum.distances],
+            include=[IncludeEnum.metadatas, IncludeEnum.documents, IncludeEnum.distances],
         )
         documents = []
         for doc in query_result["documents"][0]:

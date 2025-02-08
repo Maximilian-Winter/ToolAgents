@@ -46,7 +46,7 @@ splitter = RecursiveCharacterTextSplitter(
     keep_separator=True
 )
 
-# Use the ragatouille helper function to get the content of a wikipedia page.
+# Use the helper function to get the content of a wikipedia page.
 page = get_wikipedia_page("Synthetic_diamond")
 
 # Split the text of the wikipedia page into chunks for the vector database.
@@ -66,6 +66,11 @@ system_message = "You are an advanced AI assistant, trained by OpenAI."
 # Define a test agent to see the answer without retrieved information.
 agent = MistralAgent(model, debug_output=True)
 
+settings = model.get_default_settings()
+settings.neutralize_all_samplers()
+settings.temperature = 0.75
+
+model.set_default_settings(settings)
 # Define the query we want to ask based on the retrieved information
 query = "What is a BARS apparatus?"
 

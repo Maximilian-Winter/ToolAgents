@@ -38,7 +38,7 @@ class LLMToolCallHandler(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def parse_tool_calls(self, response: str) -> List[LLMToolCall]:
+    def parse_tool_calls(self, response: str) -> [List[LLMToolCall], bool]:
         pass
 
     @abc.abstractmethod
@@ -115,7 +115,7 @@ class TemplateToolCallHandler(LLMToolCallHandler):
             return False
         return True
 
-    def parse_tool_calls(self, response: str) -> List[GenericToolCall]:
+    def parse_tool_calls(self, response: str) ->[ List[GenericToolCall], bool]:
         """Parse tool calls from the response using the configured patterns."""
         if self.debug:
             print(f"Parsing response: {response}", flush=True)
@@ -127,7 +127,6 @@ class TemplateToolCallHandler(LLMToolCallHandler):
             try:
                 # Parse the JSON content
                 parsed = json.loads(match)
-
                 # Handle both single tool call and array formats
                 if isinstance(parsed, list):
                     calls = parsed
@@ -147,9 +146,9 @@ class TemplateToolCallHandler(LLMToolCallHandler):
             except json.JSONDecodeError as e:
                 if self.debug:
                     print(f"Failed to parse tool call: {str(e)}", flush=True)
-                continue
+                return "Failed to parse tool call", False
 
-        return tool_calls
+        return tool_calls, True
 
     def get_tool_call_messages(
             self,

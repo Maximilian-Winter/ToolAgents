@@ -1,7 +1,7 @@
 import json
 
 from .retrieval_memory import RetrievalMemory
-from .. import FunctionTool
+from ToolAgents import FunctionTool
 
 
 class RetrievalMemoryManager:

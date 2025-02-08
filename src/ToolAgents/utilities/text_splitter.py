@@ -1,7 +1,13 @@
+import abc
 import re
 
+class TextSplitter(abc.ABC):
 
-class SimpleTextSplitter:
+    @abc.abstractmethod
+    def get_chunks(self, text):
+        pass
+
+class SimpleTextSplitter(TextSplitter):
     """
     A class for splitting text into consecutive overlapping (or non-overlapping) chunks.
 
@@ -20,21 +26,22 @@ class SimpleTextSplitter:
         If chunk_size <= 0, if overlap < 0, or if overlap >= chunk_size.
     """
 
-    def __init__(self, text, chunk_size, overlap=0):
+    def __init__(self, chunk_size, overlap=0):
         if chunk_size <= 0:
             raise ValueError("chunk_size must be a positive integer.")
         if overlap < 0:
             raise ValueError("overlap cannot be negative.")
         if overlap >= chunk_size:
             raise ValueError("overlap must be strictly less than chunk_size.")
-        self.text = text
         self.chunk_size = chunk_size
         self.overlap = overlap
 
-    def get_chunks(self):
+    def get_chunks(self, text):
         """
         Splits the text into chunks of size `chunk_size`, overlapping by `overlap` characters.
 
+        Args:
+            text (str): The text to be chunked.
         Returns:
         --------
         list of str
@@ -42,14 +49,14 @@ class SimpleTextSplitter:
         """
         chunks = []
         start = 0
-        while start < len(self.text):
+        while start < len(text):
             end = start + self.chunk_size
-            chunks.append(self.text[start:end])
+            chunks.append(text[start:end])
             start = end - self.overlap
         return chunks
 
 
-class RecursiveCharacterTextSplitter:
+class RecursiveCharacterTextSplitter(TextSplitter):
     """
     A class that recursively splits text by a hierarchy of separators
     and eventually falls back to fixed-size splitting with overlap
@@ -89,7 +96,7 @@ class RecursiveCharacterTextSplitter:
         self.length_function = length_function
         self.keep_separator = keep_separator
 
-    def split_text(self, text, depth=0):
+    def get_chunks(self, text):
         """
         Recursively splits `text` by the `depth`-th separator in `self.separators`.
         If we run out of separators, we split the text into fixed-size chunks.
@@ -106,6 +113,10 @@ class RecursiveCharacterTextSplitter:
         list of str
             A list of pieces after applying the splitting logic.
         """
+        return self._split_text(text)
+
+    def _split_text(self, text, depth=0):
+
         if len(text) <= self.chunk_size:
             return [text]
 

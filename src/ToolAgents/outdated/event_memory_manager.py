@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from datetime import datetime
 import json
 
-from ToolAgents.agent_memory.event import Event
+from ToolAgents.outdated.event import Event
 from ToolAgents.utilities.chat_history import ChatMessageRole, ChatHistory
 from ToolAgents import FunctionTool
 
