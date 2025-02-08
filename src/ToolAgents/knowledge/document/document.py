@@ -13,7 +13,6 @@ class DocumentChunk:
     content: str
     chunk_index: int
     size_in_characters: int
-    embeddings: Optional[list] = None
 
 @dataclasses.dataclass
 class Document:

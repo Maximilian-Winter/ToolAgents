@@ -13,6 +13,7 @@ class RerankingResult:
     reranked_documents: list[RerankedDocument]
 
 class RerankingProvider(abc.ABC):
+
     @abc.abstractmethod
-    def rerank(self, query: str, documents: list, k: int, **kwargs) -> RerankingResult:
+    def rerank_texts(self, query: str, texts: list, k: int, **kwargs) -> RerankingResult:
         pass

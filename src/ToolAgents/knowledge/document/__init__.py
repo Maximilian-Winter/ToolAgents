@@ -1,1 +1,1 @@
-from document import Document, DocumentChunk, DocumentGenerator
+from .document import Document, DocumentChunk, DocumentGenerator

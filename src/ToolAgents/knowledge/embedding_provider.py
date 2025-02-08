@@ -1,10 +1,13 @@
 import abc
 import dataclasses
+from typing import Union
+
+from numpy import ndarray
 
 
 @dataclasses.dataclass
 class EmbeddingResult:
-    embeddings: list
+    embeddings: ndarray
 
 class EmbeddingProvider(abc.ABC):
 

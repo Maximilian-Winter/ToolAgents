@@ -32,3 +32,5 @@
 /examples/high_level_abstractions/example_agent
 /examples/memory/memory/
 /examples/high_level_abstractions/test_agent
+/src/ToolAgents/knowledge/__pycache__
+/src/ToolAgents/knowledge/document/__pycache__

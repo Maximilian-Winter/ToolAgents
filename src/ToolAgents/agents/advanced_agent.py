@@ -346,11 +346,11 @@ class AdvancedAgent:
         if self.use_semantic_memory:
             results = self.semantic_memory.recall(user, 3)
             if len(results) > 0:
-                additional_context = "\n--- Additional Context From Past Interactions ---\n"
+                additional_context = "--- Additional Context From Past Interactions ---\n"
                 for r in results:
                     additional_context += f"Memories: {r['content']}\n\n---\n\n"
                 # Append the additional context to the user input
-                user += '\n' + additional_context.strip()
+                user = additional_context.strip() + f"\n\n--- End Of Additional Context ---\n\n{user}"
 
         # Append the (possibly enriched) user message to the chat history
         chat_history.append({"role": "user", "content": user})
