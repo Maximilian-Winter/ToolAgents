@@ -1,4 +1,4 @@
-from ToolAgents.knowledge.default_implementation import ChromaDbVectorDatabaseProvider, \
+from ToolAgents.knowledge.default_providers import ChromaDbVectorDatabaseProvider, \
     SentenceTransformerEmbeddingProvider, MXBAIRerankingProvider, RAG
 
 if __name__ == "__main__":

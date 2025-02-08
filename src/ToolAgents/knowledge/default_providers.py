@@ -4,11 +4,15 @@ from typing import Any
 import chromadb
 from chromadb.api.types import IncludeEnum
 from sentence_transformers import CrossEncoder, SentenceTransformer
+from joblib import Parallel, delayed
+from pdf2image import convert_from_path
+import pytesseract
 
-from .document import Document
+from .document import Document, DocumentGenerator, DocumentProvider
 from .embedding_provider import EmbeddingProvider, EmbeddingResult
 from .reranking_provider import RerankingProvider, RerankingResult, RerankedDocument
 from .vector_database_provider import VectorDatabaseProvider, VectorSearchResult
+from ..utilities.text_splitter import TextSplitter
 
 
 class ChromaDbVectorDatabaseProvider(VectorDatabaseProvider):
@@ -124,3 +128,47 @@ class RAG:
         return self.vector_database_provider.query(query, k=k)
 
 
+class PDFOCRProvider(DocumentProvider):
+
+    def __init__(self, folder: str, text_splitter: TextSplitter):
+        self.folder = folder
+        self.document_generator = DocumentGenerator(text_splitter=text_splitter)
+
+    @staticmethod
+    def set_pytesseract_cmd(path: str = r'C:\Program Files\Tesseract-OCR\tesseract.exe'):
+        pytesseract.pytesseract.tesseract_cmd = path
+
+    def get_documents(self, **kwargs) -> list[Document]:
+        documents = []
+        for text in self.process_pdf(self.folder):
+            documents.append(self.document_generator.generate_document(text))
+
+        return documents
+
+    @staticmethod
+    def process_page(page):
+        # Convert the page to grayscale
+        page = page.convert('L')
+
+        # Apply OCR using the preloaded pytesseract
+        page_text = pytesseract.image_to_string(page)
+
+        return page_text
+
+    @staticmethod
+    def process_pdf(path):
+        pages = convert_from_path(path, dpi=300, fmt='PNG')
+        page_texts = Parallel(n_jobs=-1)(delayed(PDFOCRProvider.process_page)(page) for page in pages)
+
+        return page_texts
+
+
+class ArxivTool:
+
+    def __init__(self, folder: str, text_splitter: TextSplitter):
+        self.folder = folder
+        self.document_generator = DocumentGenerator(text_splitter=text_splitter)
+        self.pdf_ocr_provider = PDFOCRProvider(folder, text_splitter)
+
+    def get_documents(self, query) -> list[Document]:
+        pass
