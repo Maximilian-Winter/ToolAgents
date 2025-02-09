@@ -28,12 +28,14 @@ ToolAgents is a lightweight and flexible framework for creating function-calling
   - vLLM servers
   - OpenAI API
   - Anthropic API
+  - Mistral API
   - Ollama (with Tool calling support)
 - Easy-to-use interface for passing functions, Pydantic models, and tools to LLMs
 - Streamlined process for function calling and result handling
 - Flexible agent types:
   - MistralAgent for llama.cpp, TGI, and vLLM servers
   - LlamaAgent for llama.cpp, TGI and vLLM servers
+  - Customizable TemplateAgent for llama.cpp, TGI, and vLLM servers
   - ChatAPIAgent for OpenAI and Anthropic APIs
   - OllamaAgent for Ollama integration
 
