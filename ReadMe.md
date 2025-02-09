@@ -51,6 +51,7 @@ pip install ToolAgents
 from ToolAgents.agents import MistralAgent
 from ToolAgents.provider import LlamaCppServerProvider, LlamaCppSamplingSettings
 from ToolAgents.utilities import ChatHistory
+from ToolAgents import ToolRegistry
 from test_tools import calculator_function_tool, current_datetime_function_tool, get_weather_function_tool
 
 # Initialize the provider and agent
@@ -66,6 +67,10 @@ settings.max_tokens = 4096
 # Define tools
 tools = [calculator_function_tool, current_datetime_function_tool, get_weather_function_tool]
 
+tool_registry = ToolRegistry()
+
+tool_registry.add_tools(tools)
+
 # Create chat history and add system message and user message.
 chat_history = ChatHistory()
 chat_history.add_system_message("You are a helpful assistant.")
@@ -73,8 +78,8 @@ chat_history.add_user_message("Perform the following tasks: Get the current weat
 # Get a response
 result = agent.get_streaming_response(
     messages=chat_history.to_list(),
-    sampling_settings=settings,
-    tools=tools
+    settings=settings,
+    tool_registry=tool_registry
 )
 
 for token in result:
@@ -94,6 +99,7 @@ chat_history.save_history("./chat_history.json")
 from ToolAgents.agents import Llama31Agent
 from ToolAgents.provider import LlamaCppServerProvider, LlamaCppSamplingSettings
 from ToolAgents.utilities import ChatHistory
+from ToolAgents import ToolRegistry
 from test_tools import calculator_function_tool, current_datetime_function_tool, get_weather_function_tool
 
 # Initialize the provider and agent
@@ -109,6 +115,10 @@ settings.max_tokens = 4096
 # Define tools
 tools = [calculator_function_tool, current_datetime_function_tool, get_weather_function_tool]
 
+tool_registry = ToolRegistry()
+
+tool_registry.add_tools(tools)
+
 # Create chat history and add system message and user message.
 chat_history = ChatHistory()
 chat_history.add_system_message("You are a helpful assistant.")
@@ -118,7 +128,7 @@ chat_history.add_user_message("Perform the following tasks: Get the current weat
 # Get a response
 result = agent.get_streaming_response(
     messages=chat_history.to_list(),
-    sampling_settings=settings,
+    settings=settings,
     tools=tools
 )
 
@@ -140,6 +150,7 @@ from dotenv import load_dotenv
 from ToolAgents.agents import ChatAPIAgent
 from ToolAgents.provider import AnthropicChatAPI, AnthropicSettings
 from ToolAgents.utilities import ChatHistory
+from ToolAgents import ToolRegistry
 from test_tools import calculator_function_tool, current_datetime_function_tool, get_weather_function_tool
 
 load_dotenv()
@@ -155,6 +166,10 @@ settings.top_p = 0.85
 
 # Define tools
 tools = [calculator_function_tool, current_datetime_function_tool, get_weather_function_tool]
+
+tool_registry = ToolRegistry()
+
+tool_registry.add_tools(tools)
 
 # Create chat history and add system message and user message.
 chat_history = ChatHistory()
@@ -183,12 +198,19 @@ chat_history.save_history("./chat_history.json")
 ```python
 from ToolAgents.agents import OllamaAgent
 from ToolAgents.utilities import ChatHistory
+from ToolAgents import ToolRegistry
+
 from test_tools import get_flight_times_tool
 
 def run():
     agent = OllamaAgent(model='mistral-nemo', debug_output=False)
 
+    # Define tools
     tools = [get_flight_times_tool]
+    
+    tool_registry = ToolRegistry()
+    
+    tool_registry.add_tools(tools)
 
     # Create chat history and add system message and user message.
     chat_history = ChatHistory()
@@ -197,7 +219,7 @@ def run():
 
     response = agent.get_response(
             messages=chat_history.to_list(),
-            tools=tools,
+            tool_registry=tool_registry,
         )
 
     print(response)
