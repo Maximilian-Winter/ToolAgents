@@ -1,4 +1,5 @@
 import json
+import re
 from enum import Enum
 from typing import List, Dict, Any
 
@@ -17,10 +18,18 @@ class MistralToolCallHandler(LLMToolCallHandler):
         self.debug = debug_mode
 
     def contains_tool_calls(self, response: str) -> bool:
+        response = response.replace('\n', '').replace('\t', '').replace('\r', '')
         result = (response.strip().startswith("[TOOL_CALLS]")) or (response.strip().startswith("[{")
                                                                    and response.strip().endswith("}]")
                                                                    and "name" in response and "arguments" in response
                                                                    )
+        if not result:
+            tool_call_pattern = re.compile(r'\[\s*{\s*"name":\s*"[^"]+"\s*,\s*"arguments":\s*{[^}]+}\s*}(?:\s*,\s*{\s*"name":\s*"[^"]+"\s*,\s*"arguments":\s*{[^}]+}\s*})*\s*\]', re.DOTALL)
+            matches = tool_call_pattern.findall(response.strip())
+            if not matches:
+                result = False
+            else:
+                result = True
         if self.debug:
             print("\nResponse is tool call" if result else "\nResponse is not tool call", flush=True)
         return result

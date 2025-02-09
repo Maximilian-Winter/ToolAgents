@@ -6,7 +6,7 @@ from ToolAgents.agents.mistral_agent_parts import MistralTokenizer, MistralToolC
 from ToolAgents.agents.nous_hermes_pro_agent_parts import NousHermesProTokenizer, NousHermesProToolCallHandler
 from ToolAgents.agents.llama31_agent_parts import Llama31Tokenizer, Llama31ToolCallHandler
 from ToolAgents.interfaces.llm_tokenizer import TemplateTokenizer
-from ToolAgents.interfaces.llm_tool_call import LLMToolCallHandler
+from ToolAgents.interfaces.llm_tool_call import LLMToolCallHandler, TemplateToolCallHandler
 from ToolAgents.utilities.chat_history import AdvancedChatFormatter
 
 
@@ -16,7 +16,7 @@ class TemplateAgent(HostedToolAgent):
                  tool_call_handler: LLMToolCallHandler = None,
                  generation_prompt: str = None, debug_output: bool = False):
         super().__init__(provider, TemplateTokenizer(advanced_chat_formatter, generation_prompt=generation_prompt),
-                         tool_call_handler if tool_call_handler is not None else MistralToolCallHandler(debug_output),
+                         tool_call_handler if tool_call_handler is not None else TemplateToolCallHandler(debug_mode=debug_output),
                          debug_output)
 
     def last_response_contains_tool_calls(self) -> bool:

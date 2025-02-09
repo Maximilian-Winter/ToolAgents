@@ -12,13 +12,17 @@ provider = LlamaCppServerProvider("http://127.0.0.1:8080/")
 system_template = "<|im_start|>system\n{content}<|im_end|>\n"
 assistant_template = "<|im_start|>assistant\n{content}<|im_end|>\n"
 user_template = "<|im_start|>user\n{content}<|im_end|>\n"
+tool_template = "<|im_start|>tool\n{content}<|im_end|>\n"
+available_tools_template = "<|im_start|>available_tools\n{tools}<|im_end|>\n"
 
 advanced_chat_formatter = AdvancedChatFormatter({
     "system": system_template,
     "user": user_template,
     "assistant": assistant_template,
-    "tool": "<|im_start|>tool\n{content}<|im_end|>\n"
-}, tools_template="<|im_start|>available_tools\n{tools}<|im_end|>\n", message_layout_template="{sys_prompt}{tools}{prompt}", include_system_message_in_first_user_message=False)
+    "tool": tool_template
+}, available_tools_template=available_tools_template, prompt_layout_template="{system_message}{available_tools}{chat_history}{last_user_message}")
+
+
 
 agent = TemplateAgent(provider, advanced_chat_formatter=advanced_chat_formatter, tool_call_handler=TemplateToolCallHandler(), generation_prompt="<|im_start|>assistant",
                       debug_output=True)
