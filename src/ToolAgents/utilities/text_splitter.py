@@ -144,7 +144,7 @@ class RecursiveCharacterTextSplitter(TextSplitter):
         refined_pieces = []
         for piece in pieces:
             if self.length_function(piece) > self.chunk_size:
-                refined_pieces.extend(self.split_text(piece, depth + 1))
+                refined_pieces.extend(self._split_text(piece, depth + 1))
             else:
                 refined_pieces.append(piece)
 

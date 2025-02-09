@@ -38,6 +38,8 @@ class ChromaDbVectorDatabaseProvider(VectorDatabaseProvider):
         for document in documents:
             for chunk in document.document_chunks:
                 meta = copy(document.metadata)
+                if meta is None:
+                    meta = {}
                 meta["parent_doc_id"] = chunk.parent_doc_id
                 meta["chunk_index"] = chunk.chunk_index
                 ids.append(chunk.id)
@@ -93,9 +95,9 @@ class SentenceTransformerEmbeddingProvider(EmbeddingProvider):
 
 class MXBAIRerankingProvider(RerankingProvider):
 
-    def __init__(self, rerank_model: str ="mixedbread-ai/mxbai-rerank-xsmall-v1"):
+    def __init__(self, rerank_model: str ="mixedbread-ai/mxbai-rerank-xsmall-v1", trust_remote_code: bool = False, device: str = "cpu"):
         super().__init__()
-        self.cross_encoder = CrossEncoder(rerank_model)
+        self.cross_encoder = CrossEncoder(rerank_model, trust_remote_code=trust_remote_code, device=device)
 
     def rerank_texts(self, query: str, texts: list, k: int, **kwargs) -> RerankingResult:
         results = self.cross_encoder.rank(query, texts, return_documents=True, top_k=k)
@@ -134,9 +136,6 @@ class PDFOCRProvider(DocumentProvider):
         self.folder = folder
         self.document_generator = DocumentGenerator(text_splitter=text_splitter)
 
-    @staticmethod
-    def set_pytesseract_cmd(path: str = r'C:\Program Files\Tesseract-OCR\tesseract.exe'):
-        pytesseract.pytesseract.tesseract_cmd = path
 
     def get_documents(self, **kwargs) -> list[Document]:
         documents = []
@@ -155,12 +154,49 @@ class PDFOCRProvider(DocumentProvider):
 
         return page_text
 
+
+    @staticmethod
+    def find_files_by_extension(folder_path, extension):
+        import os
+        """
+        Find all files with a specific extension in a given folder.
+
+        Args:
+            folder_path (str): Path to the folder to search in
+            extension (str): File extension to search for (e.g., '.pdf')
+
+        Returns:
+            list: List of full file paths for files with the specified extension
+        """
+        # Make sure extension starts with a dot
+        if not extension.startswith('.'):
+            extension = '.' + extension
+
+        matching_files = []
+
+        # Walk through the directory
+        try:
+            for root, _, files in os.walk(folder_path):
+                for file in files:
+                    if file.lower().endswith(extension.lower()):
+                        # Create full file path and add to list
+                        full_path = os.path.join(root, file)
+                        matching_files.append(full_path)
+
+            return matching_files
+
+        except Exception as e:
+            print(f"Error accessing directory: {e}")
+            return []
+
     @staticmethod
     def process_pdf(path):
-        pages = convert_from_path(path, dpi=300, fmt='PNG')
-        page_texts = Parallel(n_jobs=-1)(delayed(PDFOCRProvider.process_page)(page) for page in pages)
-
-        return page_texts
+        results = []
+        for file in PDFOCRProvider.find_files_by_extension(path, "pdf"):
+            pages = convert_from_path(str(file), dpi=300, fmt='PNG')
+            page_texts = Parallel(n_jobs=-1)(delayed(PDFOCRProvider.process_page)(page) for page in pages)
+            results.append('\n'.join(page_texts))
+        return results
 
 
 class ArxivTool:
