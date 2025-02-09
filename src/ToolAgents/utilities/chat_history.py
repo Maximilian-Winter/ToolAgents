@@ -32,13 +32,11 @@ class ChatFormatter:
 
 
 class AdvancedChatFormatter:
-    def __init__(self, role_templates: dict[str, str], prompt_layout_template: str = "{system_message}{available_tools}{chat_history}{last_user_message}", available_tools_template: str = None,
-                 generation_add: str = None, include_system_message_in_first_user_message: bool = False):
+    def __init__(self, role_templates: dict[str, str], prompt_layout_template: str = "{system_message}{available_tools}{chat_history}{last_user_message}", available_tools_template: str = None, include_system_message_in_first_user_message: bool = False):
         self.include_system_message_in_first_user_message = include_system_message_in_first_user_message
         self.role_templates: dict[str, MessageTemplate] = {}
         for key, value in role_templates.items():
             self.role_templates[key] = MessageTemplate.from_string(value)
-        self.generation_add = generation_add
         if prompt_layout_template is None:
             prompt_layout_template = "{system_message}{chat_history}{last_user_message}"
         self.prompt_layout_template = MessageTemplate.from_string(prompt_layout_template)
@@ -86,20 +84,13 @@ class AdvancedChatFormatter:
             if messages[-1]["role"] == "user":
                 last_user_message = formatted_chat.pop(-1)
             if tool_system_message:
-
-                if self.generation_add is not None:
-                    return self.prompt_layout_template.generate_message_content(chat_history=''.join(formatted_chat), available_tools=tool_system_message, last_user_message=last_user_message) + self.generation_add
-                else:
-                    return self.prompt_layout_template.generate_message_content(chat_history=''.join(formatted_chat),
-                                                                                available_tools=tool_system_message,
-                                                                                last_user_message=last_user_message)
+                return self.prompt_layout_template.generate_message_content(chat_history=''.join(formatted_chat),
+                                                                            available_tools=tool_system_message,
+                                                                            last_user_message=last_user_message)
             else:
-                if self.generation_add is not None:
-                    return self.prompt_layout_template.generate_message_content(chat_history=''.join(formatted_chat),
-                                                                                last_user_message=last_user_message) + self.generation_add
-                else:
-                    return self.prompt_layout_template.generate_message_content(chat_history=''.join(formatted_chat),
-                                                                                last_user_message=last_user_message)
+                return self.prompt_layout_template.generate_message_content(chat_history=''.join(formatted_chat),
+                                                                            last_user_message=last_user_message)
+
         else:
             last_user_message = ""
             sys = ""
@@ -108,15 +99,10 @@ class AdvancedChatFormatter:
             if messages[0]["role"] == "system":
                 sys = formatted_chat.pop(0)
             if tool_system_message:
-                if self.generation_add is not None:
-                    return self.prompt_layout_template.generate_message_content(system_message=sys, chat_history=''.join(formatted_chat), available_tools=tool_system_message, last_user_message=last_user_message)+ self.generation_add
-                else:
-                    return self.prompt_layout_template.generate_message_content(system_message=sys, chat_history=''.join(formatted_chat), available_tools=tool_system_message, last_user_message=last_user_message)
+                return self.prompt_layout_template.generate_message_content(system_message=sys, chat_history=''.join(formatted_chat), available_tools=tool_system_message, last_user_message=last_user_message)
             else:
-                if self.generation_add is not None:
-                    return self.prompt_layout_template.generate_message_content(system_message=sys, chat_history=''.join(formatted_chat),  last_user_message=last_user_message)+ self.generation_add
-                else:
-                    return self.prompt_layout_template.generate_message_content(system_message=sys, chat_history=''.join(formatted_chat),  last_user_message=last_user_message)
+                return self.prompt_layout_template.generate_message_content(system_message=sys, chat_history=''.join(formatted_chat),  last_user_message=last_user_message)
+
 
 class Message:
     def __init__(self, role: str, content: str, **kwargs):

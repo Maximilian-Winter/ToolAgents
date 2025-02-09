@@ -10,15 +10,14 @@ from ToolAgents import FunctionTool
 
 
 # Simple tool for the agent, to get the current date and time in a specific format.
-def get_current_datetime(output_format: Optional[str] = None):
+def get_current_datetime(output_format: str):
     """
     Get the current date and time in the given format.
 
     Args:
-         output_format: formatting string for the date and time, defaults to '%Y-%m-%d %H:%M:%S'
+         output_format: formatting string for the date and time
     """
-    if output_format is None:
-        output_format = '%Y-%m-%d %H:%M:%S'
+
     return datetime.datetime.now().strftime(output_format)
 
 

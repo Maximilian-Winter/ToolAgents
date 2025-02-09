@@ -19,22 +19,15 @@ class TemplateAgent(HostedToolAgent):
                          tool_call_handler if tool_call_handler is not None else TemplateToolCallHandler(debug_mode=debug_output),
                          debug_output)
 
-    def last_response_contains_tool_calls(self) -> bool:
-        pass
-
 
 class MistralAgent(HostedToolAgent):
-    def last_response_contains_tool_calls(self) -> bool:
-        pass
 
     def __init__(self, provider: HostedLLMProvider, tokenizer_file: str = None, tokenizer_version: MistralTokenizerVersion = MistralTokenizerVersion.v7, debug_output: bool = False):
-        super().__init__(provider, MistralTokenizer(tokenizer_file), MistralToolCallHandler(debug_output),
+        super().__init__(provider, MistralTokenizer(tokenizer_file, tokenizer_version), MistralToolCallHandler(debug_output),
                          debug_output)
 
 
 class NousHermesProAgent(HostedToolAgent):
-    def last_response_contains_tool_calls(self) -> bool:
-        pass
 
     def __init__(self, provider: HostedLLMProvider, debug_output: bool = False):
         super().__init__(provider, NousHermesProTokenizer(), NousHermesProToolCallHandler(debug_output),
@@ -42,8 +35,6 @@ class NousHermesProAgent(HostedToolAgent):
 
 
 class Llama31Agent(HostedToolAgent):
-    def last_response_contains_tool_calls(self) -> bool:
-        pass
 
     def __init__(self, provider, debug_output=False):
         super().__init__(provider=provider, tokenizer=Llama31Tokenizer(),

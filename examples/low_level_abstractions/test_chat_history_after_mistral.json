@@ -1,42 +1,42 @@
 [
   {
     "role": "system",
-    "content": "You are a helpful assistant."
+    "content": "You are Funky, an AI assistant specialized in interpreting user requests and generating appropriate function calls. Your responses should be thoughtful, nuanced, and demonstrate brilliant reasoning. Your primary task is to analyze user requests and, when necessary, create function calls in JSON format to perform the requested tasks.\nChoose the appropriate function based on the task you want to perform. Provide your function calls in JSON format. Here is an example for how your function calls should look like: [{\"name\": \"get_location_news\", \"arguments\": {\"location\": \"London, Great Britain\"}}, {\"name\": \"get_location_news\", \"arguments\": {\"location\": \"Berlin, Germany\"}}]"
   },
   {
     "role": "user",
-    "content": "Perform all the following tasks: Get the current weather in celsius in London, New York and at the North Pole. Solve the following calculations: 42 * 42, 74 + 26, 7 * 26, 4 + 6  and 96/8. Retrieve the current date and time in the format: dd.mm.yyy hh:mm."
+    "content": "Perform all the following tasks: Get the current weather in celsius in the city of London, Great Britain, New York City, New York and at the North Pole, Arctica. Solve the following calculations: 42 * 42, 74 + 26, 7 * 26, 4 + 6  and 96/8. And retrieve the date and time in the format: %Y-%m-%d %H:%M:%S."
   },
   {
     "role": "assistant",
     "content": null,
     "tool_calls": [
       {
-        "id": "vSyfWKmbV",
+        "id": "xlXa09bmc",
         "type": "function",
         "function": {
           "name": "get_current_weather",
-          "arguments": "{\"location\": \"London\", \"unit\": \"celsius\"}"
+          "arguments": "{\"location\": \"London, Great Britain\", \"unit\": \"celsius\"}"
         }
       },
       {
-        "id": "qgM1mTTCz",
+        "id": "XLmEoIUAe",
         "type": "function",
         "function": {
           "name": "get_current_weather",
-          "arguments": "{\"location\": \"New York\", \"unit\": \"celsius\"}"
+          "arguments": "{\"location\": \"New York City, New York\", \"unit\": \"celsius\"}"
         }
       },
       {
-        "id": "8u4GjzJDh",
+        "id": "ZttlTDegn",
         "type": "function",
         "function": {
           "name": "get_current_weather",
-          "arguments": "{\"location\": \"North Pole\", \"unit\": \"celsius\"}"
+          "arguments": "{\"location\": \"North Pole, Arctica\", \"unit\": \"celsius\"}"
         }
       },
       {
-        "id": "bBdoc4iQr",
+        "id": "sDkulCi0S",
         "type": "function",
         "function": {
           "name": "calculator",
@@ -44,7 +44,7 @@
         }
       },
       {
-        "id": "MPzgqn0kw",
+        "id": "02xBjL6M0",
         "type": "function",
         "function": {
           "name": "calculator",
@@ -52,7 +52,7 @@
         }
       },
       {
-        "id": "tVrMCBml5",
+        "id": "CNi17yTa5",
         "type": "function",
         "function": {
           "name": "calculator",
@@ -60,7 +60,7 @@
         }
       },
       {
-        "id": "eqDbZcShp",
+        "id": "dUbkKAWdh",
         "type": "function",
         "function": {
           "name": "calculator",
@@ -68,7 +68,7 @@
         }
       },
       {
-        "id": "LFDZlshq8",
+        "id": "0hBWq5UvA",
         "type": "function",
         "function": {
           "name": "calculator",
@@ -76,11 +76,11 @@
         }
       },
       {
-        "id": "pNjlsT34K",
+        "id": "gZoCbB0I2",
         "type": "function",
         "function": {
           "name": "get_current_datetime",
-          "arguments": "{\"output_format\": \"%d.%m.%Y %H:%M\"}"
+          "arguments": "{\"output_format\": \"%Y-%m-%d %H:%M:%S\"}"
         }
       }
     ],
@@ -88,60 +88,60 @@
   },
   {
     "role": "tool",
-    "content": "Weather in London: 22\u00b0 celsius",
-    "tool_call_id": "vSyfWKmbV",
-    "name": null
+    "content": "Weather in London, Great Britain: 22\u00b0 celsius",
+    "tool_call_id": "xlXa09bmc",
+    "name": "get_current_weather"
   },
   {
     "role": "tool",
-    "content": "Weather in New York: 24\u00b0 celsius",
-    "tool_call_id": "qgM1mTTCz",
-    "name": null
+    "content": "Weather in New York City, New York: 24\u00b0 celsius",
+    "tool_call_id": "XLmEoIUAe",
+    "name": "get_current_weather"
   },
   {
     "role": "tool",
-    "content": "Weather in North Pole: -42\u00b0 celsius",
-    "tool_call_id": "8u4GjzJDh",
-    "name": null
+    "content": "Weather in North Pole, Arctica: -42\u00b0 celsius",
+    "tool_call_id": "ZttlTDegn",
+    "name": "get_current_weather"
   },
   {
     "role": "tool",
     "content": "1764.0",
-    "tool_call_id": "bBdoc4iQr",
-    "name": null
+    "tool_call_id": "sDkulCi0S",
+    "name": "calculator"
   },
   {
     "role": "tool",
     "content": "100.0",
-    "tool_call_id": "MPzgqn0kw",
-    "name": null
+    "tool_call_id": "02xBjL6M0",
+    "name": "calculator"
   },
   {
     "role": "tool",
     "content": "182.0",
-    "tool_call_id": "tVrMCBml5",
-    "name": null
+    "tool_call_id": "CNi17yTa5",
+    "name": "calculator"
   },
   {
     "role": "tool",
     "content": "10.0",
-    "tool_call_id": "eqDbZcShp",
-    "name": null
+    "tool_call_id": "dUbkKAWdh",
+    "name": "calculator"
   },
   {
     "role": "tool",
     "content": "12.0",
-    "tool_call_id": "LFDZlshq8",
-    "name": null
+    "tool_call_id": "0hBWq5UvA",
+    "name": "calculator"
   },
   {
     "role": "tool",
-    "content": "30.10.2024 10:44",
-    "tool_call_id": "pNjlsT34K",
-    "name": null
+    "content": "2025-02-09 08:50:27",
+    "tool_call_id": "gZoCbB0I2",
+    "name": "get_current_datetime"
   },
   {
     "role": "assistant",
-    "content": "Here are the results:\n\n- Weather in London: 22\u00b0 Celsius\n- Weather in New York: 24\u00b0 Celsius\n- Weather in North Pole: -42\u00b0 Celsius\n- 42 * 42 = 1764\n- 74 + 26 = 100\n- 7 * 26 = 182\n- 4 + 6 = 10\n- 96 / 8 = 12\n- Current date and time: 30.10.2024 10:44"
+    "content": "Here are the results of your tasks:\n\n- Weather in London, Great Britain: 22\u00b0 celsius\n- Weather in New York City, New York: 24\u00b0 celsius\n- Weather in North Pole, Arctica: -42\u00b0 celsius\n- 42 * 42 = 1764.0\n- 74 + 26 = 100.0\n- 7 * 26 = 182.0\n- 4 + 6 = 10.0\n- 96 / 8 = 12.0\n- Current date and time: 2025-02-09 08:50:27"
   }
 ]

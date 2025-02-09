@@ -10,8 +10,8 @@ provider = LlamaCppServerProvider("http://127.0.0.1:8080/")
 
 system_template = "<system_instructions>\n{content}\n</system_instructions>\n\n"
 assistant_template = "{content}</s>"
-user_template = "[INST] {content} [/INST]"
-available_tools_template = "[AVAILABLE_TOOLS]{tools}[/AVAILABLE_TOOLS]"
+user_template = "[INST] {content}[/INST]"
+available_tools_template = "[AVAILABLE_TOOLS] {tools}[/AVAILABLE_TOOLS]"
 
 advanced_chat_formatter = AdvancedChatFormatter({
     "system": system_template,

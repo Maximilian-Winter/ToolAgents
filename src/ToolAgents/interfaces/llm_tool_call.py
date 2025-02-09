@@ -89,7 +89,7 @@ class TemplateToolCallHandler(LLMToolCallHandler):
 
     def __init__(
             self,
-            tool_call_pattern: str = r'\[\s*{\s*"name":\s*"[^"]+"\s*,\s*"arguments":\s*{[^}]+}\s*}(?:\s*,\s*{\s*"name":\s*"[^"]+"\s*,\s*"arguments":\s*{[^}]+}\s*})*\s*\]',
+            tool_call_pattern: str = r'\[\s*{\s*"name":\s*"[^"]+"\s*,\s*"arguments":\s*{[^}]*}\s*}(?:\s*,\s*{\s*"name":\s*"[^"]+"\s*,\s*"arguments":\s*{[^}]*}\s*})*\s*\]',
             tool_name_field: str = "name",
             arguments_field: str = "arguments",
             debug_mode: bool = False
@@ -110,6 +110,7 @@ class TemplateToolCallHandler(LLMToolCallHandler):
 
     def contains_tool_calls(self, response: str) -> bool:
         """Check if the response contains tool calls using the configured pattern."""
+        response = response.replace('\n', '').replace('\t', '').replace('\r', '')
         matches = self.tool_call_pattern.findall(response.strip())
         if not matches:
             return False
