@@ -7,7 +7,7 @@ from ToolAgents.agents.nous_hermes_pro_agent_parts import NousHermesProTokenizer
 from ToolAgents.agents.llama31_agent_parts import Llama31Tokenizer, Llama31ToolCallHandler
 from ToolAgents.interfaces.llm_tokenizer import TemplateTokenizer
 from ToolAgents.interfaces.llm_tool_call import LLMToolCallHandler, TemplateToolCallHandler
-from ToolAgents.utilities.chat_history import AdvancedChatFormatter
+from ToolAgents.messages.chat_history import AdvancedChatFormatter
 
 
 class TemplateAgent(HostedToolAgent):

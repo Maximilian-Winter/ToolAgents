@@ -37,16 +37,16 @@ class MistralToolCallHandler(LLMToolCallHandler):
     def parse_tool_calls(self, response: str) -> [List[LLMToolCall], bool]:
         if self.debug:
             print(response, flush=True)
-        result = response.replace("[TOOL_CALLS]", "")
-        try:
-            function_calls = json.loads(result.strip())
-        except json.decoder.JSONDecodeError:
-            function_calls = []
-            return "Error parsing tool calls", False
+        if response.strip().startswith("[TOOL_CALLS]"):
+            response = response.strip()[len("[TOOL_CALLS]"):]
+        if response.strip().endswith("</s>"):
+            response = response.strip()[:-len("</s>")]
+        function_calls = json.loads(response.strip())
+
         results = [GenericToolCall(tool_call_id=generate_id(length=9), name=tool_call["name"],
                                    arguments=tool_call["arguments"]) for tool_call in
                    function_calls]
-        return results, True
+        return results
 
     def get_tool_call_messages(self, tool_calls: List[LLMToolCall]) -> Dict[str, Any] | List[Dict[str, Any]]:
         return AssistantMessage(content=None, tool_calls=[ToolCall(
@@ -85,6 +85,8 @@ class MistralTokenizerVersion(Enum):
 
 
 class MistralTokenizer(LLMTokenizer):
+
+
     def __init__(self, tokenizer_file: str = None,
                  tokenizer_version: MistralTokenizerVersion = MistralTokenizerVersion.v7):
         if tokenizer_file is not None:
@@ -112,3 +114,6 @@ class MistralTokenizer(LLMTokenizer):
 
     def tokenize(self, text: str) -> List[int]:
         return self.tokenizer.instruct_tokenizer.tokenizer.encode(text, False, False)
+
+    def get_eos_token_string(self) -> str:
+        return "</s>"

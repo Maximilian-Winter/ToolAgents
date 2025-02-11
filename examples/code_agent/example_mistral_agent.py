@@ -1,8 +1,7 @@
-from ToolAgents.agents import MistralAgent
 from ToolAgents.agents.hosted_tool_agents import TemplateAgent
 from ToolAgents.provider import LlamaCppServerProvider
 from ToolAgents.utilities import ChatHistory
-from ToolAgents.utilities.chat_history import AdvancedChatFormatter
+from ToolAgents.messages.chat_history import AdvancedChatFormatter
 from example_tools import get_weather_function_tool, calculator_function_tool, current_datetime_function_tool, unit, \
     MathOperation
 from new_code_executor import PythonExecutor, run_llm_code_agent

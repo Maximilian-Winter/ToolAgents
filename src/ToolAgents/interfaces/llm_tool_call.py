@@ -3,10 +3,10 @@ import json
 import random
 import re
 import string
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List
 
 from ToolAgents.function_tool import ToolRegistry
-from ToolAgents.utilities.chat_history import Message
+from ToolAgents.messages.chat_history import Message
 
 
 def generate_id(length=8):
@@ -38,7 +38,7 @@ class LLMToolCallHandler(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def parse_tool_calls(self, response: str) -> [List[LLMToolCall], bool]:
+    def parse_tool_calls(self, response: str) -> List[LLMToolCall]:
         pass
 
     @abc.abstractmethod

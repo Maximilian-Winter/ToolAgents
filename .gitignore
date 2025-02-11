@@ -34,3 +34,5 @@
 /examples/high_level_abstractions/test_agent
 /src/ToolAgents/knowledge/__pycache__
 /src/ToolAgents/knowledge/document/__pycache__
+/examples/gradio/advanced_agent/agent_data/
+/examples/gradio/advanced_agent/__pycache__

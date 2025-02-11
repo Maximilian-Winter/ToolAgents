@@ -12,7 +12,7 @@ agent = MistralAgent(provider=provider, debug_output=True)
 
 settings = provider.get_default_settings()
 settings.neutralize_all_samplers()
-settings.temperature = 0.45
+settings.temperature = 0.85
 
 settings.set_max_new_tokens(4096)
 

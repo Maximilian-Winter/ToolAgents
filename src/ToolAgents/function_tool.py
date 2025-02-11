@@ -628,8 +628,12 @@ class FunctionTool:
             print(json.dumps(parameters, indent=4))
         if self.pre_processor:
             parameters = self.pre_processor(parameters)
-        instance = self.model(**parameters)
-        result = instance.run(**self.additional_parameters)
+        try:
+            instance = self.model(**parameters)
+            result = instance.run(**self.additional_parameters)
+        except Exception as e:
+            print(e)
+            result = str(e)
         if self.post_processor:
             result = self.post_processor(result)
         return result

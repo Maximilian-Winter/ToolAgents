@@ -58,9 +58,14 @@ class HostedToolAgent(BaseToolAgent, ABC):
             tool_registry=tool_registry
         )["choices"][0]["text"]
         if self.tool_call_handler.contains_tool_calls(result):
-
-            return self.tool_call_handler.parse_tool_calls(result)
+            try:
+                tool_results =  self.tool_call_handler.parse_tool_calls(result), True
+                return tool_results
+            except Exception as e:
+                return f"Error parsing tool calls:\n{str(e)}", True
         else:
+            if result.strip().endswith(self.tokenizer.get_eos_token_string()):
+                result = result.strip()[:-len(self.tokenizer.get_eos_token_string())]
             return result.strip(), False
 
     def stream_step(
@@ -96,11 +101,18 @@ class HostedToolAgent(BaseToolAgent, ABC):
                 tool_registry=tool_registry
         ):
             ch = chunk["choices"][0]["text"]
-            result += ch
-            yield ch, False
+            if ch == self.tokenizer.get_eos_token_string():
+                yield "", False
+            else:
+                result += ch
+                yield ch, False
 
         if self.tool_call_handler.contains_tool_calls(result):
-            yield self.tool_call_handler.parse_tool_calls(result)
+            try:
+                tool_results = self.tool_call_handler.parse_tool_calls(result), True
+                yield tool_results
+            except Exception as e:
+                yield f"Error parsing tool calls:\n{str(e)}", True
 
     def get_response(
             self,

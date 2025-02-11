@@ -3,15 +3,13 @@ import io
 import re
 import sys
 from enum import Enum
-from inspect import isclass
-from typing import List, Dict, Any
+from typing import List
 
 from pydantic import BaseModel
 from ToolAgents import FunctionTool
 from ToolAgents.utilities import ChatHistory
-from ToolAgents.utilities.documentation_generation import generate_function_definition, generate_class_definition, \
-    generate_type_definitions
-from ToolAgents.utilities.message_template import MessageTemplate
+from ToolAgents.utilities.documentation_generation import generate_type_definitions
+from ToolAgents.messages.message_template import MessageTemplate
 
 system_message_code_agent = """You are an advanced AI assistant with the ability to execute Python code. You have access to a Python code interpreter that allows you to execute Python code to accomplish various tasks. This capability enables you to perform a wide range of operations, from simple calculations to complex data analysis and system interactions.
 

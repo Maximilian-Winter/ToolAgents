@@ -5,7 +5,7 @@ from datetime import datetime
 import json
 
 from ToolAgents.outdated.event import Event
-from ToolAgents.utilities.chat_history import ChatMessageRole, ChatHistory
+from ToolAgents.messages.chat_history import ChatMessageRole, ChatHistory
 from ToolAgents import FunctionTool
 
 
