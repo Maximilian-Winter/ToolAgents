@@ -8,13 +8,6 @@ from typing import List, Dict, Any, Optional
 from ToolAgents.messages.message_template import MessageTemplate
 
 
-class ChatMessageRole(str, Enum):
-    System = "system"
-    User = "user"
-    Assistant = "assistant"
-    Tool = "tool"
-
-
 class ChatFormatter:
     def __init__(self, template, role_names: Dict[str, str] = None):
         self.template = template

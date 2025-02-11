@@ -1,7 +1,7 @@
 import json
 import os
 
-from ToolAgents.agents import ChatAPIAgent
+from ToolAgents.agents import ChatToolAgent
 from ToolAgents.provider import OpenAIChatAPI, OpenAISettings, AnthropicChatAPI, AnthropicSettings
 from ToolAgents.utilities import ChatHistory
 from test_tools import calculator_function_tool, current_datetime_function_tool, get_weather_function_tool
@@ -17,7 +17,7 @@ api = AnthropicChatAPI(api_key=os.getenv("ANTHROPIC_API_KEY"), model="claude-3-5
 settings = AnthropicSettings()
 
 # Create the ChatAPIAgent
-agent = ChatAPIAgent(chat_api=api, debug_output=True)
+agent = ChatToolAgent(chat_api=api, debug_output=True)
 
 settings.temperature = 0.45
 settings.top_p = 0.85

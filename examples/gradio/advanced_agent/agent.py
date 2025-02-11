@@ -1,5 +1,5 @@
 from ToolAgents.agent_memory import semantic_memory_nomic_text_gpu_config, SummarizationExtractPatternStrategy
-from ToolAgents.agents import AdvancedAgent, ChatAPIAgent
+from ToolAgents.agents import AdvancedAgent, ChatToolAgent
 from ToolAgents.agents.advanced_agent import AgentConfig
 from ToolAgents.agents.hosted_tool_agents import MistralAgent
 from ToolAgents.agents.mistral_agent_parts import MistralTokenizerVersion

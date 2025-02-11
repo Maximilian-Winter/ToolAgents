@@ -149,7 +149,7 @@ chat_history.save_history("./chat_history.json")
 ```python
 import os
 from dotenv import load_dotenv
-from ToolAgents.agents import ChatAPIAgent
+from ToolAgents.agents import ChatToolAgent
 from ToolAgents.provider import AnthropicChatAPI, AnthropicSettings
 from ToolAgents.utilities import ChatHistory
 from ToolAgents import ToolRegistry
@@ -159,7 +159,7 @@ load_dotenv()
 
 # Initialize the API and agent
 api = AnthropicChatAPI(api_key=os.getenv("ANTHROPIC_API_KEY"), model="claude-3-sonnet-20240229")
-agent = ChatAPIAgent(chat_api=api)
+agent = ChatToolAgent(chat_api=api)
 
 # Configure settings
 settings = AnthropicSettings()
@@ -176,14 +176,14 @@ tool_registry.add_tools(tools)
 # Create chat history and add system message and user message.
 chat_history = ChatHistory()
 chat_history.add_system_message("You are a helpful assistant.")
-chat_history.add_user_message("Perform the following tasks: Get the current weather in Celsius in London, New York, and at the North Pole. Solve these calculations: 42 * 42, 74 + 26, 7 * 26, 4 + 6, and 96/8.")
-
+chat_history.add_user_message(
+  "Perform the following tasks: Get the current weather in Celsius in London, New York, and at the North Pole. Solve these calculations: 42 * 42, 74 + 26, 7 * 26, 4 + 6, and 96/8.")
 
 # Get a response
 result = agent.get_response(
-    messages=chat_history.to_list(),
-    tools=tools,
-    settings=settings
+  messages=chat_history.to_list(),
+  tools=tools,
+  settings=settings
 )
 
 print(result)

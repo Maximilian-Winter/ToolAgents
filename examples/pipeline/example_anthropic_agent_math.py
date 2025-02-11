@@ -5,7 +5,7 @@ from enum import Enum
 from dotenv import load_dotenv
 
 from ToolAgents import FunctionTool
-from ToolAgents.agents import ChatAPIAgent
+from ToolAgents.agents import ChatToolAgent
 from ToolAgents.pipelines.pipeline import ProcessStep, Pipeline, SequentialProcess
 
 from ToolAgents.provider.chat_api_provider.anthropic import AnthropicChatAPI, AnthropicSettings
@@ -15,7 +15,7 @@ load_dotenv()
 api = AnthropicChatAPI(api_key=os.getenv("ANTHROPIC_API_KEY"), model="claude-3-5-sonnet-20241022")
 
 # Create the ChatAPIAgent
-agent = ChatAPIAgent(chat_api=api, debug_output=True)
+agent = ChatToolAgent(chat_api=api, debug_output=True)
 
 settings = api.get_default_settings()
 settings.neutralize_all_samplers()

@@ -1,10 +1,12 @@
 import json
 from abc import ABC, abstractmethod
 
-from typing import Optional, Dict, List, Any, Tuple
+from typing import Optional, Dict, List, Any, Tuple, Generator
 
 from ToolAgents import ToolRegistry
 from ToolAgents.interfaces import LLMSamplingSettings
+from ToolAgents.interfaces.llm_provider import StreamingChatAPIResponse
+from ToolAgents.messages.chat_message import ChatMessage
 
 
 class BaseToolAgent(ABC):
@@ -18,11 +20,11 @@ class BaseToolAgent(ABC):
     @abstractmethod
     def step(
             self,
-            messages: List[Dict[str, Any]],
+            messages: List[ChatMessage],
             tool_registry: ToolRegistry = None,
             settings: Optional[Any] = None,
             reset_last_messages_buffer: bool = True,
-    ) -> Tuple[Any, bool]:
+    ) -> ChatMessage:
         """
         Performs a single step of interaction with the chat API, returning the result
         and whether it contains tool calls.
@@ -41,11 +43,11 @@ class BaseToolAgent(ABC):
     @abstractmethod
     def stream_step(
             self,
-            messages: List[Dict[str, Any]],
+            messages: List[ChatMessage],
             tool_registry: ToolRegistry = None,
             settings: Optional[Any] = None,
             reset_last_messages_buffer: bool = True,
-    ):
+    ) -> Generator[StreamingChatAPIResponse, None, None]:
         """
         Performs a single streaming step of interaction with the chat API,
         yielding chunks and whether they contain tool calls.
@@ -64,11 +66,11 @@ class BaseToolAgent(ABC):
     @abstractmethod
     def get_response(
             self,
-            messages: List[Dict[str, Any]],
+            messages: List[ChatMessage],
             tool_registry: ToolRegistry = None,
             settings: Optional[Any] = None,
             reset_last_messages_buffer: bool = True,
-    ) -> str:
+    ) -> ChatMessage:
         """
         Gets a complete response from the chat API, handling any tool calls.
 
@@ -86,11 +88,11 @@ class BaseToolAgent(ABC):
     @abstractmethod
     def get_streaming_response(
             self,
-            messages: List[Dict[str, Any]],
+            messages: List[ChatMessage],
             tool_registry: ToolRegistry = None,
             settings: Optional[Any] = None,
             reset_last_messages_buffer: bool = True,
-    ):
+    ) -> Generator[StreamingChatAPIResponse, None, None]:
         """
         Gets a streaming response from the chat API, handling any tool calls.
 

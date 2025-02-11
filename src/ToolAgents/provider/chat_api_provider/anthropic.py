@@ -1,23 +1,33 @@
+import copy
 import dataclasses
+import datetime
 import json
+import uuid
 from typing import List, Dict, Optional, Any, Generator
 
 from anthropic import Anthropic
+from anthropic.types import ToolUseBlock, TextBlock
 
 from ToolAgents import FunctionTool
 from ToolAgents.interfaces import LLMTokenizer
-from ToolAgents.interfaces.llm_provider import ChatAPIProvider, LLMSamplingSettings
+from ToolAgents.interfaces.llm_provider import ChatAPIProvider, LLMSamplingSettings, StreamingChatAPIResponse
+from ToolAgents.messages.chat_message import ChatMessage, ToolCallContent, TextContent, ChatMessageRole, BinaryContent, \
+    BinaryStorageType, ToolCallResultContent
 from ToolAgents.provider.chat_api_provider.utilities import clean_history_messages
 
 
-@dataclasses.dataclass
+
 class AnthropicSettings(LLMSamplingSettings):
+
     def __init__(self):
         self.temperature = 1.0
         self.top_p = 1.0
         self.top_k = 0
         self.max_tokens = 1024
         self.stop_sequences = []
+        self.request_kwargs = None
+        self.extra_body = None
+        self.tool_choice = None
 
     def save_to_file(self, settings_file: str):
         with open(settings_file, 'w') as f:
@@ -30,7 +40,7 @@ class AnthropicSettings(LLMSamplingSettings):
             setattr(self, key, value)
 
     def as_dict(self):
-        return dataclasses.asdict(self)
+        return copy.copy(self.__dict__)
 
     def set_stop_tokens(self, tokens: List[str], tokenizer: LLMTokenizer = None):
         pass
@@ -60,88 +70,116 @@ class AnthropicSettings(LLMSamplingSettings):
         self.top_k = 0
         self.top_p = 1.0
 
-class AnthropicChatAPI(ChatAPIProvider):
+    def set_response_format(self, response_format: dict[str, Any]):
+        pass
 
+    def set_extra_body(self, extra_body: dict[str, Any]):
+        self.extra_body = extra_body
+
+    def set_extra_request_kwargs(self, **kwargs):
+        self.request_kwargs = kwargs
+
+    def set_tool_choice(self, tool_choice: str):
+        self.tool_choice = tool_choice
+
+def prepare_messages(messages: List[Dict[str, str]]) -> tuple:
+    system_message = None
+    other_messages = []
+    cleaned_messages = clean_history_messages(messages)
+    for i, message in enumerate(cleaned_messages):
+        if message['role'] == 'system':
+            system_message = message['content']
+        else:
+            msg = {
+                'role': message['role'],
+                'content': message["content"],
+            }
+
+            other_messages.append(msg)
+    return system_message, other_messages
+
+
+class AnthropicChatAPI(ChatAPIProvider):
     def __init__(self, api_key: str, model: str):
         self.client = Anthropic(api_key=api_key)
         self.model = model
         self.settings = AnthropicSettings()
 
-    def prepare_messages(self, settings: AnthropicSettings, messages: List[Dict[str, str]]) -> tuple:
-        system_message = None
-        other_messages = []
-        cleaned_messages = clean_history_messages(messages)
-        for i, message in enumerate(cleaned_messages):
-            if message['role'] == 'system':
-                system_message = [
-                    {"type": "text", "text": message['content']}
-                ]
-            else:
-                msg = {
-                    'role': message['role'],
-                    'content': message["content"],
-                }
-
-                other_messages.append(msg)
-        return system_message, other_messages
-
     def get_response(self, messages: List[Dict[str, str]], settings=None,
-                     tools: Optional[List[FunctionTool]] = None) -> str:
-        system, other_messages = self.prepare_messages(self.settings if settings is None else settings, messages)
+                     tools: Optional[List[FunctionTool]] = None) -> ChatMessage:
+        system, other_messages = prepare_messages(messages)
         anthropic_tools = [tool.to_anthropic_tool() for tool in tools] if tools else None
-        response = self.client.messages.create(
-            model=self.model,
-            system=system if system else [],
-            messages=other_messages,
-            temperature=self.settings.temperature if settings is None else settings.temperature,
-            top_p=self.settings.top_p if settings is None else settings.top_p,
-            top_k=self.settings.top_k if settings is None else settings.top_k,
-            max_tokens=self.settings.max_tokens if settings is None else settings.max_tokens,
-            stop_sequences=self.settings.stop_sequences if settings is None else settings.stop_sequences,
-            tools=anthropic_tools if anthropic_tools else []
-        )
-        if tools and (response.content[0].type == 'tool_use' or (
-                len(response.content) > 1 and response.content[1].type == 'tool_use')):
-            if response.content[0].type == 'tool_use':
-                return json.dumps({
-                    "content": None,
-                    "tool_calls": [{
-                        "function": {
-                            "id": response.content[0].id,
-                            "name": response.content[0].name,
-                            "arguments": response.content[0].input
-                        }
-                    }]
-                })
-            elif response.content[1].type == 'tool_use':
-                return json.dumps({
-                    "content": response.content[0].text,
-                    "tool_calls": [{
-                        "function": {
-                            "id": response.content[1].id,
-                            "name": response.content[1].name,
-                            "arguments": response.content[1].input
-                        }
-                    }]
-                })
-        return response.content[0].text
+
+        # Prepare the base kwargs
+        request_kwargs = {
+            "model": self.model,
+            "system": system if system else [],
+            "messages": other_messages,
+            "temperature": self.settings.temperature if settings is None else settings.temperature,
+            "top_p": self.settings.top_p if settings is None else settings.top_p,
+            "top_k": self.settings.top_k if settings is None else settings.top_k,
+            "max_tokens": self.settings.max_tokens if settings is None else settings.max_tokens,
+            "stop_sequences": self.settings.stop_sequences if settings is None else settings.stop_sequences,
+            "tools": anthropic_tools if anthropic_tools else [],
+        }
+
+        # Add extra_body if present
+        if (settings is None and self.settings.extra_body) or (settings and settings.extra_body):
+            extra_body = self.settings.extra_body if settings is None else settings.extra_body
+            request_kwargs["extra_body"] = extra_body
+
+        # Add extra request kwargs if present
+        if (settings is None and self.settings.request_kwargs) or (settings and settings.request_kwargs):
+            extra_kwargs = self.settings.request_kwargs if settings is None else settings.request_kwargs
+            request_kwargs.update(extra_kwargs)
+
+        response = self.client.messages.create(**request_kwargs)
+
+        contents = []
+        for message in response.content:
+            if isinstance(message, ToolUseBlock):
+                contents.append(ToolCallContent(tool_call_id=message.id, tool_call_name=message.name,
+                                                tool_call_arguments=message.input))
+            elif isinstance(message, TextBlock):
+                contents.append(TextContent(content=message.text))
+        return ChatMessage(id=str(uuid.uuid4()), role=ChatMessageRole.Assistant, content=contents,
+                           created_at=datetime.datetime.now(), updated_at=datetime.datetime.now())
 
     def get_streaming_response(self, messages: List[Dict[str, str]], settings=None,
-                               tools: Optional[List[FunctionTool]] = None) -> Generator[str, None, None]:
-        system, other_messages = self.prepare_messages(self.settings if settings is None else settings, messages)
+                               tools: Optional[List[FunctionTool]] = None) -> Generator[
+        StreamingChatAPIResponse, None, None]:
+        system, other_messages = prepare_messages(messages)
         anthropic_tools = [tool.to_anthropic_tool() for tool in tools] if tools else None
-        stream = self.client.messages.create(
-            model=self.model,
-            system=system if system else [],
-            messages=other_messages,
-            stream=True,
-            temperature=self.settings.temperature if settings is None else settings.temperature,
-            top_p=self.settings.top_p if settings is None else settings.top_p,
-            max_tokens=self.settings.max_tokens if settings is None else settings.max_tokens,
-            tools=anthropic_tools if anthropic_tools else []
-        )
+
+        # Prepare the base kwargs
+        request_kwargs = {
+            "model": self.model,
+            "system": system if system else [],
+            "messages": other_messages,
+            "stream": True,
+            "temperature": self.settings.temperature if settings is None else settings.temperature,
+            "top_p": self.settings.top_p if settings is None else settings.top_p,
+            "max_tokens": self.settings.max_tokens if settings is None else settings.max_tokens,
+            "tools": anthropic_tools if anthropic_tools else [],
+        }
+
+        # Add extra_body if present
+        if (settings is None and self.settings.extra_body) or (settings and settings.extra_body):
+            extra_body = self.settings.extra_body if settings is None else settings.extra_body
+            request_kwargs.update(extra_body)
+
+        # Add extra request kwargs if present
+        if (settings is None and self.settings.request_kwargs) or (settings and settings.request_kwargs):
+            extra_kwargs = self.settings.request_kwargs if settings is None else settings.request_kwargs
+            request_kwargs.update(extra_kwargs)
+
+        stream = self.client.messages.create(**request_kwargs)
+
         current_tool_call = None
-        content = ""
+        contents = []
+        content = None
+        has_tool_call = False
+
         for chunk in stream:
             if chunk.type == "content_block_start":
                 if chunk.content_block.type == "tool_use":
@@ -152,64 +190,68 @@ class AnthropicChatAPI(ChatAPIProvider):
                             "arguments": ""
                         }
                     }
+                    yield StreamingChatAPIResponse(chunk="", is_tool_call=True, partial_tool_call=current_tool_call)
+                if chunk.content_block.type == "text":
+                    content = chunk.content_block.text
+                    yield StreamingChatAPIResponse(chunk=chunk.content_block.text)
             elif chunk.type == "content_block_delta":
                 if chunk.delta.type == "text_delta":
                     content += chunk.delta.text
-                    yield chunk.delta.text
+                    yield StreamingChatAPIResponse(chunk=chunk.delta.text)
                 elif chunk.delta.type == "input_json_delta":
                     if current_tool_call:
                         current_tool_call["function"]["arguments"] += chunk.delta.partial_json
-
             elif chunk.type == "content_block_stop":
+                if content:
+                    contents.append(TextContent(content=content))
+                    content = None
                 if current_tool_call:
-                    yield json.dumps({
-                        "content": content if len(content) > 0 else None,
-                        "tool_calls": [current_tool_call]
-                    })
+                    has_tool_call = True
+                    contents.append(ToolCallContent(tool_call_id=current_tool_call["function"]["id"],
+                                                    tool_call_name=current_tool_call["function"]["name"],
+                                                    tool_call_arguments=json.loads(
+                                                        current_tool_call["function"]["arguments"])))
                     current_tool_call = None
+        yield StreamingChatAPIResponse(chunk="", is_tool_call=has_tool_call, finished=True,
+                                       finished_chat_message=ChatMessage(id=str(uuid.uuid4()),
+                                                                         role=ChatMessageRole.Assistant,
+                                                                         content=contents,
+                                                                         created_at=datetime.datetime.now(),
+                                                                         updated_at=datetime.datetime.now()))
 
-    def generate_tool_use_message(self, content: str, tool_call_id: str, tool_name: str, tool_args: str) -> Dict[
-        str, Any]:
-        if content is None or len(content) == 0:
-            return {
-                "role": "assistant",
-                "content": [
-                    {
+    def convert_chat_messages(self, messages: List[ChatMessage]) -> List[Dict[str, Any]]:
+        converted_messages = []
+        for message in messages:
+            role = message.role.value
+            if role == ChatMessageRole.Tool:
+                role = ChatMessageRole.User
+            new_content = []
+            for content in message.content:
+                if isinstance(content, TextContent):
+                    new_content.append({"type": "text", "text": content.content})
+                elif isinstance(content, BinaryContent):
+                    if "image" in content.mime_type and content.storage_type == BinaryStorageType.Base64:
+                        new_content.append( {"type": "image", "source": {"type": "base64", "media_type": content.mime_type, "data": content.content}})
+                    elif "pdf" in content.mime_type and content.storage_type == BinaryStorageType.Base64:
+                        new_content.append({"type": "document", "source": {"type": "base64", "media_type": content.mime_type, "data": content.content}})
+                elif isinstance(content, ToolCallContent):
+                    new_content.append({
                         "type": "tool_use",
-                        "id": tool_call_id,
-                        "name": tool_name,
-                        "input": json.loads(tool_args) if isinstance(tool_args, str) else tool_args
-                    }
-                ]
-            }
-        else:
-            return {
-                "role": "assistant",
-                "content": [
-                    {
-                        "type": "text",
-                        "text": content
-                    },
-                    {
-                        "type": "tool_use",
-                        "id": tool_call_id,
-                        "name": tool_name,
-                        "input": json.loads(tool_args) if isinstance(tool_args, str) else tool_args
-                    }
-                ]
-            }
+                        "id": content.tool_call_id,
+                        "name": content.tool_call_name,
+                        "input": content.tool_call_arguments
+                    })
+                elif isinstance(content, ToolCallResultContent):
+                    new_content.append({
+                        "type": "tool_result",
+                        "tool_use_id": content.tool_call_id,
+                        "content": content.tool_call_result
+                    })
+            if len(new_content) > 0:
+                converted_messages.append({"role": role, "content": new_content})
 
-    def generate_tool_response_message(self, tool_call_id: str, tool_name: str, tool_response: str) -> Dict[str, Any]:
-        return {
-            "role": "user",
-            "content": [
-                {
-                    "type": "tool_result",
-                    "tool_use_id": tool_call_id,
-                    "content": tool_response
-                }
-            ]
-        }
+        return converted_messages
+
 
     def get_default_settings(self):
         return self.settings

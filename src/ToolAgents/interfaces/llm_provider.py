@@ -1,10 +1,35 @@
 import abc
-from dataclasses import dataclass
-from typing import List, Dict, Optional, Generator, Any
+from typing import List, Dict, Optional, Generator, Any, Union
 
-from ToolAgents import ToolRegistry, FunctionTool
+from ToolAgents import FunctionTool, ToolRegistry
+from ToolAgents.messages.chat_message import ChatMessage
 
-@dataclass
+class StreamingChatAPIResponse:
+    """
+    Represents a streaming chat API response.
+    """
+    def __init__(self, chunk: str, is_tool_call: bool = False, partial_tool_call: Dict[str, Any] = None, finished: bool = False, finished_chat_message: Optional[ChatMessage] = None):
+        self.chunk = chunk
+        self.is_tool_call = is_tool_call
+        self.partial_tool_call = partial_tool_call
+        self.finished = finished
+        self.finished_chat_message = finished_chat_message
+
+    def get_chunk(self) -> str:
+        return self.chunk
+
+    def get_is_tool_call(self) -> bool:
+        return self.is_tool_call
+
+    def get_partial_tool_call(self) -> Dict[str, Any]:
+        return self.partial_tool_call
+
+    def get_finished(self) -> bool:
+        return self.finished
+
+    def get_finished_chat_message(self) -> Union[ChatMessage, None]:
+        return self.finished_chat_message
+
 class LLMSamplingSettings(abc.ABC):
 
     @abc.abstractmethod
@@ -39,25 +64,21 @@ class LLMSamplingSettings(abc.ABC):
     def neutralize_all_samplers(self):
         pass
 
-
-class HostedLLMProvider(abc.ABC):
     @abc.abstractmethod
-    def get_default_settings(self) -> LLMSamplingSettings:
+    def set_response_format(self, response_format: dict[str, Any]):
         pass
 
     @abc.abstractmethod
-    def set_default_settings(self, settings: LLMSamplingSettings) -> None:
+    def set_extra_body(self, extra_body: dict[str, Any]):
         pass
 
     @abc.abstractmethod
-    def create_completion(self, prompt, settings: LLMSamplingSettings, tool_registry: ToolRegistry = None):
+    def set_extra_request_kwargs(self, **kwargs):
         pass
 
     @abc.abstractmethod
-    def create_chat_completion(self, messages: List[Dict[str, str]], settings: LLMSamplingSettings, tool_registry: ToolRegistry = None):
+    def set_tool_choice(self, tool_choice: str):
         pass
-
-
 
 class ChatAPIProvider(abc.ABC):
 
@@ -70,21 +91,15 @@ class ChatAPIProvider(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def get_response(self, messages: List[Dict[str, str]], settings=None,
-                     tools: Optional[List[FunctionTool]] = None) -> str:
+    def get_response(self, messages: List[Dict[str, Any]], settings=None,
+                     tools: Optional[List[FunctionTool]] = None) -> ChatMessage:
         pass
 
     @abc.abstractmethod
-    def get_streaming_response(self, messages: List[Dict[str, str]], settings=None,
-                               tools: Optional[List[FunctionTool]] = None) -> Generator[str, None, None]:
+    def get_streaming_response(self, messages: List[Dict[str, Any]], settings=None,
+                               tools: Optional[List[FunctionTool]] = None) -> Generator[StreamingChatAPIResponse, None, None]:
         pass
 
     @abc.abstractmethod
-    def generate_tool_response_message(self, tool_call_id: str, tool_name: str, tool_response: str) -> Dict[str, Any]:
+    def convert_chat_messages(self, messages: List[ChatMessage]) -> List[Dict[str, Any]]:
         pass
-
-    @abc.abstractmethod
-    def generate_tool_use_message(self, content: str, tool_call_id: str, tool_name: str, tool_args: str) -> Dict[
-        str, Any]:
-        pass
-
