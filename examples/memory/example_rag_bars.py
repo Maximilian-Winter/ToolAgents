@@ -50,7 +50,7 @@ splitter = RecursiveCharacterTextSplitter(
 page = get_wikipedia_page("Synthetic_diamond")
 
 # Split the text of the wikipedia page into chunks for the vector database.
-splits = splitter.split_text(page)
+splits = splitter.get_chunks(page)
 
 # Add the splits into the vector database
 for split in splits:

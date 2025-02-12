@@ -1,8 +1,13 @@
+import base64
 import datetime
+import pathlib
+import sys
 import uuid
 from enum import Enum
+from os import PathLike
 from typing import List, Union, Dict, Any
 
+import httpx
 from pydantic import BaseModel, Field
 
 
@@ -150,15 +155,51 @@ class ChatMessage(BaseModel):
 
     updated_at: datetime.datetime = Field(..., description="The last update date of the chat message.")
 
+    additional_fields: Dict[str, Any] = Field(default_factory=dict,description="Additional fields for the chat message. For provider specific features, like caching")
+
     additional_information: Dict[str, Any] = Field(
         default_factory=dict,
         description="Additional metadata or information related to the chat message."
     )
 
     @staticmethod
+    def create_system_message(message: str):
+        return ChatMessage(id=str(uuid.uuid4()), role=ChatMessageRole.System, content=[TextContent(content=message)], created_at=datetime.datetime.now(), updated_at=datetime.datetime.now(), additional_information={})
+
+    @staticmethod
+    def create_user_message(message: str):
+        return ChatMessage(id=str(uuid.uuid4()), role=ChatMessageRole.User, content=[TextContent(content=message)],
+                           created_at=datetime.datetime.now(), updated_at=datetime.datetime.now(),
+                           additional_information={})
+
+    @staticmethod
+    def create_assistant_message(message: str):
+        return ChatMessage(id=str(uuid.uuid4()), role=ChatMessageRole.Assistant, content=[TextContent(content=message)],
+                           created_at=datetime.datetime.now(), updated_at=datetime.datetime.now(),
+                           additional_information={})
+
+    @staticmethod
+    def create_empty_system_message():
+        return ChatMessage(id=str(uuid.uuid4()), role=ChatMessageRole.System, content=[],
+                           created_at=datetime.datetime.now(), updated_at=datetime.datetime.now(),
+                           additional_information={})
+
+    @staticmethod
+    def create_empty_user_message():
+        return ChatMessage(id=str(uuid.uuid4()), role=ChatMessageRole.User, content=[],
+                           created_at=datetime.datetime.now(), updated_at=datetime.datetime.now(),
+                           additional_information={})
+
+    @staticmethod
+    def create_empty_assistant_message():
+        return ChatMessage(id=str(uuid.uuid4()), role=ChatMessageRole.Assistant, content=[],
+                           created_at=datetime.datetime.now(), updated_at=datetime.datetime.now(),
+                           additional_information={})
+
+    @staticmethod
     def from_dictionaries(messages: List[Dict[str, str]]) -> List['ChatMessage']:
         """
-        To convert a list of dictionaries into a list of ChatMessage objects. Only works with simple messages, that have a role string and content string.
+        To convert a list of dictionaries into a list of ChatMessage objects. Only works with simple text messages, that have a role string and content string.
         :param messages: The messages to convert.
         :return: Returns a list of ChatMessage objects.
         """
@@ -205,6 +246,55 @@ class ChatMessage(BaseModel):
             if isinstance(content, ToolCallContent):
                 result.append(content)
         return result
+
+    def get_text_content(self) -> str:
+        result = []
+        for content in self.content:
+            if isinstance(content, TextContent):
+                result.append(content.content)
+
+        return '\n'.join(result)
+
+    def set_custom_role(self, custom_role_name: str) -> None:
+        self.role = ChatMessageRole.Custom
+        self.additional_information["custom_role_name"] = custom_role_name
+
+    def set_additional_fields(self, additional_fields: Dict[str, Any]) -> None:
+        self.additional_fields = additional_fields
+
+    def set_additional_field(self, field: str, value: Any) -> None:
+        self.additional_fields[field] = value
+
+    def add_text(self, content: str) -> None:
+        self.content.append(TextContent(content=content))
+
+    def add_text_file_data(self, file: PathLike, content_prefix: str = "", content_suffix: str = "") -> None:
+        with open(file, "r") as f:
+            text = f.read()
+        self.content.append(TextContent(content=content_prefix + text + content_suffix))
+
+    def add_image_file_data(self, file: PathLike, image_format: str) -> None:
+        self.add_binary_file_data(file, f"image/{image_format}")
+
+    def add_binary_file_data(self, file: PathLike, mime_type: str) -> None:
+        with open(file, "rb") as f:
+            binary_data = f.read()
+            base_64_encoded_data = base64.b64encode(binary_data)
+            base64_string = base_64_encoded_data.decode('utf-8')
+        self.add_base64_data(base64_string, mime_type)
+
+    def add_image_url(self, url: str, image_format: str) -> None:
+        self.content.append(BinaryContent(storage_type=BinaryStorageType.Url, mime_type=f"image/{image_format}", content=url ))
+
+    def download_and_add_image_data(self, url: str, image_format: str) -> None:
+        base64_string = base64.b64encode(httpx.get(url).content).decode("utf-8")
+        self.add_base64_data(base64_string, f"image/{image_format}")
+
+    def add_base64_data(self, base64_string: str, mime_type: str) -> None:
+        self.content.append(BinaryContent(storage_type=BinaryStorageType.Base64, mime_type=mime_type, content=base64_string ))
+
+
+
 
 if __name__ == "__main__":
     example = {

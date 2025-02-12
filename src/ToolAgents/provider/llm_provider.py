@@ -14,7 +14,7 @@ class StreamingChatAPIResponse(BaseModel):
     """
     chunk: str
     is_tool_call: bool = False
-    partial_tool_call: Optional[Dict[str, Any]] = None
+    tool_call: Optional[Dict[str, Any]] = None
     finished: bool = False
     finished_chat_message: Optional[ChatMessage] = None
 
@@ -24,8 +24,8 @@ class StreamingChatAPIResponse(BaseModel):
     def get_is_tool_call(self) -> bool:
         return self.is_tool_call
 
-    def get_partial_tool_call(self) -> Dict[str, Any]:
-        return self.partial_tool_call
+    def get_tool_call(self) -> Dict[str, Any]:
+        return self.tool_call
 
     def get_finished(self) -> bool:
         return self.finished

@@ -1,12 +1,31 @@
-import json
 from abc import ABC, abstractmethod
 
-from typing import Optional, Dict, List, Any, Tuple, Generator
+from typing import Optional, List, Any, Generator
+
+from pydantic import BaseModel, Field
 
 from ToolAgents import ToolRegistry
-from ToolAgents.interfaces import SamplingSettings
-from ToolAgents.interfaces.llm_provider import StreamingChatAPIResponse
+from ToolAgents.provider.llm_provider import SamplingSettings
+from ToolAgents.provider.llm_provider import StreamingChatAPIResponse
 from ToolAgents.messages.chat_message import ChatMessage
+
+
+class ChatResponse(BaseModel):
+    """
+    Represents an agent chat response.
+    """
+    messages: List[ChatMessage] = Field(default_factory=list, description="List of chat messages.")
+    response: str = Field(default_factory=str, description="Final response from the agent.")
+
+
+class ChatResponseChunk(BaseModel):
+    """
+    Represents an agent chat response chunk.
+    """
+    chunk: str = Field("", description="Response chunk from the agent.")
+
+    finished: bool = Field(default_factory=bool, description="Whether the response has been completed.")
+    finished_response: ChatResponse = Field(default_factory=ChatResponse, description="Finished response object from the agent.")
 
 
 class BaseToolAgent(ABC):
@@ -26,8 +45,7 @@ class BaseToolAgent(ABC):
             reset_last_messages_buffer: bool = True,
     ) -> ChatMessage:
         """
-        Performs a single step of interaction with the chat API, returning the result
-        and whether it contains tool calls.
+        Performs a single step of interaction with the agent, returning the chat message of the agent  .
 
         Args:
             messages: List of message dictionaries
@@ -36,7 +54,7 @@ class BaseToolAgent(ABC):
             reset_last_messages_buffer: Whether to reset the message buffer
 
         Returns:
-            Tuple of (result, contains_tool_calls)
+            Chat Message (ChatMessage)
         """
         pass
 
@@ -49,8 +67,7 @@ class BaseToolAgent(ABC):
             reset_last_messages_buffer: bool = True,
     ) -> Generator[StreamingChatAPIResponse, None, None]:
         """
-        Performs a single streaming step of interaction with the chat API,
-        yielding chunks and whether they contain tool calls.
+        Performs a single streaming step of interaction with the agent, yielding chunks.
 
         Args:
             messages: List of message dictionaries
@@ -59,7 +76,7 @@ class BaseToolAgent(ABC):
             reset_last_messages_buffer: Whether to reset the message buffer
 
         Yields:
-            Tuples of (chunk, contains_tool_calls)
+            Chunks of chat api responses (StreamingChatAPIResponse)
         """
         pass
 
@@ -70,7 +87,7 @@ class BaseToolAgent(ABC):
             tool_registry: ToolRegistry = None,
             settings: Optional[Any] = None,
             reset_last_messages_buffer: bool = True,
-    ) -> ChatMessage:
+    ) -> ChatResponse:
         """
         Gets a complete response from the chat API, handling any tool calls.
 
@@ -81,7 +98,7 @@ class BaseToolAgent(ABC):
             reset_last_messages_buffer: Whether to reset the message buffer
 
         Returns:
-            The final response string
+            The final chat response from the agent.(ChatResponse)
         """
         pass
 
@@ -92,7 +109,7 @@ class BaseToolAgent(ABC):
             tool_registry: ToolRegistry = None,
             settings: Optional[Any] = None,
             reset_last_messages_buffer: bool = True,
-    ) -> Generator[StreamingChatAPIResponse, None, None]:
+    ) -> Generator[ChatResponseChunk, None, None]:
         """
         Gets a streaming response from the chat API, handling any tool calls.
 
@@ -103,7 +120,15 @@ class BaseToolAgent(ABC):
             reset_last_messages_buffer: Whether to reset the message buffer
 
         Yields:
-            Response chunks
+            Response chunks(ChatResponseChunk)
         """
         pass
 
+    @abstractmethod
+    def get_last_response(self) -> ChatResponse:
+        """
+        Returns the last response from the agent.
+        Returns:
+            Last response(ChatResponse)
+        """
+        pass

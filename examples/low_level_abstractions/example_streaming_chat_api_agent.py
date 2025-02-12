@@ -21,16 +21,16 @@ load_dotenv()
 #settings = OpenAISettings()
 
 # Official OpenAI API
-#api = OpenAIChatAPI(api_key=os.getenv("OPENAI_API_KEY"), model="gpt-4o-mini")
-#settings = OpenAISettings()
+api = OpenAIChatAPI(api_key=os.getenv("OPENAI_API_KEY"), model="gpt-4o-mini")
+settings = OpenAISettings()
 
 # Anthropic API
 #api = AnthropicChatAPI(api_key=os.getenv("ANTHROPIC_API_KEY"), model="claude-3-5-sonnet-20241022")
 #settings = AnthropicSettings()
 
 # Groq API
-api = GroqChatAPI(api_key=os.getenv("GROQ_API_KEY"), model="llama-3.3-70b-versatile")
-settings = GroqSettings()
+#api = GroqChatAPI(api_key=os.getenv("GROQ_API_KEY"), model="llama-3.3-70b-versatile")
+#settings = GroqSettings()
 
 # Mistral API
 #api = MistralChatAPI(api_key=os.getenv("MISTRAL_API_KEY"), model="mistral-small-latest")
@@ -48,19 +48,14 @@ tool_registry = ToolRegistry()
 
 tool_registry.add_tools(tools)
 messages = [
-  {
-    "role": "system",
-    "content": "You are a helpful assistant with tool calling capabilities. Only reply with a tool call if the function exists in the library provided by the user. Use JSON format to output your function calls. If it doesn't exist, just reply directly in natural language. When you receive a tool call response, use the output to format an answer to the original user question."
-  },
-  {
-    "role": "user",
-    "content": "Get the weather in London and New York. Calculate 420 x 420 and retrieve the date and time in the format: %Y-%m-%d %H:%M:%S."
-  }
+    ChatMessage.create_system_message("You are a helpful assistant with tool calling capabilities. Only reply with a tool call if the function exists in the library provided by the user. Use JSON format to output your function calls. If it doesn't exist, just reply directly in natural language. When you receive a tool call response, use the output to format an answer to the original user question."),
+    ChatMessage.create_user_message("Get the weather in London and New York. Calculate 420 x 420 and retrieve the date and time in the format: %Y-%m-%d %H:%M:%S.")
 ]
 
 result = agent.get_streaming_response(
-    messages=ChatMessage.from_dictionaries(messages),
+    messages=messages,
     settings=settings, tool_registry=tool_registry)
+
 
 for res in result:
     print(res.chunk, end='', flush=True)

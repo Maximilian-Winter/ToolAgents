@@ -2,7 +2,7 @@ import abc
 from typing import Any
 
 from ToolAgents import FunctionTool, ToolRegistry
-from ToolAgents.interfaces.base_llm_agent import BaseToolAgent
+from ToolAgents.agents.base_llm_agent import BaseToolAgent
 from ToolAgents.messages.message_template import MessageTemplate
 
 

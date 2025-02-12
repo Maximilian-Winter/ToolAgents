@@ -7,7 +7,7 @@ import requests
 
 from ToolAgents import FunctionTool
 from ToolAgents.interfaces import SamplingSettings, LLMTokenizer
-from ToolAgents.interfaces.llm_provider import ChatAPIProvider
+from ToolAgents.provider.llm_provider import ChatAPIProvider
 from ToolAgents.provider.chat_api_provider.utilities import clean_history_messages
 
 

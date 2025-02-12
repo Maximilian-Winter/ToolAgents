@@ -18,10 +18,10 @@
 /src/ToolAgents/interfaces/__pycache__
 /src/ToolAgents/agent_memory/__pycache__
 /tests/__pycache__
-/src/ToolAgents/gbnf_grammar_generator/__pycache__
-/src/ToolAgents/json_schema_generator/__pycache__
+/src/ToolAgents/utilities/gbnf_grammar_generator/__pycache__
+/src/ToolAgents/utilities/json_schema_generator/__pycache__
 /examples/basic/__pycache__
-/src/ToolAgents/llm_documentation/__pycache__
+/src/ToolAgents/utilities/llm_documentation/__pycache__
 /src/ToolAgents/pipelines/__pycache__
 /src/ToolAgents/agent_memory/knowledge_graphs/__pycache__
 /src/ToolAgents/agent_memory/knowledge_graphs/__pycache__
@@ -38,4 +38,6 @@
 /examples/gradio/advanced_agent/__pycache__
 /examples/low_level_abstractions/__pycache__
 /src/ToolAgents/messages/chats.db
+/src/ToolAgents/messages/__pycache__
+/src/ToolAgents/messages/message_converter/__pycache__
 /src/ToolAgents/messages/__pycache__

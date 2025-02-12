@@ -15,12 +15,12 @@ from typing import List, Dict, Optional, Any, Mapping
 
 import chromadb
 from chromadb.api.types import IncludeEnum
-from sentence_transformers import SentenceTransformer
+
 import numpy as np
 from torch import Tensor
 
-from ToolAgents.interfaces import SamplingSettings
-from ToolAgents.interfaces.base_llm_agent import BaseToolAgent
+from ToolAgents.provider.llm_provider import SamplingSettings
+from ToolAgents.agents.base_llm_agent import BaseToolAgent
 
 
 # =============================================================================
@@ -447,6 +447,7 @@ class SemanticMemory:
         Args:
             config: An instance of SemanticMemoryConfig defining system parameters.
         """
+        from sentence_transformers import SentenceTransformer
         # Initialize the sentence transformer encoder using the provided model configuration
         self.encoder = SentenceTransformer(
             config.embeddings_config.sentence_transformer_model_path,

@@ -2,9 +2,9 @@ import datetime
 import uuid
 from typing import Optional, List, Any, Generator
 from ToolAgents import ToolRegistry
-from ToolAgents.interfaces.base_llm_agent import BaseToolAgent
+from ToolAgents.agents.base_llm_agent import BaseToolAgent, ChatResponse, ChatResponseChunk
 
-from ToolAgents.interfaces.llm_provider import ChatAPIProvider, StreamingChatAPIResponse
+from ToolAgents.provider.llm_provider import ChatAPIProvider, StreamingChatAPIResponse
 from ToolAgents.messages.chat_message import ChatMessage, ChatMessageRole, ToolCallResultContent
 
 
@@ -14,7 +14,7 @@ class ChatToolAgent(BaseToolAgent):
         super().__init__()
         self.chat_api = chat_api
         self.debug_output = debug_output
-        self.last_messages_buffer = []
+        self.last_messages_buffer: list[ChatMessage] = []
         self.tool_registry = ToolRegistry()
         self.last_response_has_tool_calls = False
 
@@ -93,33 +93,7 @@ class ChatToolAgent(BaseToolAgent):
         for chunk in self.chat_api.get_streaming_response(self.chat_api.convert_chat_messages(messages), settings=settings, tools=tools):
             yield chunk
 
-    def handle_function_calling_response(
-            self,
-            chat_message: ChatMessage,
-            current_messages: List[ChatMessage],
-    ) -> None:
-        """
-        Handles the response containing function calls by executing tools and updating messages.
 
-        Args:
-            chat_message: chat message
-            current_messages: List of current conversation messages
-        """
-        tool_calls = chat_message.get_tool_calls()
-        content = []
-        for tool_call in tool_calls:
-            tool_name = tool_call.tool_call_name
-            tool = self.tool_registry.get_tool(tool_name)
-
-            if tool:
-                call_parameters = tool_call.tool_call_arguments
-                output = tool.execute(call_parameters)
-                content.append(ToolCallResultContent(tool_call_result_id=str(uuid.uuid4()), tool_call_id=tool_call.tool_call_id, tool_call_name=tool_call.tool_call_name, tool_call_result=str(output)))
-        tool_message = ChatMessage(id=str(uuid.uuid4()), role=ChatMessageRole.Tool, content=content, created_at=datetime.datetime.now(), updated_at=datetime.datetime.now())
-        self.last_messages_buffer.append(chat_message)
-        current_messages.append(chat_message)
-        self.last_messages_buffer.append(tool_message)
-        current_messages.append(tool_message)
 
     def get_response(
             self,
@@ -127,7 +101,7 @@ class ChatToolAgent(BaseToolAgent):
             tool_registry: ToolRegistry = None,
             settings: Optional[Any] = None,
             reset_last_messages_buffer: bool = True,
-    ) -> ChatMessage:
+    ) -> ChatResponse:
         """
         Gets a complete response from the chat API, handling any tool calls.
 
@@ -155,7 +129,7 @@ class ChatToolAgent(BaseToolAgent):
             )
         else:
             self.last_messages_buffer.append(result)
-            return result
+            return ChatResponse(messages=self.last_messages_buffer, response=result.get_text_content())
 
     def get_streaming_response(
             self,
@@ -163,7 +137,7 @@ class ChatToolAgent(BaseToolAgent):
             tool_registry: ToolRegistry = None,
             settings: Optional[Any] = None,
             reset_last_messages_buffer: bool = True,
-    ) -> Generator[StreamingChatAPIResponse, None, None]:
+    ) -> Generator[ChatResponseChunk, None, None]:
         """
         Gets a streaming response from the chat API, handling any tool calls.
 
@@ -188,10 +162,10 @@ class ChatToolAgent(BaseToolAgent):
         self.tool_registry = tool_registry
 
         finished_message = None
-        for chunk in self.stream_step(messages=messages, tool_registry=tool_registry, settings=settings, reset_last_messages_buffer=True):
+        for chunk in self.stream_step(messages=messages, tool_registry=tool_registry, settings=settings, reset_last_messages_buffer=reset_last_messages_buffer):
             if chunk.get_finished():
                 finished_message = chunk.get_finished_chat_message()
-            yield chunk
+            yield ChatResponseChunk(chunk=chunk.chunk)
         if finished_message.contains_tool_call():
             self.last_response_has_tool_calls = True
             self.handle_function_calling_response(finished_message, messages)
@@ -203,4 +177,35 @@ class ChatToolAgent(BaseToolAgent):
             )
         else:
             self.last_messages_buffer.append(finished_message)
+            yield ChatResponseChunk(chunk="", finished=True, finished_response=ChatResponse(messages=self.last_messages_buffer, response=finished_message.get_text_content()))
 
+    def get_last_response(self) -> ChatResponse:
+        return ChatResponse(messages=self.last_messages_buffer, response=self.last_messages_buffer[-1].get_text_content())
+
+    def handle_function_calling_response(
+                self,
+                chat_message: ChatMessage,
+                current_messages: List[ChatMessage],
+        ) -> None:
+            """
+            Handles the response containing function calls by executing tools and updating messages.
+
+            Args:
+                chat_message: chat message
+                current_messages: List of current conversation messages
+            """
+            tool_calls = chat_message.get_tool_calls()
+            content = []
+            for tool_call in tool_calls:
+                tool_name = tool_call.tool_call_name
+                tool = self.tool_registry.get_tool(tool_name)
+
+                if tool:
+                    call_parameters = tool_call.tool_call_arguments
+                    output = tool.execute(call_parameters)
+                    content.append(ToolCallResultContent(tool_call_result_id=str(uuid.uuid4()), tool_call_id=tool_call.tool_call_id, tool_call_name=tool_call.tool_call_name, tool_call_result=str(output)))
+            tool_message = ChatMessage(id=str(uuid.uuid4()), role=ChatMessageRole.Tool, content=content, created_at=datetime.datetime.now(), updated_at=datetime.datetime.now())
+            self.last_messages_buffer.append(chat_message)
+            current_messages.append(chat_message)
+            self.last_messages_buffer.append(tool_message)
+            current_messages.append(tool_message)

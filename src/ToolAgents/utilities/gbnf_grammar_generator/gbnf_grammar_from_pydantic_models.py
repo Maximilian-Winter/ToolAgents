@@ -1,12 +1,10 @@
 from __future__ import annotations
 
 import inspect
-import json
 import re
-import typing
 from copy import copy
 from enum import Enum
-from inspect import getdoc, isclass
+from inspect import isclass
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -16,13 +14,12 @@ from typing import (
     Union,
     get_args,
     get_origin,
-    get_type_hints,
 )
 
 from docstring_parser import parse
-from pydantic import BaseModel, Field, create_model
+from pydantic import BaseModel, create_model
 
-from ToolAgents.llm_documentation import generate_markdown_documentation, generate_text_documentation
+from ToolAgents.utilities.llm_documentation import generate_markdown_documentation, generate_text_documentation
 
 if TYPE_CHECKING:
     from types import GenericAlias

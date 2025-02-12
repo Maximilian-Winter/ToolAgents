@@ -1,4 +1,3 @@
-import dataclasses
 import inspect
 import json
 import re
@@ -10,11 +9,10 @@ from typing import Type, List, Callable, Any, Union, Tuple, Dict
 from docstring_parser import DocstringStyle, parse
 from pydantic import BaseModel, create_model, Field
 from pydantic_core import PydanticUndefined
-from pydantic_settings import BaseSettings
 
-from ToolAgents.gbnf_grammar_generator.gbnf_grammar_from_pydantic_models import \
+from ToolAgents.utilities.gbnf_grammar_generator.gbnf_grammar_from_pydantic_models import \
     generate_gbnf_grammar_from_pydantic_models
-from ToolAgents.json_schema_generator import generate_json_schemas
+from ToolAgents.utilities.json_schema_generator import generate_json_schemas
 from ToolAgents.utilities.documentation_generation import generate_text_documentation, generate_function_definition
 
 

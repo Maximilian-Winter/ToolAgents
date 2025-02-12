@@ -7,8 +7,9 @@ from ToolAgents import ToolRegistry, FunctionTool
 from ToolAgents.agent_memory.context_app_state import ContextAppState
 from ToolAgents.agent_memory.semantic_memory.memory import SemanticMemory, SemanticMemoryConfig, \
     SummarizationExtractPatternStrategy
-from ToolAgents.interfaces import SamplingSettings
-from ToolAgents.interfaces.base_llm_agent import BaseToolAgent
+from ToolAgents.provider.llm_provider import SamplingSettings
+from ToolAgents.agents.base_llm_agent import BaseToolAgent
+from ToolAgents.messages import ChatHistory, ChatMessage
 
 
 @dataclasses.dataclass
@@ -94,7 +95,7 @@ class AdvancedAgent:
         self.agent_config_path = os.path.join(self.save_dir, "agent_config.json")
         self.app_state_path = os.path.join(save_dir, "app_state.json")
         self.semantic_memory_path = os.path.join(save_dir, "semantic_memory")
-
+        self.agent_chat_history_path = os.path.join(self.save_dir, "agent_chat_history.json")
         # Determine if we should load an existing agent state based on file existence
         if os.path.exists(save_dir) and os.path.exists(self.agent_config_path):
             load = True
@@ -102,7 +103,7 @@ class AdvancedAgent:
         # Initialize chat history and state tracking variables
         self.app_state = None
         self.chat_history_index = 0
-        self.chat_history = []
+        self.chat_history = ChatHistory()
         self.tool_usage_history = {}
 
         # Load existing agent state if available
@@ -245,7 +246,6 @@ class AdvancedAgent:
         # Restore the agent's configuration and chat history
         self.system_message = loaded_data["system_message"]
         self.has_app_state = loaded_data["has_app_state"]
-        self.chat_history = loaded_data["chat_history"]
         self.chat_history_index = loaded_data["chat_history_index"]
         self.max_chat_history_length = loaded_data["max_chat_history_length"]
         self.use_semantic_memory = loaded_data["use_semantic_memory"]
@@ -257,6 +257,8 @@ class AdvancedAgent:
         if self.has_app_state:
             self.app_state = ContextAppState()
             self.app_state.load_json(self.app_state_path)
+
+        self.chat_history.load_from_json(self.agent_chat_history_path)
 
     def save_agent(self):
         """
@@ -270,7 +272,6 @@ class AdvancedAgent:
             save_data = {
                 "system_message": self.system_message,
                 "has_app_state": self.has_app_state,
-                "chat_history": self.chat_history,
                 "chat_history_index": self.chat_history_index,
                 "max_chat_history_length": self.max_chat_history_length,
                 "use_semantic_memory": self.use_semantic_memory,
@@ -284,6 +285,8 @@ class AdvancedAgent:
         if self.has_app_state:
             self.app_state.save_json(self.app_state_path)
 
+        self.chat_history.save_to_json(self.agent_chat_history_path)
+
     def get_current_chat_history(self):
         if not self.has_app_state:
             chat_history = [{"role": "system", "content": self.system_message}]
@@ -292,7 +295,7 @@ class AdvancedAgent:
             chat_history = [{"role": "system",
                              "content": self.system_message.format(app_state=self.app_state.get_app_state_string())}]
         # Add any existing chat history beyond the current index
-        chat_history.extend(self.chat_history[self.chat_history_index:])
+        chat_history.extend(self.chat_history.get_messages()[self.chat_history_index:])
         return chat_history
 
     def add_to_chat_history(self, messages: list[dict[str, Any]]):
@@ -302,7 +305,7 @@ class AdvancedAgent:
         Args:
             messages (list[dict[str, Any]]): List of message dictionaries to add.
         """
-        self.chat_history.extend(messages)
+        self.chat_history.add_messages_from_dictionaries(messages)
 
     def add_to_chat_history_from_json(self, file_path: str):
         """
@@ -313,7 +316,7 @@ class AdvancedAgent:
         """
         with open(file_path, "r") as f:
             loaded_data = json.load(fp=f)
-        self.chat_history.extend(loaded_data)
+        self.chat_history.add_messages_from_dictionaries(loaded_data)
 
     def set_summarization_prompt(self, prompt: tuple[str, str]):
         self.summarization_prompt = prompt
@@ -340,7 +343,7 @@ class AdvancedAgent:
             chat_history = [{"role": "system",
                              "content": self.system_message.format(app_state=self.app_state.get_app_state_string())}]
         # Add any existing chat history beyond the current index
-        chat_history.extend(self.chat_history[self.chat_history_index:])
+        chat_history.extend(self.chat_history.get_messages()[self.chat_history_index:])
 
         # If semantic memory is enabled, retrieve additional context and append it to the user input
         if self.use_semantic_memory:
@@ -350,7 +353,7 @@ class AdvancedAgent:
                 for r in results:
                     additional_context += f"Memories: {r['content']}\n\n---\n\n"
                 # Append the additional context to the user input
-                user = additional_context.strip() + f"\n\n--- End Of Additional Context ---\n\n{user}"
+                user = additional_context.strip() + f"\n\n--- End Of Additional Context ---\n\nLatest User Message:{user}"
 
         # Append the (possibly enriched) user message to the chat history
         chat_history.append({"role": "user", "content": user})
@@ -367,13 +370,13 @@ class AdvancedAgent:
             chat_input (str): The original user input that was sent to the agent.
         """
         # Record tool usage for the current position in chat history
-        self.tool_usage_history[len(self.chat_history)] = 1
+        self.tool_usage_history[self.chat_history.get_message_count()] = 1
         # Append the user's message to the chat history
-        self.chat_history.append({"role": "user", "content": chat_input})
+        self.chat_history.add_user_message(chat_input)
         # Record the length of the agent's response buffer as tool usage
-        self.tool_usage_history[len(self.chat_history)] = len(self.agent.last_messages_buffer)
+        self.tool_usage_history[self.chat_history.get_message_count()] = len(self.agent.last_messages_buffer)
         # Append the agent's response messages to the chat history
-        self.chat_history.extend(self.agent.last_messages_buffer)
+        self.chat_history.add_messages(self.agent.last_messages_buffer)
         # Process the chat history to enforce any maximum length limits
         self.process_chat_history()
 
@@ -387,14 +390,13 @@ class AdvancedAgent:
         Args:
             max_chat_history_length (int, optional): The maximum number of chat messages to retain.
                 Defaults to the instance's max_chat_history_length.
-            summarize_with_agent (bool, optional): If True, the message pairs get summarized by the agent before storing them.
         """
         if max_chat_history_length is None:
             max_chat_history_length = self.max_chat_history_length
         # Only process if the chat history length exceeds the allowed limit and the limit is set (not -1)
         if (
-                len(self.chat_history) - self.chat_history_index) > max_chat_history_length and max_chat_history_length > -1:
-            while (len(self.chat_history) - self.chat_history_index) > max_chat_history_length:
+                self.chat_history.get_message_count() - self.chat_history_index) > max_chat_history_length and max_chat_history_length > -1:
+            while (self.chat_history.get_message_count() - self.chat_history_index) > max_chat_history_length:
                 # Determine how many messages are associated with the current chat block
                 msg_count = self.tool_usage_history.get(self.chat_history_index, 1)
                 msg_count += self.tool_usage_history.get(self.chat_history_index + 1, 1)
@@ -402,11 +404,11 @@ class AdvancedAgent:
                 message2 = {}
                 # If semantic memory is enabled, select messages to be consolidated
                 if self.use_semantic_memory and msg_count == 2:
-                    message = self.chat_history[self.chat_history_index]
-                    message2 = self.chat_history[self.chat_history_index + 1]
+                    message = self.chat_history.get_messages()[self.chat_history_index]
+                    message2 = self.chat_history.get_messages()[self.chat_history_index + 1]
                 elif self.use_semantic_memory and msg_count > 2:
-                    message = self.chat_history[self.chat_history_index]
-                    message2 = self.chat_history[self.chat_history_index + (msg_count - 1)]
+                    message = self.chat_history.get_messages()[self.chat_history_index]
+                    message2 = self.chat_history.get_messages()[self.chat_history_index + (msg_count - 1)]
                 # If there are at least two messages to consolidate, build a memory string and store it
                 if self.use_semantic_memory and msg_count >= 2:
                     memory = f"<{self.user_name}> {message['content']} </{self.user_name}>\n"
@@ -422,7 +424,7 @@ class AdvancedAgent:
                         settings = self.agent.get_default_settings()
                         settings.neutralize_all_samplers()
                         settings.temperature = 0.0
-                        memory = self.agent.get_response(summarization_history, settings=settings)
+                        memory = self.agent.get_response(ChatMessage.from_dictionaries(summarization_history), settings=settings)
                         print(memory)
                     self.semantic_memory.store(memory)
                 # Move the chat history index forward by the number of messages consolidated
