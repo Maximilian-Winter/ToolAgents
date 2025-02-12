@@ -41,7 +41,7 @@ class AnthropicSettings(SamplingSettings):
     def as_dict(self):
         return copy.copy(self.__dict__)
 
-    def set_stop_tokens(self, tokens: List[str], tokenizer: LLMTokenizer = None):
+    def set_stop_tokens(self, tokens: List[str]):
         pass
 
     def set_max_new_tokens(self, max_new_tokens: int):

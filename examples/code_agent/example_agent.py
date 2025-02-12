@@ -1,30 +1,24 @@
-from ToolAgents.agents.hosted_tool_agents import TemplateAgent
-from ToolAgents.provider import LlamaCppServerProvider
-from ToolAgents.utilities import ChatHistory
-from ToolAgents.messages.chat_history import AdvancedChatFormatter
+import os
+
+from ToolAgents.agents import ChatToolAgent
+from ToolAgents.provider import AnthropicChatAPI, AnthropicSettings
+
+from ToolAgents.messages import ChatHistory
 from example_tools import get_weather_function_tool, calculator_function_tool, current_datetime_function_tool, unit, \
     MathOperation
 from new_code_executor import PythonExecutor, run_llm_code_agent
 
-provider = LlamaCppServerProvider("http://127.0.0.1:8080/")
+from dotenv import load_dotenv
 
-system_template = "<system_instructions>\n{content}\n</system_instructions>\n\n"
-assistant_template = "{content}</s>"
-user_template = "[INST] {content} [/INST]"
+load_dotenv()
 
-advanced_chat_formatter = AdvancedChatFormatter({
-    "system": system_template,
-    "user": user_template,
-    "assistant": assistant_template,
-}, message_layout_template="{sys_prompt}{prompt}", include_system_message_in_first_user_message=True)
+# Anthropic API
+api = AnthropicChatAPI(api_key=os.getenv("ANTHROPIC_API_KEY"), model="claude-3-5-sonnet-20241022")
+settings = AnthropicSettings()
+agent = ChatToolAgent(chat_api=api, debug_output=True)
 
-# agent = MistralAgent(provider=provider, debug_output=True)
-agent = TemplateAgent(provider, advanced_chat_formatter=advanced_chat_formatter, generation_prompt=None, debug_output=True)
-
-settings = provider.get_default_settings()
 settings.neutralize_all_samplers()
 settings.temperature = 0.1
-settings.set_stop_tokens(["</s>"], None)
 settings.set_max_new_tokens(4096)
 
 python_code_executor = PythonExecutor(predefined_types=[unit, MathOperation],
@@ -43,11 +37,11 @@ prompt3 = r"""Analyze and visualize the dataset "./input.csv" with your Python c
 run_llm_code_agent(agent=agent, settings=settings, chat_history=chat_history, user_input=prompt_function_calling,
                executor=python_code_executor)
 
-# run_code_agent(agent=agent, settings=settings, chat_history=chat_history, user_input=prompt,
-#                python_code_executor=python_code_executor)
-# run_code_agent(agent=agent, settings=settings, chat_history=chat_history, user_input=prompt2,
-#                python_code_executor=python_code_executor)
-# run_code_agent(agent=agent, settings=settings, chat_history=chat_history, user_input=prompt3,
-#                python_code_executor=python_code_executor)
+run_llm_code_agent(agent=agent, settings=settings, chat_history=chat_history, user_input=prompt,
+               executor=python_code_executor)
+run_llm_code_agent(agent=agent, settings=settings, chat_history=chat_history, user_input=prompt2,
+               executor=python_code_executor)
+run_llm_code_agent(agent=agent, settings=settings, chat_history=chat_history, user_input=prompt3,
+               executor=python_code_executor)
 
-chat_history.save_history("./test_chat_history_after_mistral.json")
+chat_history.save_to_json("./test_chat_history_after_llama.json")

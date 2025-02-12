@@ -12,7 +12,7 @@ from mistralai import Tool, Function
 from mistralai import Mistral
 
 from ToolAgents import FunctionTool
-from ToolAgents.interfaces import LLMTokenizer, SamplingSettings
+from ToolAgents.interfaces import SamplingSettings
 from ToolAgents.interfaces.llm_provider import ChatAPIProvider, StreamingChatAPIResponse
 from ToolAgents.messages.chat_message import ChatMessage, TextContent, ToolCallContent, ChatMessageRole, \
     ToolCallResultContent, BinaryStorageType, BinaryContent
@@ -44,7 +44,7 @@ class MistralSettings(SamplingSettings):
     def as_dict(self):
         return copy(self.__dict__)
 
-    def set_stop_tokens(self, tokens: List[str], tokenizer: LLMTokenizer = None):
+    def set_stop_tokens(self, tokens: List[str]):
         pass
 
     def set_max_new_tokens(self, max_new_tokens: int):

@@ -8,7 +8,7 @@ from typing import List, Optional, Dict, Generator, Any
 from groq import Groq
 
 from ToolAgents import FunctionTool
-from ToolAgents.interfaces import SamplingSettings, LLMTokenizer
+from ToolAgents.interfaces import SamplingSettings
 from ToolAgents.interfaces.llm_provider import ChatAPIProvider, StreamingChatAPIResponse
 from ToolAgents.messages.chat_message import ChatMessage, TextContent, BinaryContent, BinaryStorageType, \
     ToolCallContent, ToolCallResultContent, ChatMessageRole
@@ -40,7 +40,7 @@ class GroqSettings(SamplingSettings):
     def as_dict(self):
         return copy(self.__dict__)
 
-    def set_stop_tokens(self, tokens: List[str], tokenizer: LLMTokenizer = None):
+    def set_stop_tokens(self, tokens: List[str]):
         pass
 
     def set_max_new_tokens(self, max_new_tokens: int):
@@ -151,7 +151,7 @@ class GroqChatAPI(ChatAPIProvider):
                                tools: Optional[List[FunctionTool]] = None) -> Generator[
         StreamingChatAPIResponse, None, None]:
         openai_tools = [tool.to_openai_tool() for tool in tools] if tools else None
-        print(json.dumps(messages, indent=4))
+
         # Prepare base request kwargs
         request_kwargs = {
             "model": self.model,

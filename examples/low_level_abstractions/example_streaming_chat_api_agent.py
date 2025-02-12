@@ -17,7 +17,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Local OpenAI like API, like vllm or llama-cpp-server
-#api = OpenAIChatAPI(api_key="token-abc123", base_url="http://127.0.0.1:8000/v1", model="unsloth/Meta-Llama-3.1-8B-Instruct-bnb-4bit")
+#api = OpenAIChatAPI(api_key="token-abc123", base_url="http://127.0.0.1:8080/v1", model="unsloth/Meta-Llama-3.1-8B-Instruct-bnb-4bit")
 #settings = OpenAISettings()
 
 # Official OpenAI API
@@ -29,19 +29,19 @@ load_dotenv()
 #settings = AnthropicSettings()
 
 # Groq API
-#api = GroqChatAPI(api_key=os.getenv("GROQ_API_KEY"), model="llama-3.3-70b-versatile")
-#settings = GroqSettings()
+api = GroqChatAPI(api_key=os.getenv("GROQ_API_KEY"), model="llama-3.3-70b-versatile")
+settings = GroqSettings()
 
 # Mistral API
-api = MistralChatAPI(api_key=os.getenv("MISTRAL_API_KEY"), model="mistral-small-latest")
-settings = MistralSettings()
+#api = MistralChatAPI(api_key=os.getenv("MISTRAL_API_KEY"), model="mistral-small-latest")
+#settings = MistralSettings()
 
 # Create the ChatAPIAgent
-agent = ChatToolAgent(chat_api=api, debug_output=True)
+agent = ChatToolAgent(chat_api=api)
 
 settings.temperature = 0.45
-settings.top_p = 0.85
-settings.debug_mode = True
+settings.top_p = 1.0
+
 # Define the tools
 tools = [calculator_function_tool, current_datetime_function_tool, get_weather_function_tool]
 tool_registry = ToolRegistry()
@@ -54,7 +54,7 @@ messages = [
   },
   {
     "role": "user",
-    "content": "Retrieve the date and time in the format: %Y-%m-%d %H:%M:%S."
+    "content": "Get the weather in London and New York. Calculate 420 x 420 and retrieve the date and time in the format: %Y-%m-%d %H:%M:%S."
   }
 ]
 

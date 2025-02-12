@@ -51,7 +51,7 @@ class SamplingSettings(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def set_stop_tokens(self, tokens: List[str], tokenizer):
+    def set_stop_tokens(self, tokens: List[str]):
         pass
 
     @abc.abstractmethod

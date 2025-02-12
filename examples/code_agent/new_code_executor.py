@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from contextlib import contextmanager
 from pydantic import BaseModel
 from ToolAgents import FunctionTool
-from ToolAgents.utilities import ChatHistory
+from ToolAgents.messages import ChatHistory
 from ToolAgents.utilities.documentation_generation import generate_type_definitions
 
 # System messages for LLM instruction
@@ -361,13 +361,13 @@ def run_llm_code_agent(agent, settings, chat_history: ChatHistory, user_input: s
     chat_history.add_user_message(user_input)
 
     result_gen = agent.get_streaming_response(
-        messages=chat_history.to_list(),
+        messages=chat_history.get_messages(),
         settings=settings)
 
     full_response = ""
     for tok in result_gen:
-        print(tok, end="", flush=True)
-        full_response += tok
+        print(tok.chunk, end="", flush=True)
+        full_response += tok.chunk
     print()
 
     while True:
@@ -376,16 +376,16 @@ def run_llm_code_agent(agent, settings, chat_history: ChatHistory, user_input: s
             output, has_error = asyncio.run(executor.run(full_response))
             print("Execution Output:")
             print(output)
-            chat_history.add_message("user", "Execution results:\n" + output)
+            chat_history.add_user_message("Execution results:\n" + output)
 
             print("Response: ", end="")
             result_gen = agent.get_streaming_response(
-                messages=chat_history.to_list(),
+                messages=chat_history.get_messages(),
                 settings=settings)
             full_response = ""
             for tok in result_gen:
-                print(tok, end="", flush=True)
-                full_response += tok
+                print(tok.chunk, end="", flush=True)
+                full_response += tok.chunk
             print()
         else:
             break

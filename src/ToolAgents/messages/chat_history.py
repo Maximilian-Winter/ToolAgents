@@ -1,10 +1,11 @@
 import json
+import uuid
 from typing import List, Dict, Any
 from datetime import datetime
 from pydantic import BaseModel, Field
 
-from ToolAgents.messages.chat_message import ChatMessageRole
-from chat_message import ChatMessage, TextContent, BinaryContent, ToolCallContent, ToolCallResultContent
+from ToolAgents.messages import ChatMessageRole
+from ToolAgents.messages import ChatMessage, TextContent, BinaryContent, ToolCallContent, ToolCallResultContent
 
 
 class ChatHistory(BaseModel):
@@ -29,6 +30,33 @@ class ChatHistory(BaseModel):
             message: ChatMessage object to add
         """
         self.messages.append(message)
+
+    def add_system_message(self, message: str) -> None:
+        """
+        Add a new system message to the chat history.
+
+        Args:
+            message: ChatMessage object to add
+        """
+        self.messages.append(ChatMessage(id=str(uuid.uuid4()), role=ChatMessageRole.System, content=[TextContent(content=message)], created_at=datetime.now(), updated_at=datetime.now()))
+
+    def add_user_message(self, message: str) -> None:
+        """
+        Add a new user message to the chat history.
+
+        Args:
+            message: ChatMessage object to add
+        """
+        self.messages.append(ChatMessage(id=str(uuid.uuid4()), role=ChatMessageRole.User, content=[TextContent(content=message)], created_at=datetime.now(), updated_at=datetime.now()))
+
+    def add_assistant_message(self, message: str) -> None:
+        """
+        Add a new assistant message to the chat history.
+
+        Args:
+            message: ChatMessage object to add
+        """
+        self.messages.append(ChatMessage(id=str(uuid.uuid4()), role=ChatMessageRole.Assistant, content=[TextContent(content=message)], created_at=datetime.now(), updated_at=datetime.now()))
 
     def add_messages(self, messages: List[ChatMessage]) -> None:
         """
