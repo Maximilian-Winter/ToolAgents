@@ -6,12 +6,12 @@ from typing import List, Dict, Optional, Any, Generator, Union
 import requests
 
 from ToolAgents import FunctionTool
-from ToolAgents.interfaces import LLMSamplingSettings, LLMTokenizer
+from ToolAgents.interfaces import SamplingSettings, LLMTokenizer
 from ToolAgents.interfaces.llm_provider import ChatAPIProvider
 from ToolAgents.provider.chat_api_provider.utilities import clean_history_messages
 
 
-class OpenRouterSettings(LLMSamplingSettings):
+class OpenRouterSettings(SamplingSettings):
     def __init__(self):
         self.temperature = 0.1
         self.top_p = 1.0

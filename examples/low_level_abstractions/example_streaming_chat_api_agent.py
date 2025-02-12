@@ -58,11 +58,9 @@ messages = [
   }
 ]
 
-
-response = agent.get_response(
+result = agent.get_streaming_response(
     messages=ChatMessage.from_dictionaries(messages),
     settings=settings, tool_registry=tool_registry)
 
-print(response.content[0].content)
-#print('\n'.join([msg.model_dump_json(indent=4) for msg in agent.last_messages_buffer]))
-
+for res in result:
+    print(res.chunk, end='', flush=True)

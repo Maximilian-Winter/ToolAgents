@@ -2,23 +2,30 @@ import dataclasses
 import datetime
 import json
 import uuid
+from copy import copy
 from typing import List, Optional, Dict, Generator, Any
 
 from groq import Groq
 
 from ToolAgents import FunctionTool
-from ToolAgents.interfaces import LLMSamplingSettings, LLMTokenizer
+from ToolAgents.interfaces import SamplingSettings, LLMTokenizer
 from ToolAgents.interfaces.llm_provider import ChatAPIProvider, StreamingChatAPIResponse
 from ToolAgents.messages.chat_message import ChatMessage, TextContent, BinaryContent, BinaryStorageType, \
     ToolCallContent, ToolCallResultContent, ChatMessageRole
 from ToolAgents.provider.chat_api_provider.utilities import clean_history_messages
 
 
-class GroqSettings(LLMSamplingSettings):
+class GroqSettings(SamplingSettings):
+
     def __init__(self):
         self.temperature = 0.4
-        self.top_p = 1.0
+        self.top_p = 1
         self.max_tokens = 4096
+        self.response_format = None
+        self.request_kwargs = None
+        self.extra_body = None
+        self.tool_choice = "auto"
+        self.debug_mode = False
 
     def save_to_file(self, settings_file: str):
         with open(settings_file, 'w') as f:
@@ -31,7 +38,7 @@ class GroqSettings(LLMSamplingSettings):
             setattr(self, key, value)
 
     def as_dict(self):
-        return dataclasses.asdict(self)
+        return copy(self.__dict__)
 
     def set_stop_tokens(self, tokens: List[str], tokenizer: LLMTokenizer = None):
         pass
@@ -58,6 +65,18 @@ class GroqSettings(LLMSamplingSettings):
         self.temperature = 1.0
         self.top_p = 1.0
 
+    def set_response_format(self, response_format: dict[str, Any]):
+        self.response_format = response_format
+
+    def set_extra_body(self, extra_body: dict[str, Any]):
+        self.extra_body = extra_body
+
+    def set_extra_request_kwargs(self, **kwargs):
+        self.request_kwargs = kwargs
+
+    def set_tool_choice(self, tool_choice: str):
+        self.tool_choice = tool_choice
+
 class GroqChatAPI(ChatAPIProvider):
     def __init__(self, api_key: str, model: str):
         self.client = Groq(api_key=api_key)
@@ -66,25 +85,51 @@ class GroqChatAPI(ChatAPIProvider):
 
     def get_response(self, messages: List[Dict[str, str]], settings=None,
                      tools: Optional[List[FunctionTool]] = None) -> ChatMessage:
-        groq_tools = [tool.to_openai_tool() for tool in tools] if tools else None
-        response = self.client.chat.completions.create(
-            model=self.model,
-            messages=clean_history_messages(messages),
-            max_tokens=self.settings.max_tokens if settings is None else settings.max_tokens,
-            temperature=self.settings.temperature if settings is None else settings.temperature,
-            top_p=self.settings.top_p if settings is None else settings.top_p,
-            tools=groq_tools,
-            tool_choice="auto" if tools else None
-        )
+        openai_tools = [tool.to_openai_tool() for tool in tools] if tools else None
+
+        # Prepare base request kwargs
+        request_kwargs = {
+            "model": self.model,
+            "messages": clean_history_messages(messages),
+            "max_tokens": self.settings.max_tokens if settings is None else settings.max_tokens,
+            "temperature": self.settings.temperature if settings is None else settings.temperature,
+            "top_p": self.settings.top_p if settings is None else settings.top_p,
+        }
+
+        # Add tools if present
+        if openai_tools:
+            request_kwargs.update({
+                "tools": openai_tools,
+                "tool_choice": "auto"
+            })
+
+        # Add response format if present
+        if (settings is None and self.settings.response_format) or (settings and settings.response_format):
+            response_format = self.settings.response_format if settings is None else settings.response_format
+            request_kwargs["response_format"] = response_format
+
+        # Add extra_body if present
+        if (settings is None and self.settings.extra_body) or (settings and settings.extra_body):
+            extra_body = self.settings.extra_body if settings is None else settings.extra_body
+            request_kwargs["extra_body"] = extra_body
+
+        # Add extra request kwargs if present
+        if (settings is None and self.settings.request_kwargs) or (settings and settings.request_kwargs):
+            extra_kwargs = self.settings.request_kwargs if settings is None else settings.request_kwargs
+            request_kwargs.update(extra_kwargs)
+
+        response = self.client.chat.completions.create(**request_kwargs)
 
         if response.choices[0].message.content is not None:
             content = [TextContent(content=response.choices[0].message.content)]
         else:
             content = []
+
         tool_calls = response.choices[0].message.tool_calls
 
         additional_information = response.model_dump()
         additional_information.pop("choices")
+
         if tools and tool_calls:
             for tool_call in tool_calls:
                 try:
@@ -103,22 +148,48 @@ class GroqChatAPI(ChatAPIProvider):
                            additional_information=additional_information)
 
     def get_streaming_response(self, messages: List[Dict[str, str]], settings=None,
-                               tools: Optional[List[FunctionTool]] = None) -> Generator[StreamingChatAPIResponse, None, None]:
-        groq_tools = [tool.to_openai_tool() for tool in tools] if tools else None
-        stream = self.client.chat.completions.create(
-            model=self.model,
-            messages=clean_history_messages(messages),
-            max_tokens=self.settings.max_tokens if settings is None else settings.max_tokens,
-            temperature=self.settings.temperature if settings is None else settings.temperature,
-            top_p=self.settings.top_p if settings is None else settings.top_p,
-            tools=groq_tools,
-            tool_choice="auto" if tools else None,
-            stream=True
-        )
+                               tools: Optional[List[FunctionTool]] = None) -> Generator[
+        StreamingChatAPIResponse, None, None]:
+        openai_tools = [tool.to_openai_tool() for tool in tools] if tools else None
+        print(json.dumps(messages, indent=4))
+        # Prepare base request kwargs
+        request_kwargs = {
+            "model": self.model,
+            "messages": clean_history_messages(messages),
+            "max_tokens": self.settings.max_tokens if settings is None else settings.max_tokens,
+            "stream": True,
+            "temperature": self.settings.temperature if settings is None else settings.temperature,
+            "top_p": self.settings.top_p if settings is None else settings.top_p,
+        }
+
+        # Add tools if present
+        if openai_tools:
+            request_kwargs.update({
+                "tools": openai_tools,
+                "tool_choice": self.settings.tool_choice if settings is None else settings.tool_choice,
+            })
+
+        # Add response format if present
+        if (settings is None and self.settings.response_format) or (settings and settings.response_format):
+            response_format = self.settings.response_format if settings is None else settings.response_format
+            request_kwargs["response_format"] = response_format
+
+        # Add extra_body if present
+        if (settings is None and self.settings.extra_body) or (settings and settings.extra_body):
+            extra_body = self.settings.extra_body if settings is None else settings.extra_body
+            request_kwargs["extra_body"] = extra_body
+
+        # Add extra request kwargs if present
+        if (settings is None and self.settings.request_kwargs) or (settings and settings.request_kwargs):
+            extra_kwargs = self.settings.request_kwargs if settings is None else settings.request_kwargs
+            request_kwargs.update(extra_kwargs)
+
+        stream = self.client.chat.completions.create(**request_kwargs)
 
         current_content = ""
         current_tool_calls = []
         alt_index = 0
+
         for chunk in stream:
             delta = chunk.choices[0].delta
 
@@ -156,6 +227,7 @@ class GroqChatAPI(ChatAPIProvider):
                         finished_chat_message=None
                     )
                     current_tool_calls[-1]["yielded"] = True
+
             if chunk.choices[0].finish_reason is not None:
                 contents = [TextContent(content=current_content)]
                 has_tool_call = False
@@ -173,8 +245,7 @@ class GroqChatAPI(ChatAPIProvider):
                                 tool_call_arguments=arguments
                             )
                         )
-                additional_data = chunk.__dict__
-                additional_data.pop("choices")
+                additional_data = chunk.x_groq.model_dump()
                 finished_message = ChatMessage(
                     id=str(uuid.uuid4()),
                     role=ChatMessageRole.Assistant,
@@ -184,7 +255,7 @@ class GroqChatAPI(ChatAPIProvider):
                     additional_information=additional_data
                 )
                 yield StreamingChatAPIResponse(
-                    chunk=current_content,
+                    chunk="",
                     is_tool_call=has_tool_call,
                     finished=True,
                     finished_chat_message=finished_message
@@ -202,10 +273,7 @@ class GroqChatAPI(ChatAPIProvider):
             tool_calls = []
             for content in message.content:
                 if isinstance(content, TextContent):
-                    if role == ChatMessageRole.System:
-                        new_content.append(content.content)
-                    else:
-                        new_content.append({"type": "text", "text": content.content})
+                    new_content.append({"type": "text", "text": content.content})
                 elif isinstance(content, BinaryContent):
                     if "image" in content.mime_type and content.storage_type == BinaryStorageType.Url:
                         new_content.append({"type": "image_url", "image_url": {
@@ -233,14 +301,20 @@ class GroqChatAPI(ChatAPIProvider):
                     })
             if len(new_content) > 0:
                 if len(tool_calls) > 0:
-                    converted_messages.append({"role": role, "content": new_content, "tool_calls": tool_calls})
+                    if len(new_content) > 0:
+                        converted_messages.append(
+                            {"role": role, "content": new_content[0]["text"], "tool_calls": tool_calls})
+                    else:
+                        converted_messages.append(
+                            {"role": role, "content": "", "tool_calls": tool_calls})
                 else:
-                    if role == ChatMessageRole.System:
-                        converted_messages.append({"role": role, "content": '\n'.join(new_content)})
+                    if len(new_content) == 1 and new_content[0]["type"] == "text":
+                        converted_messages.append({"role": role, "content": new_content[0]["text"]})
                     else:
                         converted_messages.append({"role": role, "content": new_content})
             elif len(tool_calls) > 0:
                 converted_messages.append({"role": role, "content": "", "tool_calls": tool_calls})
+
         return converted_messages
 
     def get_default_settings(self):

@@ -37,3 +37,4 @@
 /examples/gradio/advanced_agent/agent_data/
 /examples/gradio/advanced_agent/__pycache__
 /examples/low_level_abstractions/__pycache__
+/src/ToolAgents/messages/chats.db

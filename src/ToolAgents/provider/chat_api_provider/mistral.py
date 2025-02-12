@@ -12,18 +12,24 @@ from mistralai import Tool, Function
 from mistralai import Mistral
 
 from ToolAgents import FunctionTool
-from ToolAgents.interfaces import LLMTokenizer, LLMSamplingSettings
+from ToolAgents.interfaces import LLMTokenizer, SamplingSettings
 from ToolAgents.interfaces.llm_provider import ChatAPIProvider, StreamingChatAPIResponse
 from ToolAgents.messages.chat_message import ChatMessage, TextContent, ToolCallContent, ChatMessageRole, \
     ToolCallResultContent, BinaryStorageType, BinaryContent
 from ToolAgents.provider.chat_api_provider.utilities import clean_history_messages
 
 
-class MistralSettings(LLMSamplingSettings):
+class MistralSettings(SamplingSettings):
+
     def __init__(self):
         self.temperature = 0.4
         self.top_p = 1
-        self.max_tokens = 8192
+        self.max_tokens = 4096
+        self.response_format = None
+        self.request_kwargs = None
+        self.extra_body = None
+        self.tool_choice = "auto"
+        self.debug_mode = False
 
     def save_to_file(self, settings_file: str):
         with open(settings_file, 'w') as f:
@@ -36,7 +42,7 @@ class MistralSettings(LLMSamplingSettings):
             setattr(self, key, value)
 
     def as_dict(self):
-        return copy.copy(self.__dict__)
+        return copy(self.__dict__)
 
     def set_stop_tokens(self, tokens: List[str], tokenizer: LLMTokenizer = None):
         pass
@@ -63,9 +69,20 @@ class MistralSettings(LLMSamplingSettings):
         self.temperature = 1.0
         self.top_p = 1.0
 
+    def set_response_format(self, response_format: dict[str, Any]):
+        self.response_format = response_format
+
+    def set_extra_body(self, extra_body: dict[str, Any]):
+        self.extra_body = extra_body
+
+    def set_extra_request_kwargs(self, **kwargs):
+        self.request_kwargs = kwargs
+
+    def set_tool_choice(self, tool_choice: str):
+        self.tool_choice = tool_choice
+
+
 class MistralChatAPI(ChatAPIProvider):
-
-
     def __init__(self, api_key: str, model: str):
         self.client = Mistral(api_key=api_key)
         self.model = model
@@ -74,29 +91,42 @@ class MistralChatAPI(ChatAPIProvider):
     def get_response(self, messages: List[Dict[str, str]], settings=None,
                      tools: Optional[List[FunctionTool]] = None) -> ChatMessage:
         openai_tools = [tool.to_openai_tool() for tool in tools] if tools else None
-        if openai_tools is None:
-            response = self.client.chat.complete(
-                model=self.model,
-                messages=clean_history_messages(messages),
-                max_tokens=self.settings.max_tokens,
-                temperature=self.settings.temperature if settings is None else settings.temperature,
-                top_p=self.settings.top_p if settings is None else settings.top_p
-            )
-        else:
-            response = self.client.chat.complete(
-                model=self.model,
-                messages=clean_history_messages(messages),
-                max_tokens=self.settings.max_tokens,
-                temperature=self.settings.temperature if settings is None else settings.temperature,
-                top_p=self.settings.top_p if settings is None else settings.top_p,
-                tools=openai_tools,
-                tool_choice="auto"
-            )
+
+        # Prepare base request kwargs
+        request_kwargs = {
+            "model": self.model,
+            "messages": clean_history_messages(messages),
+            "max_tokens": self.settings.max_tokens if settings is None else settings.max_tokens,
+            "temperature": self.settings.temperature if settings is None else settings.temperature,
+            "top_p": self.settings.top_p if settings is None else settings.top_p,
+        }
+
+        # Add tools if present
+        if openai_tools:
+            request_kwargs.update({
+                "tools": openai_tools,
+                "tool_choice": self.settings.tool_choice if settings is None else settings.tool_choice
+            })
+
+        # Add response format if present
+        if (settings is None and self.settings.response_format) or (settings and settings.response_format):
+            response_format = self.settings.response_format if settings is None else settings.response_format
+            request_kwargs["response_format"] = response_format
+
+
+        # Add extra request kwargs if present
+        if (settings is None and self.settings.request_kwargs) or (settings and settings.request_kwargs):
+            extra_kwargs = self.settings.request_kwargs if settings is None else settings.request_kwargs
+            request_kwargs.update(extra_kwargs)
+
+        response = self.client.chat.complete(**request_kwargs)
+
         content = [TextContent(content=response.choices[0].message.content)]
         tool_calls = response.choices[0].message.tool_calls
 
         additional_information = response.model_dump()
         additional_information.pop("choices")
+
         if tools and tool_calls:
             for tool_call in tool_calls:
                 try:
@@ -115,32 +145,44 @@ class MistralChatAPI(ChatAPIProvider):
                            additional_information=additional_information)
 
     def get_streaming_response(self, messages: List[Dict[str, str]], settings=None,
-                               tools: Optional[List[FunctionTool]] = None) -> Generator[StreamingChatAPIResponse, None, None]:
+                               tools: Optional[List[FunctionTool]] = None) -> Generator[
+        StreamingChatAPIResponse, None, None]:
         openai_tools = [tool.to_openai_tool() for tool in tools] if tools else None
 
-        if openai_tools is None:
-            stream = self.client.chat.stream(
-                model=self.model,
-                messages=clean_history_messages(messages),
-                max_tokens=self.settings.max_tokens,
-                stream=True,
-                temperature=self.settings.temperature if settings is None else settings.temperature,
-                top_p=self.settings.top_p if settings is None else settings.top_p
-            )
-        else:
-            stream = self.client.chat.stream(
-                model=self.model,
-                messages=clean_history_messages(messages),
-                max_tokens=self.settings.max_tokens,
-                stream=True,
-                temperature=self.settings.temperature if settings is None else settings.temperature,
-                top_p=self.settings.top_p if settings is None else settings.top_p,
-                tools=openai_tools,
-                tool_choice="auto"
-            )
+        # Prepare base request kwargs
+        request_kwargs = {
+            "model": self.model,
+            "messages": clean_history_messages(messages),
+            "max_tokens": self.settings.max_tokens if settings is None else settings.max_tokens,
+            "stream": True,
+            "temperature": self.settings.temperature if settings is None else settings.temperature,
+            "top_p": self.settings.top_p if settings is None else settings.top_p,
+        }
+
+        # Add tools if present
+        if openai_tools:
+            request_kwargs.update({
+                "tools": openai_tools,
+                "tool_choice": self.settings.tool_choice if settings is None else settings.tool_choice
+            })
+
+        # Add response format if present
+        if (settings is None and self.settings.response_format) or (settings and settings.response_format):
+            response_format = self.settings.response_format if settings is None else settings.response_format
+            request_kwargs["response_format"] = response_format
+
+
+        # Add extra request kwargs if present
+        if (settings is None and self.settings.request_kwargs) or (settings and settings.request_kwargs):
+            extra_kwargs = self.settings.request_kwargs if settings is None else settings.request_kwargs
+            request_kwargs.update(extra_kwargs)
+
+        stream = self.client.chat.stream(**request_kwargs)
+
         current_content = ""
         current_tool_calls = []
         alt_index = 0
+
         for chunk in stream:
             delta = chunk.data.choices[0].delta
 
@@ -178,6 +220,7 @@ class MistralChatAPI(ChatAPIProvider):
                         finished_chat_message=None
                     )
                     current_tool_calls[-1]["yielded"] = True
+
             if chunk.data.choices[0].finish_reason is not None:
                 contents = [TextContent(content=current_content)]
                 has_tool_call = False
@@ -207,16 +250,12 @@ class MistralChatAPI(ChatAPIProvider):
                 )
 
                 yield StreamingChatAPIResponse(
-                    chunk=current_content,
+                    chunk="",
                     is_tool_call=has_tool_call,
                     finished=True,
                     finished_chat_message=finished_message,
-
                 )
                 break
-
-        # if current_content:
-        #     yield current_content
 
     def convert_chat_messages(self, messages: List[ChatMessage]) -> List[Dict[str, Any]]:
         converted_messages = []

@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from typing import Optional, Dict, List, Any, Tuple, Generator
 
 from ToolAgents import ToolRegistry
-from ToolAgents.interfaces import LLMSamplingSettings
+from ToolAgents.interfaces import SamplingSettings
 from ToolAgents.interfaces.llm_provider import StreamingChatAPIResponse
 from ToolAgents.messages.chat_message import ChatMessage
 
@@ -14,7 +14,7 @@ class BaseToolAgent(ABC):
         self.last_messages_buffer = []
 
     @abstractmethod
-    def get_default_settings(self) -> LLMSamplingSettings:
+    def get_default_settings(self) -> SamplingSettings:
         pass
 
     @abstractmethod

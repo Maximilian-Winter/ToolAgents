@@ -66,7 +66,8 @@ class MessageTemplate:
             template_string = file.read()
         return cls(template_string=template_string)
 
-    def _remove_empty_placeholders(self, text):
+    @staticmethod
+    def _remove_empty_placeholders(text):
         """
         Remove lines that contain only the empty placeholder.
 
@@ -123,7 +124,7 @@ class MessageTemplate:
         def replace_placeholder(match):
             placeholder = match.group(1)
             k = cleaned_fields.get(placeholder, None)
-            if k != None:
+            if k is not None:
                 return cleaned_fields.get(placeholder, match.group(0))
             return "__EMPTY_TEMPLATE_FIELD__"
 

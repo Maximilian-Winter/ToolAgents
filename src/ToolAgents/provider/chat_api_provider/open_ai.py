@@ -8,22 +8,23 @@ from typing import List, Dict, Optional, Any, Generator
 from openai import OpenAI
 
 from ToolAgents import FunctionTool
-from ToolAgents.interfaces import LLMTokenizer, LLMSamplingSettings
+from ToolAgents.interfaces import LLMTokenizer, SamplingSettings
 from ToolAgents.interfaces.llm_provider import ChatAPIProvider, StreamingChatAPIResponse
 from ToolAgents.messages.chat_message import ChatMessage, ChatMessageRole, TextContent, ToolCallContent, ToolCallResultContent, \
     BinaryContent, BinaryStorageType
 from ToolAgents.provider.chat_api_provider.utilities import clean_history_messages
 
 
-class OpenAISettings(LLMSamplingSettings):
+class OpenAISettings(SamplingSettings):
     def __init__(self):
         self.temperature = 0.4
         self.top_p = 1
-        self.max_tokens = 8192
+        self.max_tokens = 4096
         self.response_format = None
         self.request_kwargs = None
         self.extra_body = None
         self.tool_choice = "auto"
+        self.debug_mode = False
 
     def save_to_file(self, settings_file: str):
         with open(settings_file, 'w') as f:
@@ -254,7 +255,7 @@ class OpenAIChatAPI(ChatAPIProvider):
                     additional_information=additional_data
                 )
                 yield StreamingChatAPIResponse(
-                    chunk=current_content,
+                    chunk="",
                     is_tool_call=has_tool_call,
                     finished=True,
                     finished_chat_message=finished_message

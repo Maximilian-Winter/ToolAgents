@@ -3,17 +3,20 @@ from typing import List, Dict, Optional, Generator, Any, Union
 
 from ToolAgents import FunctionTool, ToolRegistry
 from ToolAgents.messages.chat_message import ChatMessage
+from pydantic import BaseModel
+from typing import Dict, Optional, Any, Union
 
-class StreamingChatAPIResponse:
+from ToolAgents.messages.chat_message import ChatMessage
+
+class StreamingChatAPIResponse(BaseModel):
     """
     Represents a streaming chat API response.
     """
-    def __init__(self, chunk: str, is_tool_call: bool = False, partial_tool_call: Dict[str, Any] = None, finished: bool = False, finished_chat_message: Optional[ChatMessage] = None):
-        self.chunk = chunk
-        self.is_tool_call = is_tool_call
-        self.partial_tool_call = partial_tool_call
-        self.finished = finished
-        self.finished_chat_message = finished_chat_message
+    chunk: str
+    is_tool_call: bool = False
+    partial_tool_call: Optional[Dict[str, Any]] = None
+    finished: bool = False
+    finished_chat_message: Optional[ChatMessage] = None
 
     def get_chunk(self) -> str:
         return self.chunk
@@ -30,7 +33,10 @@ class StreamingChatAPIResponse:
     def get_finished_chat_message(self) -> Union[ChatMessage, None]:
         return self.finished_chat_message
 
-class LLMSamplingSettings(abc.ABC):
+    class Config:
+        arbitrary_types_allowed = True  # To allow ChatMessage custom type
+
+class SamplingSettings(abc.ABC):
 
     @abc.abstractmethod
     def save_to_file(self, settings_file: str):

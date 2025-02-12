@@ -9,15 +9,14 @@ from anthropic import Anthropic
 from anthropic.types import ToolUseBlock, TextBlock
 
 from ToolAgents import FunctionTool
-from ToolAgents.interfaces import LLMTokenizer
-from ToolAgents.interfaces.llm_provider import ChatAPIProvider, LLMSamplingSettings, StreamingChatAPIResponse
+from ToolAgents.interfaces.llm_provider import ChatAPIProvider, SamplingSettings, StreamingChatAPIResponse
 from ToolAgents.messages.chat_message import ChatMessage, ToolCallContent, TextContent, ChatMessageRole, BinaryContent, \
     BinaryStorageType, ToolCallResultContent
 from ToolAgents.provider.chat_api_provider.utilities import clean_history_messages
 
 
 
-class AnthropicSettings(LLMSamplingSettings):
+class AnthropicSettings(SamplingSettings):
 
     def __init__(self):
         self.temperature = 1.0

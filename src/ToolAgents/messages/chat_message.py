@@ -28,7 +28,7 @@ class ContentType(str, Enum):
 
 class BinaryStorageType(str, Enum):
     """
-    Enum representing the storage method used for binary content.
+    Enum representing the storage method used for binary content. Url for links and Base64 for raw file data.
     """
     Url = "url"
     Base64 = "base64"
@@ -38,10 +38,10 @@ class TextContent(BaseModel):
     Model for text-based content.
 
     Attributes:
-        content_type: Always 'text' for text content.
+        type: Always 'text' for text content.
         content: The actual text content.
     """
-    content_type: ContentType = Field(
+    type: ContentType = Field(
         default=ContentType.Text,
         description="The content type, always 'text' for TextContent."
     )
@@ -53,13 +53,13 @@ class BinaryContent(BaseModel):
     Model for binary content which is stored using different storage methods.
 
     Attributes:
-        content_type: Always 'binary' for binary content.
+        type: Always 'binary' for binary content.
         storage_type: The binary content, base64 encoded if storage_type is 'base64'. Or url string if storage_type is 'url'.
         mime_type: The MIME type of the binary content.
         content: The actual binary data (typically encoded as base64 if storage_type is 'base64').
         additional_information: Extra metadata or information related to the binary content.
     """
-    content_type: ContentType = Field(
+    type: ContentType = Field(
         default=ContentType.Binary,
         description="The content type, always 'binary' for BinaryContent."
     )
@@ -80,12 +80,12 @@ class ToolCallContent(BaseModel):
     Model for representing a tool call within a chat message.
 
     Attributes:
-        content_type: Always 'tool_call' for a tool call.
+        type: Always 'tool_call' for a tool call.
         tool_call_id: Unique identifier for the tool call.
         tool_call_name: The name of the tool to be invoked.
         tool_call_arguments: A dictionary of arguments to be passed to the tool.
     """
-    content_type: ContentType = Field(
+    type: ContentType = Field(
         default=ContentType.ToolCall,
         description="The content type, always 'tool_call' for ToolCallContent."
     )
@@ -102,13 +102,13 @@ class ToolCallResultContent(BaseModel):
     Model for representing the result of a tool call.
 
     Attributes:
-        content_type: Always 'tool_call_result' for a tool call result.
+        type: Always 'tool_call_result' for a tool call result.
         tool_call_result_id: Unique identifier for the tool call result.
         tool_call_id: Unique identifier for the corresponding tool call.
         tool_call_name: The name of the tool that produced the result.
         tool_call_result: The result data from the tool call.
     """
-    content_type: ContentType = Field(
+    type: ContentType = Field(
         default=ContentType.ToolCallResult,
         description="The content type, always 'tool_call_result' for ToolCallResult."
     )
@@ -156,7 +156,12 @@ class ChatMessage(BaseModel):
     )
 
     @staticmethod
-    def convert_list_of_dicts(messages: List[Dict[str, Any]]) -> List['ChatMessage']:
+    def from_dictionaries(messages: List[Dict[str, str]]) -> List['ChatMessage']:
+        """
+        To convert a list of dictionaries into a list of ChatMessage objects. Only works with simple messages, that have a role string and content string.
+        :param messages: The messages to convert.
+        :return: Returns a list of ChatMessage objects.
+        """
         converted_messages = []
         for message in messages:
             converted_messages.append(ChatMessage(id=str(uuid.uuid4()), role=ChatMessageRole(message['role']), content=[TextContent(content=message['content'])],
@@ -164,13 +169,37 @@ class ChatMessage(BaseModel):
 
         return converted_messages
 
+    @staticmethod
+    def from_dict(data: Dict[str, Any]) -> 'ChatMessage':
+        """
+        To convert a dictionary into a ChatMessage object.
+        :param data: The data to convert.
+        :return: A ChatMessage object.
+        """
+        return ChatMessage(**data)
+
+    def to_dict(self) -> Dict[str, Any]:
+        """
+        Converts a ChatMessage object to a dictionary.
+        :return: The data as a dictionary.
+        """
+        return self.model_dump()
+
     def contains_tool_call(self) -> bool:
+        """
+        Returns True if the chat message contains a tool call.
+        :return: If the chat message contains a tool call.
+        """
         for content in self.content:
-            if content.content_type == ContentType.ToolCall:
+            if content.type == ContentType.ToolCall:
                 return True
         return False
 
     def get_tool_calls(self) -> List[ToolCallContent]:
+        """
+        Returns a list of ToolCallContent objects.
+        :return: Returns a list of ToolCallContent objects.
+        """
         result: List[ToolCallContent] = []
         for content in self.content:
             if isinstance(content, ToolCallContent):
@@ -183,11 +212,11 @@ if __name__ == "__main__":
         "role": "assistant",
         "content": [
           {
-            "content_type": "text",
+            "type": "text",
             "content": "I'll help you perform all these tasks. Let me break this down into multiple function calls:\n\n1. First, let's get the weather for all three locations in celsius:"
           },
           {
-            "content_type": "tool_call",
+            "type": "tool_call",
             "tool_call_id": "toolu_01WCpS9wxURWdbtUwU3UPvqR",
             "tool_call_name": "get_current_weather",
             "tool_call_arguments": {

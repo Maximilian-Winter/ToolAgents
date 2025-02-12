@@ -1,11 +1,10 @@
 import datetime
-import json
 import uuid
-from typing import Optional, Dict, List, Any, Tuple
+from typing import Optional, List, Any, Generator
 from ToolAgents import ToolRegistry
 from ToolAgents.interfaces.base_llm_agent import BaseToolAgent
-from ToolAgents.interfaces.llm_tool_call import generate_id
-from ToolAgents.interfaces.llm_provider import ChatAPIProvider
+
+from ToolAgents.interfaces.llm_provider import ChatAPIProvider, StreamingChatAPIResponse
 from ToolAgents.messages.chat_message import ChatMessage, ChatMessageRole, ToolCallResultContent
 
 
@@ -65,7 +64,7 @@ class ChatToolAgent(BaseToolAgent):
             tool_registry: ToolRegistry = None,
             settings: Optional[Any] = None,
             reset_last_messages_buffer: bool = True,
-    ):
+    ) -> Generator[StreamingChatAPIResponse, None, None]:
         """
         Performs a single streaming step of interaction with the chat API,
         yielding chunks and whether they contain tool calls.
@@ -89,7 +88,7 @@ class ChatToolAgent(BaseToolAgent):
         tools = [tool for tool in tool_registry.tools.values()]
 
         if self.debug_output:
-            print("Input messages:", json.dumps(messages, indent=2))
+            print("Input messages:", '\n'.join([msg.model_dump_json(indent=4, exclude_none=True) for msg in messages]))
 
         for chunk in self.chat_api.get_streaming_response(self.chat_api.convert_chat_messages(messages), settings=settings, tools=tools):
             yield chunk
@@ -164,7 +163,7 @@ class ChatToolAgent(BaseToolAgent):
             tool_registry: ToolRegistry = None,
             settings: Optional[Any] = None,
             reset_last_messages_buffer: bool = True,
-    ):
+    ) -> Generator[StreamingChatAPIResponse, None, None]:
         """
         Gets a streaming response from the chat API, handling any tool calls.
 
@@ -187,10 +186,8 @@ class ChatToolAgent(BaseToolAgent):
             self.last_messages_buffer = []
 
         self.tool_registry = tool_registry
-        tools = [tool for tool in tool_registry.tools.values()]
 
         finished_message = None
-
         for chunk in self.stream_step(messages=messages, tool_registry=tool_registry, settings=settings, reset_last_messages_buffer=True):
             if chunk.get_finished():
                 finished_message = chunk.get_finished_chat_message()
@@ -198,7 +195,6 @@ class ChatToolAgent(BaseToolAgent):
         if finished_message.contains_tool_call():
             self.last_response_has_tool_calls = True
             self.handle_function_calling_response(finished_message, messages)
-            yield "\n"
             yield from self.get_streaming_response(
                 messages=messages,
                 tool_registry=tool_registry,

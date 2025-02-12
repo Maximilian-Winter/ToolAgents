@@ -19,7 +19,7 @@ from sentence_transformers import SentenceTransformer
 import numpy as np
 from torch import Tensor
 
-from ToolAgents.interfaces import LLMSamplingSettings
+from ToolAgents.interfaces import SamplingSettings
 from ToolAgents.interfaces.base_llm_agent import BaseToolAgent
 
 
@@ -93,7 +93,7 @@ class SummarizationExtractPatternStrategy(ExtractPatternStrategy):
     to summarize and extract a pattern from multiple documents.
     """
 
-    def __init__(self, agent: BaseToolAgent, summarizer_settings: LLMSamplingSettings,
+    def __init__(self, agent: BaseToolAgent, summarizer_settings: SamplingSettings,
                  system_prompt_and_prefix: tuple[str, str] = None, pattern_type: str = "chat",
                  debug_mode: bool = False):
         """
