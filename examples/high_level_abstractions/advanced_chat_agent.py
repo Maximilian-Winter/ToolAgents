@@ -1,14 +1,13 @@
 # This show an advanced agent that will handle all the things like chat history by itself, also contains optional memory and app state functionality.
-from ToolAgents.agent_memory import semantic_memory_nomic_text_gpu_config, SummarizationExtractPatternStrategy
-from ToolAgents.agents import AdvancedAgent
+from ToolAgents.agent_memory.semantic_memory.memory import semantic_memory_nomic_text_gpu_config, SummarizationExtractPatternStrategy
+from ToolAgents.agents.advanced_agent import AdvancedAgent
 from ToolAgents.agents.advanced_agent import AgentConfig
-from ToolAgents.agents.hosted_tool_agents import MistralAgent
+from ToolAgents.agents import ChatToolAgent
+from ToolAgents.provider import OpenAIChatAPI
 
-from ToolAgents.provider import LlamaCppServerProvider
+provider = OpenAIChatAPI(api_key="token-abc123", base_url="http://127.0.0.1:8080/v1", model="unsloth/Meta-Llama-3.1-8B-Instruct-bnb-4bit")
 
-provider = LlamaCppServerProvider(server_address="http://127.0.0.1:8080/")
-
-agent = MistralAgent(provider=provider, debug_output=True)
+agent = ChatToolAgent(chat_api=provider)
 
 settings = provider.get_default_settings()
 settings.neutralize_all_samplers()

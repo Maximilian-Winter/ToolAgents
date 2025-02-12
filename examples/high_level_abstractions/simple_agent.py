@@ -1,12 +1,12 @@
 # This show an advanced agent that will handle all the things like chat history by itself.
 
 from ToolAgents.agents import AdvancedAgent
-from ToolAgents.agents.hosted_tool_agents import MistralAgent
-from ToolAgents.provider import LlamaCppServerProvider
+from ToolAgents.agents import ChatToolAgent
+from ToolAgents.provider import OpenAIChatAPI
 
-provider = LlamaCppServerProvider(server_address="http://127.0.0.1:8080/")
+provider = OpenAIChatAPI(api_key="token-abc123", base_url="http://127.0.0.1:8080/v1", model="unsloth/Meta-Llama-3.1-8B-Instruct-bnb-4bit")
 
-agent = MistralAgent(provider=provider)
+agent = ChatToolAgent(chat_api=provider)
 
 settings = provider.get_default_settings()
 settings.neutralize_all_samplers()

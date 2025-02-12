@@ -5,8 +5,7 @@ from typing import Any
 
 from ToolAgents import ToolRegistry, FunctionTool
 from ToolAgents.agent_memory.context_app_state import ContextAppState
-from ToolAgents.agent_memory.semantic_memory.memory import SemanticMemory, SemanticMemoryConfig, \
-    SummarizationExtractPatternStrategy
+
 from ToolAgents.provider.llm_provider import SamplingSettings
 from ToolAgents.agents.base_llm_agent import BaseToolAgent
 from ToolAgents.messages import ChatHistory, ChatMessage
@@ -35,6 +34,7 @@ class AgentConfig:
     use_semantic_chat_history_memory: bool = False
     save_on_creation: bool = False
     summarize_chat_pairs_before_storing: bool = False
+    from ToolAgents.agent_memory.semantic_memory.memory import SemanticMemoryConfig
     semantic_chat_history_config: SemanticMemoryConfig = dataclasses.field(default_factory=SemanticMemoryConfig)
 
 
@@ -124,6 +124,7 @@ class AdvancedAgent:
                 os.makedirs(self.save_dir)
             # Set the directory where semantic memory will persist
             agent_config.semantic_chat_history_config.persist_directory = self.semantic_memory_path
+            from ToolAgents.agent_memory.semantic_memory.memory import SemanticMemory
             self.semantic_memory = SemanticMemory(agent_config.semantic_chat_history_config)
 
         # If a tool registry and initial app state exist, and edit tools are enabled,
@@ -337,11 +338,10 @@ class AdvancedAgent:
         user = chat_input
         # Start with a system message; include app state if available
         if not self.has_app_state:
-            chat_history = [{"role": "system", "content": self.system_message}]
+            chat_history = [ChatMessage.create_system_message(self.system_message)]
         else:
             # Format system message with app state if needed
-            chat_history = [{"role": "system",
-                             "content": self.system_message.format(app_state=self.app_state.get_app_state_string())}]
+            chat_history = [ChatMessage.create_system_message(self.system_message.format(app_state=self.app_state.get_app_state_string()))]
         # Add any existing chat history beyond the current index
         chat_history.extend(self.chat_history.get_messages()[self.chat_history_index:])
 
@@ -356,7 +356,7 @@ class AdvancedAgent:
                 user = additional_context.strip() + f"\n\n--- End Of Additional Context ---\n\nLatest User Message:{user}"
 
         # Append the (possibly enriched) user message to the chat history
-        chat_history.append({"role": "user", "content": user})
+        chat_history.append(ChatMessage.create_user_message(user))
         return chat_history
 
     def _after_run(self, chat_input: str):
@@ -416,6 +416,7 @@ class AdvancedAgent:
 
                     if self.summarize_chat_pairs_before_storing:
                         if self.summarization_prompt is None:
+                            from ToolAgents.agent_memory.semantic_memory.memory import SummarizationExtractPatternStrategy
                             prompt = SummarizationExtractPatternStrategy.get_dynamic_prompt("chat")
                         else:
                             prompt = self.summarization_prompt

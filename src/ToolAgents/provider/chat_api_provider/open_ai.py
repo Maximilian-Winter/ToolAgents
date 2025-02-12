@@ -18,8 +18,8 @@ from ToolAgents.provider.chat_api_provider.utilities import clean_history_messag
 
 class OpenAISettings(SamplingSettings):
     def __init__(self):
-        self.temperature = 0.4
-        self.top_p = 1
+        self.temperature = 1.0
+        self.top_p = 1.0
         self.max_tokens = 4096
         self.response_format = None
         self.request_kwargs = None
