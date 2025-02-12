@@ -3,6 +3,7 @@ import dataclasses
 import datetime
 import json
 import uuid
+from json import JSONDecodeError
 from typing import List, Dict, Optional, Any, Generator
 
 from anthropic import Anthropic
@@ -206,11 +207,15 @@ class AnthropicChatAPI(ChatAPIProvider):
                     content = None
                 if current_tool_call:
                     has_tool_call = True
-                    contents.append(ToolCallContent(tool_call_id=current_tool_call["function"]["id"],
-                                                    tool_call_name=current_tool_call["function"]["name"],
-                                                    tool_call_arguments=json.loads(
-                                                        current_tool_call["function"]["arguments"])))
-                    current_tool_call = None
+                    try:
+                        data = json.loads(
+                            current_tool_call["function"]["arguments"])
+                        contents.append(ToolCallContent(tool_call_id=current_tool_call["function"]["id"],
+                                                        tool_call_name=current_tool_call["function"]["name"],
+                                                        tool_call_arguments=data))
+                        current_tool_call = None
+                    except JSONDecodeError as e:
+                        contents.append(TextContent(content=f"Error Parsing Tool Use JSON Data: {str(e)}\n\n\nJSON Data:\n{current_tool_call["function"]["arguments"]}"))
         yield StreamingChatAPIResponse(chunk="", is_tool_call=has_tool_call, finished=True,
                                        finished_chat_message=ChatMessage(id=str(uuid.uuid4()),
                                                                          role=ChatMessageRole.Assistant,

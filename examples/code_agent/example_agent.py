@@ -1,7 +1,7 @@
 import os
 
 from ToolAgents.agents import ChatToolAgent
-from ToolAgents.provider import AnthropicChatAPI, AnthropicSettings
+from ToolAgents.provider import AnthropicChatAPI, AnthropicSettings, OpenAIChatAPI, OpenAISettings
 
 from ToolAgents.messages import ChatHistory
 from example_tools import get_weather_function_tool, calculator_function_tool, current_datetime_function_tool, unit, \
@@ -12,9 +12,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Anthropic API
-api = AnthropicChatAPI(api_key=os.getenv("ANTHROPIC_API_KEY"), model="claude-3-5-sonnet-20241022")
-settings = AnthropicSettings()
+api = OpenAIChatAPI(api_key="token-abc123", base_url="http://127.0.0.1:8080/v1", model="unsloth/Meta-Llama-3.1-8B-Instruct-bnb-4bit")
+settings = OpenAISettings()
 agent = ChatToolAgent(chat_api=api, debug_output=True)
 
 settings.neutralize_all_samplers()
@@ -44,4 +43,4 @@ run_llm_code_agent(agent=agent, settings=settings, chat_history=chat_history, us
 run_llm_code_agent(agent=agent, settings=settings, chat_history=chat_history, user_input=prompt3,
                executor=python_code_executor)
 
-chat_history.save_to_json("./test_chat_history_after_llama.json")
+chat_history.save_to_json("./test_chat_history_after.json")
