@@ -21,16 +21,16 @@ load_dotenv()
 #settings = OpenAISettings()
 
 # Official OpenAI API
-api = OpenAIChatAPI(api_key=os.getenv("OPENAI_API_KEY"), model="gpt-4o-mini")
-settings = OpenAISettings()
+#api = OpenAIChatAPI(api_key=os.getenv("OPENAI_API_KEY"), model="gpt-4o-mini")
+#settings = OpenAISettings()
 
 # Anthropic API
 #api = AnthropicChatAPI(api_key=os.getenv("ANTHROPIC_API_KEY"), model="claude-3-5-sonnet-20241022")
 #settings = AnthropicSettings()
 
 # Groq API
-#api = GroqChatAPI(api_key=os.getenv("GROQ_API_KEY"), model="llama-3.3-70b-versatile")
-#settings = GroqSettings()
+api = GroqChatAPI(api_key=os.getenv("GROQ_API_KEY"), model="llama-3.3-70b-versatile")
+settings = GroqSettings()
 
 # Mistral API
 #api = MistralChatAPI(api_key=os.getenv("MISTRAL_API_KEY"), model="mistral-small-latest")
