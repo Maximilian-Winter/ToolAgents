@@ -1,14 +1,13 @@
 # This show an advanced agent that will handle all the things like chat history by itself, also contains optional memory and app state functionality.
 from ToolAgents.agent_memory import semantic_memory_nomic_text_gpu_config, SummarizationExtractPatternStrategy
-from ToolAgents.agents import AdvancedAgent
+from ToolAgents.agents.advanced_agent import AdvancedAgent
 from ToolAgents.agents.advanced_agent import AgentConfig
-from ToolAgents.agents.hosted_tool_agents import MistralAgent
+from ToolAgents.agents import ChatToolAgent
+from ToolAgents.provider import OpenAIChatAPI
 
-from ToolAgents.provider import LlamaCppServerProvider
+provider = OpenAIChatAPI(api_key="token-abc123", base_url="http://127.0.0.1:8080/v1", model="unsloth/Meta-Llama-3.1-8B-Instruct-bnb-4bit")
 
-provider = LlamaCppServerProvider(server_address="http://127.0.0.1:8080/")
-
-agent = MistralAgent(provider=provider, debug_output=True)
+agent = ChatToolAgent(chat_api=provider)
 
 settings = provider.get_default_settings()
 settings.neutralize_all_samplers()
@@ -49,7 +48,7 @@ You are a helpful and context-aware assistant. Your goal is to assist the user e
 agent_config.save_dir = "./test_agent"
 agent_config.max_chat_history_length = 25
 agent_config.use_semantic_chat_history_memory = True
-agent_config.give_agent_edit_tool = True
+#agent_config.give_agent_edit_tool = True
 agent_config.initial_app_state_file = "example_app_state.yaml"
 agent_config.semantic_chat_history_config = semantic_memory_nomic_text_gpu_config
 agent_config.semantic_chat_history_config.debug_mode = False
@@ -95,5 +94,5 @@ for question in semantic_memory_test_questions:
     print(f"A: ", end="", flush=True)
     result = configurable_agent.stream_chat_with_agent(question)
     for output in result:
-        print(output, end="", flush=True)
+        print(output.chunk, end="", flush=True)
     print("\n---\n")

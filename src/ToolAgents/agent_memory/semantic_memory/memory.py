@@ -19,6 +19,7 @@ from chromadb.api.types import IncludeEnum
 import numpy as np
 from torch import Tensor
 
+from ToolAgents.messages import ChatMessage
 from ToolAgents.provider.llm_provider import SamplingSettings
 from ToolAgents.agents.base_llm_agent import BaseToolAgent
 
@@ -175,16 +176,16 @@ class SummarizationExtractPatternStrategy(ExtractPatternStrategy):
 
         # Use the language model agent to generate a summary based on the prompt
         result = self.agent.get_response(
-            messages=[
+            messages=ChatMessage.from_dictionaries([
                 {"role": "system", "content": self.system_prompt[0]},
                 {"role": "user", "content": docs_prompt}
-            ],
+            ]),
             settings=self.summarizer_settings
         )
         if self.debug_mode:
             print(result, flush=True)
         return {
-            "content": result,
+            "content": result.response,
             "metadata": pattern_metadata
         }
 

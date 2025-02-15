@@ -72,7 +72,7 @@ You can modify the app state using the following tools:
 agent_config.save_dir = "./example_agent"
 agent_config.max_chat_history_length = 25
 agent_config.use_semantic_chat_history_memory = True
-agent_config.give_agent_edit_tool = True
+#agent_config.give_agent_edit_tool = True
 agent_config.initial_app_state_file = "example_app_state.yaml"
 agent_config.semantic_chat_history_config = semantic_memory_nomic_text_gpu_config
 agent_config.semantic_chat_history_config.debug_mode = True
@@ -91,5 +91,5 @@ while True:
     else:
         result = configurable_agent.stream_chat_with_agent(user_input)
         for output in result:
-            print(output, end="", flush=True)
+            print(output.chunk, end="", flush=True)
         print()

@@ -1,7 +1,7 @@
 {
   "messages": [
     {
-      "id": "93ae837e-7a30-4515-aa79-da045b3b0515",
+      "id": "14601ce9-40d7-49b3-bc3a-f21cda806456",
       "role": "system",
       "content": [
         {
@@ -9,12 +9,13 @@
           "content": "You are Funky, an AI assistant specialized in interpreting user requests and generating appropriate function calls. Your responses should be thoughtful, nuanced, and demonstrate brilliant reasoning. Your primary task is to analyze user requests and, when necessary, create function calls in JSON format to perform the requested tasks.\nChoose the appropriate function based on the task you want to perform. Provide your function calls in JSON format. Here is an example for how your function calls should look like: [{\"name\": \"get_location_news\", \"arguments\": {\"location\": \"London, Great Britain\"}}, {\"name\": \"get_location_news\", \"arguments\": {\"location\": \"Berlin, Germany\"}}]"
         }
       ],
-      "created_at": "2025-02-12T05:25:24.299319",
-      "updated_at": "2025-02-12T05:25:24.299323",
+      "created_at": "2025-02-14T15:07:00.697384",
+      "updated_at": "2025-02-14T15:07:00.697387",
+      "additional_fields": {},
       "additional_information": {}
     },
     {
-      "id": "264cd69e-8e60-48f9-a900-3aec4bef9209",
+      "id": "da6431b8-484d-496e-9682-b4d0b3db5215",
       "role": "user",
       "content": [
         {
@@ -22,1168 +23,412 @@
           "content": "Perform all the following tasks: Get the current weather in celsius in the city of London, Great Britain, New York City, New York and at the North Pole, Arctica. Solve the following calculations: 42 * 42, 74 + 26, 7 * 26, 4 + 6  and 96/8. And retrieve the date and time in the format: %Y-%m-%d %H:%M:%S."
         }
       ],
-      "created_at": "2025-02-12T05:25:24.299355",
-      "updated_at": "2025-02-12T05:25:24.299355",
+      "created_at": "2025-02-14T15:07:00.697416",
+      "updated_at": "2025-02-14T15:07:00.697416",
+      "additional_fields": {},
       "additional_information": {}
     },
     {
-      "id": "1db80395-fece-4eb8-b886-566eb48a321f",
+      "id": "7a41ac7d-0639-4731-b407-76b615a44267",
       "role": "assistant",
       "content": [
         {
-          "type": "text",
-          "content": ""
-        },
-        {
           "type": "tool_call",
-          "tool_call_id": "",
+          "tool_call_id": "call_7mbx",
           "tool_call_name": "get_current_weather",
           "tool_call_arguments": {
             "location": "London, Great Britain",
             "unit": "celsius"
           }
-        }
-      ],
-      "created_at": "2025-02-12T05:25:27.590014",
-      "updated_at": "2025-02-12T05:25:27.590016",
-      "additional_information": {
-        "id": "chatcmpl-uqpo32dHMsyRFVGtsbcJ240CRIQN2kJE",
-        "created": 1739334327,
-        "model": "unsloth/Meta-Llama-3.1-8B-Instruct-bnb-4bit",
-        "object": "chat.completion",
-        "service_tier": null,
-        "system_fingerprint": "b4686-7b891bdc",
-        "usage": {
-          "completion_tokens": 67,
-          "prompt_tokens": 791,
-          "total_tokens": 858,
-          "completion_tokens_details": null,
-          "prompt_tokens_details": null
-        },
-        "timings": {
-          "prompt_n": 1,
-          "prompt_ms": 254.703,
-          "prompt_per_token_ms": 254.703,
-          "prompt_per_second": 3.9261414274665003,
-          "predicted_n": 67,
-          "predicted_ms": 2960.748,
-          "predicted_per_token_ms": 44.19026865671642,
-          "predicted_per_second": 22.629416620394576
-        }
-      }
-    },
-    {
-      "id": "46f7d3d0-a73f-4ea3-8bf7-cb9ef9821714",
-      "role": "tool",
-      "content": [
-        {
-          "type": "tool_call_result",
-          "tool_call_result_id": "9c8a2529-18a8-454d-93de-3a62367cedf3",
-          "tool_call_id": "",
-          "tool_call_name": "get_current_weather",
-          "tool_call_result": "Weather in London, Great Britain: 22\u00b0 celsius"
-        }
-      ],
-      "created_at": "2025-02-12T05:25:27.590203",
-      "updated_at": "2025-02-12T05:25:27.590203",
-      "additional_information": {}
-    },
-    {
-      "id": "3c78eb92-b115-430f-8843-ddbc1e6d369e",
-      "role": "assistant",
-      "content": [
-        {
-          "type": "text",
-          "content": ""
         },
         {
           "type": "tool_call",
-          "tool_call_id": "",
+          "tool_call_id": "call_h650",
           "tool_call_name": "get_current_weather",
           "tool_call_arguments": {
             "location": "New York City, New York",
             "unit": "celsius"
           }
-        }
-      ],
-      "created_at": "2025-02-12T05:25:29.595930",
-      "updated_at": "2025-02-12T05:25:29.595933",
-      "additional_information": {
-        "id": "chatcmpl-eMT9eRM6J67rGdH2IBXGG2C4I3O3P5u9",
-        "created": 1739334329,
-        "model": "unsloth/Meta-Llama-3.1-8B-Instruct-bnb-4bit",
-        "object": "chat.completion",
-        "service_tier": null,
-        "system_fingerprint": "b4686-7b891bdc",
-        "usage": {
-          "completion_tokens": 49,
-          "prompt_tokens": 917,
-          "total_tokens": 966,
-          "completion_tokens_details": null,
-          "prompt_tokens_details": null
-        },
-        "timings": {
-          "prompt_n": 121,
-          "prompt_ms": 143.303,
-          "prompt_per_token_ms": 1.1843223140495867,
-          "prompt_per_second": 844.3647376537825,
-          "predicted_n": 49,
-          "predicted_ms": 1846.2,
-          "predicted_per_token_ms": 37.67755102040817,
-          "predicted_per_second": 26.541003141588124
-        }
-      }
-    },
-    {
-      "id": "73c288e3-4dff-4a56-a3d3-189abebdae34",
-      "role": "tool",
-      "content": [
-        {
-          "type": "tool_call_result",
-          "tool_call_result_id": "7acd2926-4fed-439f-98e0-7afe653aecf7",
-          "tool_call_id": "",
-          "tool_call_name": "get_current_weather",
-          "tool_call_result": "Weather in New York City, New York: 24\u00b0 celsius"
-        }
-      ],
-      "created_at": "2025-02-12T05:25:29.596033",
-      "updated_at": "2025-02-12T05:25:29.596034",
-      "additional_information": {}
-    },
-    {
-      "id": "022b4fb7-4fe1-4874-b9fd-64639acf2f13",
-      "role": "assistant",
-      "content": [
-        {
-          "type": "text",
-          "content": ""
         },
         {
           "type": "tool_call",
-          "tool_call_id": "",
+          "tool_call_id": "call_x29c",
           "tool_call_name": "get_current_weather",
           "tool_call_arguments": {
             "location": "North Pole, Arctica",
             "unit": "celsius"
           }
-        }
-      ],
-      "created_at": "2025-02-12T05:25:31.517805",
-      "updated_at": "2025-02-12T05:25:31.517808",
-      "additional_information": {
-        "id": "chatcmpl-IiWVx1FA9v6iC6MvbMCTbHzLkfoIgDBA",
-        "created": 1739334331,
-        "model": "unsloth/Meta-Llama-3.1-8B-Instruct-bnb-4bit",
-        "object": "chat.completion",
-        "service_tier": null,
-        "system_fingerprint": "b4686-7b891bdc",
-        "usage": {
-          "completion_tokens": 49,
-          "prompt_tokens": 1047,
-          "total_tokens": 1096,
-          "completion_tokens_details": null,
-          "prompt_tokens_details": null
-        },
-        "timings": {
-          "prompt_n": 125,
-          "prompt_ms": 142.904,
-          "prompt_per_token_ms": 1.143232,
-          "prompt_per_second": 874.7130941051336,
-          "predicted_n": 49,
-          "predicted_ms": 1756.333,
-          "predicted_per_token_ms": 35.8435306122449,
-          "predicted_per_second": 27.899037369337133
-        }
-      }
-    },
-    {
-      "id": "da0a491d-373c-4334-9ba2-267228ad0c1b",
-      "role": "tool",
-      "content": [
-        {
-          "type": "tool_call_result",
-          "tool_call_result_id": "e988b329-0e46-470f-8628-c8f2bd86cc56",
-          "tool_call_id": "",
-          "tool_call_name": "get_current_weather",
-          "tool_call_result": "Weather in North Pole, Arctica: -42\u00b0 celsius"
-        }
-      ],
-      "created_at": "2025-02-12T05:25:31.517894",
-      "updated_at": "2025-02-12T05:25:31.517895",
-      "additional_information": {}
-    },
-    {
-      "id": "6fddef55-3328-4850-af5b-99e253c0f23a",
-      "role": "assistant",
-      "content": [
-        {
-          "type": "text",
-          "content": ""
         },
         {
           "type": "tool_call",
-          "tool_call_id": "",
+          "tool_call_id": "call_9d69",
           "tool_call_name": "calculator",
           "tool_call_arguments": {
             "number_one": 42,
             "operation": "multiply",
             "number_two": 42
           }
-        }
-      ],
-      "created_at": "2025-02-12T05:25:33.592814",
-      "updated_at": "2025-02-12T05:25:33.592817",
-      "additional_information": {
-        "id": "chatcmpl-0bpCBwpaLIFqRQDYLjaW7Fdc6FQzpZWo",
-        "created": 1739334333,
-        "model": "unsloth/Meta-Llama-3.1-8B-Instruct-bnb-4bit",
-        "object": "chat.completion",
-        "service_tier": null,
-        "system_fingerprint": "b4686-7b891bdc",
-        "usage": {
-          "completion_tokens": 53,
-          "prompt_tokens": 1177,
-          "total_tokens": 1230,
-          "completion_tokens_details": null,
-          "prompt_tokens_details": null
-        },
-        "timings": {
-          "prompt_n": 125,
-          "prompt_ms": 143.723,
-          "prompt_per_token_ms": 1.1497840000000001,
-          "prompt_per_second": 869.7285751062808,
-          "predicted_n": 53,
-          "predicted_ms": 1904.884,
-          "predicted_per_token_ms": 35.94120754716981,
-          "predicted_per_second": 27.823216531820307
-        }
-      }
-    },
-    {
-      "id": "64cc9352-6c12-45ec-bcd8-672eec429e3d",
-      "role": "tool",
-      "content": [
-        {
-          "type": "tool_call_result",
-          "tool_call_result_id": "f88858b0-0015-48ff-96f7-5672071222ca",
-          "tool_call_id": "",
-          "tool_call_name": "calculator",
-          "tool_call_result": "1764.0"
-        }
-      ],
-      "created_at": "2025-02-12T05:25:33.592917",
-      "updated_at": "2025-02-12T05:25:33.592918",
-      "additional_information": {}
-    },
-    {
-      "id": "3f01c2d4-3a3b-4719-9c1a-1b2c503758fa",
-      "role": "assistant",
-      "content": [
-        {
-          "type": "text",
-          "content": ""
         },
         {
           "type": "tool_call",
-          "tool_call_id": "",
+          "tool_call_id": "call_py38",
           "tool_call_name": "calculator",
           "tool_call_arguments": {
             "number_one": 74,
             "operation": "add",
             "number_two": 26
           }
-        }
-      ],
-      "created_at": "2025-02-12T05:25:35.694719",
-      "updated_at": "2025-02-12T05:25:35.694722",
-      "additional_information": {
-        "id": "chatcmpl-jHwRclbPkoRvyQiD2pNcHCMPuxyqabC1",
-        "created": 1739334335,
-        "model": "unsloth/Meta-Llama-3.1-8B-Instruct-bnb-4bit",
-        "object": "chat.completion",
-        "service_tier": null,
-        "system_fingerprint": "b4686-7b891bdc",
-        "usage": {
-          "completion_tokens": 52,
-          "prompt_tokens": 1300,
-          "total_tokens": 1352,
-          "completion_tokens_details": null,
-          "prompt_tokens_details": null
-        },
-        "timings": {
-          "prompt_n": 118,
-          "prompt_ms": 142.9,
-          "prompt_per_token_ms": 1.2110169491525424,
-          "prompt_per_second": 825.7522743177046,
-          "predicted_n": 52,
-          "predicted_ms": 1933.53,
-          "predicted_per_token_ms": 37.18326923076923,
-          "predicted_per_second": 26.893815973892313
-        }
-      }
-    },
-    {
-      "id": "9a9f5814-9a05-4902-92e4-51beb78ed351",
-      "role": "tool",
-      "content": [
-        {
-          "type": "tool_call_result",
-          "tool_call_result_id": "8b30deee-1a32-46bc-93fa-2c61323a4fc0",
-          "tool_call_id": "",
-          "tool_call_name": "calculator",
-          "tool_call_result": "100.0"
-        }
-      ],
-      "created_at": "2025-02-12T05:25:35.694813",
-      "updated_at": "2025-02-12T05:25:35.694814",
-      "additional_information": {}
-    },
-    {
-      "id": "e16b3f04-81b5-41fd-8f7d-f2db5cf3ba17",
-      "role": "assistant",
-      "content": [
-        {
-          "type": "text",
-          "content": ""
         },
         {
           "type": "tool_call",
-          "tool_call_id": "",
+          "tool_call_id": "call_9hcm",
           "tool_call_name": "calculator",
           "tool_call_arguments": {
             "number_one": 7,
             "operation": "multiply",
             "number_two": 26
           }
-        }
-      ],
-      "created_at": "2025-02-12T05:25:37.750749",
-      "updated_at": "2025-02-12T05:25:37.750752",
-      "additional_information": {
-        "id": "chatcmpl-PD964idEwf9UbRZUFk4JlCbHNnG0zdX5",
-        "created": 1739334337,
-        "model": "unsloth/Meta-Llama-3.1-8B-Instruct-bnb-4bit",
-        "object": "chat.completion",
-        "service_tier": null,
-        "system_fingerprint": "b4686-7b891bdc",
-        "usage": {
-          "completion_tokens": 52,
-          "prompt_tokens": 1421,
-          "total_tokens": 1473,
-          "completion_tokens_details": null,
-          "prompt_tokens_details": null
-        },
-        "timings": {
-          "prompt_n": 116,
-          "prompt_ms": 142.245,
-          "prompt_per_token_ms": 1.22625,
-          "prompt_per_second": 815.4943934760448,
-          "predicted_n": 52,
-          "predicted_ms": 1883.888,
-          "predicted_per_token_ms": 36.22861538461538,
-          "predicted_per_second": 27.602490169266964
-        }
-      }
-    },
-    {
-      "id": "91979ceb-caa9-43a4-aae4-13f0f8adf9da",
-      "role": "tool",
-      "content": [
-        {
-          "type": "tool_call_result",
-          "tool_call_result_id": "38435f8f-4a75-4338-bc6f-f67dab2a224b",
-          "tool_call_id": "",
-          "tool_call_name": "calculator",
-          "tool_call_result": "182.0"
-        }
-      ],
-      "created_at": "2025-02-12T05:25:37.750839",
-      "updated_at": "2025-02-12T05:25:37.750839",
-      "additional_information": {}
-    },
-    {
-      "id": "d02f010a-e2b1-4a62-9d11-be81c4c13e07",
-      "role": "assistant",
-      "content": [
-        {
-          "type": "text",
-          "content": ""
         },
         {
           "type": "tool_call",
-          "tool_call_id": "",
+          "tool_call_id": "call_3q9c",
           "tool_call_name": "calculator",
           "tool_call_arguments": {
             "number_one": 4,
             "operation": "add",
             "number_two": 6
           }
-        }
-      ],
-      "created_at": "2025-02-12T05:25:39.757885",
-      "updated_at": "2025-02-12T05:25:39.757887",
-      "additional_information": {
-        "id": "chatcmpl-p9oft7ca9U7TPN7imdcAUfoij0wKa28G",
-        "created": 1739334339,
-        "model": "unsloth/Meta-Llama-3.1-8B-Instruct-bnb-4bit",
-        "object": "chat.completion",
-        "service_tier": null,
-        "system_fingerprint": "b4686-7b891bdc",
-        "usage": {
-          "completion_tokens": 50,
-          "prompt_tokens": 1542,
-          "total_tokens": 1592,
-          "completion_tokens_details": null,
-          "prompt_tokens_details": null
-        },
-        "timings": {
-          "prompt_n": 116,
-          "prompt_ms": 143.284,
-          "prompt_per_token_ms": 1.235206896551724,
-          "prompt_per_second": 809.5809720554983,
-          "predicted_n": 50,
-          "predicted_ms": 1824.817,
-          "predicted_per_token_ms": 36.496340000000004,
-          "predicted_per_second": 27.40000778160221
-        }
-      }
-    },
-    {
-      "id": "94509088-e402-4c78-bab6-dc36d07ff180",
-      "role": "tool",
-      "content": [
-        {
-          "type": "tool_call_result",
-          "tool_call_result_id": "4913a3ff-5623-44c1-87da-f6ce02920120",
-          "tool_call_id": "",
-          "tool_call_name": "calculator",
-          "tool_call_result": "10.0"
-        }
-      ],
-      "created_at": "2025-02-12T05:25:39.757951",
-      "updated_at": "2025-02-12T05:25:39.757951",
-      "additional_information": {}
-    },
-    {
-      "id": "2cf971f7-cc6a-459c-9a15-c7f677c8a3b1",
-      "role": "assistant",
-      "content": [
-        {
-          "type": "text",
-          "content": ""
         },
         {
           "type": "tool_call",
-          "tool_call_id": "",
+          "tool_call_id": "call_dwff",
           "tool_call_name": "calculator",
           "tool_call_arguments": {
             "number_one": 96,
             "operation": "divide",
             "number_two": 8
           }
-        }
-      ],
-      "created_at": "2025-02-12T05:25:41.965387",
-      "updated_at": "2025-02-12T05:25:41.965389",
-      "additional_information": {
-        "id": "chatcmpl-mo9vv16ufTdo71HfptsCsxRcrtMw0fdC",
-        "created": 1739334341,
-        "model": "unsloth/Meta-Llama-3.1-8B-Instruct-bnb-4bit",
-        "object": "chat.completion",
-        "service_tier": null,
-        "system_fingerprint": "b4686-7b891bdc",
-        "usage": {
-          "completion_tokens": 52,
-          "prompt_tokens": 1660,
-          "total_tokens": 1712,
-          "completion_tokens_details": null,
-          "prompt_tokens_details": null
-        },
-        "timings": {
-          "prompt_n": 113,
-          "prompt_ms": 147.191,
-          "prompt_per_token_ms": 1.302575221238938,
-          "prompt_per_second": 767.7099822679376,
-          "predicted_n": 52,
-          "predicted_ms": 2028.722,
-          "predicted_per_token_ms": 39.01388461538461,
-          "predicted_per_second": 25.6319002800778
-        }
-      }
-    },
-    {
-      "id": "ab004158-a631-4add-a69d-3c2723c9584f",
-      "role": "tool",
-      "content": [
-        {
-          "type": "tool_call_result",
-          "tool_call_result_id": "70a4020a-3b17-45cc-b203-b63a98891380",
-          "tool_call_id": "",
-          "tool_call_name": "calculator",
-          "tool_call_result": "12.0"
-        }
-      ],
-      "created_at": "2025-02-12T05:25:41.965470",
-      "updated_at": "2025-02-12T05:25:41.965471",
-      "additional_information": {}
-    },
-    {
-      "id": "61d47b00-5488-41c4-a8c9-d4ba648ea102",
-      "role": "assistant",
-      "content": [
-        {
-          "type": "text",
-          "content": ""
         },
         {
           "type": "tool_call",
-          "tool_call_id": "",
+          "tool_call_id": "call_sg65",
           "tool_call_name": "get_current_datetime",
           "tool_call_arguments": {
             "output_format": "%Y-%m-%d %H:%M:%S"
           }
         }
       ],
-      "created_at": "2025-02-12T05:25:43.764019",
-      "updated_at": "2025-02-12T05:25:43.764022",
+      "created_at": "2025-02-14T15:07:02.155631",
+      "updated_at": "2025-02-14T15:07:02.155632",
+      "additional_fields": {},
       "additional_information": {
-        "id": "chatcmpl-8b4EZzcRohRBHs7NNwTgZJDS8IW1iwoy",
-        "created": 1739334343,
-        "model": "unsloth/Meta-Llama-3.1-8B-Instruct-bnb-4bit",
+        "id": "chatcmpl-57ec7f3a-3b9e-48d5-a099-7d7d9fe1a0e2",
+        "created": 1739542019,
+        "model": "llama-3.3-70b-versatile",
         "object": "chat.completion",
-        "service_tier": null,
-        "system_fingerprint": "b4686-7b891bdc",
+        "system_fingerprint": "fp_5f849c5a0b",
         "usage": {
-          "completion_tokens": 46,
-          "prompt_tokens": 1780,
-          "total_tokens": 1826,
-          "completion_tokens_details": null,
-          "prompt_tokens_details": null
+          "completion_tokens": 231,
+          "prompt_tokens": 663,
+          "total_tokens": 894,
+          "completion_time": 0.84,
+          "prompt_time": 0.045928927,
+          "queue_time": 0.262302526,
+          "total_time": 0.885928927
         },
-        "timings": {
-          "prompt_n": 115,
-          "prompt_ms": 144.766,
-          "prompt_per_token_ms": 1.2588347826086956,
-          "prompt_per_second": 794.3854219913516,
-          "predicted_n": 46,
-          "predicted_ms": 1617.506,
-          "predicted_per_token_ms": 35.16317391304348,
-          "predicted_per_second": 28.438843503517145
+        "x_groq": {
+          "id": "req_01jm2chff4e6a9tyvf77njw88p"
         }
       }
     },
     {
-      "id": "d38fbd36-0dd9-4d77-9359-34af4f27b480",
+      "id": "7fb411b8-3c0d-4131-ab67-349782b3e730",
       "role": "tool",
       "content": [
         {
           "type": "tool_call_result",
-          "tool_call_result_id": "cd470a3c-6c92-4589-b0b1-05e5b464ad98",
-          "tool_call_id": "",
+          "tool_call_result_id": "a43d99e6-f486-4991-ae06-f71cbcce8500",
+          "tool_call_id": "call_7mbx",
+          "tool_call_name": "get_current_weather",
+          "tool_call_result": "Weather in London, Great Britain: 22\u00b0 celsius"
+        },
+        {
+          "type": "tool_call_result",
+          "tool_call_result_id": "2c5aceeb-8718-4c8c-ab9e-e0107a3e1ce8",
+          "tool_call_id": "call_h650",
+          "tool_call_name": "get_current_weather",
+          "tool_call_result": "Weather in New York City, New York: 24\u00b0 celsius"
+        },
+        {
+          "type": "tool_call_result",
+          "tool_call_result_id": "53bdcabf-ea88-4a3b-9b52-d787251faa94",
+          "tool_call_id": "call_x29c",
+          "tool_call_name": "get_current_weather",
+          "tool_call_result": "Weather in North Pole, Arctica: -42\u00b0 celsius"
+        },
+        {
+          "type": "tool_call_result",
+          "tool_call_result_id": "ebf9ab05-ad6d-45c9-bb5f-36d332774cd8",
+          "tool_call_id": "call_9d69",
+          "tool_call_name": "calculator",
+          "tool_call_result": "1764.0"
+        },
+        {
+          "type": "tool_call_result",
+          "tool_call_result_id": "d1ad60bf-0837-414b-8a59-dc06b4badf64",
+          "tool_call_id": "call_py38",
+          "tool_call_name": "calculator",
+          "tool_call_result": "100.0"
+        },
+        {
+          "type": "tool_call_result",
+          "tool_call_result_id": "40c52a84-95da-4a61-b444-23876da4fc08",
+          "tool_call_id": "call_9hcm",
+          "tool_call_name": "calculator",
+          "tool_call_result": "182.0"
+        },
+        {
+          "type": "tool_call_result",
+          "tool_call_result_id": "3fd567a0-cfc4-4d57-8cc3-559854a7248e",
+          "tool_call_id": "call_3q9c",
+          "tool_call_name": "calculator",
+          "tool_call_result": "10.0"
+        },
+        {
+          "type": "tool_call_result",
+          "tool_call_result_id": "9473584b-ac28-4fe0-a627-91a986bbf469",
+          "tool_call_id": "call_dwff",
+          "tool_call_name": "calculator",
+          "tool_call_result": "12.0"
+        },
+        {
+          "type": "tool_call_result",
+          "tool_call_result_id": "cc60c995-33fd-4afd-bb40-a004667d09e2",
+          "tool_call_id": "call_sg65",
           "tool_call_name": "get_current_datetime",
-          "tool_call_result": "2025-02-12 05:25:43"
+          "tool_call_result": "2025-02-14 15:07:02"
         }
       ],
-      "created_at": "2025-02-12T05:25:43.764109",
-      "updated_at": "2025-02-12T05:25:43.764109",
+      "created_at": "2025-02-14T15:07:02.156797",
+      "updated_at": "2025-02-14T15:07:02.156797",
+      "additional_fields": {},
       "additional_information": {}
     },
     {
-      "id": "1db80395-fece-4eb8-b886-566eb48a321f",
+      "id": "7a41ac7d-0639-4731-b407-76b615a44267",
       "role": "assistant",
       "content": [
         {
-          "type": "text",
-          "content": ""
-        },
-        {
           "type": "tool_call",
-          "tool_call_id": "",
+          "tool_call_id": "call_7mbx",
           "tool_call_name": "get_current_weather",
           "tool_call_arguments": {
             "location": "London, Great Britain",
             "unit": "celsius"
           }
-        }
-      ],
-      "created_at": "2025-02-12T05:25:27.590014",
-      "updated_at": "2025-02-12T05:25:27.590016",
-      "additional_information": {
-        "id": "chatcmpl-uqpo32dHMsyRFVGtsbcJ240CRIQN2kJE",
-        "created": 1739334327,
-        "model": "unsloth/Meta-Llama-3.1-8B-Instruct-bnb-4bit",
-        "object": "chat.completion",
-        "service_tier": null,
-        "system_fingerprint": "b4686-7b891bdc",
-        "usage": {
-          "completion_tokens": 67,
-          "prompt_tokens": 791,
-          "total_tokens": 858,
-          "completion_tokens_details": null,
-          "prompt_tokens_details": null
-        },
-        "timings": {
-          "prompt_n": 1,
-          "prompt_ms": 254.703,
-          "prompt_per_token_ms": 254.703,
-          "prompt_per_second": 3.9261414274665003,
-          "predicted_n": 67,
-          "predicted_ms": 2960.748,
-          "predicted_per_token_ms": 44.19026865671642,
-          "predicted_per_second": 22.629416620394576
-        }
-      }
-    },
-    {
-      "id": "46f7d3d0-a73f-4ea3-8bf7-cb9ef9821714",
-      "role": "tool",
-      "content": [
-        {
-          "type": "tool_call_result",
-          "tool_call_result_id": "9c8a2529-18a8-454d-93de-3a62367cedf3",
-          "tool_call_id": "",
-          "tool_call_name": "get_current_weather",
-          "tool_call_result": "Weather in London, Great Britain: 22\u00b0 celsius"
-        }
-      ],
-      "created_at": "2025-02-12T05:25:27.590203",
-      "updated_at": "2025-02-12T05:25:27.590203",
-      "additional_information": {}
-    },
-    {
-      "id": "3c78eb92-b115-430f-8843-ddbc1e6d369e",
-      "role": "assistant",
-      "content": [
-        {
-          "type": "text",
-          "content": ""
         },
         {
           "type": "tool_call",
-          "tool_call_id": "",
+          "tool_call_id": "call_h650",
           "tool_call_name": "get_current_weather",
           "tool_call_arguments": {
             "location": "New York City, New York",
             "unit": "celsius"
           }
-        }
-      ],
-      "created_at": "2025-02-12T05:25:29.595930",
-      "updated_at": "2025-02-12T05:25:29.595933",
-      "additional_information": {
-        "id": "chatcmpl-eMT9eRM6J67rGdH2IBXGG2C4I3O3P5u9",
-        "created": 1739334329,
-        "model": "unsloth/Meta-Llama-3.1-8B-Instruct-bnb-4bit",
-        "object": "chat.completion",
-        "service_tier": null,
-        "system_fingerprint": "b4686-7b891bdc",
-        "usage": {
-          "completion_tokens": 49,
-          "prompt_tokens": 917,
-          "total_tokens": 966,
-          "completion_tokens_details": null,
-          "prompt_tokens_details": null
-        },
-        "timings": {
-          "prompt_n": 121,
-          "prompt_ms": 143.303,
-          "prompt_per_token_ms": 1.1843223140495867,
-          "prompt_per_second": 844.3647376537825,
-          "predicted_n": 49,
-          "predicted_ms": 1846.2,
-          "predicted_per_token_ms": 37.67755102040817,
-          "predicted_per_second": 26.541003141588124
-        }
-      }
-    },
-    {
-      "id": "73c288e3-4dff-4a56-a3d3-189abebdae34",
-      "role": "tool",
-      "content": [
-        {
-          "type": "tool_call_result",
-          "tool_call_result_id": "7acd2926-4fed-439f-98e0-7afe653aecf7",
-          "tool_call_id": "",
-          "tool_call_name": "get_current_weather",
-          "tool_call_result": "Weather in New York City, New York: 24\u00b0 celsius"
-        }
-      ],
-      "created_at": "2025-02-12T05:25:29.596033",
-      "updated_at": "2025-02-12T05:25:29.596034",
-      "additional_information": {}
-    },
-    {
-      "id": "022b4fb7-4fe1-4874-b9fd-64639acf2f13",
-      "role": "assistant",
-      "content": [
-        {
-          "type": "text",
-          "content": ""
         },
         {
           "type": "tool_call",
-          "tool_call_id": "",
+          "tool_call_id": "call_x29c",
           "tool_call_name": "get_current_weather",
           "tool_call_arguments": {
             "location": "North Pole, Arctica",
             "unit": "celsius"
           }
-        }
-      ],
-      "created_at": "2025-02-12T05:25:31.517805",
-      "updated_at": "2025-02-12T05:25:31.517808",
-      "additional_information": {
-        "id": "chatcmpl-IiWVx1FA9v6iC6MvbMCTbHzLkfoIgDBA",
-        "created": 1739334331,
-        "model": "unsloth/Meta-Llama-3.1-8B-Instruct-bnb-4bit",
-        "object": "chat.completion",
-        "service_tier": null,
-        "system_fingerprint": "b4686-7b891bdc",
-        "usage": {
-          "completion_tokens": 49,
-          "prompt_tokens": 1047,
-          "total_tokens": 1096,
-          "completion_tokens_details": null,
-          "prompt_tokens_details": null
-        },
-        "timings": {
-          "prompt_n": 125,
-          "prompt_ms": 142.904,
-          "prompt_per_token_ms": 1.143232,
-          "prompt_per_second": 874.7130941051336,
-          "predicted_n": 49,
-          "predicted_ms": 1756.333,
-          "predicted_per_token_ms": 35.8435306122449,
-          "predicted_per_second": 27.899037369337133
-        }
-      }
-    },
-    {
-      "id": "da0a491d-373c-4334-9ba2-267228ad0c1b",
-      "role": "tool",
-      "content": [
-        {
-          "type": "tool_call_result",
-          "tool_call_result_id": "e988b329-0e46-470f-8628-c8f2bd86cc56",
-          "tool_call_id": "",
-          "tool_call_name": "get_current_weather",
-          "tool_call_result": "Weather in North Pole, Arctica: -42\u00b0 celsius"
-        }
-      ],
-      "created_at": "2025-02-12T05:25:31.517894",
-      "updated_at": "2025-02-12T05:25:31.517895",
-      "additional_information": {}
-    },
-    {
-      "id": "6fddef55-3328-4850-af5b-99e253c0f23a",
-      "role": "assistant",
-      "content": [
-        {
-          "type": "text",
-          "content": ""
         },
         {
           "type": "tool_call",
-          "tool_call_id": "",
+          "tool_call_id": "call_9d69",
           "tool_call_name": "calculator",
           "tool_call_arguments": {
             "number_one": 42,
             "operation": "multiply",
             "number_two": 42
           }
-        }
-      ],
-      "created_at": "2025-02-12T05:25:33.592814",
-      "updated_at": "2025-02-12T05:25:33.592817",
-      "additional_information": {
-        "id": "chatcmpl-0bpCBwpaLIFqRQDYLjaW7Fdc6FQzpZWo",
-        "created": 1739334333,
-        "model": "unsloth/Meta-Llama-3.1-8B-Instruct-bnb-4bit",
-        "object": "chat.completion",
-        "service_tier": null,
-        "system_fingerprint": "b4686-7b891bdc",
-        "usage": {
-          "completion_tokens": 53,
-          "prompt_tokens": 1177,
-          "total_tokens": 1230,
-          "completion_tokens_details": null,
-          "prompt_tokens_details": null
-        },
-        "timings": {
-          "prompt_n": 125,
-          "prompt_ms": 143.723,
-          "prompt_per_token_ms": 1.1497840000000001,
-          "prompt_per_second": 869.7285751062808,
-          "predicted_n": 53,
-          "predicted_ms": 1904.884,
-          "predicted_per_token_ms": 35.94120754716981,
-          "predicted_per_second": 27.823216531820307
-        }
-      }
-    },
-    {
-      "id": "64cc9352-6c12-45ec-bcd8-672eec429e3d",
-      "role": "tool",
-      "content": [
-        {
-          "type": "tool_call_result",
-          "tool_call_result_id": "f88858b0-0015-48ff-96f7-5672071222ca",
-          "tool_call_id": "",
-          "tool_call_name": "calculator",
-          "tool_call_result": "1764.0"
-        }
-      ],
-      "created_at": "2025-02-12T05:25:33.592917",
-      "updated_at": "2025-02-12T05:25:33.592918",
-      "additional_information": {}
-    },
-    {
-      "id": "3f01c2d4-3a3b-4719-9c1a-1b2c503758fa",
-      "role": "assistant",
-      "content": [
-        {
-          "type": "text",
-          "content": ""
         },
         {
           "type": "tool_call",
-          "tool_call_id": "",
+          "tool_call_id": "call_py38",
           "tool_call_name": "calculator",
           "tool_call_arguments": {
             "number_one": 74,
             "operation": "add",
             "number_two": 26
           }
-        }
-      ],
-      "created_at": "2025-02-12T05:25:35.694719",
-      "updated_at": "2025-02-12T05:25:35.694722",
-      "additional_information": {
-        "id": "chatcmpl-jHwRclbPkoRvyQiD2pNcHCMPuxyqabC1",
-        "created": 1739334335,
-        "model": "unsloth/Meta-Llama-3.1-8B-Instruct-bnb-4bit",
-        "object": "chat.completion",
-        "service_tier": null,
-        "system_fingerprint": "b4686-7b891bdc",
-        "usage": {
-          "completion_tokens": 52,
-          "prompt_tokens": 1300,
-          "total_tokens": 1352,
-          "completion_tokens_details": null,
-          "prompt_tokens_details": null
-        },
-        "timings": {
-          "prompt_n": 118,
-          "prompt_ms": 142.9,
-          "prompt_per_token_ms": 1.2110169491525424,
-          "prompt_per_second": 825.7522743177046,
-          "predicted_n": 52,
-          "predicted_ms": 1933.53,
-          "predicted_per_token_ms": 37.18326923076923,
-          "predicted_per_second": 26.893815973892313
-        }
-      }
-    },
-    {
-      "id": "9a9f5814-9a05-4902-92e4-51beb78ed351",
-      "role": "tool",
-      "content": [
-        {
-          "type": "tool_call_result",
-          "tool_call_result_id": "8b30deee-1a32-46bc-93fa-2c61323a4fc0",
-          "tool_call_id": "",
-          "tool_call_name": "calculator",
-          "tool_call_result": "100.0"
-        }
-      ],
-      "created_at": "2025-02-12T05:25:35.694813",
-      "updated_at": "2025-02-12T05:25:35.694814",
-      "additional_information": {}
-    },
-    {
-      "id": "e16b3f04-81b5-41fd-8f7d-f2db5cf3ba17",
-      "role": "assistant",
-      "content": [
-        {
-          "type": "text",
-          "content": ""
         },
         {
           "type": "tool_call",
-          "tool_call_id": "",
+          "tool_call_id": "call_9hcm",
           "tool_call_name": "calculator",
           "tool_call_arguments": {
             "number_one": 7,
             "operation": "multiply",
             "number_two": 26
           }
-        }
-      ],
-      "created_at": "2025-02-12T05:25:37.750749",
-      "updated_at": "2025-02-12T05:25:37.750752",
-      "additional_information": {
-        "id": "chatcmpl-PD964idEwf9UbRZUFk4JlCbHNnG0zdX5",
-        "created": 1739334337,
-        "model": "unsloth/Meta-Llama-3.1-8B-Instruct-bnb-4bit",
-        "object": "chat.completion",
-        "service_tier": null,
-        "system_fingerprint": "b4686-7b891bdc",
-        "usage": {
-          "completion_tokens": 52,
-          "prompt_tokens": 1421,
-          "total_tokens": 1473,
-          "completion_tokens_details": null,
-          "prompt_tokens_details": null
-        },
-        "timings": {
-          "prompt_n": 116,
-          "prompt_ms": 142.245,
-          "prompt_per_token_ms": 1.22625,
-          "prompt_per_second": 815.4943934760448,
-          "predicted_n": 52,
-          "predicted_ms": 1883.888,
-          "predicted_per_token_ms": 36.22861538461538,
-          "predicted_per_second": 27.602490169266964
-        }
-      }
-    },
-    {
-      "id": "91979ceb-caa9-43a4-aae4-13f0f8adf9da",
-      "role": "tool",
-      "content": [
-        {
-          "type": "tool_call_result",
-          "tool_call_result_id": "38435f8f-4a75-4338-bc6f-f67dab2a224b",
-          "tool_call_id": "",
-          "tool_call_name": "calculator",
-          "tool_call_result": "182.0"
-        }
-      ],
-      "created_at": "2025-02-12T05:25:37.750839",
-      "updated_at": "2025-02-12T05:25:37.750839",
-      "additional_information": {}
-    },
-    {
-      "id": "d02f010a-e2b1-4a62-9d11-be81c4c13e07",
-      "role": "assistant",
-      "content": [
-        {
-          "type": "text",
-          "content": ""
         },
         {
           "type": "tool_call",
-          "tool_call_id": "",
+          "tool_call_id": "call_3q9c",
           "tool_call_name": "calculator",
           "tool_call_arguments": {
             "number_one": 4,
             "operation": "add",
             "number_two": 6
           }
-        }
-      ],
-      "created_at": "2025-02-12T05:25:39.757885",
-      "updated_at": "2025-02-12T05:25:39.757887",
-      "additional_information": {
-        "id": "chatcmpl-p9oft7ca9U7TPN7imdcAUfoij0wKa28G",
-        "created": 1739334339,
-        "model": "unsloth/Meta-Llama-3.1-8B-Instruct-bnb-4bit",
-        "object": "chat.completion",
-        "service_tier": null,
-        "system_fingerprint": "b4686-7b891bdc",
-        "usage": {
-          "completion_tokens": 50,
-          "prompt_tokens": 1542,
-          "total_tokens": 1592,
-          "completion_tokens_details": null,
-          "prompt_tokens_details": null
-        },
-        "timings": {
-          "prompt_n": 116,
-          "prompt_ms": 143.284,
-          "prompt_per_token_ms": 1.235206896551724,
-          "prompt_per_second": 809.5809720554983,
-          "predicted_n": 50,
-          "predicted_ms": 1824.817,
-          "predicted_per_token_ms": 36.496340000000004,
-          "predicted_per_second": 27.40000778160221
-        }
-      }
-    },
-    {
-      "id": "94509088-e402-4c78-bab6-dc36d07ff180",
-      "role": "tool",
-      "content": [
-        {
-          "type": "tool_call_result",
-          "tool_call_result_id": "4913a3ff-5623-44c1-87da-f6ce02920120",
-          "tool_call_id": "",
-          "tool_call_name": "calculator",
-          "tool_call_result": "10.0"
-        }
-      ],
-      "created_at": "2025-02-12T05:25:39.757951",
-      "updated_at": "2025-02-12T05:25:39.757951",
-      "additional_information": {}
-    },
-    {
-      "id": "2cf971f7-cc6a-459c-9a15-c7f677c8a3b1",
-      "role": "assistant",
-      "content": [
-        {
-          "type": "text",
-          "content": ""
         },
         {
           "type": "tool_call",
-          "tool_call_id": "",
+          "tool_call_id": "call_dwff",
           "tool_call_name": "calculator",
           "tool_call_arguments": {
             "number_one": 96,
             "operation": "divide",
             "number_two": 8
           }
-        }
-      ],
-      "created_at": "2025-02-12T05:25:41.965387",
-      "updated_at": "2025-02-12T05:25:41.965389",
-      "additional_information": {
-        "id": "chatcmpl-mo9vv16ufTdo71HfptsCsxRcrtMw0fdC",
-        "created": 1739334341,
-        "model": "unsloth/Meta-Llama-3.1-8B-Instruct-bnb-4bit",
-        "object": "chat.completion",
-        "service_tier": null,
-        "system_fingerprint": "b4686-7b891bdc",
-        "usage": {
-          "completion_tokens": 52,
-          "prompt_tokens": 1660,
-          "total_tokens": 1712,
-          "completion_tokens_details": null,
-          "prompt_tokens_details": null
-        },
-        "timings": {
-          "prompt_n": 113,
-          "prompt_ms": 147.191,
-          "prompt_per_token_ms": 1.302575221238938,
-          "prompt_per_second": 767.7099822679376,
-          "predicted_n": 52,
-          "predicted_ms": 2028.722,
-          "predicted_per_token_ms": 39.01388461538461,
-          "predicted_per_second": 25.6319002800778
-        }
-      }
-    },
-    {
-      "id": "ab004158-a631-4add-a69d-3c2723c9584f",
-      "role": "tool",
-      "content": [
-        {
-          "type": "tool_call_result",
-          "tool_call_result_id": "70a4020a-3b17-45cc-b203-b63a98891380",
-          "tool_call_id": "",
-          "tool_call_name": "calculator",
-          "tool_call_result": "12.0"
-        }
-      ],
-      "created_at": "2025-02-12T05:25:41.965470",
-      "updated_at": "2025-02-12T05:25:41.965471",
-      "additional_information": {}
-    },
-    {
-      "id": "61d47b00-5488-41c4-a8c9-d4ba648ea102",
-      "role": "assistant",
-      "content": [
-        {
-          "type": "text",
-          "content": ""
         },
         {
           "type": "tool_call",
-          "tool_call_id": "",
+          "tool_call_id": "call_sg65",
           "tool_call_name": "get_current_datetime",
           "tool_call_arguments": {
             "output_format": "%Y-%m-%d %H:%M:%S"
           }
         }
       ],
-      "created_at": "2025-02-12T05:25:43.764019",
-      "updated_at": "2025-02-12T05:25:43.764022",
+      "created_at": "2025-02-14T15:07:02.155631",
+      "updated_at": "2025-02-14T15:07:02.155632",
+      "additional_fields": {},
       "additional_information": {
-        "id": "chatcmpl-8b4EZzcRohRBHs7NNwTgZJDS8IW1iwoy",
-        "created": 1739334343,
-        "model": "unsloth/Meta-Llama-3.1-8B-Instruct-bnb-4bit",
+        "id": "chatcmpl-57ec7f3a-3b9e-48d5-a099-7d7d9fe1a0e2",
+        "created": 1739542019,
+        "model": "llama-3.3-70b-versatile",
         "object": "chat.completion",
-        "service_tier": null,
-        "system_fingerprint": "b4686-7b891bdc",
+        "system_fingerprint": "fp_5f849c5a0b",
         "usage": {
-          "completion_tokens": 46,
-          "prompt_tokens": 1780,
-          "total_tokens": 1826,
-          "completion_tokens_details": null,
-          "prompt_tokens_details": null
+          "completion_tokens": 231,
+          "prompt_tokens": 663,
+          "total_tokens": 894,
+          "completion_time": 0.84,
+          "prompt_time": 0.045928927,
+          "queue_time": 0.262302526,
+          "total_time": 0.885928927
         },
-        "timings": {
-          "prompt_n": 115,
-          "prompt_ms": 144.766,
-          "prompt_per_token_ms": 1.2588347826086956,
-          "prompt_per_second": 794.3854219913516,
-          "predicted_n": 46,
-          "predicted_ms": 1617.506,
-          "predicted_per_token_ms": 35.16317391304348,
-          "predicted_per_second": 28.438843503517145
+        "x_groq": {
+          "id": "req_01jm2chff4e6a9tyvf77njw88p"
         }
       }
     },
     {
-      "id": "d38fbd36-0dd9-4d77-9359-34af4f27b480",
+      "id": "7fb411b8-3c0d-4131-ab67-349782b3e730",
       "role": "tool",
       "content": [
         {
           "type": "tool_call_result",
-          "tool_call_result_id": "cd470a3c-6c92-4589-b0b1-05e5b464ad98",
-          "tool_call_id": "",
+          "tool_call_result_id": "a43d99e6-f486-4991-ae06-f71cbcce8500",
+          "tool_call_id": "call_7mbx",
+          "tool_call_name": "get_current_weather",
+          "tool_call_result": "Weather in London, Great Britain: 22\u00b0 celsius"
+        },
+        {
+          "type": "tool_call_result",
+          "tool_call_result_id": "2c5aceeb-8718-4c8c-ab9e-e0107a3e1ce8",
+          "tool_call_id": "call_h650",
+          "tool_call_name": "get_current_weather",
+          "tool_call_result": "Weather in New York City, New York: 24\u00b0 celsius"
+        },
+        {
+          "type": "tool_call_result",
+          "tool_call_result_id": "53bdcabf-ea88-4a3b-9b52-d787251faa94",
+          "tool_call_id": "call_x29c",
+          "tool_call_name": "get_current_weather",
+          "tool_call_result": "Weather in North Pole, Arctica: -42\u00b0 celsius"
+        },
+        {
+          "type": "tool_call_result",
+          "tool_call_result_id": "ebf9ab05-ad6d-45c9-bb5f-36d332774cd8",
+          "tool_call_id": "call_9d69",
+          "tool_call_name": "calculator",
+          "tool_call_result": "1764.0"
+        },
+        {
+          "type": "tool_call_result",
+          "tool_call_result_id": "d1ad60bf-0837-414b-8a59-dc06b4badf64",
+          "tool_call_id": "call_py38",
+          "tool_call_name": "calculator",
+          "tool_call_result": "100.0"
+        },
+        {
+          "type": "tool_call_result",
+          "tool_call_result_id": "40c52a84-95da-4a61-b444-23876da4fc08",
+          "tool_call_id": "call_9hcm",
+          "tool_call_name": "calculator",
+          "tool_call_result": "182.0"
+        },
+        {
+          "type": "tool_call_result",
+          "tool_call_result_id": "3fd567a0-cfc4-4d57-8cc3-559854a7248e",
+          "tool_call_id": "call_3q9c",
+          "tool_call_name": "calculator",
+          "tool_call_result": "10.0"
+        },
+        {
+          "type": "tool_call_result",
+          "tool_call_result_id": "9473584b-ac28-4fe0-a627-91a986bbf469",
+          "tool_call_id": "call_dwff",
+          "tool_call_name": "calculator",
+          "tool_call_result": "12.0"
+        },
+        {
+          "type": "tool_call_result",
+          "tool_call_result_id": "cc60c995-33fd-4afd-bb40-a004667d09e2",
+          "tool_call_id": "call_sg65",
           "tool_call_name": "get_current_datetime",
-          "tool_call_result": "2025-02-12 05:25:43"
+          "tool_call_result": "2025-02-14 15:07:02"
         }
       ],
-      "created_at": "2025-02-12T05:25:43.764109",
-      "updated_at": "2025-02-12T05:25:43.764109",
+      "created_at": "2025-02-14T15:07:02.156797",
+      "updated_at": "2025-02-14T15:07:02.156797",
+      "additional_fields": {},
       "additional_information": {}
     },
     {
-      "id": "f7f5aeae-671b-4dbc-9b24-f538906f28b5",
+      "id": "9df64e8f-85ef-40df-b56b-c0520f41bc71",
       "role": "assistant",
       "content": [
         {
           "type": "text",
-          "content": "Here are the current temperatures: 22\u00b0 celsius in London, 24\u00b0 celsius in New York City, and -42\u00b0 celsius at the North Pole. Here are the results of the calculations: 42 * 42 = 1764, 74 + 26 = 100, 7 * 26 = 182, 4 + 6 = 10, and 96 / 8 = 12. And here is the current date and time: 2025-02-12 05:25:43."
+          "content": "The current weather in London, Great Britain is 22\u00b0 celsius, in New York City, New York is 24\u00b0 celsius and at the North Pole, Arctica is -42\u00b0 celsius. The results of the calculations are: 42 * 42 = 1764, 74 + 26 = 100, 7 * 26 = 182, 4 + 6 = 10 and 96 / 8 = 12. The current date and time is 2025-02-14 15:07:02."
         }
       ],
-      "created_at": "2025-02-12T05:25:49.027981",
-      "updated_at": "2025-02-12T05:25:49.027983",
+      "created_at": "2025-02-14T15:07:03.426123",
+      "updated_at": "2025-02-14T15:07:03.426125",
+      "additional_fields": {},
       "additional_information": {
-        "id": "chatcmpl-hv2ofyU6a645ctTgvBRdElH2CuQeZJgK",
-        "created": 1739334349,
-        "model": "unsloth/Meta-Llama-3.1-8B-Instruct-bnb-4bit",
+        "id": "chatcmpl-b09029a5-ca02-4c7a-8c56-ef3c819867cf",
+        "created": 1739542021,
+        "model": "llama-3.3-70b-versatile",
         "object": "chat.completion",
-        "service_tier": null,
-        "system_fingerprint": "b4686-7b891bdc",
+        "system_fingerprint": "fp_2ca0059abb",
         "usage": {
-          "completion_tokens": 145,
-          "prompt_tokens": 1910,
-          "total_tokens": 2055,
-          "completion_tokens_details": null,
-          "prompt_tokens_details": null
+          "completion_tokens": 117,
+          "prompt_tokens": 1019,
+          "total_tokens": 1136,
+          "completion_time": 0.425454545,
+          "prompt_time": 0.055932152,
+          "queue_time": 0.362431192,
+          "total_time": 0.481386697
         },
-        "timings": {
-          "prompt_n": 125,
-          "prompt_ms": 148.475,
-          "prompt_per_token_ms": 1.1878,
-          "prompt_per_second": 841.8925745074929,
-          "predicted_n": 145,
-          "predicted_ms": 5080.727,
-          "predicted_per_token_ms": 35.039496551724135,
-          "predicted_per_second": 28.539222831693184
+        "x_groq": {
+          "id": "req_01jm2chgt7etbrhrpp0ehy3ga1"
         }
       }
     }
