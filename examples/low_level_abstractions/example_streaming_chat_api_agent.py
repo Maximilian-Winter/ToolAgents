@@ -6,9 +6,11 @@ import uuid
 from ToolAgents import ToolRegistry
 from ToolAgents.agents import ChatToolAgent
 from ToolAgents.messages.chat_message import ChatMessage, ChatMessageRole, TextContent
-from ToolAgents.provider import AnthropicChatAPI, AnthropicSettings, OpenAIChatAPI, OpenAISettings
+from ToolAgents.provider import AnthropicChatAPI, AnthropicSettings, OpenAIChatAPI, OpenAISettings, \
+    LlamaCppServerProvider
 from ToolAgents.provider.chat_api_provider.groq import GroqChatAPI, GroqSettings
 from ToolAgents.provider.chat_api_provider.mistral import MistralChatAPI, MistralSettings
+from ToolAgents.provider.generation_provider.llama_cpp_server import LlamaCppSamplingSettings
 
 from example_tools import calculator_function_tool, current_datetime_function_tool, get_weather_function_tool
 
@@ -29,8 +31,12 @@ load_dotenv()
 #settings = AnthropicSettings()
 
 # Groq API
-api = GroqChatAPI(api_key=os.getenv("GROQ_API_KEY"), model="llama-3.3-70b-versatile")
-settings = GroqSettings()
+#api = GroqChatAPI(api_key=os.getenv("GROQ_API_KEY"), model="llama-3.3-70b-versatile")
+#settings = GroqSettings()
+
+# Llama Cpp Generation Server API
+api = LlamaCppServerProvider("http://127.0.0.1:8080")
+settings = LlamaCppSamplingSettings()
 
 # Mistral API
 #api = MistralChatAPI(api_key=os.getenv("MISTRAL_API_KEY"), model="mistral-small-latest")

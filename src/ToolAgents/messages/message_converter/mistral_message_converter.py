@@ -54,6 +54,9 @@ class MistralMessageConverter(BaseMessageConverter):
                 converted_messages.append({"role": role, "content": "", "tool_calls": tool_calls})
         return converted_messages
 
+
+
+
 class MistralResponseConverter(BaseResponseConverter):
     def from_provider_response(self, response_data: Any) -> ChatMessage:
 
