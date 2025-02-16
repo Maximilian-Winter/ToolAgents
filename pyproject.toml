@@ -4,15 +4,22 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ToolAgents"
-version = "0.0.12"
+version = "0.1.0"
 description = "ToolAgents is a lightweight and flexible framework for creating function-calling agents with various language models and APIs."
 
 readme = "ReadMe.md"
 dependencies = [
     "pydantic>=2.5.3",
     "requests>=2.31.0",
+    "pydantic-settings",
     "docstring_parser",
     "aiohttp",
+    "chromadb",
+    "pdf2image",
+    "pytesseract",
+    "sentence_transformers",
+    "hdbscan",
+    "mistralai",
     "mistral-common",
     "openai",
     "transformers",

@@ -1,0 +1,437 @@
+{
+  "messages": [
+    {
+      "id": "14601ce9-40d7-49b3-bc3a-f21cda806456",
+      "role": "system",
+      "content": [
+        {
+          "type": "text",
+          "content": "You are Funky, an AI assistant specialized in interpreting user requests and generating appropriate function calls. Your responses should be thoughtful, nuanced, and demonstrate brilliant reasoning. Your primary task is to analyze user requests and, when necessary, create function calls in JSON format to perform the requested tasks.\nChoose the appropriate function based on the task you want to perform. Provide your function calls in JSON format. Here is an example for how your function calls should look like: [{\"name\": \"get_location_news\", \"arguments\": {\"location\": \"London, Great Britain\"}}, {\"name\": \"get_location_news\", \"arguments\": {\"location\": \"Berlin, Germany\"}}]"
+        }
+      ],
+      "created_at": "2025-02-14T15:07:00.697384",
+      "updated_at": "2025-02-14T15:07:00.697387",
+      "additional_fields": {},
+      "additional_information": {}
+    },
+    {
+      "id": "da6431b8-484d-496e-9682-b4d0b3db5215",
+      "role": "user",
+      "content": [
+        {
+          "type": "text",
+          "content": "Perform all the following tasks: Get the current weather in celsius in the city of London, Great Britain, New York City, New York and at the North Pole, Arctica. Solve the following calculations: 42 * 42, 74 + 26, 7 * 26, 4 + 6  and 96/8. And retrieve the date and time in the format: %Y-%m-%d %H:%M:%S."
+        }
+      ],
+      "created_at": "2025-02-14T15:07:00.697416",
+      "updated_at": "2025-02-14T15:07:00.697416",
+      "additional_fields": {},
+      "additional_information": {}
+    },
+    {
+      "id": "7a41ac7d-0639-4731-b407-76b615a44267",
+      "role": "assistant",
+      "content": [
+        {
+          "type": "tool_call",
+          "tool_call_id": "call_7mbx",
+          "tool_call_name": "get_current_weather",
+          "tool_call_arguments": {
+            "location": "London, Great Britain",
+            "unit": "celsius"
+          }
+        },
+        {
+          "type": "tool_call",
+          "tool_call_id": "call_h650",
+          "tool_call_name": "get_current_weather",
+          "tool_call_arguments": {
+            "location": "New York City, New York",
+            "unit": "celsius"
+          }
+        },
+        {
+          "type": "tool_call",
+          "tool_call_id": "call_x29c",
+          "tool_call_name": "get_current_weather",
+          "tool_call_arguments": {
+            "location": "North Pole, Arctica",
+            "unit": "celsius"
+          }
+        },
+        {
+          "type": "tool_call",
+          "tool_call_id": "call_9d69",
+          "tool_call_name": "calculator",
+          "tool_call_arguments": {
+            "number_one": 42,
+            "operation": "multiply",
+            "number_two": 42
+          }
+        },
+        {
+          "type": "tool_call",
+          "tool_call_id": "call_py38",
+          "tool_call_name": "calculator",
+          "tool_call_arguments": {
+            "number_one": 74,
+            "operation": "add",
+            "number_two": 26
+          }
+        },
+        {
+          "type": "tool_call",
+          "tool_call_id": "call_9hcm",
+          "tool_call_name": "calculator",
+          "tool_call_arguments": {
+            "number_one": 7,
+            "operation": "multiply",
+            "number_two": 26
+          }
+        },
+        {
+          "type": "tool_call",
+          "tool_call_id": "call_3q9c",
+          "tool_call_name": "calculator",
+          "tool_call_arguments": {
+            "number_one": 4,
+            "operation": "add",
+            "number_two": 6
+          }
+        },
+        {
+          "type": "tool_call",
+          "tool_call_id": "call_dwff",
+          "tool_call_name": "calculator",
+          "tool_call_arguments": {
+            "number_one": 96,
+            "operation": "divide",
+            "number_two": 8
+          }
+        },
+        {
+          "type": "tool_call",
+          "tool_call_id": "call_sg65",
+          "tool_call_name": "get_current_datetime",
+          "tool_call_arguments": {
+            "output_format": "%Y-%m-%d %H:%M:%S"
+          }
+        }
+      ],
+      "created_at": "2025-02-14T15:07:02.155631",
+      "updated_at": "2025-02-14T15:07:02.155632",
+      "additional_fields": {},
+      "additional_information": {
+        "id": "chatcmpl-57ec7f3a-3b9e-48d5-a099-7d7d9fe1a0e2",
+        "created": 1739542019,
+        "model": "llama-3.3-70b-versatile",
+        "object": "chat.completion",
+        "system_fingerprint": "fp_5f849c5a0b",
+        "usage": {
+          "completion_tokens": 231,
+          "prompt_tokens": 663,
+          "total_tokens": 894,
+          "completion_time": 0.84,
+          "prompt_time": 0.045928927,
+          "queue_time": 0.262302526,
+          "total_time": 0.885928927
+        },
+        "x_groq": {
+          "id": "req_01jm2chff4e6a9tyvf77njw88p"
+        }
+      }
+    },
+    {
+      "id": "7fb411b8-3c0d-4131-ab67-349782b3e730",
+      "role": "tool",
+      "content": [
+        {
+          "type": "tool_call_result",
+          "tool_call_result_id": "a43d99e6-f486-4991-ae06-f71cbcce8500",
+          "tool_call_id": "call_7mbx",
+          "tool_call_name": "get_current_weather",
+          "tool_call_result": "Weather in London, Great Britain: 22\u00b0 celsius"
+        },
+        {
+          "type": "tool_call_result",
+          "tool_call_result_id": "2c5aceeb-8718-4c8c-ab9e-e0107a3e1ce8",
+          "tool_call_id": "call_h650",
+          "tool_call_name": "get_current_weather",
+          "tool_call_result": "Weather in New York City, New York: 24\u00b0 celsius"
+        },
+        {
+          "type": "tool_call_result",
+          "tool_call_result_id": "53bdcabf-ea88-4a3b-9b52-d787251faa94",
+          "tool_call_id": "call_x29c",
+          "tool_call_name": "get_current_weather",
+          "tool_call_result": "Weather in North Pole, Arctica: -42\u00b0 celsius"
+        },
+        {
+          "type": "tool_call_result",
+          "tool_call_result_id": "ebf9ab05-ad6d-45c9-bb5f-36d332774cd8",
+          "tool_call_id": "call_9d69",
+          "tool_call_name": "calculator",
+          "tool_call_result": "1764.0"
+        },
+        {
+          "type": "tool_call_result",
+          "tool_call_result_id": "d1ad60bf-0837-414b-8a59-dc06b4badf64",
+          "tool_call_id": "call_py38",
+          "tool_call_name": "calculator",
+          "tool_call_result": "100.0"
+        },
+        {
+          "type": "tool_call_result",
+          "tool_call_result_id": "40c52a84-95da-4a61-b444-23876da4fc08",
+          "tool_call_id": "call_9hcm",
+          "tool_call_name": "calculator",
+          "tool_call_result": "182.0"
+        },
+        {
+          "type": "tool_call_result",
+          "tool_call_result_id": "3fd567a0-cfc4-4d57-8cc3-559854a7248e",
+          "tool_call_id": "call_3q9c",
+          "tool_call_name": "calculator",
+          "tool_call_result": "10.0"
+        },
+        {
+          "type": "tool_call_result",
+          "tool_call_result_id": "9473584b-ac28-4fe0-a627-91a986bbf469",
+          "tool_call_id": "call_dwff",
+          "tool_call_name": "calculator",
+          "tool_call_result": "12.0"
+        },
+        {
+          "type": "tool_call_result",
+          "tool_call_result_id": "cc60c995-33fd-4afd-bb40-a004667d09e2",
+          "tool_call_id": "call_sg65",
+          "tool_call_name": "get_current_datetime",
+          "tool_call_result": "2025-02-14 15:07:02"
+        }
+      ],
+      "created_at": "2025-02-14T15:07:02.156797",
+      "updated_at": "2025-02-14T15:07:02.156797",
+      "additional_fields": {},
+      "additional_information": {}
+    },
+    {
+      "id": "7a41ac7d-0639-4731-b407-76b615a44267",
+      "role": "assistant",
+      "content": [
+        {
+          "type": "tool_call",
+          "tool_call_id": "call_7mbx",
+          "tool_call_name": "get_current_weather",
+          "tool_call_arguments": {
+            "location": "London, Great Britain",
+            "unit": "celsius"
+          }
+        },
+        {
+          "type": "tool_call",
+          "tool_call_id": "call_h650",
+          "tool_call_name": "get_current_weather",
+          "tool_call_arguments": {
+            "location": "New York City, New York",
+            "unit": "celsius"
+          }
+        },
+        {
+          "type": "tool_call",
+          "tool_call_id": "call_x29c",
+          "tool_call_name": "get_current_weather",
+          "tool_call_arguments": {
+            "location": "North Pole, Arctica",
+            "unit": "celsius"
+          }
+        },
+        {
+          "type": "tool_call",
+          "tool_call_id": "call_9d69",
+          "tool_call_name": "calculator",
+          "tool_call_arguments": {
+            "number_one": 42,
+            "operation": "multiply",
+            "number_two": 42
+          }
+        },
+        {
+          "type": "tool_call",
+          "tool_call_id": "call_py38",
+          "tool_call_name": "calculator",
+          "tool_call_arguments": {
+            "number_one": 74,
+            "operation": "add",
+            "number_two": 26
+          }
+        },
+        {
+          "type": "tool_call",
+          "tool_call_id": "call_9hcm",
+          "tool_call_name": "calculator",
+          "tool_call_arguments": {
+            "number_one": 7,
+            "operation": "multiply",
+            "number_two": 26
+          }
+        },
+        {
+          "type": "tool_call",
+          "tool_call_id": "call_3q9c",
+          "tool_call_name": "calculator",
+          "tool_call_arguments": {
+            "number_one": 4,
+            "operation": "add",
+            "number_two": 6
+          }
+        },
+        {
+          "type": "tool_call",
+          "tool_call_id": "call_dwff",
+          "tool_call_name": "calculator",
+          "tool_call_arguments": {
+            "number_one": 96,
+            "operation": "divide",
+            "number_two": 8
+          }
+        },
+        {
+          "type": "tool_call",
+          "tool_call_id": "call_sg65",
+          "tool_call_name": "get_current_datetime",
+          "tool_call_arguments": {
+            "output_format": "%Y-%m-%d %H:%M:%S"
+          }
+        }
+      ],
+      "created_at": "2025-02-14T15:07:02.155631",
+      "updated_at": "2025-02-14T15:07:02.155632",
+      "additional_fields": {},
+      "additional_information": {
+        "id": "chatcmpl-57ec7f3a-3b9e-48d5-a099-7d7d9fe1a0e2",
+        "created": 1739542019,
+        "model": "llama-3.3-70b-versatile",
+        "object": "chat.completion",
+        "system_fingerprint": "fp_5f849c5a0b",
+        "usage": {
+          "completion_tokens": 231,
+          "prompt_tokens": 663,
+          "total_tokens": 894,
+          "completion_time": 0.84,
+          "prompt_time": 0.045928927,
+          "queue_time": 0.262302526,
+          "total_time": 0.885928927
+        },
+        "x_groq": {
+          "id": "req_01jm2chff4e6a9tyvf77njw88p"
+        }
+      }
+    },
+    {
+      "id": "7fb411b8-3c0d-4131-ab67-349782b3e730",
+      "role": "tool",
+      "content": [
+        {
+          "type": "tool_call_result",
+          "tool_call_result_id": "a43d99e6-f486-4991-ae06-f71cbcce8500",
+          "tool_call_id": "call_7mbx",
+          "tool_call_name": "get_current_weather",
+          "tool_call_result": "Weather in London, Great Britain: 22\u00b0 celsius"
+        },
+        {
+          "type": "tool_call_result",
+          "tool_call_result_id": "2c5aceeb-8718-4c8c-ab9e-e0107a3e1ce8",
+          "tool_call_id": "call_h650",
+          "tool_call_name": "get_current_weather",
+          "tool_call_result": "Weather in New York City, New York: 24\u00b0 celsius"
+        },
+        {
+          "type": "tool_call_result",
+          "tool_call_result_id": "53bdcabf-ea88-4a3b-9b52-d787251faa94",
+          "tool_call_id": "call_x29c",
+          "tool_call_name": "get_current_weather",
+          "tool_call_result": "Weather in North Pole, Arctica: -42\u00b0 celsius"
+        },
+        {
+          "type": "tool_call_result",
+          "tool_call_result_id": "ebf9ab05-ad6d-45c9-bb5f-36d332774cd8",
+          "tool_call_id": "call_9d69",
+          "tool_call_name": "calculator",
+          "tool_call_result": "1764.0"
+        },
+        {
+          "type": "tool_call_result",
+          "tool_call_result_id": "d1ad60bf-0837-414b-8a59-dc06b4badf64",
+          "tool_call_id": "call_py38",
+          "tool_call_name": "calculator",
+          "tool_call_result": "100.0"
+        },
+        {
+          "type": "tool_call_result",
+          "tool_call_result_id": "40c52a84-95da-4a61-b444-23876da4fc08",
+          "tool_call_id": "call_9hcm",
+          "tool_call_name": "calculator",
+          "tool_call_result": "182.0"
+        },
+        {
+          "type": "tool_call_result",
+          "tool_call_result_id": "3fd567a0-cfc4-4d57-8cc3-559854a7248e",
+          "tool_call_id": "call_3q9c",
+          "tool_call_name": "calculator",
+          "tool_call_result": "10.0"
+        },
+        {
+          "type": "tool_call_result",
+          "tool_call_result_id": "9473584b-ac28-4fe0-a627-91a986bbf469",
+          "tool_call_id": "call_dwff",
+          "tool_call_name": "calculator",
+          "tool_call_result": "12.0"
+        },
+        {
+          "type": "tool_call_result",
+          "tool_call_result_id": "cc60c995-33fd-4afd-bb40-a004667d09e2",
+          "tool_call_id": "call_sg65",
+          "tool_call_name": "get_current_datetime",
+          "tool_call_result": "2025-02-14 15:07:02"
+        }
+      ],
+      "created_at": "2025-02-14T15:07:02.156797",
+      "updated_at": "2025-02-14T15:07:02.156797",
+      "additional_fields": {},
+      "additional_information": {}
+    },
+    {
+      "id": "9df64e8f-85ef-40df-b56b-c0520f41bc71",
+      "role": "assistant",
+      "content": [
+        {
+          "type": "text",
+          "content": "The current weather in London, Great Britain is 22\u00b0 celsius, in New York City, New York is 24\u00b0 celsius and at the North Pole, Arctica is -42\u00b0 celsius. The results of the calculations are: 42 * 42 = 1764, 74 + 26 = 100, 7 * 26 = 182, 4 + 6 = 10 and 96 / 8 = 12. The current date and time is 2025-02-14 15:07:02."
+        }
+      ],
+      "created_at": "2025-02-14T15:07:03.426123",
+      "updated_at": "2025-02-14T15:07:03.426125",
+      "additional_fields": {},
+      "additional_information": {
+        "id": "chatcmpl-b09029a5-ca02-4c7a-8c56-ef3c819867cf",
+        "created": 1739542021,
+        "model": "llama-3.3-70b-versatile",
+        "object": "chat.completion",
+        "system_fingerprint": "fp_2ca0059abb",
+        "usage": {
+          "completion_tokens": 117,
+          "prompt_tokens": 1019,
+          "total_tokens": 1136,
+          "completion_time": 0.425454545,
+          "prompt_time": 0.055932152,
+          "queue_time": 0.362431192,
+          "total_time": 0.481386697
+        },
+        "x_groq": {
+          "id": "req_01jm2chgt7etbrhrpp0ehy3ga1"
+        }
+      }
+    }
+  ],
+  "metadata": {}
+}

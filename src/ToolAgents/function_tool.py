@@ -1,5 +1,5 @@
-import dataclasses
 import inspect
+import json
 import re
 
 import typing
@@ -7,13 +7,12 @@ import typing
 from typing import Type, List, Callable, Any, Union, Tuple, Dict
 
 from docstring_parser import DocstringStyle, parse
-from pydantic import BaseModel, create_model
+from pydantic import BaseModel, create_model, Field
 from pydantic_core import PydanticUndefined
-from pydantic_settings import BaseSettings
 
-from ToolAgents.gbnf_grammar_generator.gbnf_grammar_from_pydantic_models import \
+from ToolAgents.utilities.gbnf_grammar_generator.gbnf_grammar_from_pydantic_models import \
     generate_gbnf_grammar_from_pydantic_models
-from ToolAgents.json_schema_generator import generate_json_schemas
+from ToolAgents.utilities.json_schema_generator import generate_json_schemas
 from ToolAgents.utilities.documentation_generation import generate_text_documentation, generate_function_definition
 
 
@@ -290,6 +289,7 @@ def py_type_to_json_type(schema):
         int: {"type": "integer"},
         bool: {"type": "boolean"},
         list: {"type": "array"},
+        dict: {"type": "object"},
     }
     return type_map[schema]
 
@@ -312,6 +312,9 @@ def get_openai_type(py_type):
             # Filter out NoneType to handle optional fields
             non_none_types = [get_openai_type(t) for t in py_type.__args__ if t is not type(None)]
             return non_none_types
+        elif py_type.__origin__ is Dict or py_type.__origin__ is dict:
+            # Handle lists by identifying the type of list items
+            return {"type": "object"}
         elif py_type.__origin__ is List or py_type.__origin__ is list:
             # Handle lists by identifying the type of list items
             return {"type": "array", "items": get_openai_type(py_type.__args__[0])}
@@ -375,6 +378,79 @@ def pydantic_model_to_openai_function_definition(pydantic_model: Type[BaseModel]
     return function_definition
 
 
+def add_field_to_model(
+        model_class: Type[BaseModel],
+        field_name: str,
+        field_type: Type[Any],
+        default: Any = None,
+        required: bool = True
+) -> Type[BaseModel]:
+    """
+    Adds a new field to an existing Pydantic model class.
+
+    Args:
+        model_class: The original Pydantic model class
+        field_name: Name of the field to add
+        field_type: Type of the field (e.g., str, int, etc.)
+        default: Default value for the field (None if not provided)
+        required: Whether the field is required (True by default)
+
+    Returns:
+        A new Pydantic model class with the added field
+
+    Example:
+        class UserBase(BaseModel):
+            name: str
+            age: int
+
+        UpdatedUser = add_field_to_model(
+            UserBase,
+            "email",
+            str,
+            default="user@example.com",
+            required=False
+        )
+    """
+    # Get existing model fields
+    existing_fields = model_class.__annotations__
+
+    # Create field configuration
+    field_config = {}
+    if not required:
+        if default is not None:
+            field_config["default"] = default
+        else:
+            field_config["default"] = None
+    elif default is not None:
+        field_config["default"] = default
+
+    # Create the new field with Field configuration
+    new_field = Field(**field_config)
+
+    # Create new annotations dictionary with the added field
+    new_annotations = {
+        **existing_fields,
+        field_name: field_type
+    }
+
+    # Create new namespace for the model
+    namespace = {
+        "__annotations__": new_annotations,
+        field_name: new_field,
+        **{k: v for k, v in model_class.__dict__.items()
+           if not k.startswith("_") and k != "model_fields"}
+    }
+
+    # Create new model class
+    new_model = type(
+        f"{model_class.__name__}With{field_name.title()}",
+        (BaseModel,),
+        namespace
+    )
+
+    return new_model
+
+
 class FunctionTool:
     """
     Class representing a function tool for a LLM.
@@ -393,7 +469,7 @@ class FunctionTool:
 
     def __init__(
             self,
-            function_tool: Union[BaseModel, Callable, Tuple[Dict[str, Any], Callable]],
+            function_tool: Union[BaseModel, Callable, Tuple[Dict[str, Any], Callable]], pre_processor: Callable[[dict[str, Any]], dict[str, Any]] = None, post_processor: Callable[[Any], Any] = None, debug_mode: bool = False,
             **additional_parameters,
     ):
         # Determine the type of function_tool and set up the appropriate handling
@@ -410,17 +486,23 @@ class FunctionTool:
             models = create_dynamic_models_from_dictionaries([function_tool[0]])
             self.model = add_run_method_to_dynamic_model(models[0], function_tool[1])
         elif callable(function_tool):
-            # Handle simple callable
             self.model = create_dynamic_model_from_function(function_tool)
         else:
             raise ValueError("Invalid function_tool type provided")
 
+        self.pre_processor = pre_processor
+        self.post_processor = post_processor
+
+        self.debug_mode = debug_mode
         self.additional_parameters = (
             additional_parameters if additional_parameters else {}
         )
 
     def set_name(self, new_name: str):
         self.model.__name__ = new_name
+
+    def set_keyword_argument(self, key: str, value: Any):
+        self.additional_parameters[key] = value
 
     def get_python_documentation(self):
         return generate_function_definition(self.model, self.model.__name__, self.model.__doc__)
@@ -540,8 +622,19 @@ class FunctionTool:
         return nous_hermes_pro_tool
 
     def execute(self, parameters):
-        instance = self.model(**parameters)
-        return instance.run(**self.additional_parameters)
+        if self.debug_mode:
+            print(json.dumps(parameters, indent=4))
+        if self.pre_processor:
+            parameters = self.pre_processor(parameters)
+        try:
+            instance = self.model(**parameters)
+            result = instance.run(**self.additional_parameters)
+        except Exception as e:
+            print(e)
+            result = str(e)
+        if self.post_processor:
+            result = self.post_processor(result)
+        return result
 
 
 class ToolRegistry:
@@ -554,16 +647,22 @@ class ToolRegistry:
 
     def add_tools(self, tools: List[FunctionTool]):
         for tool in tools:
-            self.tools[tool.model.__name__] = tool
+            if tool.model.__name__ not in self.tools:
+                self.tools[tool.model.__name__] = tool
 
     def add_tool(self, tool: FunctionTool):
-        self.tools[tool.model.__name__] = tool
+        if tool.model.__name__ not in self.tools:
+            self.tools[tool.model.__name__] = tool
+
 
     def remove(self, tool_name: str):
         del self.tools[tool_name]
 
     def get_tool(self, name: str) -> FunctionTool:
         return self.tools[name]
+
+    def get_tools(self):
+        return self.tools.values()
 
     def get_mistral_tools(self):
         return [tool.to_mistral_tool() for tool in self.tools.values()]

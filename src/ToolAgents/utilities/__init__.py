@@ -1,2 +1,2 @@
-from ToolAgents.utilities.chat_history import ChatHistory, ChatFormatter
+from ToolAgents.utilities.text_splitter import SimpleTextSplitter, RecursiveCharacterTextSplitter
 from ToolAgents.utilities.documentation_generation import generate_text_documentation, generate_markdown_documentation

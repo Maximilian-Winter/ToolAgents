@@ -1,4 +1,4 @@
-from ToolAgents.utilities.chat_history import ChatHistory, AdvancedChatFormatter
+from ToolAgents.messages.chat_history import ChatHistory, AdvancedChatFormatter
 
 chat_history = ChatHistory()
 chat_history.load_history("./test_chat_history.json")
