@@ -23,21 +23,13 @@ ToolAgents is a lightweight and flexible framework for creating function-calling
 ## Features
 
 - Support for multiple LLM providers:
-  - llama.cpp servers
-  - Hugging Face's Text Generation Interface (TGI) servers
-  - vLLM servers
   - OpenAI API
   - Anthropic API
   - Mistral API
-  - Ollama (with Tool calling support)
+  - OpenAI like API, like OpenRouter, VLLM, llama-cpp-server
 - Easy-to-use interface for passing functions, Pydantic models, and tools to LLMs
 - Streamlined process for function calling and result handling
-- Flexible agent types:
-  - MistralAgent for llama.cpp, TGI, and vLLM servers
-  - LlamaAgent for llama.cpp, TGI and vLLM servers
-  - Customizable TemplateAgent for llama.cpp, TGI, and vLLM servers
-  - ChatAPIAgent for OpenAI and Anthropic APIs
-  - OllamaAgent for Ollama integration
+- Unified Message format, making switching of providers while keeping the same chat history easy.
 
 ## Installation
 
@@ -47,200 +39,193 @@ pip install ToolAgents
 
 ## Usage
 
-### MistralAgent with llama.cpp Server
-
-```python
-from ToolAgents.agents import MistralAgent
-from ToolAgents.provider import LlamaCppServerProvider, LlamaCppSamplingSettings
-from ToolAgents.utilities import ChatHistory
-from ToolAgents import ToolRegistry
-from test_tools import calculator_function_tool, current_datetime_function_tool, get_weather_function_tool
-
-# Initialize the provider and agent
-provider = LlamaCppServerProvider("http://127.0.0.1:8080/")
-agent = MistralAgent(provider=provider, debug_output=False)
-
-# Configure settings
-settings = LlamaCppSamplingSettings()
-settings.temperature = 0.3
-settings.top_p = 1.0
-settings.max_tokens = 4096
-
-# Define tools
-tools = [calculator_function_tool, current_datetime_function_tool, get_weather_function_tool]
-
-tool_registry = ToolRegistry()
-
-tool_registry.add_tools(tools)
-
-# Create chat history and add system message and user message.
-chat_history = ChatHistory()
-chat_history.add_system_message("You are a helpful assistant.")
-chat_history.add_user_message("Perform the following tasks: Get the current weather in Celsius in London, New York, and at the North Pole. Solve these calculations: 42 * 42, 74 + 26, 7 * 26, 4 + 6, and 96/8.")
-# Get a response
-result = agent.get_streaming_response(
-    messages=chat_history.to_list(),
-    settings=settings,
-    tool_registry=tool_registry
-)
-
-for token in result:
-    print(token, end="", flush=True)
-print()
-
-# Add the generated messages, including tool messages, to the chat history.
-chat_history.add_list_of_dicts(agent.last_messages_buffer)
-
-# Save chat history to file.
-chat_history.save_history("./chat_history.json")
-```
-
-### LlamaAgent with llama.cpp Server
-
-```python
-from ToolAgents.agents import Llama31Agent
-from ToolAgents.provider import LlamaCppServerProvider, LlamaCppSamplingSettings
-from ToolAgents.utilities import ChatHistory
-from ToolAgents import ToolRegistry
-from test_tools import calculator_function_tool, current_datetime_function_tool, get_weather_function_tool
-
-# Initialize the provider and agent
-provider = LlamaCppServerProvider("http://127.0.0.1:8080/")
-agent = Llama31Agent(provider=provider, debug_output=False)
-
-# Configure settings
-settings = LlamaCppSamplingSettings()
-settings.temperature = 0.3
-settings.top_p = 1.0
-settings.max_tokens = 4096
-
-# Define tools
-tools = [calculator_function_tool, current_datetime_function_tool, get_weather_function_tool]
-
-tool_registry = ToolRegistry()
-
-tool_registry.add_tools(tools)
-
-# Create chat history and add system message and user message.
-chat_history = ChatHistory()
-chat_history.add_system_message("You are a helpful assistant.")
-chat_history.add_user_message("Perform the following tasks: Get the current weather in Celsius in London, New York, and at the North Pole. Solve these calculations: 42 * 42, 74 + 26, 7 * 26, 4 + 6, and 96/8.")
-
-
-# Get a response
-result = agent.get_streaming_response(
-    messages=chat_history.to_list(),
-    settings=settings,
-    tools=tools
-)
-
-for token in result:
-    print(token, end="", flush=True)
-print()
-
-# Add the generated messages, including tool messages, to the chat history.
-chat_history.add_list_of_dicts(agent.last_messages_buffer)
-
-# Save chat history to file.
-chat_history.save_history("./chat_history.json")
-```
-### ChatAPIAgent with Anthropic API
+### ChatToolAgent
 
 ```python
 import os
-from dotenv import load_dotenv
-from ToolAgents.agents import ChatToolAgent
-from ToolAgents.provider import AnthropicChatAPI, AnthropicSettings
-from ToolAgents.utilities import ChatHistory
+
 from ToolAgents import ToolRegistry
-from test_tools import calculator_function_tool, current_datetime_function_tool, get_weather_function_tool
+from ToolAgents.agents import ChatToolAgent
+from ToolAgents.messages.chat_message import ChatMessage
+from ToolAgents.provider import OpenAIChatAPI
+from example_tools import calculator_function_tool, current_datetime_function_tool, get_weather_function_tool
+
+from dotenv import load_dotenv
 
 load_dotenv()
 
-# Initialize the API and agent
-api = AnthropicChatAPI(api_key=os.getenv("ANTHROPIC_API_KEY"), model="claude-3-sonnet-20240229")
+# Official OpenAI API
+api = OpenAIChatAPI(api_key=os.getenv("OPENAI_API_KEY"), model="gpt-4o-mini")
+
+# Create the ChatAPIAgent
+agent = ChatToolAgent(chat_api=api)
+settings = api.get_default_settings()
+settings.temperature = 0.45
+settings.top_p = 1.0
+
+# Define the tools
+tools = [calculator_function_tool, current_datetime_function_tool, get_weather_function_tool]
+tool_registry = ToolRegistry()
+
+tool_registry.add_tools(tools)
+messages = [
+    ChatMessage.create_system_message("You are a helpful assistant with tool calling capabilities. Only reply with a tool call if the function exists in the library provided by the user. Use JSON format to output your function calls. If it doesn't exist, just reply directly in natural language. When you receive a tool call response, use the output to format an answer to the original user question."),
+    ChatMessage.create_user_message("Get the weather in London and New York. Calculate 420 x 420 and retrieve the date and time in the format: %Y-%m-%d %H:%M:%S.")
+]
+
+result = agent.get_streaming_response(
+    messages=messages,
+    settings=settings, tool_registry=tool_registry)
+
+
+for res in result:
+    print(res.chunk, end='', flush=True)
+
+```
+
+### Different Providers
+```python
+# Import different providers
+from ToolAgents.provider import AnthropicChatAPI, OpenAIChatAPI, GroqChatAPI, MistralChatAPI, CompletionProvider
+
+# Official OpenAI API
+api = OpenAIChatAPI(api_key=os.getenv("OPENAI_API_KEY"), model="gpt-4o-mini")
+
+# Local OpenAI like API, like vllm or llama-cpp-server
+api = OpenAIChatAPI(api_key="token-abc123", base_url="http://127.0.0.1:8080/v1", model="unsloth/Meta-Llama-3.1-8B-Instruct-bnb-4bit")
+
+# Anthropic API
+api = AnthropicChatAPI(api_key=os.getenv("ANTHROPIC_API_KEY"), model="claude-3-5-sonnet-20241022")
+
+# Groq API
+api = GroqChatAPI(api_key=os.getenv("GROQ_API_KEY"), model="llama-3.3-70b-versatile")
+
+
+# Mistral API
+api = MistralChatAPI(api_key=os.getenv("MISTRAL_API_KEY"), model="mistral-small-latest")
+
+```
+
+### Use ChatToolAgent with ChatHistory class
+```python
+import os
+
+from ToolAgents import ToolRegistry
+from ToolAgents.agents import ChatToolAgent
+from ToolAgents.messages import ChatHistory
+
+from ToolAgents.provider import OpenAIChatAPI
+
+from example_tools import calculator_function_tool, current_datetime_function_tool, get_weather_function_tool
+
+from dotenv import load_dotenv
+
+load_dotenv()
+
+# Openrouter API
+api = OpenAIChatAPI(api_key=os.getenv("OPENROUTER_API_KEY"), model="google/gemini-2.0-pro-exp-02-05:free", base_url="https://openrouter.ai/api/v1")
+
+# Create the ChatAPIAgent
 agent = ChatToolAgent(chat_api=api)
 
-# Configure settings
-settings = AnthropicSettings()
+# Create a samplings settings object
+settings = api.get_default_settings()
+
+# Set sampling settings
 settings.temperature = 0.45
-settings.top_p = 0.85
+settings.top_p = 1.0
 
-# Define tools
+# Define the tools
 tools = [calculator_function_tool, current_datetime_function_tool, get_weather_function_tool]
-
 tool_registry = ToolRegistry()
 
 tool_registry.add_tools(tools)
 
-# Create chat history and add system message and user message.
 chat_history = ChatHistory()
-chat_history.add_system_message("You are a helpful assistant.")
-chat_history.add_user_message(
-  "Perform the following tasks: Get the current weather in Celsius in London, New York, and at the North Pole. Solve these calculations: 42 * 42, 74 + 26, 7 * 26, 4 + 6, and 96/8.")
+chat_history.add_system_message("You are a helpful assistant with tool calling capabilities. Only reply with a tool call if the function exists in the library provided by the user. Use JSON format to output your function calls. If it doesn't exist, just reply directly in natural language. When you receive a tool call response, use the output to format an answer to the original user question.")
 
-# Get a response
-result = agent.get_response(
-  messages=chat_history.to_list(),
-  tools=tools,
-  settings=settings
-)
+while True:
+    user_input = input("User input >")
+    if user_input == "quit":
+        break
+    elif user_input == "save":
+        chat_history.save_to_json("example_chat_history.json")
+    elif user_input == "load":
+        chat_history.load_from_json("example_chat_history.json")
+    else:
+        chat_history.add_user_message(user_input)
 
-print(result)
+        chat_response = agent.get_response(
+            messages=chat_history.get_messages(),
+            settings=settings, tool_registry=tool_registry)
 
-# Add the generated messages, including tool messages, to the chat history.
-chat_history.add_list_of_dicts(agent.last_messages_buffer)
+        print(chat_response.response.strip())
+        chat_history.add_messages(chat_response.messages)
 
-# Save chat history to file.
-chat_history.save_history("./chat_history.json")
 ```
 
-### OllamaAgent
-
+### Use Streaming ChatToolAgent with ChatHistory class
 ```python
-from ToolAgents.agents import OllamaAgent
-from ToolAgents.utilities import ChatHistory
+import os
+
 from ToolAgents import ToolRegistry
+from ToolAgents.agents import ChatToolAgent
+from ToolAgents.messages import ChatHistory
 
-from test_tools import get_flight_times_tool
+from ToolAgents.provider import OpenAIChatAPI
 
-def run():
-    agent = OllamaAgent(model='mistral-nemo', debug_output=False)
+from example_tools import calculator_function_tool, current_datetime_function_tool, get_weather_function_tool
 
-    # Define tools
-    tools = [get_flight_times_tool]
-    
-    tool_registry = ToolRegistry()
-    
-    tool_registry.add_tools(tools)
+from dotenv import load_dotenv
 
-    # Create chat history and add system message and user message.
-    chat_history = ChatHistory()
-    chat_history.add_system_message("You are a helpful assistant.")
-    chat_history.add_user_message("What is the flight time from New York (NYC) to Los Angeles (LAX)?")
+load_dotenv()
 
-    response = agent.get_response(
-            messages=chat_history.to_list(),
-            tool_registry=tool_registry,
-        )
+# Openrouter API
+api = OpenAIChatAPI(api_key=os.getenv("OPENROUTER_API_KEY"), model="google/gemini-2.0-pro-exp-02-05:free", base_url="https://openrouter.ai/api/v1")
 
-    print(response)
-    
-    # Add the generated messages, including tool messages, to the chat history.
-    chat_history.add_list_of_dicts(agent.last_messages_buffer)
-    
-    chat_history.add_user_message("What is the flight time from London (LHR) to New York (JFK)?")
-    print("\nStreaming response:")
-    for chunk in agent.get_streaming_response(
-            messages=chat_history.to_list(),
-            tools=tools,
-    ):
-        print(chunk, end='', flush=True)
+# Create the ChatAPIAgent
+agent = ChatToolAgent(chat_api=api)
 
-if __name__ == "__main__":
-    run()
+# Create a samplings settings object
+settings = api.get_default_settings()
+
+# Set sampling settings
+settings.temperature = 0.45
+settings.top_p = 1.0
+
+# Define the tools
+tools = [calculator_function_tool, current_datetime_function_tool, get_weather_function_tool]
+tool_registry = ToolRegistry()
+
+tool_registry.add_tools(tools)
+
+chat_history = ChatHistory()
+chat_history.add_system_message("You are a helpful assistant with tool calling capabilities. Only reply with a tool call if the function exists in the library provided by the user. Use JSON format to output your function calls. If it doesn't exist, just reply directly in natural language. When you receive a tool call response, use the output to format an answer to the original user question.")
+
+while True:
+    user_input = input("User input >")
+    if user_input == "quit":
+        break
+    elif user_input == "save":
+        chat_history.save_to_json("example_chat_history.json")
+    elif user_input == "load":
+        chat_history.load_from_json("example_chat_history.json")
+    else:
+        chat_history.add_user_message(user_input)
+
+        stream = agent.get_streaming_response(
+            messages=chat_history.get_messages(),
+            settings=settings, tool_registry=tool_registry)
+        chat_response = None
+        for res in stream:
+            print(res.chunk, end='', flush=True)
+            if res.finished:
+              chat_response = res.finished_response
+        if chat_response is not None:
+            chat_history.add_messages(chat_response.messages)
+        else:
+          raise Exception("Error during response generation")
 ```
-
 ## Custom Tools
 
 ToolAgents supports various ways to create custom tools, allowing you to integrate specific functionalities into your agents. Here are different approaches to creating custom tools:

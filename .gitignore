@@ -46,3 +46,4 @@
 /src/ToolAgents/provider/completion_provider/__pycache__
 /examples/gradio/pdf_rag/__pycache__
 /examples/gradio/pdf_rag/uploaded_files
+examples/low_level_abstractions/example_chat_history.json
