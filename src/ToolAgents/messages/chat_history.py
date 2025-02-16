@@ -87,6 +87,15 @@ class ChatHistory(BaseModel):
         """
         return self.messages
 
+    def get_last_k_messages(self, k: int) -> List[ChatMessage]:
+        """
+        Get all messages in the chat history.
+
+        Returns:
+            List of ChatMessage objects
+        """
+        return self.messages[-k:]
+
     def clear_history(self) -> None:
         """Clear all messages from the chat history."""
         self.messages.clear()

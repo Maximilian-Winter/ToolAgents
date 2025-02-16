@@ -11,6 +11,7 @@ from anthropic.types import ToolUseBlock, TextBlock
 from ToolAgents import FunctionTool
 from ToolAgents.messages.message_converter.anthropic_message_converter import AnthropicMessageConverter, \
     AnthropicResponseConverter
+from ToolAgents.messages.message_converter.message_converter import BaseMessageConverter, BaseResponseConverter
 from ToolAgents.provider.llm_provider import ChatAPIProvider, SamplingSettings, StreamingChatAPIResponse
 from ToolAgents.messages.chat_message import ChatMessage, ToolCallContent, TextContent, ChatMessageRole, BinaryContent, \
     BinaryStorageType, ToolCallResultContent

@@ -54,50 +54,60 @@ class CompletionProvider(ChatAPIProvider):
         prompt = self.tokenizer.apply_template(messages=messages, tools=[tool.to_openai_tool() for tool in tools])
         if settings is None:
             settings = self.get_default_settings()
-        settings.stream = True  # Ensure streaming is enabled
+        settings.stream = True
 
-        # Get the complete token stream
-        token_stream = list(self.completion_endpoint.create_completion(prompt, settings))
+        # Get the streaming generator
+        token_stream = self.completion_endpoint.create_completion(prompt, settings)
         complete_response = ""
-        buffer = ""  # Buffer to hold tokens for look-ahead
+        buffer = ""  # Buffer for potential tool call tokens
         is_in_tool_call = False
         eos_token = self.tokenizer.get_eos_token_string()
 
-        i = 0
-        while i < len(token_stream):
-            current_token = token_stream[i].replace(eos_token, "")
+        # Create a sliding window of tokens
+        token_window = []
 
-            # Look ahead at the next 2 tokens
-            next_tokens = ""
-            for j in range(1, 3):
-                if i + j < len(token_stream):
-                    next_tokens += token_stream[i + j].replace(eos_token, "")
+        for token in token_stream:
+            current_token = token.replace(eos_token, "")
+            token_window.append(current_token)
 
-            # Check if current buffer + next tokens would form a tool call
-            test_sequence = complete_response + current_token + next_tokens
+            # Keep only last 3 tokens (current + 2 look-ahead)
+            if len(token_window) > 3:
+                token_window.pop(0)
+
+            # If we don't have enough tokens for look-ahead yet, just buffer
+            if len(token_window) < 3 and not is_in_tool_call:
+                buffer += current_token
+                continue
+
+            # Check if current buffer + window would form a tool call
+            test_sequence = complete_response + buffer + "".join(token_window)
 
             if self.tool_call_handler.contains_partial_tool_calls(test_sequence):
-                # We've detected a potential tool call, enter tool call mode
+                # Potential tool call detected
                 is_in_tool_call = True
                 buffer += current_token
             elif is_in_tool_call:
-                # We're already in a tool call, keep buffering
+                # Already in tool call mode, keep buffering
                 buffer += current_token
             else:
-                # No tool call detected, safe to stream the token
+                # If we have buffered tokens and no tool call detected, stream them
+                if buffer:
+                    chunk = StreamingChatAPIResponse(chunk=buffer)
+                    complete_response += buffer
+                    buffer = ""
+                    yield chunk
+
+                # Stream current token
                 chunk = StreamingChatAPIResponse(chunk=current_token)
                 complete_response += current_token
                 yield chunk
 
-            i += 1
-
-        # Process the final response
+        # Process any remaining buffered tokens
         if buffer:
             complete_response += buffer
 
         final_chunk = StreamingChatAPIResponse(chunk="", finished=True)
 
-        # Check if the complete response contains tool calls
         if self.tool_call_handler.contains_tool_calls(complete_response):
             final_chunk.is_tool_call = True
             final_chunk.tool_call = {}

@@ -4,6 +4,7 @@ from typing import Any
 from ToolAgents import FunctionTool, ToolRegistry
 from ToolAgents.agents.base_llm_agent import BaseToolAgent
 from ToolAgents.messages.message_template import MessageTemplate
+from ToolAgents.messages import ChatMessage
 
 
 class ProcessStep:
@@ -185,10 +186,7 @@ class SequentialProcess(Process):
             tool_registry = ToolRegistry() if step.get_tools() else None
 
             # Prepare messages for the step
-            messages = [
-                {"role": "system", "content": step.get_system_message()},
-                {"role": "user", "content": step.get_prompt(**results)}
-            ]
+            messages = [ChatMessage.create_system_message( step.get_system_message()), ChatMessage.create_user_message(step.get_prompt(**results))]
 
             # Add tools to registry if available
             if tool_registry is not None:
@@ -216,6 +214,6 @@ class SequentialProcess(Process):
                     )
 
             # Store step results
-            results[step.step_name] = process_result
+            results[step.step_name] = process_result.response
 
         return results

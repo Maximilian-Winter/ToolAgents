@@ -38,6 +38,7 @@ class StreamingChatAPIResponse(BaseModel):
 
 class SamplingSettings(abc.ABC):
 
+
     @abc.abstractmethod
     def save_to_file(self, settings_file: str):
         pass
