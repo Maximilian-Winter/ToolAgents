@@ -151,7 +151,7 @@ while True:
     elif user_input == "save":
         chat_history.save_to_json("example_chat_history.json")
     elif user_input == "load":
-        chat_history.load_from_json("example_chat_history.json")
+        chat_history = ChatHistory.load_from_json("example_chat_history.json")
     else:
         chat_history.add_user_message(user_input)
 
@@ -209,7 +209,7 @@ while True:
     elif user_input == "save":
         chat_history.save_to_json("example_chat_history.json")
     elif user_input == "load":
-        chat_history.load_from_json("example_chat_history.json")
+        chat_history = ChatHistory.load_from_json("example_chat_history.json")
     else:
         chat_history.add_user_message(user_input)
 
