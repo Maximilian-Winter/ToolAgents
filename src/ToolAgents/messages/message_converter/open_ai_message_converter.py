@@ -20,7 +20,8 @@ class OpenAIMessageConverter(BaseMessageConverter):
             tool_calls = []
             for content in message.content:
                 if isinstance(content, TextContent):
-                    new_content.append({"type": "text", "text": content.content})
+                    if len(content.content) > 0:
+                        new_content.append({"type": "text", "text": content.content})
                 elif isinstance(content, BinaryContent):
                     if "image" in content.mime_type and content.storage_type == BinaryStorageType.Url:
                         new_content.append({"type": "image_url", "image_url": {
@@ -62,6 +63,9 @@ class OpenAIResponseConverter(BaseResponseConverter):
 
     def from_provider_response(self, response_data: Any) -> ChatMessage:
         # OpenAI's response: get the first choice's message.
+        if hasattr(response_data, 'model_extra') and "error" in response_data.model_extra:
+            raise Exception(json.dumps(response_data.model_extra["error"]))
+
         if response_data.choices[0].message.content is not None:
             content = [TextContent(content=response_data.choices[0].message.content)]
         else:

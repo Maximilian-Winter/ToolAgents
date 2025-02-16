@@ -7,6 +7,7 @@ from typing import List, Dict, Optional, Any, Generator
 from openai import OpenAI
 
 from ToolAgents import FunctionTool
+from ToolAgents.messages.message_converter.message_converter import BaseMessageConverter, BaseResponseConverter
 from ToolAgents.messages.message_converter.open_ai_message_converter import OpenAIMessageConverter, \
     OpenAIResponseConverter
 from ToolAgents.provider.llm_provider import SamplingSettings
@@ -78,21 +79,31 @@ class OpenAISettings(SamplingSettings):
         self.tool_choice = tool_choice
 
 class OpenAIChatAPI(ChatAPIProvider):
-    def __init__(self, api_key: str, model: str , base_url: str = "https://api.openai.com/v1", message_converter: OpenAIMessageConverter = OpenAIMessageConverter(), response_converter: OpenAIResponseConverter = OpenAIResponseConverter()):
+    def __init__(self, api_key: str, model: str , base_url: str = "https://api.openai.com/v1", message_converter: BaseMessageConverter = OpenAIMessageConverter(), response_converter: BaseResponseConverter = OpenAIResponseConverter(), debug_mode: bool = False):
         self.client = OpenAI(api_key=api_key, base_url=base_url)
         self.model = model
         self.settings = OpenAISettings()
         self.message_converter = message_converter
         self.response_converter = response_converter
+        self.debug_mode = debug_mode
 
     def get_response(self, messages: List[Dict[str, str]], settings=None,
                      tools: Optional[List[FunctionTool]] = None) -> ChatMessage:
         openai_tools = [tool.to_openai_tool() for tool in tools] if tools else None
 
         # Prepare base request kwargs
+
+        message_cleaned = clean_history_messages(messages)
+        if self.debug_mode:
+            print("-----------PRE CLEANING----------", flush=True)
+            print(json.dumps(messages, indent=2), flush=True)
+            print("--------------------------", flush=True)
+            print("-----------POST CLEANING----------", flush=True)
+            print(json.dumps(message_cleaned, indent=2), flush=True)
+            print("--------------------------", flush=True)
         request_kwargs = {
             "model": self.model,
-            "messages": clean_history_messages(messages),
+            "messages": message_cleaned,
             "max_tokens": self.settings.max_tokens if settings is None else settings.max_tokens,
             "temperature": self.settings.temperature if settings is None else settings.temperature,
             "top_p": self.settings.top_p if settings is None else settings.top_p,
@@ -119,6 +130,9 @@ class OpenAIChatAPI(ChatAPIProvider):
         if (settings is None and self.settings.request_kwargs) or (settings and settings.request_kwargs):
             extra_kwargs = self.settings.request_kwargs if settings is None else settings.request_kwargs
             request_kwargs.update(extra_kwargs)
+
+        if self.debug_mode:
+            print(json.dumps(request_kwargs, indent=2), flush=True)
 
         response = self.client.chat.completions.create(**request_kwargs)
         return self.response_converter.from_provider_response(response)

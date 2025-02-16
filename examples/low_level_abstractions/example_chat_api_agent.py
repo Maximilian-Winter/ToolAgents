@@ -6,6 +6,8 @@ import uuid
 from ToolAgents import ToolRegistry
 from ToolAgents.agents import ChatToolAgent
 from ToolAgents.messages.chat_message import ChatMessage, ChatMessageRole, TextContent
+from ToolAgents.messages.message_converter.anthropic_message_converter import AnthropicMessageConverter, \
+    AnthropicResponseConverter
 from ToolAgents.provider import AnthropicChatAPI, AnthropicSettings, OpenAIChatAPI, OpenAISettings, MistralChatAPI, CompletionProvider
 from ToolAgents.provider.completion_provider.default_implementations import LlamaCppServer
 
@@ -23,7 +25,7 @@ load_dotenv()
 #api = OpenAIChatAPI(api_key=os.getenv("OPENAI_API_KEY"), model="gpt-4o-mini")
 
 # Openrouter API
-api = OpenAIChatAPI(api_key=os.getenv("OPENROUTER_API_KEY"), model="gpt-4o-mini", base_url="https://openrouter.ai/api/v1")
+api = OpenAIChatAPI(api_key=os.getenv("OPENROUTER_API_KEY"), model="google/gemini-2.0-pro-exp-02-05:free", base_url="https://openrouter.ai/api/v1")
 
 # Anthropic API
 #api = AnthropicChatAPI(api_key=os.getenv("ANTHROPIC_API_KEY"), model="claude-3-5-sonnet-20241022")

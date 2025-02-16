@@ -3,9 +3,11 @@ from ToolAgents.agent_memory import semantic_memory_nomic_text_gpu_config, Summa
 from ToolAgents.agents.advanced_agent import AdvancedAgent
 from ToolAgents.agents.advanced_agent import AgentConfig
 from ToolAgents.agents import ChatToolAgent
-from ToolAgents.provider import OpenAIChatAPI
 
-provider = OpenAIChatAPI(api_key="token-abc123", base_url="http://127.0.0.1:8080/v1", model="unsloth/Meta-Llama-3.1-8B-Instruct-bnb-4bit")
+from ToolAgents.provider import CompletionProvider
+from ToolAgents.provider.completion_provider.default_implementations import LlamaCppServer
+
+provider = CompletionProvider(completion_endpoint=LlamaCppServer("http://127.0.0.1:8080"))
 
 agent = ChatToolAgent(chat_api=provider)
 
