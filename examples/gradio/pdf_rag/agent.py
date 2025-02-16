@@ -1,14 +1,15 @@
-from ToolAgents.agents import MistralAgent
-from ToolAgents.provider import LlamaCppServerProvider
+from ToolAgents.agents import ChatToolAgent
+from ToolAgents.provider import CompletionProvider
+from ToolAgents.provider.completion_provider.default_implementations import LlamaCppServer
 
-provider = LlamaCppServerProvider("http://127.0.0.1:8080/")
+api = CompletionProvider(completion_endpoint=LlamaCppServer("http://127.0.0.1:8080"))
 
-answer_agent = MistralAgent(provider=provider, debug_output=True)
+answer_agent = ChatToolAgent(chat_api=api, debug_output=True)
 
-settings = provider.get_default_settings()
+settings = api.get_default_settings()
 settings.neutralize_all_samplers()
 settings.temperature = 0.3
 
 settings.set_max_new_tokens(4096)
 
-provider.set_default_settings(settings)
+api.set_default_settings(settings)

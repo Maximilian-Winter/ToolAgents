@@ -1,3 +1,3 @@
-from ToolAgents.provider.chat_api_provider import OpenAIChatAPI, OpenAISettings, AnthropicChatAPI, AnthropicSettings, GroqChatAPI, GroqSettings
+from ToolAgents.provider.chat_api_provider import OpenAIChatAPI, OpenAISettings, AnthropicChatAPI, AnthropicSettings, GroqChatAPI, GroqSettings, MistralChatAPI, MistralSettings
 from ToolAgents.provider.llm_provider import StreamingChatAPIResponse, SamplingSettings, ChatAPIProvider
-from ToolAgents.provider.generation_provider.llama_cpp_server import LlamaCppServerProvider
+from ToolAgents.provider.completion_provider.completion_provider import CompletionProvider

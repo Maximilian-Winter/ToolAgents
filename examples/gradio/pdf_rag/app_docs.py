@@ -5,7 +5,8 @@ import shutil
 from ToolAgents import FunctionTool, ToolRegistry
 from ToolAgents.knowledge.default_providers import PDFOCRProvider, ChromaDbVectorDatabaseProvider, \
     SentenceTransformerEmbeddingProvider, MXBAIRerankingProvider
-from ToolAgents.utilities import ChatHistory, SimpleTextSplitter
+from ToolAgents.utilities import SimpleTextSplitter
+from ToolAgents.messages.chat_history import ChatHistory
 from agent import answer_agent
 
 has_ingested = False
@@ -51,7 +52,9 @@ def ingest():
 
 
 # Function to handle chat messages
-def chat_response(message, chat_history=[]):
+def chat_response(message, chat_history=None):
+    if chat_history is None:
+        chat_history = []
     global has_ingested, history
     if not has_ingested:
         return "Please pre-process the files before!", chat_history
@@ -62,12 +65,12 @@ def chat_response(message, chat_history=[]):
     tool_registry.add_tools(tools)
 
     history.add_user_message(message)
-    history_list = history.to_list()
+    history_list = history.get_messages()
     response = answer_agent.get_response(messages=history_list, tool_registry=tool_registry)
 
     chat_history.append(gr.ChatMessage(role="user", content=message))
-    chat_history.append(gr.ChatMessage(role="assistant", content=response))
-    history.add_list_of_dicts(answer_agent.last_messages_buffer)
+    chat_history.append(gr.ChatMessage(role="assistant", content=response.response))
+    history.add_messages(response.messages)
     return "", chat_history
 
 
@@ -81,13 +84,6 @@ def upload_files(files):
     for file in files:
         shutil.copy(file.name, os.path.join(upload_folder, os.path.basename(file.name)))
     return f"{len(files)} file(s) uploaded successfully."
-
-
-def clear():
-    global has_ingested
-    has_ingested = False
-    upload_folder = "uploaded_files"
-    os.remove(upload_folder)
 
 
 # Define the Gradio interface with custom CSS

@@ -78,12 +78,12 @@ class OpenAISettings(SamplingSettings):
         self.tool_choice = tool_choice
 
 class OpenAIChatAPI(ChatAPIProvider):
-    def __init__(self, api_key: str, model: str , base_url: str = "https://api.openai.com/v1"):
+    def __init__(self, api_key: str, model: str , base_url: str = "https://api.openai.com/v1", message_converter: OpenAIMessageConverter = OpenAIMessageConverter(), response_converter: OpenAIResponseConverter = OpenAIResponseConverter()):
         self.client = OpenAI(api_key=api_key, base_url=base_url)
         self.model = model
         self.settings = OpenAISettings()
-        self.message_converter = OpenAIMessageConverter()
-        self.response_converter = OpenAIResponseConverter()
+        self.message_converter = message_converter
+        self.response_converter = response_converter
 
     def get_response(self, messages: List[Dict[str, str]], settings=None,
                      tools: Optional[List[FunctionTool]] = None) -> ChatMessage:
@@ -168,7 +168,7 @@ class OpenAIChatAPI(ChatAPIProvider):
         return self.message_converter.to_provider_format(messages)
 
     def get_default_settings(self):
-        return self.settings
+        return copy(self.settings)
 
     def set_default_settings(self, settings) -> None:
         self.settings = settings

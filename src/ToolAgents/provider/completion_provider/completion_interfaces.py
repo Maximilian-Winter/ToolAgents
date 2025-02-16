@@ -1,9 +1,10 @@
 import abc
 import random
 import string
-from typing import List, Dict, Union
+from typing import List, Dict, Union, Generator
 
 from ToolAgents.messages import ToolCallContent, TextContent
+from ToolAgents.provider import SamplingSettings
 
 
 def generate_id(length=8):
@@ -25,8 +26,14 @@ class LLMTokenizer(abc.ABC):
     def get_eos_token_string(self) -> str:
         pass
 
+class CompletionEndpoint(abc.ABC):
+    @abc.abstractmethod
+    def create_completion(self, prompt, settings: SamplingSettings)-> Union[str, Generator[str, None, None]]:
+        pass
 
-
+    @abc.abstractmethod
+    def get_default_settings(self):
+        pass
 
 class LLMToolCallHandler(abc.ABC):
 

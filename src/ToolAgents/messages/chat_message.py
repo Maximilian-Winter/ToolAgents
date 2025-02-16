@@ -164,36 +164,37 @@ class ChatMessage(BaseModel):
 
     @staticmethod
     def create_system_message(message: str):
-        return ChatMessage(id=str(uuid.uuid4()), role=ChatMessageRole.System, content=[TextContent(content=message)], created_at=datetime.datetime.now(), updated_at=datetime.datetime.now(), additional_information={})
+        date = datetime.datetime.now()
+        return ChatMessage(id=str(uuid.uuid4()), role=ChatMessageRole.System, content=[TextContent(content=message)], created_at=date, updated_at=date, additional_information={})
 
     @staticmethod
     def create_user_message(message: str):
-        return ChatMessage(id=str(uuid.uuid4()), role=ChatMessageRole.User, content=[TextContent(content=message)],
-                           created_at=datetime.datetime.now(), updated_at=datetime.datetime.now(),
+        date = datetime.datetime.now()
+        return ChatMessage(id=str(uuid.uuid4()), role=ChatMessageRole.User, content=[TextContent(content=message)], created_at=date, updated_at=date,
                            additional_information={})
 
     @staticmethod
     def create_assistant_message(message: str):
-        return ChatMessage(id=str(uuid.uuid4()), role=ChatMessageRole.Assistant, content=[TextContent(content=message)],
-                           created_at=datetime.datetime.now(), updated_at=datetime.datetime.now(),
+        date = datetime.datetime.now()
+        return ChatMessage(id=str(uuid.uuid4()), role=ChatMessageRole.Assistant, content=[TextContent(content=message)], created_at=date, updated_at=date,
                            additional_information={})
 
     @staticmethod
     def create_empty_system_message():
-        return ChatMessage(id=str(uuid.uuid4()), role=ChatMessageRole.System, content=[],
-                           created_at=datetime.datetime.now(), updated_at=datetime.datetime.now(),
+        date = datetime.datetime.now()
+        return ChatMessage(id=str(uuid.uuid4()), role=ChatMessageRole.System, content=[], created_at=date, updated_at=date,
                            additional_information={})
 
     @staticmethod
     def create_empty_user_message():
-        return ChatMessage(id=str(uuid.uuid4()), role=ChatMessageRole.User, content=[],
-                           created_at=datetime.datetime.now(), updated_at=datetime.datetime.now(),
+        date = datetime.datetime.now()
+        return ChatMessage(id=str(uuid.uuid4()), role=ChatMessageRole.User, content=[], created_at=date, updated_at=date,
                            additional_information={})
 
     @staticmethod
     def create_empty_assistant_message():
-        return ChatMessage(id=str(uuid.uuid4()), role=ChatMessageRole.Assistant, content=[],
-                           created_at=datetime.datetime.now(), updated_at=datetime.datetime.now(),
+        date = datetime.datetime.now()
+        return ChatMessage(id=str(uuid.uuid4()), role=ChatMessageRole.Assistant, content=[], created_at=date, updated_at=date,
                            additional_information={})
 
     @staticmethod
@@ -205,8 +206,8 @@ class ChatMessage(BaseModel):
         """
         converted_messages = []
         for message in messages:
-            converted_messages.append(ChatMessage(id=str(uuid.uuid4()), role=ChatMessageRole(message['role']), content=[TextContent(content=message['content'])],
-                        created_at=datetime.datetime.now(), updated_at=datetime.datetime.now()))
+            date = datetime.datetime.now()
+            converted_messages.append(ChatMessage(id=str(uuid.uuid4()), role=ChatMessageRole(message['role']), content=[TextContent(content=message['content'])], created_at=date, updated_at=date))
 
         return converted_messages
 

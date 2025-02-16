@@ -177,7 +177,7 @@ class AnthropicChatAPI(ChatAPIProvider):
 
 
     def get_default_settings(self):
-        return self.settings
+        return copy.copy(self.settings)
 
     def set_default_settings(self, settings) -> None:
         self.settings = settings

@@ -59,7 +59,7 @@ class ChromaDbVectorDatabaseProvider(VectorDatabaseProvider):
         query_embedding = self.embedding_provider.get_embedding([query])
         query_result = self.collection.query(
             query_embedding.embeddings[0],
-            n_results=k,
+            n_results=min(k *4, self.collection.count()),
             include=[IncludeEnum.metadatas, IncludeEnum.documents, IncludeEnum.distances],
             where=query_filter
         )
@@ -199,12 +199,3 @@ class PDFOCRProvider(DocumentProvider):
         return results
 
 
-class ArxivTool:
-
-    def __init__(self, folder: str, text_splitter: TextSplitter):
-        self.folder = folder
-        self.document_generator = DocumentGenerator(text_splitter=text_splitter)
-        self.pdf_ocr_provider = PDFOCRProvider(folder, text_splitter)
-
-    def get_documents(self, query) -> list[Document]:
-        pass

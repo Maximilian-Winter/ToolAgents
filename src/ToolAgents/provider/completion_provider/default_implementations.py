@@ -1,9 +1,12 @@
+import copy
 import re
+from dataclasses import dataclass
 from enum import Enum
 
 from typing import List, Dict, Union, Any
 import json
 
+import requests
 from mistral_common.protocol.instruct.request import ChatCompletionRequest
 from mistral_common.tokens.tokenizers.mistral import MistralTokenizer as MistralTokenizerOfficial
 from transformers import AutoTokenizer
@@ -11,7 +14,9 @@ from transformers import AutoTokenizer
 from ToolAgents.messages import ToolCallContent, TextContent, ChatMessage, BinaryContent
 from ToolAgents.messages.chat_message import BinaryStorageType, ToolCallResultContent
 from ToolAgents.messages.message_converter.message_converter import BaseMessageConverter
-from ToolAgents.provider.generation_provider.generation_interfaces import LLMTokenizer, LLMToolCallHandler, generate_id
+from ToolAgents.provider.llm_provider import SamplingSettings
+from ToolAgents.provider.completion_provider.completion_interfaces import LLMTokenizer, LLMToolCallHandler, generate_id, \
+    CompletionEndpoint
 
 
 class HuggingFaceTokenizer(LLMTokenizer):
@@ -192,3 +197,157 @@ class MistralMessageConverterLlamaCpp(BaseMessageConverter):
             elif len(tool_calls) > 0:
                 converted_messages.append({"role": role,  "tool_calls": tool_calls})
         return converted_messages
+
+
+class LlamaCppSamplingSettings(SamplingSettings):
+    def set_response_format(self, response_format: dict[str, Any]):
+        pass
+
+    def set_extra_body(self, extra_body: dict[str, Any]):
+        pass
+
+    def set_extra_request_kwargs(self, **kwargs):
+        pass
+
+    def set_tool_choice(self, tool_choice: str):
+        pass
+
+    temperature: float = 1.0
+    top_k: int = 0
+    top_p: float = 1.0
+    min_p: float = 0.0
+    n_predict: int = -1
+    n_keep: int = 0
+    stream: bool = True
+    stop: List[str] = None
+    tfs_z: float = 1.0
+    typical_p: float = 1.0
+    repeat_penalty: float = 1.1
+    repeat_last_n: int = -1
+    penalize_nl: bool = False
+    presence_penalty: float = 0.0
+    frequency_penalty: float = 0.0
+    penalty_prompt: Union[None, str, List[int]] = None
+    mirostat_mode: int = 0
+    mirostat_tau: float = 5.0
+    mirostat_eta: float = 0.1
+    cache_prompt: bool = True
+    seed: int = -1
+    ignore_eos: bool = False
+    samplers: List[str] = None
+
+    def save_to_file(self, settings_file: str):
+        with open(settings_file, 'w') as f:
+            json.dump(self.as_dict(), f, indent=2)
+
+    def load_from_file(self, settings_file: str):
+        with open(settings_file, 'r') as f:
+            data = json.load(f)
+        for key, value in data.items():
+            setattr(self, key, value)
+
+    def as_dict(self):
+        return copy.copy(self.__dict__)
+
+    def set_stop_tokens(self, tokens: List[str]):
+        self.stop = tokens
+
+    def set_max_new_tokens(self, max_new_tokens: int):
+        self.n_predict = max_new_tokens
+
+    def set(self, setting_key: str, setting_value: str):
+        if hasattr(self, setting_key):
+            setattr(self, setting_key, setting_value)
+        else:
+            raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{setting_key}'")
+
+    def neutralize_sampler(self, sampler_name: str):
+        if sampler_name == "temperature":
+            self.temperature = 1.0
+        elif sampler_name == "top_k":
+            self.top_k = 0
+        elif sampler_name == "top_p":
+            self.top_p = 1.0
+        elif sampler_name == "min_p":
+            self.min_p = 0.0
+        elif sampler_name == "tfs_z":
+            self.tfs_z = 1.0
+        elif sampler_name == "typical_p":
+            self.typical_p = 1.0
+        else:
+            raise ValueError(f"Unknown sampler: {sampler_name}")
+
+    def neutralize_all_samplers(self):
+        self.temperature = 1.0
+        self.top_k = 0
+        self.top_p = 1.0
+        self.min_p = 0.0
+        self.tfs_z = 1.0
+        self.typical_p = 1.0
+
+
+class LlamaCppServer(CompletionEndpoint):
+
+
+    def __init__(self, server_address: str, api_key: str = None):
+        super().__init__()
+        self.server_address = server_address
+        self.api_key = api_key
+        self.server_completion_endpoint = f"{server_address}/completion"
+
+    def create_completion(self, prompt: str, settings: LlamaCppSamplingSettings):
+        settings = copy.deepcopy(settings.as_dict())
+        headers = self._get_headers()
+        data = self._prepare_data(settings, prompt=prompt)
+
+        if settings.get('stream', False):
+            return self._get_response_stream(headers, data, self.server_completion_endpoint)
+
+        response = requests.post(self.server_completion_endpoint, headers=headers, json=data)
+        data = response.json()
+        return data["content"]
+
+    def get_default_settings(self):
+        return LlamaCppSamplingSettings()
+
+    def _get_headers(self):
+        headers = {"Content-Type": "application/json"}
+        if self.api_key:
+            headers["Authorization"] = f"Bearer {self.api_key}"
+        return headers
+
+    def _prepare_data(self, settings, **kwargs):
+        data = copy.deepcopy(settings)
+        data.update(kwargs)
+
+        # Adjust some key names to match the API expectations
+        if 'mirostat_mode' in data:
+            data['mirostat'] = data.pop('mirostat_mode')
+        if 'additional_stop_sequences' in data:
+            data['stop'] = data.pop('additional_stop_sequences')
+        if 'max_tokens' in data:
+            data['n_predict'] = data.pop('max_tokens')
+
+        # Set default samplers if not provided
+        if 'samplers' not in data or data['samplers'] is None:
+            data['samplers'] = ["top_k", "tfs_z", "typical_p", "top_p", "min_p", "temperature"]
+
+        return data
+
+    def _get_response_stream(self, headers, data, endpoint_address):
+        response = requests.post(endpoint_address, headers=headers, json=data, stream=True)
+        response.raise_for_status()
+
+        def generate_text_chunks():
+            decoded_chunk = ""
+            for chunk in response.iter_lines():
+                if chunk:
+                    decoded_chunk += chunk.decode("utf-8")
+                    if decoded_chunk.strip().startswith("error:"):
+                        raise RuntimeError(decoded_chunk)
+                    new_data = json.loads(decoded_chunk.replace("data:", ""))
+                    returned_data = new_data["content"]
+                    yield returned_data
+                    decoded_chunk = ""
+
+        return generate_text_chunks()

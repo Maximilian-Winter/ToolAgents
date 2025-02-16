@@ -43,3 +43,6 @@
 /src/ToolAgents/messages/__pycache__
 /src/ToolAgents/messages/__pycache__
 /src/ToolAgents/provider/generation_provider/__pycache__
+/src/ToolAgents/provider/completion_provider/__pycache__
+/examples/gradio/pdf_rag/__pycache__
+/examples/gradio/pdf_rag/uploaded_files

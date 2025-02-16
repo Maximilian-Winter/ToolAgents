@@ -170,7 +170,7 @@ class GroqChatAPI(ChatAPIProvider):
         return self.message_converter.to_provider_format(messages)
 
     def get_default_settings(self):
-        return self.settings
+        return copy(self.settings)
 
     def set_default_settings(self, settings) -> None:
         self.settings = settings

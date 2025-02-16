@@ -38,7 +38,8 @@ class ChatHistory(BaseModel):
         Args:
             message: ChatMessage object to add
         """
-        self.messages.append(ChatMessage(id=str(uuid.uuid4()), role=ChatMessageRole.System, content=[TextContent(content=message)], created_at=datetime.now(), updated_at=datetime.now()))
+        date = datetime.now()
+        self.messages.append(ChatMessage(id=str(uuid.uuid4()), role=ChatMessageRole.System, content=[TextContent(content=message)], created_at=date, updated_at=date))
 
     def add_user_message(self, message: str) -> None:
         """
@@ -47,7 +48,8 @@ class ChatHistory(BaseModel):
         Args:
             message: ChatMessage object to add
         """
-        self.messages.append(ChatMessage(id=str(uuid.uuid4()), role=ChatMessageRole.User, content=[TextContent(content=message)], created_at=datetime.now(), updated_at=datetime.now()))
+        date = datetime.now()
+        self.messages.append(ChatMessage(id=str(uuid.uuid4()), role=ChatMessageRole.User, content=[TextContent(content=message)], created_at=date, updated_at=date))
 
     def add_assistant_message(self, message: str) -> None:
         """
@@ -56,7 +58,8 @@ class ChatHistory(BaseModel):
         Args:
             message: ChatMessage object to add
         """
-        self.messages.append(ChatMessage(id=str(uuid.uuid4()), role=ChatMessageRole.Assistant, content=[TextContent(content=message)], created_at=datetime.now(), updated_at=datetime.now()))
+        date = datetime.now()
+        self.messages.append(ChatMessage(id=str(uuid.uuid4()), role=ChatMessageRole.Assistant, content=[TextContent(content=message)], created_at=date, updated_at=date))
 
     def add_messages(self, messages: List[ChatMessage]) -> None:
         """
@@ -154,27 +157,27 @@ class ChatHistory(BaseModel):
 # Example usage
 if __name__ == "__main__":
     # Create a new chat history
-    history = ChatHistory()
-
+    test_history = ChatHistory()
+    test_date = datetime.now()
     # Create a sample message
-    message = ChatMessage(
+    test_message = ChatMessage(
         id="1",
         role=ChatMessageRole.User,
         content=[
             TextContent(content="Hello, how can I help you today?")
         ],
-        created_at=datetime.now(),
-        updated_at=datetime.now()
+        created_at=test_date,
+        updated_at=test_date
     )
 
     # Add message to history
-    history.add_message(message)
+    test_history.add_message(test_message)
 
     # Save to JSON
-    history.save_to_json("chat_history.json")
+    test_history.save_to_json("chat_history.json")
 
     # Load from JSON
-    loaded_history = ChatHistory.load_from_json("chat_history.json")
+    test_loaded_history = ChatHistory.load_from_json("chat_history.json")
 
     # Print the loaded message
-    print(loaded_history.get_last_message().model_dump_json(indent=2))
+    print(test_loaded_history.get_last_message().model_dump_json(indent=2))
