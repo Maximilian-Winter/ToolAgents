@@ -157,10 +157,26 @@ class ContextAppState:
         output = ""
         for key, value in self.template_fields.items():
             output += begin_section_marker.format(section_name=key)
-            for k, v in value.items():
-                output += f"  {begin_section_marker.format(section_name=k).rstrip()}\n"
-                output += f"    {str(v)}\n"
-                output += f"  {end_section_marker.format(section_name=k).strip()}\n"
+            if isinstance(value, str):
+                output += value
+            elif isinstance(value, list):
+                for subitem in value:
+                    if isinstance(subitem, dict):
+                        for k, v in subitem.items():
+                            output += f"  {begin_section_marker.format(section_name=k).rstrip()}\n"
+                            output += f"    {str(v)}\n"
+                            output += f"  {end_section_marker.format(section_name=k).strip()}\n"
+                    elif isinstance(subitem, list):
+                        output += ", ".join(subitem)
+                    else:
+                        output += str(subitem)
+            elif isinstance(value, dict):
+                for k, v in value.items():
+                    output += f"  {begin_section_marker.format(section_name=k).rstrip()}\n"
+                    output += f"    {str(v)}\n"
+                    output += f"  {end_section_marker.format(section_name=k).strip()}\n"
+            else:
+                output += str(value)
             output += end_section_marker.format(section_name=key).lstrip()
             output += "\n"
         return output

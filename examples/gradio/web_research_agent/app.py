@@ -1,20 +1,25 @@
 import gradio as gr
 from typing import Iterator
 
-from ToolAgents.messages import ChatMessageRole
-from agent import configurable_agent
+from ToolAgents.messages import ChatMessageRole, ChatHistory, ChatMessage
+from agent import agent, tool_registry, system_prompt
 
-def stream_chat_response(chat_history: list) -> Iterator[list]:
+chat = ChatHistory()
+
+def chat_response(chat_history: list) -> Iterator[list]:
     """Handles streaming chat responses"""
-    chat_history.append(gr.ChatMessage(role="assistant", content=""))
-    partial_message = ""
-    # Get the streaming response from the agent
-    for chunk in configurable_agent.stream_chat_with_agent(chat_history[-2]["content"]):
-        partial_message += chunk.chunk
-        chat_history[-1].content = partial_message
+    if chat_history[-1]["content"].strip() == "":
+        chat_history.pop()
+        chat_history.pop()
         yield chat_history
-
-    configurable_agent.save_agent()
+    chat.clear_history()
+    chat.add_messages_from_dictionaries(chat_history)
+    messages = chat.get_last_k_messages(30)
+    messages.insert(0, ChatMessage.create_system_message(system_prompt))
+    response = agent.get_response(messages, tool_registry=tool_registry)
+    chat_history.append(gr.ChatMessage(role="assistant", content=response.response))
+    chat.add_messages(response.messages)
+    chat.save_to_json("example_chat.json")
     yield chat_history
 
 
@@ -69,16 +74,19 @@ body {
 """
 
 with gr.Blocks(css=css) as demo:
-    gr.Markdown("## Personal Chat Agent")
+    gr.Markdown("## Web Research Chat Agent")
 
     # Initialize chat history
-    value = []
-    for chat_entry in configurable_agent.chat_history.get_messages():
-        if chat_entry.role == ChatMessageRole.Assistant or chat_entry.role == ChatMessageRole.User:
-            value.append(gr.ChatMessage(role=chat_entry.role.value, content=chat_entry.get_text_content()))
+    def update_chat_history():
+        value = []
+        for chat_entry in chat.get_messages():
+            if chat_entry.role == ChatMessageRole.Assistant or chat_entry.role == ChatMessageRole.User:
+                value.append(gr.ChatMessage(role=chat_entry.role.value, content=chat_entry.get_text_content()))
+        return value
 
     chatbox = gr.Chatbot(
-        value=value,
+        value=update_chat_history,
+        editable="all",
         type="messages",
         show_copy_button=True
     )
@@ -97,7 +105,7 @@ with gr.Blocks(css=css) as demo:
         inputs=[chat_input, chatbox],
         outputs=[chat_input, chatbox], queue=False
     ).then(
-        stream_chat_response,
+        chat_response,
         chatbox,
         chatbox
     )
@@ -107,7 +115,7 @@ with gr.Blocks(css=css) as demo:
         inputs=[chat_input, chatbox],
         outputs=[chat_input, chatbox], queue=False
     ).then(
-        stream_chat_response,
+        chat_response,
         chatbox,
         chatbox
     )

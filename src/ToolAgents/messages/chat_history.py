@@ -12,6 +12,8 @@ class ChatHistory(BaseModel):
     Model for managing chat history with functionality to load and save to JSON files.
 
     Attributes:
+        id (str): Unique identifier of the chat history.
+        title (str): Title of the chat history.
         messages: List of chat messages in the history
         metadata: Optional metadata about the chat history
     """
@@ -86,6 +88,9 @@ class ChatHistory(BaseModel):
             List of ChatMessage objects
         """
         return self.messages
+
+    def remove_last_message(self):
+        self.messages.remove(self.messages[-1])
 
     def get_last_k_messages(self, k: int) -> List[ChatMessage]:
         """

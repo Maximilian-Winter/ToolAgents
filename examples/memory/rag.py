@@ -1,6 +1,7 @@
-from ToolAgents.knowledge.default_providers import ChromaDbVectorDatabaseProvider, \
-    SentenceTransformerEmbeddingProvider, MXBAIRerankingProvider, RAG
-
+from ToolAgents.knowledge.vector_database import RAG
+from ToolAgents.knowledge.vector_database.implementations.chroma_db import ChromaDbVectorDatabaseProvider
+from ToolAgents.knowledge.vector_database.implementations.sentence_transformer_embeddings import SentenceTransformerEmbeddingProvider
+from ToolAgents.knowledge.vector_database.implementations.mbxai_reranking import MXBAIRerankingProvider
 if __name__ == "__main__":
     rag = RAG(ChromaDbVectorDatabaseProvider(SentenceTransformerEmbeddingProvider(), MXBAIRerankingProvider()))
 

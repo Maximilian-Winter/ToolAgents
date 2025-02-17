@@ -7,9 +7,53 @@ from ToolAgents import ToolRegistry, FunctionTool
 from ToolAgents.agent_memory.context_app_state import ContextAppState
 
 from ToolAgents.provider.llm_provider import SamplingSettings
-from ToolAgents.agents.base_llm_agent import BaseToolAgent
-from ToolAgents.messages import ChatHistory, ChatMessage
+from ToolAgents.agents.base_llm_agent import BaseToolAgent, ChatResponse
+from ToolAgents.messages import ChatHistory, ChatMessage, MessageTemplate
 
+sum_prompt_template = MessageTemplate.from_string("""Here is the chat message to summarize:
+
+<chat_message>
+{{chat_message}}
+</chat_message>
+
+You are an AI assistant tasked with creating concise yet detailed summaries of chat conversations. Your goal is to distill the essential information from these conversations while preserving important details.
+
+Please follow these steps to create your summary:
+
+1. Carefully read and analyze the chat message.
+2. Identify specific facts, preferences, and details mentioned in the conversation.
+3. Note any concrete information that might be needed for future reference.
+4. Avoid generalizing or abstracting information in a way that might lose important details.
+5. Create a concise summary that captures all essential points.
+6. Review your summary to ensure it meets all the criteria.
+
+Before writing your final summary, wrap your work inside <conversation_breakdown> tags to break down the key points and show your thought process. This will help ensure a thorough interpretation of the conversation. In your breakdown:
+
+- List out key topics or themes from the conversation
+- Quote specific important details for each topic
+- Identify any preferences or decisions made by the devotee
+- Note any action items or follow-up tasks mentioned
+
+It's OK for this section to be quite long.
+
+In your analysis and summary, please consider the following:
+- Focus on preserving specific details that are unique to this conversation.
+- Maintain a balance between conciseness and completeness.
+- Ensure that your summary could be used to reconstruct the key points of the conversation if needed.
+
+After your analysis, provide your final summary within <summary> tags. The summary should be concise but detailed enough to capture all important information from the conversation.
+
+Example output structure:
+
+<conversation_breakdown>
+[Your detailed breakdown of the chat message, listing key topics, quoting important details, identifying preferences, and noting action items]
+</conversation_breakdown>
+
+<summary>
+[A concise yet detailed summary of the chat conversation, preserving specific facts, preferences, and important details]
+</summary>
+
+Please proceed with your conversation breakdown and summary of the chat message.""")
 
 @dataclasses.dataclass
 class AgentConfig:
@@ -62,7 +106,7 @@ class AdvancedAgent:
 
         self.tool_registry = tool_registry
         self.agent = agent
-        self.summarization_prompt = None
+        self.summarization_prompt = sum_prompt_template
         # Extract configuration parameters for easier access
         save_dir = agent_config.save_dir
         initial_state_file = agent_config.initial_app_state_file
@@ -197,7 +241,7 @@ class AdvancedAgent:
             settings=settings
         )
         # Update chat history and state after the conversation
-        self._after_run(chat_input)
+        self._after_run(chat_input, result)
         return result
 
     def stream_chat_with_agent(self, chat_input: str, tool_registry: ToolRegistry = None,
@@ -229,11 +273,13 @@ class AdvancedAgent:
             self.tool_registry if tool_registry is None else tool_registry,
             settings=settings
         )
-        # Yield each token as it arrives
+        response = None
         for tok in result:
             yield tok
+            if tok.finished:
+                response = tok.finished_response
         # Update state after the streaming conversation is complete
-        self._after_run(chat_input)
+        self._after_run(chat_input, response)
 
     def load_agent(self):
         """
@@ -259,7 +305,7 @@ class AdvancedAgent:
             self.app_state = ContextAppState()
             self.app_state.load_json(self.app_state_path)
 
-        self.chat_history.load_from_json(self.agent_chat_history_path)
+        self.chat_history = ChatHistory.load_from_json(self.agent_chat_history_path)
 
     def save_agent(self):
         """
@@ -290,11 +336,10 @@ class AdvancedAgent:
 
     def get_current_chat_history(self):
         if not self.has_app_state:
-            chat_history = [{"role": "system", "content": self.system_message}]
+            chat_history = [ChatMessage.create_system_message(self.system_message)]
         else:
             # Format system message with app state if needed
-            chat_history = [{"role": "system",
-                             "content": self.system_message.format(app_state=self.app_state.get_app_state_string())}]
+            chat_history = [ChatMessage.create_system_message(self.system_message.format(app_state=self.app_state.get_app_state_string()))]
         # Add any existing chat history beyond the current index
         chat_history.extend(self.chat_history.get_messages()[self.chat_history_index:])
         return chat_history
@@ -319,7 +364,7 @@ class AdvancedAgent:
             loaded_data = json.load(fp=f)
         self.chat_history.add_messages_from_dictionaries(loaded_data)
 
-    def set_summarization_prompt(self, prompt: tuple[str, str]):
+    def set_summarization_prompt(self, prompt: MessageTemplate):
         self.summarization_prompt = prompt
 
     def _before_run(self, chat_input: str):
@@ -359,7 +404,7 @@ class AdvancedAgent:
         chat_history.append(ChatMessage.create_user_message(user))
         return chat_history
 
-    def _after_run(self, chat_input: str):
+    def _after_run(self, chat_input: str, response: ChatResponse):
         """
         Update the chat history and usage tracking after an agent run.
 
@@ -374,9 +419,9 @@ class AdvancedAgent:
         # Append the user's message to the chat history
         self.chat_history.add_user_message(chat_input)
         # Record the length of the agent's response buffer as tool usage
-        self.tool_usage_history[self.chat_history.get_message_count()] = len(self.agent.last_messages_buffer)
+        self.tool_usage_history[self.chat_history.get_message_count()] = len(response.messages)
         # Append the agent's response messages to the chat history
-        self.chat_history.add_messages(self.agent.last_messages_buffer)
+        self.chat_history.add_messages(response.messages)
         # Process the chat history to enforce any maximum length limits
         self.process_chat_history()
 
@@ -414,18 +459,14 @@ class AdvancedAgent:
                     memory = f"<{self.user_name}> {message.get_text_content()} </{self.user_name}>\n"
                     memory += f"<{self.assistant_name}> {message2.get_text_content()} </{self.assistant_name}>"
 
-                    if self.summarize_chat_pairs_before_storing:
-                        if self.summarization_prompt is None:
-                            from ToolAgents.agent_memory.semantic_memory.memory import SummarizationExtractPatternStrategy
-                            prompt = SummarizationExtractPatternStrategy.get_dynamic_prompt("chat")
-                        else:
-                            prompt = self.summarization_prompt
-                        summarization_history = [{"role": "system", "content": prompt[0]},
-                                                 {"role": "user", "content": prompt[1] + memory}]
+                    if self.summarize_chat_pairs_before_storing and isinstance(self.summarization_prompt, MessageTemplate):
+
+                        summarization_history = [ChatMessage.create_user_message(self.summarization_prompt.generate_message_content(chat_message=memory))]
+
                         settings = self.agent.get_default_settings()
                         settings.neutralize_all_samplers()
                         settings.temperature = 0.0
-                        memory = self.agent.get_response(ChatMessage.from_dictionaries(summarization_history), settings=settings)
+                        memory = self.agent.get_response(summarization_history, settings=settings).response
                         print(memory)
                     self.semantic_memory.store(memory)
                 # Move the chat history index forward by the number of messages consolidated

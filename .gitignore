@@ -52,3 +52,6 @@ examples/low_level_abstractions/example_chat_history.json
 /src/ToolAgents/knowledge/web_search/__pycache__
 /src/ToolAgents/knowledge/web_search/implementations/__pycache__
 /src/ToolAgents/knowledge/agent_tools/__pycache__
+/src/ToolAgents/knowledge/vector_database/__pycache__
+/src/ToolAgents/knowledge/vector_database/implementations/__pycache__
+/examples/gradio/web_research_agent/__pycache__

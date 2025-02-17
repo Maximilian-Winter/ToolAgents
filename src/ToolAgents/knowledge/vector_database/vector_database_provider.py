@@ -4,8 +4,8 @@ import uuid
 from typing import Optional, Any
 
 from ToolAgents.knowledge import Document
-from ToolAgents.knowledge.embedding_provider import EmbeddingProvider
-from ToolAgents.knowledge.reranking_provider import RerankingProvider
+from ToolAgents.knowledge.vector_database.reranking_provider import RerankingProvider
+from ToolAgents.knowledge.vector_database.embedding_provider import EmbeddingProvider
 
 
 @dataclasses.dataclass

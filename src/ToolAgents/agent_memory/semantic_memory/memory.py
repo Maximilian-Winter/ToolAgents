@@ -411,8 +411,8 @@ class SemanticMemoryConfig:
     decay_factor: float = 0.98
     query_result_multiplier = 4
     minimum_cluster_size: int = 4
-    minimum_cluster_similarity: float = 0.75
-    minimum_similarity_threshold: float = 0.60
+    minimum_cluster_similarity: float = 0.80
+    minimum_similarity_threshold: float = 0.65
     debug_mode: bool = False
 
 

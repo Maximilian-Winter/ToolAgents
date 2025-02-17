@@ -1,16 +1,17 @@
 from ToolAgents.agent_memory.context_app_state import ContextAppState
-from ToolAgents.agents.hosted_tool_agents import MistralAgent
+from ToolAgents.agents import ChatToolAgent
+from ToolAgents.messages import ChatMessage
 
-from ToolAgents.provider import LlamaCppServerProvider
+from ToolAgents.provider import CompletionProvider
+from ToolAgents.provider.completion_provider.default_implementations import LlamaCppServer
 
-provider = LlamaCppServerProvider("http://127.0.0.1:8080/")
+api = CompletionProvider(completion_endpoint=LlamaCppServer("http://127.0.0.1:8080"))
 
-agent = MistralAgent(provider=provider, debug_output=True)
+agent = ChatToolAgent(chat_api=api, debug_output=True)
 
-settings = provider.get_default_settings()
+settings = api.get_default_settings()
 settings.neutralize_all_samplers()
 settings.temperature = 0.4
-settings.set_stop_tokens(["</s>", "<|im_end|>"], None)
 settings.set_max_new_tokens(4096)
 
 app_state = ContextAppState(initial_state_file="rpg_elysia.yaml")
@@ -80,11 +81,9 @@ What's your next move, Jane? How do you want to approach investigating this ware
 
 
 result = agent.get_streaming_response(
-    messages=[
-    {"role": "system", "content": system_prompt},
-    {"role": "user", "content": "Me and Lyra are on our way to Waterdeep. (Start of the Game)."}
+    messages=[ChatMessage.create_system_message(system_prompt), ChatMessage.create_user_message("Me and Lyra are on our way to Waterdeep. (Start of the Game).")
   ],
     settings=settings)
 for tok in result:
-    print(tok, end="", flush=True)
+    print(tok.chunk, end="", flush=True)
 print()
