@@ -155,6 +155,7 @@ class OpenAIResponseConverter(BaseResponseConverter):
                         )
                 additional_data = chunk.__dict__
                 additional_data.pop("choices")
+                additional_data['usage'] = chunk.usage.model_dump()
                 finished_message = ChatMessage(
                     id=str(uuid.uuid4()),
                     role=ChatMessageRole.Assistant,
