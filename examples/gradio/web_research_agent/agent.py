@@ -38,4 +38,4 @@ tool_registry.add_tool(web_search_tool.get_tool())
 
 chat = ChatHistory()
 
-system_prompt = "You are a helpful assistant.\n\nDate: 2025-02-17 11:00 am"
+system_prompt = "You are a helpful assistant.\n\nDate: 2025-02-17 08:00 am"
