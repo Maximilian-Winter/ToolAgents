@@ -29,6 +29,3 @@ class HackernewsWebSearchProvider(WebSearchProvider):
             stories.append(story["url"])
 
         return stories
-
-    def get_tool(self):
-        return FunctionTool(self.search_web)

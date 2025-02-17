@@ -1,3 +1,4 @@
+from ToolAgents import FunctionTool
 from ToolAgents.agents import ChatToolAgent
 from ToolAgents.knowledge.summarizer import summarize_list_of_strings
 from ToolAgents.knowledge.web_crawler import WebCrawler
@@ -27,4 +28,11 @@ class WebSearchTool:
         all_content = self.web_crawler.get_website_content_from_urls(urls)
         if self.summarizing_api:
             all_content = summarize_list_of_strings(self.summarizing_agent, self.summarizing_settings, all_content)
-        return all_content
+
+        final_results = ""
+        for url, content in zip(urls, all_content):
+            final_results += f"Website: '{url}'\nContent:\n{content}\n\n---\n\n"
+        return final_results.strip()
+
+    def get_tool(self):
+        return FunctionTool(self.search_web)

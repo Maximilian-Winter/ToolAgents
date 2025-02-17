@@ -3,6 +3,7 @@ import os
 import shutil
 from typing import Iterator
 
+from ToolAgents.messages import ChatMessageRole
 from agent import configurable_agent
 
 def stream_chat_response(chat_history: list) -> Iterator[list]:
@@ -12,7 +13,7 @@ def stream_chat_response(chat_history: list) -> Iterator[list]:
 
     # Get the streaming response from the agent
     for chunk in configurable_agent.stream_chat_with_agent(chat_history[-2]["content"]):
-        partial_message += chunk
+        partial_message += chunk.chunk
         chat_history[-1].content = partial_message
         yield chat_history
 
@@ -75,9 +76,9 @@ with gr.Blocks(css=css) as demo:
 
     # Initialize chat history
     value = []
-    for chat_entry in configurable_agent.chat_history:
-        if chat_entry["role"] == "assistant" or chat_entry["role"] == "user":
-            value.append(gr.ChatMessage(role=chat_entry["role"], content=chat_entry["content"]))
+    for chat_entry in configurable_agent.chat_history.get_messages():
+        if chat_entry.role == ChatMessageRole.Assistant or chat_entry.role == ChatMessageRole.User:
+            value.append(gr.ChatMessage(role=chat_entry.role.value, content=chat_entry.get_text_content()))
 
     chatbox = gr.Chatbot(
         value=value,

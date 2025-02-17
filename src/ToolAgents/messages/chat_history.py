@@ -16,7 +16,7 @@ class ChatHistory(BaseModel):
         metadata: Optional metadata about the chat history
     """
     id: str = Field(default_factory=lambda : str(uuid.uuid4()), description='Unique ID')
-    title: str = Field("New Chat", description='Chat title')
+    title: str = Field(default_factory=lambda : "New Chat", description='Chat title')
     messages: List[ChatMessage] = Field(default_factory=list, description="List of chat messages")
     metadata: Dict[str, Any] = Field(
         default_factory=dict,

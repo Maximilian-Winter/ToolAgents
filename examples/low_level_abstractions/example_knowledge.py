@@ -2,11 +2,16 @@ import os
 
 from ToolAgents import ToolRegistry
 from ToolAgents.agents import ChatToolAgent
+from ToolAgents.knowledge.agent_tools.web_search_tool import WebSearchTool
 from ToolAgents.messages import ChatMessage
 
-from ToolAgents.provider import OpenAIChatAPI, OpenAISettings, GroqChatAPI, GroqSettings, AnthropicChatAPI
-from ToolAgents.knowledge.default_providers import TrafilaturaWebCrawler, DDGWebSearchProvider
+from ToolAgents.provider import OpenAIChatAPI, OpenAISettings, GroqChatAPI, GroqSettings, AnthropicChatAPI, \
+    CompletionProvider
+from ToolAgents.knowledge.web_search.implementations.googlesearch import GoogleWebSearchProvider
+from ToolAgents.knowledge.web_crawler.implementations.camoufox import CamoufoxWebCrawler
 from dotenv import load_dotenv
+
+from ToolAgents.provider.completion_provider.default_implementations import LlamaCppServer
 
 load_dotenv()
 
@@ -16,19 +21,21 @@ api = AnthropicChatAPI(api_key=os.getenv("ANTHROPIC_API_KEY"), model="claude-3-5
 settings = api.get_default_settings()
 settings.temperature = 0.45
 # Create the ChatAPIAgent
-agent = ChatToolAgent(chat_api=api)
-web_crawler = TrafilaturaWebCrawler()
-web_search_provider = DDGWebSearchProvider()
-
+agent = ChatToolAgent(chat_api=api, debug_output=True)
+web_crawler = CamoufoxWebCrawler()
+web_search_provider = GoogleWebSearchProvider()
+# Llama Cpp Server Completion Based API with Mistral model
+summary_api = CompletionProvider(completion_endpoint=LlamaCppServer("http://127.0.0.1:8080"))
+web_search_tool = WebSearchTool(web_crawler=web_crawler, web_provider=web_search_provider, summarizing_api=summary_api)
 
 tool_registry = ToolRegistry()
 
-tool_registry.add_tools([web_crawler.get_tool(api=api), web_search_provider.get_tool()])
+tool_registry.add_tool(web_search_tool.get_tool())
 
 
 messages = [
     ChatMessage.create_system_message("You are a helpful assistant with tool calling capabilities. Only reply with a tool call if the function exists in the library provided by the user. Use JSON format to output your function calls. If it doesn't exist, just reply directly in natural language. When you receive a tool call response, use the output to format an answer to the original user question."),
-    ChatMessage.create_user_message("Retrieve latest information about american foreign politics.")
+    ChatMessage.create_user_message("Retrieve latest information about advancements in 3D realtime rendering")
 ]
 
 

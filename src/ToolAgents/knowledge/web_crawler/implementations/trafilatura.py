@@ -29,3 +29,20 @@ class TrafilaturaWebCrawler(WebCrawler):
                 return ""
         except Exception as e:
             return f"An error occurred: {str(e)}"
+
+    def get_website_content_from_urls(self, urls: list[str]) -> list[str]:
+        results = []
+        for url in urls:
+            try:
+                downloaded = fetch_url(url)
+
+                result = extract(downloaded, include_formatting=True, include_links=True, output_format='json', url=url)
+
+                if result:
+                    result = json.loads(result)
+                    results.append(f'=========== Website Title: {result["title"]} ===========\n\n=========== Website URL: {url} ===========\n\n=========== Website Content ===========\n\n{result["raw_text"]}\n\n=========== Website Content End ===========\n\n')
+                else:
+                    results.append("NO RESULT")
+            except Exception as e:
+                results.append(f"An error occurred: {str(e)}")
+        return results
