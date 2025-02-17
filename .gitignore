@@ -58,3 +58,4 @@ examples/low_level_abstractions/example_chat_history.json
 /examples/agents/__pycache__
 examples/agents/example_chat_history.json
 /src/ToolAgents/work_in_progress/knowledge_graphs/__pycache__
+/examples/advanced_agent/example_agent/

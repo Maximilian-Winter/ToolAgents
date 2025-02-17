@@ -1,5 +1,6 @@
 import base64
 import datetime
+import json
 import pathlib
 import sys
 import uuid
@@ -100,7 +101,10 @@ class ToolCallContent(BaseModel):
         ...,
         description="Arguments for the tool call."
     )
-
+    def get_as_text(self):
+        result = f"Tool Call: {self.tool_call_id}"
+        result += f"Tool Name: {self.tool_call_name}"
+        result += f"Tool Call Arguments: {json.dumps(self.tool_call_arguments, indent=2)}"
 
 class ToolCallResultContent(BaseModel):
     """
@@ -124,7 +128,10 @@ class ToolCallResultContent(BaseModel):
         ...,
         description="The result data from the tool call."
     )
-
+    def get_as_text(self):
+        result = f"Tool Call Result: {self.tool_call_id}"
+        result += f"Tool Name: {self.tool_call_name}"
+        result += f"Tool Call Result: {self.tool_call_result}"
 
 
 class ChatMessage(BaseModel):
@@ -253,7 +260,12 @@ class ChatMessage(BaseModel):
         for content in self.content:
             if isinstance(content, TextContent):
                 result.append(content.content)
-
+            elif isinstance(content, ToolCallContent):
+                result.append(content.get_as_text())
+            elif isinstance(content, ToolCallResultContent):
+                result.append(content.get_as_text())
+            elif isinstance(content, BinaryContent):
+                result.append(f"Binary Content\nMime type: {content.mime_type}")
         return '\n'.join(result)
 
     def set_custom_role(self, custom_role_name: str) -> None:

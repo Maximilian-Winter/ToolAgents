@@ -10,10 +10,57 @@ from ToolAgents.provider.llm_provider import SamplingSettings
 from ToolAgents.agents.base_llm_agent import BaseToolAgent, ChatResponse
 from ToolAgents.messages import ChatHistory, ChatMessage, MessageTemplate
 
+sum_prompt_alt_template = MessageTemplate.from_string("""You will be analyzing a chat turn to extract information about {USER_NAME} and their relationship with {ASSISTANT_NAME}. Here are the chat turns:
+
+<chat_turn>
+{CHAT_TURN}
+</chat_turn>
+
+Your task is to carefully read through these chat turns and extract all relevant information about the user named {USER_NAME} and their relationship with the AI assistant named {ASSISTANT_NAME}. This information may include personal details, preferences, interactions, or any other relevant data that can be inferred from the conversation.
+
+Follow these steps:
+
+1. Read through the chat turns thoroughly, paying close attention to any mentions of {USER_NAME} or interactions between {USER_NAME} and {ASSISTANT_NAME}.
+
+2. Extract and note down any information about {USER_NAME}, such as:
+   - Personal details (age, occupation, location, etc.)
+   - Preferences or interests
+   - Personality traits
+   - Any other relevant information
+
+3. Analyze the interactions between {USER_NAME} and {ASSISTANT_NAME} to understand their relationship. Look for:
+   - Frequency of interactions
+   - Tone of conversation
+   - Types of requests or questions from {USER_NAME}
+   - Any expressed feelings or attitudes towards {ASSISTANT_NAME}
+
+4. Organize the extracted information into two main categories:
+   a) Information about {USER_NAME}
+   b) Relationship between {USER_NAME} and {ASSISTANT_NAME}
+
+Present your findings in the following format:
+
+<extracted_information>
+<user_info>
+[List all relevant information about {USER_NAME} here]
+</user_info>
+
+<relationship_info>
+[Describe the relationship between {USER_NAME} and {ASSISTANT_NAME} based on the analyzed interactions]
+</relationship_info>
+</extracted_information>
+
+If you cannot find any relevant information about {USER_NAME} or their relationship with {ASSISTANT_NAME} in the provided chat turns, state this clearly in your response:
+
+<extracted_information>
+No relevant information found about {USER_NAME} or their relationship with {ASSISTANT_NAME} in the provided chat turns.
+</extracted_information>
+
+Remember to base your analysis solely on the information provided in the chat turns. Do not make assumptions or include information that is not directly stated or strongly implied in the conversation.""")
 sum_prompt_template = MessageTemplate.from_string("""Here is the chat message to summarize:
 
 <chat_message>
-{{chat_message}}
+{chat_message}
 </chat_message>
 
 You are an AI assistant tasked with creating concise yet detailed summaries of chat conversations. Your goal is to distill the essential information from these conversations while preserving important details.
@@ -91,7 +138,7 @@ class AdvancedAgent:
     to interact with the underlying language model.
     """
 
-    def __init__(self, agent: BaseToolAgent, tool_registry: ToolRegistry = None, agent_config: AgentConfig = None, user_name: str = None, assistant_name: str = None):
+    def __init__(self, agent: BaseToolAgent, tool_registry: ToolRegistry = None, agent_config: AgentConfig = None, user_name: str = None, assistant_name: str = None, debug_mode: bool = False):
         """
         Initialize the AdvancedAgent.
 
@@ -104,9 +151,10 @@ class AdvancedAgent:
         if agent_config is None:
             agent_config = AgentConfig()
 
+        self.debug_mode = debug_mode
         self.tool_registry = tool_registry
         self.agent = agent
-        self.summarization_prompt = sum_prompt_template
+        self.summarization_prompt = sum_prompt_alt_template
         # Extract configuration parameters for easier access
         save_dir = agent_config.save_dir
         initial_state_file = agent_config.initial_app_state_file
@@ -392,13 +440,15 @@ class AdvancedAgent:
 
         # If semantic memory is enabled, retrieve additional context and append it to the user input
         if self.use_semantic_memory:
-            results = self.semantic_memory.recall(user, 3)
+            results = self.semantic_memory.recall(f"{self.user_name}: {user}", 3)
             if len(results) > 0:
-                additional_context = "--- Additional Context From Past Interactions ---\n"
+                additional_context = f"{user}\n\n\n<additional_context>\n"
                 for r in results:
-                    additional_context += f"Memories: {r['content']}\n\n---\n\n"
+                    additional_context += f"{r['content'].replace('extracted_information', 'memory')}\n\n---\n\n"
                 # Append the additional context to the user input
-                user = additional_context.strip() + f"\n\n--- End Of Additional Context ---\n\nLatest User Message:{user}"
+                user = additional_context.strip() + f"\n\n</additional_context>\n\n"
+                if self.debug_mode:
+                    print(user, flush=True)
 
         # Append the (possibly enriched) user message to the chat history
         chat_history.append(ChatMessage.create_user_message(user))
@@ -456,18 +506,19 @@ class AdvancedAgent:
                     message2 = self.chat_history.get_messages()[self.chat_history_index + (msg_count - 1)]
                 # If there are at least two messages to consolidate, build a memory string and store it
                 if self.use_semantic_memory and msg_count >= 2:
-                    memory = f"<{self.user_name}> {message.get_text_content()} </{self.user_name}>\n"
-                    memory += f"<{self.assistant_name}> {message2.get_text_content()} </{self.assistant_name}>"
+                    memory = f"{self.user_name}: {message.get_text_content().strip()}\n\n\n"
+                    memory += f"{self.assistant_name}: {message2.get_text_content().strip()}"
 
                     if self.summarize_chat_pairs_before_storing and isinstance(self.summarization_prompt, MessageTemplate):
 
-                        summarization_history = [ChatMessage.create_user_message(self.summarization_prompt.generate_message_content(chat_message=memory))]
-
+                        summarization_history = [ChatMessage.create_user_message(self.summarization_prompt.generate_message_content(CHAT_TURN=memory, USER_NAME=self.user_name, ASSISTANT_NAME=self.assistant_name))]
                         settings = self.agent.get_default_settings()
                         settings.neutralize_all_samplers()
-                        settings.temperature = 0.0
+                        settings.temperature = 0.4
+                        settings.set_max_new_tokens(4096)
                         memory = self.agent.get_response(summarization_history, settings=settings).response
-                        print(memory)
+                        if self.debug_mode:
+                            print(memory, flush=True)
                     self.semantic_memory.store(memory)
                 # Move the chat history index forward by the number of messages consolidated
                 self.chat_history_index += msg_count
