@@ -110,3 +110,7 @@ class ChatAPIProvider(abc.ABC):
     @abc.abstractmethod
     def convert_chat_messages(self, messages: List[ChatMessage]) -> List[Dict[str, Any]]:
         pass
+
+    @abc.abstractmethod
+    def get_provider_identifier(self) -> str:
+        pass

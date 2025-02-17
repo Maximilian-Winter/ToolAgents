@@ -133,3 +133,6 @@ class CompletionProvider(ChatAPIProvider):
 
     def convert_chat_messages(self, messages: List[ChatMessage]) -> List[Dict[str, Any]]:
         return self.message_converter.to_provider_format(messages)
+
+    def get_provider_identifier(self) -> str:
+        return "completion"

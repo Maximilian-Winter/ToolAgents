@@ -1,4 +1,7 @@
+from typing import Any
+
 from ToolAgents.agents import ChatToolAgent
+from ToolAgents.function_tool import PostProcessor
 from ToolAgents.messages import ChatMessage, MessageTemplate
 from ToolAgents.provider import SamplingSettings
 
@@ -82,17 +85,27 @@ Conclusions:
 
 [Conclusion paragraph tying together the key points]
 </summary>""")
+    results = []
     for doc in strings:
         messages = [
             ChatMessage.create_system_message("You are a helpful assistant."),
             ChatMessage.create_user_message(template.generate_message_content(DOCUMENTS=doc))
         ]
-
+        print(messages[1].model_dump_json(indent=2))
         chat_response = agent.get_response(
             messages=messages,
             settings=settings)
+        print(chat_response.response.strip())
+        results.append(chat_response.response.strip())
+    return results
 
-        return chat_response.response.strip()
 
 
+class SummarizingFunctionToolPostProcessor(PostProcessor):
+    def __init__(self, summarizing_agent: ChatToolAgent, settings: SamplingSettings):
+        super().__init__()
+        self.summarizing_agent = summarizing_agent
+        self.settings = settings
 
+    def process(self, result: Any) -> Any:
+        return summarize_list_of_strings(self.summarizing_agent, self.settings, [f"{result}"])[0]

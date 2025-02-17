@@ -17,6 +17,7 @@ dependencies = [
     "chromadb",
     "pdf2image",
     "pytesseract",
+    "lxml_html_clean",
     "sentence_transformers",
     "hdbscan",
     "mistralai",

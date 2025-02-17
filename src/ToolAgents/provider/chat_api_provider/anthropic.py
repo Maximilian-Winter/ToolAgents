@@ -102,6 +102,7 @@ def prepare_messages(messages: List[Dict[str, str]]) -> tuple:
 
 
 class AnthropicChatAPI(ChatAPIProvider):
+
     def __init__(self, api_key: str, model: str):
         self.client = Anthropic(api_key=api_key)
         self.model = model
@@ -182,3 +183,6 @@ class AnthropicChatAPI(ChatAPIProvider):
 
     def set_default_settings(self, settings) -> None:
         self.settings = settings
+
+    def get_provider_identifier(self) -> str:
+        return 'anthropic'

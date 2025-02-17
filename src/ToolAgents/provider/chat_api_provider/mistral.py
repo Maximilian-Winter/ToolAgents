@@ -166,3 +166,6 @@ class MistralChatAPI(ChatAPIProvider):
 
     def set_default_settings(self, settings) -> None:
         self.settings = settings
+
+    def get_provider_identifier(self) -> str:
+        return 'mistral'

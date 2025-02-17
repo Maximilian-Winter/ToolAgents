@@ -1,0 +1,26 @@
+{
+  "chats": {
+    "c5f5e02f-e29c-42df-a879-ddbe974a24be": {
+      "id": "c5f5e02f-e29c-42df-a879-ddbe974a24be",
+      "title": "New Chat",
+      "messages": [
+        {
+          "id": "1",
+          "role": "user",
+          "content": [
+            {
+              "type": "text",
+              "content": "Hello, how can I help you today?"
+            }
+          ],
+          "created_at": "2025-02-16T23:01:30.556161",
+          "updated_at": "2025-02-16T23:01:30.556161",
+          "additional_fields": {},
+          "additional_information": {}
+        }
+      ],
+      "metadata": {}
+    }
+  },
+  "chats_metadata": {}
+}
