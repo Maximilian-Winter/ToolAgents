@@ -1,5 +1,5 @@
 import markdownify
-from camoufox.sync_api import Camoufox
+from camoufox_crawler.sync_api import Camoufox
 
 
 

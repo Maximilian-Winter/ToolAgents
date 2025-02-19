@@ -9,7 +9,7 @@ import json
 import requests
 from mistral_common.protocol.instruct.request import ChatCompletionRequest
 from mistral_common.tokens.tokenizers.mistral import MistralTokenizer as MistralTokenizerOfficial
-from transformers import AutoTokenizer
+
 
 from ToolAgents.messages import ToolCallContent, TextContent, ChatMessage, BinaryContent
 from ToolAgents.messages.chat_message import BinaryStorageType, ToolCallResultContent
@@ -21,6 +21,7 @@ from ToolAgents.provider.completion_provider.completion_interfaces import LLMTok
 
 class HuggingFaceTokenizer(LLMTokenizer):
     def __init__(self, huggingface_tokenizer_model: str):
+        from transformers import AutoTokenizer
         self.tokenizer = AutoTokenizer.from_pretrained(huggingface_tokenizer_model)
 
     def apply_template(self, messages: List[Dict[str, str]], tools: List) -> str:

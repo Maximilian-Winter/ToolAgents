@@ -3,7 +3,7 @@ import os
 from ToolAgents import ToolRegistry
 from ToolAgents.agents import ChatToolAgent
 from ToolAgents.knowledge.agent_tools.web_search_tool import WebSearchTool
-from ToolAgents.knowledge.web_crawler.implementations.camoufox import CamoufoxWebCrawler
+from ToolAgents.knowledge.web_crawler.implementations.camoufox_crawler import CamoufoxWebCrawler
 from ToolAgents.knowledge.web_search.implementations.googlesearch import GoogleWebSearchProvider
 from ToolAgents.messages import ChatHistory
 from ToolAgents.provider import CompletionProvider, OpenAIChatAPI, AnthropicChatAPI

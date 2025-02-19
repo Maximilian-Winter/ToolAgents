@@ -22,13 +22,13 @@ load_dotenv()
 #api = OpenAIChatAPI(api_key=os.getenv("OPENAI_API_KEY"), model="gpt-4o-mini")
 
 # Anthropic API
-#api = AnthropicChatAPI(api_key=os.getenv("ANTHROPIC_API_KEY"), model="claude-3-5-sonnet-20241022")
+api = AnthropicChatAPI(api_key=os.getenv("ANTHROPIC_API_KEY"), model="claude-3-5-sonnet-20241022")
 
 # Groq API
 #api = GroqChatAPI(api_key=os.getenv("GROQ_API_KEY"), model="llama-3.3-70b-versatile")
 
 # Llama Cpp Server Completion Based API
-api = CompletionProvider(completion_endpoint=LlamaCppServer("http://127.0.0.1:8080"))
+#api = CompletionProvider(completion_endpoint=LlamaCppServer("http://127.0.0.1:8080"))
 
 # Mistral API
 #api = MistralChatAPI(api_key=os.getenv("MISTRAL_API_KEY"), model="mistral-small-latest")
