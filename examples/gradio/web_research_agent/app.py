@@ -6,20 +6,15 @@ from agent import agent, tool_registry, system_prompt
 
 chat = ChatHistory()
 
-def chat_response(chat_history: list) -> Iterator[list]:
+def stream_chat_response(chat_history: list) -> Iterator[list]:
     """Handles streaming chat responses"""
-    if chat_history[-1]["content"].strip() == "":
-        chat_history.pop()
-        chat_history.pop()
+    chat_history.append(gr.ChatMessage(role="assistant", content=""))
+    partial_message = ""
+    # Get the streaming response from the agent
+    for chunk in agent.get_streaming_response([ChatMessage.create_system_message(system_prompt), ChatMessage.create_user_message(chat_history[-2]["content"])], tool_registry=tool_registry):
+        partial_message += chunk.chunk
+        chat_history[-1].content = partial_message
         yield chat_history
-    chat.clear_history()
-    chat.add_messages_from_dictionaries(chat_history)
-    messages = chat.get_last_k_messages(30)
-    messages.insert(0, ChatMessage.create_system_message(system_prompt))
-    response = agent.get_response(messages, tool_registry=tool_registry)
-    chat_history.append(gr.ChatMessage(role="assistant", content=response.response))
-    chat.add_messages(response.messages)
-    chat.save_to_json("example_chat.json")
     yield chat_history
 
 
@@ -88,7 +83,8 @@ with gr.Blocks(css=css) as demo:
         value=update_chat_history,
         editable="all",
         type="messages",
-        show_copy_button=True
+        show_copy_button=True,
+        height=1000
     )
 
     with gr.Row():
@@ -105,7 +101,7 @@ with gr.Blocks(css=css) as demo:
         inputs=[chat_input, chatbox],
         outputs=[chat_input, chatbox], queue=False
     ).then(
-        chat_response,
+        stream_chat_response,
         chatbox,
         chatbox
     )
@@ -115,7 +111,7 @@ with gr.Blocks(css=css) as demo:
         inputs=[chat_input, chatbox],
         outputs=[chat_input, chatbox], queue=False
     ).then(
-        chat_response,
+        stream_chat_response,
         chatbox,
         chatbox
     )

@@ -762,7 +762,7 @@ class FunctionTool:
             result = instance.run(**self.additional_parameters)
         except Exception as e:
             print(f"Error in function execution: {str(e)}")
-            raise Exception(f"Error in function execution: {str(e)}")
+            return f"Error in function execution: {str(e)}"
 
         # Apply post-processors in sequence
         processed_result = result

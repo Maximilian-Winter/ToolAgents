@@ -18,7 +18,7 @@ class CamoufoxWebCrawler(WebCrawler):
             str: Extracted content including title, main text, and tables.
         """
 
-        with Camoufox() as browser:
+        with Camoufox(headless=True) as browser:
             page = browser.new_page()
             page.goto(url, timeout=300000)
             content = page.content()
@@ -27,7 +27,7 @@ class CamoufoxWebCrawler(WebCrawler):
 
     def get_website_content_from_urls(self, urls: list[str]) -> list[str]:
         results = []
-        with Camoufox() as browser:
+        with Camoufox(headless=True) as browser:
             for url in urls:
                 page = browser.new_page()
                 page.goto(url, timeout=300000)
