@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ToolAgents"
-version = "0.2.2"
+version = "0.2.3"
 description = "ToolAgents is a lightweight and flexible framework for creating function-calling agents with various language models and APIs."
 
 readme = "ReadMe.md"
