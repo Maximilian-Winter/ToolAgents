@@ -106,15 +106,15 @@ class AnthropicResponseConverter(BaseResponseConverter):
                 if current_tool_call:
                     has_tool_call = True
                     try:
-                        data = json.loads(
+                        arguments = json.loads(
                             current_tool_call["function"]["arguments"])
-                        contents.append(ToolCallContent(tool_call_id=current_tool_call["function"]["id"],
-                                                        tool_call_name=current_tool_call["function"]["name"],
-                                                        tool_call_arguments=data))
+
                         current_tool_call = None
                     except JSONDecodeError as e:
-                        contents.append(TextContent(
-                            content=f"Error Parsing Tool Use JSON Data: {str(e)}\n\n\nJSON Data:\n{current_tool_call["function"]["arguments"]}"))
+                        arguments = f"Exception during JSON decoding of arguments: {e}"
+                    contents.append(ToolCallContent(tool_call_id=current_tool_call["function"]["id"],
+                                                        tool_call_name=current_tool_call["function"]["name"],
+                                                        tool_call_arguments=arguments))
         yield StreamingChatAPIResponse(chunk="", is_tool_call=has_tool_call, finished=True, tool_call=current_tool_call,
                                        finished_chat_message=ChatMessage(id=str(uuid.uuid4()),
                                                                          role=ChatMessageRole.Assistant,

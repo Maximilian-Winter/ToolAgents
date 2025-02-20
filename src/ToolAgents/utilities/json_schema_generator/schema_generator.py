@@ -45,7 +45,7 @@ def custom_json_schema(model: BaseModel):
                             new_anyof.append({"type": type_str})
                         elif isclass(sub_type) and issubclass(sub_type, BaseModel):
                             new_anyof.append(
-                                refine_schema(sub_type.schema(), sub_type, index + 1)
+                                refine_schema(sub_type.model_json_schema(), sub_type, index + 1)
                             )
                         elif type_str:
                             new_anyof.append({"type": type_str})
@@ -56,7 +56,7 @@ def custom_json_schema(model: BaseModel):
                     item_type = get_args(field.annotation)[0]
                     if isclass(item_type) and issubclass(item_type, BaseModel):
                         prop["items"] = refine_schema(
-                            item_type.schema(), item_type, index + 1
+                            item_type.model_json_schema(), item_type, index + 1
                         )
                     elif item_type is Any:
                         prop["items"] = {
@@ -82,7 +82,7 @@ def custom_json_schema(model: BaseModel):
                                 ):
                                     new_anyof.append(
                                         refine_schema(
-                                            sub_type.schema(), sub_type, index + 1
+                                            sub_type.model_json_schema(), sub_type, index + 1
                                         )
                                     )
                                 elif type_str:
@@ -101,7 +101,7 @@ def custom_json_schema(model: BaseModel):
                     key_type_str = get_type_str(key_type)
                     if isclass(value_type) and issubclass(value_type, BaseModel):
                         prop["additionalProperties"] = refine_schema(
-                            value_type.schema(), value_type, index + 1
+                            value_type.model_json_schema(), value_type, index + 1
                         )
                     else:
                         value_type_str = get_type_str(value_type)
@@ -114,7 +114,7 @@ def custom_json_schema(model: BaseModel):
                 ):
                     prop.update(
                         refine_schema(
-                            field.annotation.schema(), field.annotation, index + 1
+                            field.annotation.model_json_schema(), field.annotation, index + 1
                         )
                     )
 
@@ -128,16 +128,16 @@ def custom_json_schema(model: BaseModel):
                 else:
                     if "required" in prop:
                         new_schema["required"] = [
-                            "{:03}".format(count) + "_" + name
+                             name
                             for name in prop["required"]
                         ]
                     else:
-                        new_schema["{:03}".format(count) + "_" + name] = prop
+                        new_schema[name] = prop
                     count += 1
             schema["properties"] = new_schema
             if "required" in schema:
                 schema["required"] = [
-                    "{:03}".format(idx + 1) + "_" + name
+                    name
                     for idx, name in enumerate(schema["required"])
                 ]
         schema["title"] = model.__name__
@@ -147,7 +147,7 @@ def custom_json_schema(model: BaseModel):
             schema.pop("$defs")
         return schema
 
-    return refine_schema(model.schema(), model, 0)
+    return refine_schema(model.model_json_schema(), model, 0)
 
 
 def generate_list(

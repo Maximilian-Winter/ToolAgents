@@ -1,6 +1,6 @@
 from ToolAgents import FunctionTool
 from ToolAgents.agents import ChatToolAgent
-from ToolAgents.knowledge.summarizer import summarize_list_of_strings
+from ToolAgents.knowledge.utilities.summarizer import summarize_list_of_strings
 from ToolAgents.knowledge.web_crawler import WebCrawler
 from ToolAgents.knowledge.web_search import WebSearchProvider
 from ToolAgents.provider import ChatAPIProvider
