@@ -1,9 +1,13 @@
 # anthropic_message_converter.py
+import base64
 import uuid
 import datetime
 import json
 from json import JSONDecodeError
 from typing import List, Dict, Any, Generator
+
+import httpx
+
 from .message_converter import BaseMessageConverter, BaseResponseConverter
 from ToolAgents.messages.chat_message import ChatMessage, ChatMessageRole, TextContent, ToolCallContent, BinaryContent, \
     BinaryStorageType, ToolCallResultContent
@@ -20,30 +24,49 @@ class AnthropicMessageConverter(BaseMessageConverter):
                 role = ChatMessageRole.User
             new_content = []
             for content in message.content:
-                if isinstance(content, TextContent):
-                    new_content.append({"type": "text", "text": content.content})
-                elif isinstance(content, BinaryContent):
-                    if "image" in content.mime_type and content.storage_type == BinaryStorageType.Base64:
-                        new_content.append({"type": "image",
-                                            "source": {"type": "base64", "media_type": content.mime_type,
-                                                       "data": content.content}})
-                    elif "pdf" in content.mime_type and content.storage_type == BinaryStorageType.Base64:
-                        new_content.append({"type": "document",
-                                            "source": {"type": "base64", "media_type": content.mime_type,
-                                                       "data": content.content}})
-                elif isinstance(content, ToolCallContent):
-                    new_content.append({
-                        "type": "tool_use",
-                        "id": content.tool_call_id,
-                        "name": content.tool_call_name,
-                        "input": content.tool_call_arguments
-                    })
-                elif isinstance(content, ToolCallResultContent):
-                    new_content.append({
-                        "type": "tool_result",
-                        "tool_use_id": content.tool_call_id,
-                        "content": content.tool_call_result
-                    })
+                try:
+                    current_content = {}
+                    if isinstance(content, TextContent):
+                        current_content.update({"type": "text", "text": content.content})
+                    elif isinstance(content, BinaryContent):
+                        if "image" in content.mime_type and content.storage_type == BinaryStorageType.Base64:
+                            current_content.update({"type": "image",
+                                                "source": {"type": "base64", "media_type": content.mime_type,
+                                                           "data": content.content}})
+                        elif "image" in content.mime_type and content.storage_type == BinaryStorageType.Url:
+                            response = httpx.get(content.content)
+                            base64_string = base64.b64encode(response.content).decode("utf-8")
+                            current_content.update({"type": "image",
+                                                "source": {"type": "base64", "media_type": content.mime_type,
+                                                           "data": base64_string}})
+                        elif "pdf" in content.mime_type and content.storage_type == BinaryStorageType.Base64:
+                            current_content.update({"type": "document",
+                                                "source": {"type": "base64", "media_type": content.mime_type,
+                                                           "data": content.content}})
+                        elif "pdf" in content.mime_type and content.storage_type == BinaryStorageType.Url:
+                            response = httpx.get(content.content)
+                            base64_string = base64.b64encode(response.content).decode("utf-8")
+                            current_content.update({"type": "document",
+                                                "source": {"type": "base64", "media_type": content.mime_type,
+                                                           "data": base64_string}})
+                    elif isinstance(content, ToolCallContent):
+                        current_content.update({
+                            "type": "tool_use",
+                            "id": content.tool_call_id,
+                            "name": content.tool_call_name,
+                            "input": content.tool_call_arguments
+                        })
+                    elif isinstance(content, ToolCallResultContent):
+                        current_content.update({
+                            "type": "tool_result",
+                            "tool_use_id": content.tool_call_id,
+                            "content": content.tool_call_result
+                        })
+                    if len(content.additional_fields) > 0:
+                        if "cache_control" in content.additional_fields:
+                            current_content["cache_control"] = content.additional_fields["cache_control"]
+                except Exception as e:
+                    print(f"Failed to convert message {message}: {e}")
             if len(new_content) > 0:
                 converted_messages.append({"role": role, "content": new_content})
 
