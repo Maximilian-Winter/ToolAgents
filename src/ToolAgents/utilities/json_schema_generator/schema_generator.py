@@ -145,6 +145,8 @@ def custom_json_schema(model: BaseModel):
 
         if "$defs" in schema:
             schema.pop("$defs")
+        if "$ref" in schema:
+            schema.pop("$defs")
         return schema
 
     return refine_schema(model.model_json_schema(), model, 0)
@@ -353,3 +355,35 @@ def generate_json_schemas(
             max_items=1,
         )
     return model_schema_list
+
+
+class AdditionalFieldPosition(Enum):
+    before = "before"
+    after = "after"
+
+class AdditionalSchemaField(BaseModel):
+    """
+    Represents an additional schema field.
+    """
+    name: str = Field(..., description="The name of the field.")
+    description: str = Field(..., description="The description of the field.")
+    type: str = Field(..., description="The type of the field.")
+    position: AdditionalFieldPosition = Field(default=AdditionalFieldPosition.after, description="The type of the field.")
+
+
+class SchemaObject:
+    """
+    Represents a schema object.
+    """
+    model: BaseModel
+    additional_fields: List[AdditionalSchemaField]
+
+class OuterSchemaObject(BaseModel):
+    """
+    Represents an outer object around a schema.
+    """
+    name: str = Field(..., description="The name of the outer object.")
+    description: str = Field(..., description="The description of the outer object.")
+    schemas: List[SchemaObject] = Field(..., description="The list of schema objects.")
+    additional_fields: List[AdditionalSchemaField] = Field()
+    type: str = Field(..., description="The type of the outer object.")
