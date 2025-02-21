@@ -17,7 +17,7 @@ from pydantic_core import PydanticUndefined
 
 from ToolAgents.utilities.gbnf_grammar_generator.gbnf_grammar_from_pydantic_models import \
     generate_gbnf_grammar_from_pydantic_models
-from ToolAgents.utilities.json_schema_generator import generate_json_schemas
+
 from ToolAgents.utilities.documentation_generation import generate_text_documentation, generate_function_definition
 
 
@@ -860,8 +860,9 @@ class ToolRegistry:
                                                           allow_only_inner_thoughts=False, add_request_heartbeat=False)
 
     def get_guided_sampling_json_schema(self):
-        return generate_json_schemas(models=[tool.model for tool in self.tools.values()], outer_object_name="name",
-                                     allow_list=True, outer_object_properties_name="arguments")
+        pass
+        #return generate_json_schemas(models=[tool.model for tool in self.tools.values()], outer_object_name="name",
+        #                             allow_list=True, outer_object_properties_name="arguments")
 
     def get_tools_documentation(self):
         return generate_text_documentation([tool.model for tool in self.tools.values()], model_prefix="Tool",
