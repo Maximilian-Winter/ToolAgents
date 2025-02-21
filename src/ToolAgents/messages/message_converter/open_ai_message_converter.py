@@ -16,6 +16,8 @@ class OpenAIMessageConverter(BaseMessageConverter):
         converted_messages = []
         for message in messages:
             role = message.role.value
+            if role == ChatMessageRole.Custom.value:
+                role = message.additional_information["custom_role_name"]
             new_content = []
             tool_calls = []
             for content in message.content:
@@ -26,10 +28,6 @@ class OpenAIMessageConverter(BaseMessageConverter):
                     if "image" in content.mime_type and content.storage_type == BinaryStorageType.Url:
                         new_content.append({"type": "image_url", "image_url": {
                             "url": content.content,
-                        }})
-                    else:
-                        new_content.append({"type": "image_url", "image_url": {
-                            "url": f"data:image/jpeg;base64,{content.content}",
                         }})
                 elif isinstance(content, ToolCallContent):
                     tool_calls.append({
