@@ -59,3 +59,7 @@ examples/low_level_abstractions/example_chat_history.json
 examples/agents/example_chat_history.json
 /src/ToolAgents/work_in_progress/knowledge_graphs/__pycache__
 /examples/advanced_agent/example_agent/
+examples/agents/knowledge_graph6222.gv.pdf
+examples/agents/knowledge_graph6.gv.pdf
+examples/agents/knowledge_graph6.gv
+examples/agents/knowledge_graph44446.gv.pdf

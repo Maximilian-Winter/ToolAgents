@@ -23,7 +23,7 @@ settings = api.get_default_settings()
 # Set sampling settings
 settings.temperature = 0.45
 settings.top_p = 1.0
-
+settings.set_max_new_tokens(16378)
 
 class Node(BaseModel):
     id: int
@@ -62,12 +62,11 @@ def visualize_knowledge_graph(kg):
 def generate_graph(user_input: str):
     prompt = f"""Help me understand the following by describing it as a extremely detailed knowledge graph with at least 20 nodes: {user_input}""".strip()
     schema = custom_json_schema(KnowledgeGraph)
-    schema["type"] = "json_object"
     print(json.dumps(schema, indent=2))
-    settings.set_response_format(schema)
+    settings.set_response_format({"type": "json_object", "schema": schema})
     messages = [
         ChatMessage.create_system_message(
-            f"""You are knowledge graph builder. You will build the knowledge graph according to the following JSON-Schema:{json.dumps(schema, indent=2)}"""),
+            f"""You are knowledge graph builder. You will build the knowledge graph according to the following JSON-Schema:\n\n{json.dumps(schema, indent=2)}"""),
         ChatMessage.create_user_message(
             prompt)
     ]
