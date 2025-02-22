@@ -14,7 +14,6 @@ from ToolAgents.provider.llm_provider import SamplingSettings
 from ToolAgents.provider.llm_provider import ChatAPIProvider, StreamingChatAPIResponse
 from ToolAgents.messages.chat_message import ChatMessage, ChatMessageRole, TextContent, ToolCallContent, ToolCallResultContent, \
     BinaryContent, BinaryStorageType
-from ToolAgents.provider.chat_api_provider.utilities import clean_history_messages
 
 
 class OpenAISettings(SamplingSettings):
@@ -95,17 +94,9 @@ class OpenAIChatAPI(ChatAPIProvider):
 
         # Prepare base request kwargs
 
-        message_cleaned = clean_history_messages(messages)
-        if self.debug_mode:
-            print("-----------PRE CLEANING----------", flush=True)
-            print(json.dumps(messages, indent=2), flush=True)
-            print("--------------------------", flush=True)
-            print("-----------POST CLEANING----------", flush=True)
-            print(json.dumps(message_cleaned, indent=2), flush=True)
-            print("--------------------------", flush=True)
         request_kwargs = {
             "model": self.model,
-            "messages": message_cleaned,
+            "messages": messages,
             "max_tokens": self.settings.max_tokens if settings is None else settings.max_tokens,
             "temperature": self.settings.temperature if settings is None else settings.temperature,
             "top_p": self.settings.top_p if settings is None else settings.top_p,
@@ -148,7 +139,7 @@ class OpenAIChatAPI(ChatAPIProvider):
         # Prepare base request kwargs
         request_kwargs = {
             "model": self.model,
-            "messages": clean_history_messages(messages),
+            "messages": messages,
             "max_tokens": self.settings.max_tokens if settings is None else settings.max_tokens,
             "stream": True,
             "temperature": self.settings.temperature if settings is None else settings.temperature,

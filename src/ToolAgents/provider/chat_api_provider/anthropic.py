@@ -15,7 +15,6 @@ from ToolAgents.messages.message_converter.message_converter import BaseMessageC
 from ToolAgents.provider.llm_provider import ChatAPIProvider, SamplingSettings, StreamingChatAPIResponse
 from ToolAgents.messages.chat_message import ChatMessage, ToolCallContent, TextContent, ChatMessageRole, BinaryContent, \
     BinaryStorageType, ToolCallResultContent
-from ToolAgents.provider.chat_api_provider.utilities import clean_history_messages
 
 
 
@@ -87,7 +86,7 @@ class AnthropicSettings(SamplingSettings):
 def prepare_messages(messages: List[Dict[str, str]]) -> tuple:
     system_message = None
     other_messages = []
-    cleaned_messages = clean_history_messages(messages)
+    cleaned_messages = messages
     for i, message in enumerate(cleaned_messages):
         if message['role'] == 'system':
             system_message = message['content']

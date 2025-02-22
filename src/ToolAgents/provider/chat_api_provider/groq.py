@@ -13,7 +13,6 @@ from ToolAgents.provider.llm_provider import SamplingSettings
 from ToolAgents.provider.llm_provider import ChatAPIProvider, StreamingChatAPIResponse
 from ToolAgents.messages.chat_message import ChatMessage, TextContent, BinaryContent, BinaryStorageType, \
     ToolCallContent, ToolCallResultContent, ChatMessageRole
-from ToolAgents.provider.chat_api_provider.utilities import clean_history_messages
 
 
 class GroqSettings(SamplingSettings):
@@ -93,7 +92,7 @@ class GroqChatAPI(ChatAPIProvider):
         # Prepare base request kwargs
         request_kwargs = {
             "model": self.model,
-            "messages": clean_history_messages(messages),
+            "messages": messages,
             "max_tokens": self.settings.max_tokens if settings is None else settings.max_tokens,
             "temperature": self.settings.temperature if settings is None else settings.temperature,
             "top_p": self.settings.top_p if settings is None else settings.top_p,
@@ -132,7 +131,7 @@ class GroqChatAPI(ChatAPIProvider):
         # Prepare base request kwargs
         request_kwargs = {
             "model": self.model,
-            "messages": clean_history_messages(messages),
+            "messages": messages,
             "max_tokens": self.settings.max_tokens if settings is None else settings.max_tokens,
             "stream": True,
             "temperature": self.settings.temperature if settings is None else settings.temperature,

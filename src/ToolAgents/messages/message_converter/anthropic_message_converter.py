@@ -65,6 +65,7 @@ class AnthropicMessageConverter(BaseMessageConverter):
                     if len(content.additional_fields) > 0:
                         if "cache_control" in content.additional_fields:
                             current_content["cache_control"] = content.additional_fields["cache_control"]
+                    new_content.append(current_content)
                 except Exception as e:
                     print(f"Failed to convert message {message}: {e}")
             if len(new_content) > 0:
@@ -131,13 +132,12 @@ class AnthropicResponseConverter(BaseResponseConverter):
                     try:
                         arguments = json.loads(
                             current_tool_call["function"]["arguments"])
-
-                        current_tool_call = None
                     except JSONDecodeError as e:
                         arguments = f"Exception during JSON decoding of arguments: {e}"
                     contents.append(ToolCallContent(tool_call_id=current_tool_call["function"]["id"],
                                                         tool_call_name=current_tool_call["function"]["name"],
                                                         tool_call_arguments=arguments))
+                    current_tool_call = None
         yield StreamingChatAPIResponse(chunk="", is_tool_call=has_tool_call, finished=True, tool_call=current_tool_call,
                                        finished_chat_message=ChatMessage(id=str(uuid.uuid4()),
                                                                          role=ChatMessageRole.Assistant,

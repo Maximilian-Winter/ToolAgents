@@ -29,7 +29,7 @@ class SemanticTextSplitter:
     similarity_threshold : float
         Cosine similarity threshold. If consecutive sentences have a similarity above
         this threshold, they are merged into the same semantic chunk.
-    spaCy_model : str, optional
+    spacy_model : str, optional
         The SpaCy language model to load, e.g. 'en_core_web_sm'. Defaults to 'en_core_web_sm'.
     """
 
@@ -39,7 +39,7 @@ class SemanticTextSplitter:
             chunk_size,
             chunk_overlap,
             similarity_threshold=0.5,
-            spaCy_model="en_core_web_sm",
+            spacy_model="en_core_web_sm",
     ):
         # Validate parameters
         if chunk_size <= 0:
@@ -56,7 +56,7 @@ class SemanticTextSplitter:
         self.similarity_threshold = similarity_threshold
 
         # Load the SpaCy model for sentence segmentation
-        self.nlp = spacy.load(spaCy_model)
+        self.nlp = spacy.load(spacy_model)
 
         # Load a Sentence-BERT model from sentence-transformers
         self.embed_model = SentenceTransformer(model_name)
