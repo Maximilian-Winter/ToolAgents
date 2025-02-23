@@ -1,6 +1,5 @@
 # Example that uses the StructuredOutputAgent class to create a dataset entry of a book, out of unstructured data.
 import json
-from enum import Enum
 from typing import List
 
 from graphviz import Digraph
@@ -62,7 +61,6 @@ def visualize_knowledge_graph(kg):
 def generate_graph(user_input: str):
     prompt = f"""Help me understand the following by describing it as a extremely detailed knowledge graph with at least 20 nodes: {user_input}""".strip()
     schema = custom_json_schema(KnowledgeGraph)
-    print(json.dumps(schema, indent=2))
     settings.set_response_format({"type": "json_object", "schema": schema})
     messages = [
         ChatMessage.create_system_message(

@@ -1,19 +1,14 @@
-import abc
 import copy
 import datetime
-import json
 import uuid
-from dataclasses import dataclass
-from typing import Any, List, Union, Optional, Dict, Generator
-
-import requests
+from typing import Any, List, Optional, Dict, Generator
 
 from ToolAgents import FunctionTool
 from ToolAgents.messages import ChatMessage, ChatMessageRole, TextContent
 from ToolAgents.provider.llm_provider import ProviderSettings, ChatAPIProvider, StreamingChatMessage
 from .default_implementations import TemplateToolCallHandler, MistralMessageConverterLlamaCpp, MistralTokenizer
 from .completion_interfaces import LLMTokenizer, LLMToolCallHandler, CompletionEndpoint
-from ToolAgents.messages.message_converter.message_converter import BaseMessageConverter
+from ToolAgents.provider.message_converter.message_converter import BaseMessageConverter
 
 
 
@@ -32,13 +27,15 @@ class CompletionProvider(ChatAPIProvider):
     def set_default_settings(self, settings: ProviderSettings):
         self.default_settings = settings
 
-    def get_response(self, messages: List[Dict[str, Any]], settings=None,
+    def get_response(self, messages: List[ChatMessage], settings=None,
                      tools: Optional[List[FunctionTool]] = None) -> ChatMessage:
-        msg = ChatMessage(id=str(uuid.uuid4()), role=ChatMessageRole.Assistant, content=[], created_at=datetime.datetime.now(), updated_at=datetime.datetime.now())
-        prompt = self.tokenizer.apply_template(messages=messages, tools=[tool.to_openai_tool() for tool in tools])
         if settings is None:
             settings = self.get_default_settings()
-        settings.stream = False
+
+        msg = ChatMessage(id=str(uuid.uuid4()), role=ChatMessageRole.Assistant, content=[], created_at=datetime.datetime.now(), updated_at=datetime.datetime.now())
+        messages = self.message_converter.prepare_request("llama.cpp", messages, settings, tools)
+        prompt = self.tokenizer.apply_template(messages=messages['messages'], tools=[tool.to_openai_tool() for tool in tools])
+
         result = self.completion_endpoint.create_completion(prompt, settings)
         if self.tool_call_handler.contains_tool_calls(result):
             tool_calls = self.tool_call_handler.parse_tool_calls(result)
@@ -47,17 +44,16 @@ class CompletionProvider(ChatAPIProvider):
             msg.add_text(result.replace(self.tokenizer.get_eos_token_string(), ""))
         return msg
 
-    def get_streaming_response(self, messages: List[Dict[str, Any]], settings=None,
+    def get_streaming_response(self, messages: List[ChatMessage], settings=None,
                                tools: Optional[List[FunctionTool]] = None) -> Generator[
         StreamingChatMessage, None, None]:
-
-        prompt = self.tokenizer.apply_template(messages=messages, tools=[tool.to_openai_tool() for tool in tools])
+        messages = self.message_converter.prepare_request("llama.cpp", messages, settings, tools)
+        prompt = self.tokenizer.apply_template(messages=messages['messages'], tools=[tool.to_openai_tool() for tool in tools])
         if settings is None:
             settings = self.get_default_settings()
-        settings.stream = True
 
         # Get the streaming generator
-        token_stream = self.completion_endpoint.create_completion(prompt, settings)
+        token_stream = self.completion_endpoint.create_streaming_completion(prompt, settings)
         complete_response = ""
         buffer = ""  # Buffer for potential tool call tokens
         is_in_tool_call = False
@@ -129,10 +125,6 @@ class CompletionProvider(ChatAPIProvider):
 
         final_chunk.finished_chat_message = msg
         yield final_chunk
-
-
-    def convert_chat_messages(self, messages: List[ChatMessage]) -> List[Dict[str, Any]]:
-        return self.message_converter.to_provider_format(messages)
 
     def get_provider_identifier(self) -> str:
         return "completion"

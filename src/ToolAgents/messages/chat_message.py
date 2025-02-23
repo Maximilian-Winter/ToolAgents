@@ -113,15 +113,14 @@ class ToolCallContent(ContentBase):
     )
     tool_call_id: str = Field(..., description="Unique identifier for the tool call.")
     tool_call_name: str = Field(..., description="The name of the tool to be called.")
-    tool_call_arguments: Dict[str, Any] = Field(
+    tool_call_arguments: Union[Dict[str, Any] | None] = Field(
         ...,
         description="Arguments for the tool call."
     )
 
     def get_as_text(self) -> str:
-        result = f"Tool Call: {self.tool_call_id}\n"
-        result += f"Tool Name: {self.tool_call_name}\n"
-        result += f"Tool Call Arguments: {json.dumps(self.tool_call_arguments, indent=2)}"
+        result = f"{self.tool_call_name}\n"
+        result += f"{json.dumps(self.tool_call_arguments)}"
         return result
 
 
@@ -149,9 +148,8 @@ class ToolCallResultContent(ContentBase):
     )
 
     def get_as_text(self) -> str:
-        result = f"Tool Call Result: {self.tool_call_id}\n"
-        result += f"Tool Name: {self.tool_call_name}\n"
-        result += f"Tool Call Result: {self.tool_call_result}"
+        result = f"{self.tool_call_name}\n"
+        result += f"{self.tool_call_result}"
         return result
 
 
@@ -295,7 +293,12 @@ class ChatMessage(BaseModel):
         """
         return [content for content in self.content if isinstance(content, ToolCallContent)]
 
-    def get_text_content(self) -> str:
+    def get_tool_call_results(self) -> List[ToolCallResultContent]:
+        """
+        Returns a list of ToolCallContent objects.
+        """
+        return [content for content in self.content if isinstance(content, ToolCallResultContent)]
+    def get_as_text(self) -> str:
         result = []
         for content in self.content:
             if isinstance(content, TextContent):

@@ -6,10 +6,8 @@ import os
 from dotenv import load_dotenv
 from starlette.responses import HTMLResponse, JSONResponse
 
-from ToolAgents import ToolRegistry
-from ToolAgents.provider import AnthropicChatAPI, AnthropicSettings
+from ToolAgents.provider import AnthropicChatAPI
 from ToolAgents.agents import ChatToolAgent
-from ToolAgents.messages import ChatHistory
 
 from ToolAgents.messages import ChatMessage
 

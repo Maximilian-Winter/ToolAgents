@@ -5,8 +5,7 @@ from ToolAgents.agents import ChatToolAgent
 from ToolAgents.knowledge.agent_tools.web_search_tool import WebSearchTool
 from ToolAgents.messages import ChatMessage
 
-from ToolAgents.provider import OpenAIChatAPI, OpenAISettings, GroqChatAPI, GroqSettings, AnthropicChatAPI, \
-    CompletionProvider
+from ToolAgents.provider import AnthropicChatAPI, CompletionProvider
 from ToolAgents.knowledge.web_search.implementations.googlesearch import GoogleWebSearchProvider
 from ToolAgents.knowledge.web_crawler.implementations.camoufox_crawler import CamoufoxWebCrawler
 from dotenv import load_dotenv

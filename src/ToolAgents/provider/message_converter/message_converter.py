@@ -1,11 +1,23 @@
 # message_converter.py
 from abc import ABC, abstractmethod
-from typing import List, Dict, Any, Generator
+from typing import List, Dict, Any, Generator, Optional, AsyncGenerator
+
+from ToolAgents import FunctionTool
 from ToolAgents.messages.chat_message import ChatMessage
-from ToolAgents.provider.llm_provider import StreamingChatMessage
+from ToolAgents.provider.llm_provider import StreamingChatMessage, ProviderSettings
 
 
 class BaseMessageConverter(ABC):
+    @abstractmethod
+    def prepare_request(self, model: str, messages: List[ChatMessage], settings: ProviderSettings = None,
+                         tools: Optional[List[FunctionTool]] = None) -> Dict[str, Any]:
+        """
+        Prepare the request for the provider
+        Returns:
+            Request arguments as dictionary
+        """
+        pass
+
     @abstractmethod
     def to_provider_format(self, messages: List[ChatMessage]) -> List[Dict[str, Any]]:
         """
@@ -14,6 +26,7 @@ class BaseMessageConverter(ABC):
         pass
 
 class BaseResponseConverter(ABC):
+
     @abstractmethod
     def from_provider_response(self, response_data: Any) -> ChatMessage:
         """
@@ -26,4 +39,8 @@ class BaseResponseConverter(ABC):
         """
         Yield a universal StreamingChatAPIResponse from the provider-specific response.
         """
+        pass
+
+    @abstractmethod
+    async def async_yield_from_provider(self, stream_generator: Any) -> AsyncGenerator[StreamingChatMessage]:
         pass

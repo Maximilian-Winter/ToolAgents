@@ -506,8 +506,8 @@ class AdvancedAgent:
                     message2 = self.chat_history.get_messages()[self.chat_history_index + (msg_count - 1)]
                 # If there are at least two messages to consolidate, build a memory string and store it
                 if self.use_semantic_memory and msg_count >= 2:
-                    memory = f"{self.user_name}: {message.get_text_content().strip()}\n\n\n"
-                    memory += f"{self.assistant_name}: {message2.get_text_content().strip()}"
+                    memory = f"{self.user_name}: {message.get_as_text().strip()}\n\n\n"
+                    memory += f"{self.assistant_name}: {message2.get_as_text().strip()}"
 
                     if self.summarize_chat_pairs_before_storing and isinstance(self.summarization_prompt, MessageTemplate):
 

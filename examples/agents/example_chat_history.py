@@ -4,7 +4,7 @@ from ToolAgents import ToolRegistry
 from ToolAgents.agents import ChatToolAgent
 from ToolAgents.messages import ChatHistory
 
-from ToolAgents.provider import OpenAIChatAPI, OpenAISettings, GroqChatAPI, GroqSettings
+from ToolAgents.provider import GroqChatAPI
 
 from example_tools import calculator_function_tool, current_datetime_function_tool, get_weather_function_tool
 
@@ -15,11 +15,11 @@ load_dotenv()
 # Local OpenAI like API, like vllm or llama-cpp-server
 # Groq API
 api = GroqChatAPI(api_key=os.getenv("GROQ_API_KEY"), model="llama-3.3-70b-versatile")
-settings = GroqSettings()
 
 # Create the ChatAPIAgent
 agent = ChatToolAgent(chat_api=api)
 
+settings = api.get_default_settings()
 settings.temperature = 0.35
 settings.top_p = 1.0
 

@@ -76,7 +76,7 @@ with gr.Blocks(css=css) as demo:
         value = []
         for chat_entry in chat.get_messages():
             if chat_entry.role == ChatMessageRole.Assistant or chat_entry.role == ChatMessageRole.User:
-                value.append(gr.ChatMessage(role=chat_entry.role.value, content=chat_entry.get_text_content()))
+                value.append(gr.ChatMessage(role=chat_entry.role.value, content=chat_entry.get_as_text()))
         return value
 
     chatbox = gr.Chatbot(

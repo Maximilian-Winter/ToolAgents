@@ -30,7 +30,9 @@ class CompletionEndpoint(abc.ABC):
     @abc.abstractmethod
     def create_completion(self, prompt, settings: ProviderSettings)-> Union[str, Generator[str, None, None]]:
         pass
-
+    @abc.abstractmethod
+    def create_streaming_completion(self, prompt, settings: ProviderSettings) -> Union[str, Generator[str, None, None]]:
+        pass
     @abc.abstractmethod
     def get_default_settings(self):
         pass

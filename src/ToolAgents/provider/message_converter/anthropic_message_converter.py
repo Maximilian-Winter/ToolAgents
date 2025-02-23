@@ -4,17 +4,51 @@ import uuid
 import datetime
 import json
 from json import JSONDecodeError
-from typing import List, Dict, Any, Generator
+from typing import List, Dict, Any, Generator, Optional, AsyncGenerator
 
 import httpx
 
 from .message_converter import BaseMessageConverter, BaseResponseConverter
 from ToolAgents.messages.chat_message import ChatMessage, ChatMessageRole, TextContent, ToolCallContent, BinaryContent, \
     BinaryStorageType, ToolCallResultContent
-from ...provider.llm_provider import StreamingChatMessage
+from ToolAgents.provider.llm_provider import StreamingChatMessage, ProviderSettings
+from ToolAgents import FunctionTool
+
+
+def prepare_messages(messages: List[Dict[str, str]]) -> tuple:
+    system_message = None
+    other_messages = []
+    cleaned_messages = messages
+    for i, message in enumerate(cleaned_messages):
+        if message['role'] == 'system':
+            system_message = message['content']
+        else:
+            msg = {
+                'role': message['role'],
+                'content': message["content"],
+            }
+
+            other_messages.append(msg)
+    return system_message, other_messages
 
 
 class AnthropicMessageConverter(BaseMessageConverter):
+
+    def prepare_request(self, model: str, messages: List[ChatMessage], settings: ProviderSettings = None,
+                        tools: Optional[List[FunctionTool]] = None) -> Dict[str, Any]:
+        system, other_messages = prepare_messages(self.to_provider_format(messages))
+        anthropic_tools = [tool.to_anthropic_tool() for tool in tools] if tools else None
+
+        request_kwargs = settings.to_dict(
+            include=["temperature", "top_p", "top_k", "max_tokens", "stop_sequences", "tool_choice"])
+        request_kwargs["model"] = model
+        request_kwargs['system'] = system
+        request_kwargs['messages'] = other_messages
+        if anthropic_tools and len(anthropic_tools) > 0:
+            request_kwargs['tools'] = anthropic_tools
+        else:
+            request_kwargs.pop('tool_choice')
+        return request_kwargs
 
     def to_provider_format(self, messages: List[ChatMessage]) -> List[Dict[str, Any]]:
         converted_messages = []
@@ -112,7 +146,9 @@ class AnthropicResponseConverter(BaseResponseConverter):
                             "arguments": ""
                         }
                     }
-                    yield StreamingChatMessage(chunk="", is_tool_call=True, tool_call=current_tool_call)
+                    yield StreamingChatMessage(chunk="", is_tool_call=True, tool_call=ToolCallContent(tool_call_id=current_tool_call["function"]["id"],
+                                                        tool_call_name=current_tool_call["function"]["name"],
+                                                    tool_call_arguments=None).model_dump(exclude_none=True))
                 if chunk.content_block.type == "text":
                     content = chunk.content_block.text
                     yield StreamingChatMessage(chunk=chunk.content_block.text)
@@ -137,10 +173,66 @@ class AnthropicResponseConverter(BaseResponseConverter):
                     contents.append(ToolCallContent(tool_call_id=current_tool_call["function"]["id"],
                                                         tool_call_name=current_tool_call["function"]["name"],
                                                         tool_call_arguments=arguments))
+                    yield StreamingChatMessage(chunk="", is_tool_call=has_tool_call, finished=False,
+                                               tool_call=contents[-1].model_dump())
                     current_tool_call = None
-        yield StreamingChatMessage(chunk="", is_tool_call=has_tool_call, finished=True, tool_call=current_tool_call,
+        yield StreamingChatMessage(chunk="", is_tool_call=False, finished=True,
                                    finished_chat_message=ChatMessage(id=str(uuid.uuid4()),
                                                                          role=ChatMessageRole.Assistant,
                                                                          content=contents,
                                                                          created_at=datetime.datetime.now(),
                                                                          updated_at=datetime.datetime.now()))
+
+    async def async_yield_from_provider(self, stream_generator: Any) -> AsyncGenerator[StreamingChatMessage]:
+        current_tool_call = None
+        content = None
+        has_tool_call = False
+        contents = []
+        async for chunk in await stream_generator:
+            if chunk.type == "content_block_start":
+                if chunk.content_block.type == "tool_use":
+                    current_tool_call = {
+                        "function": {
+                            "id": chunk.content_block.id,
+                            "name": chunk.content_block.name,
+                            "arguments": ""
+                        }
+                    }
+                    yield StreamingChatMessage(chunk="", is_tool_call=True, tool_call=ToolCallContent(tool_call_id=current_tool_call["function"]["id"],
+                                                        tool_call_name=current_tool_call["function"]["name"],
+                                                    tool_call_arguments=None).model_dump(exclude_none=True))
+                if chunk.content_block.type == "text":
+                    content = chunk.content_block.text
+                    yield StreamingChatMessage(chunk=chunk.content_block.text)
+            elif chunk.type == "content_block_delta":
+                if chunk.delta.type == "text_delta":
+                    content += chunk.delta.text
+                    yield StreamingChatMessage(chunk=chunk.delta.text)
+                elif chunk.delta.type == "input_json_delta":
+                    if current_tool_call:
+                        current_tool_call["function"]["arguments"] += chunk.delta.partial_json
+            elif chunk.type == "content_block_stop":
+                if content:
+                    contents.append(TextContent(content=content))
+                    content = None
+
+                if current_tool_call:
+                    has_tool_call = True
+                    try:
+                        arguments = json.loads(
+                            current_tool_call["function"]["arguments"])
+                    except JSONDecodeError as e:
+                        arguments = f"Exception during JSON decoding of arguments: {e}"
+                    contents.append(ToolCallContent(tool_call_id=current_tool_call["function"]["id"],
+                                                        tool_call_name=current_tool_call["function"]["name"],
+                                                        tool_call_arguments=arguments))
+                    yield StreamingChatMessage(chunk="", is_tool_call=has_tool_call, finished=False,
+                                               tool_call=contents[-1].model_dump())
+                    current_tool_call = None
+        yield StreamingChatMessage(chunk="", is_tool_call=False, finished=True,
+                                   tool_call=None,
+                                   finished_chat_message=ChatMessage(id=str(uuid.uuid4()),
+                                                                     role=ChatMessageRole.Assistant,
+                                                                     content=contents,
+                                                                     created_at=datetime.datetime.now(),
+                                                                     updated_at=datetime.datetime.now()))

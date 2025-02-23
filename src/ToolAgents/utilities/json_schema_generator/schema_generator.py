@@ -61,7 +61,7 @@ def get_json_type(annotation):
     return mapping.get(annotation)
 
 
-def refine_schema(schema: dict, model: BaseModel) -> dict:
+def refine_schema(schema: dict, model: Type[BaseModel]) -> dict:
     """
     Refine the generated schema based on the model's annotations and field details.
     Recursively handles Enums, Unions, lists/sets, dictionaries, and nested Pydantic models.
@@ -170,7 +170,7 @@ def refine_schema(schema: dict, model: BaseModel) -> dict:
     return schema
 
 
-def custom_json_schema(model: BaseModel) -> dict:
+def custom_json_schema(model: Type[BaseModel]) -> dict:
     """
     Generate a custom JSON schema for a given Pydantic model.
     """
