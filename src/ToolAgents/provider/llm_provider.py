@@ -3,7 +3,7 @@ from typing import List, Dict, Optional, Generator, Any, Union
 
 from ToolAgents import FunctionTool, ToolRegistry
 from ToolAgents.messages.chat_message import ChatMessage
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from typing import Dict, Optional, Any, Union
 
 from ToolAgents.messages.chat_message import ChatMessage
@@ -36,130 +36,74 @@ class StreamingChatAPIResponse(BaseModel):
     class Config:
         arbitrary_types_allowed = True  # To allow ChatMessage custom type
 
-class SamplerSetting(BaseModel):
-    name: str = Field(..., title="Sampler name")
-    default_value: dict[str, Any] = Field(..., title="Sampler default value")
-    neutral_value: dict[str, Any] = Field(..., title="Sampler when neutral (turned off)")
-    sampler_value: dict[str, Any] = Field(..., title="Sampler value")
-    is_single_value: bool = Field(..., title="Sampler when value is single value")
+class SamplingSettings(abc.ABC):
 
-    @staticmethod
-    def create_sampler_setting(name: str, default_value: Any, neutral_value: Any) -> 'SamplerSetting':
-        if isinstance(default_value, dict) and isinstance(neutral_value, dict):
-            return SamplerSetting(name=name, default_value=default_value, neutral_value=neutral_value, sampler_value=default_value, is_single_value=False)
-        elif not isinstance(default_value, dict) and not isinstance(neutral_value, dict):
-            return SamplerSetting(name=name, default_value={name: default_value}, neutral_value={name: neutral_value}, sampler_value=default_value, is_single_value=True)
-        else:
-            raise RuntimeError(f"Wrong default and neutral value types, has to be either both dict or not!\nDefault Value Type:{default_value}\nNeutral Value:{neutral_value}")
 
-    def get_sampler_name(self) -> str:
-        return self.name
+    @abc.abstractmethod
+    def save_to_file(self, settings_file: str):
+        pass
 
-    def get_default_value(self) -> Any:
-        if self.is_single_value:
-            return self.default_value[self.sampler_name]
-        else:
-            return self.sampler_default_value
+    @abc.abstractmethod
+    def load_from_file(self, settings_file: str):
+        pass
 
-    def get_neutral_value(self) -> Any:
-        if self.is_single_value:
-            return self.sampler_neutral_value[self.sampler_name]
-        else:
-            return self.sampler_neutral_value
+    @abc.abstractmethod
+    def as_dict(self):
+        pass
 
-    def get_value(self) -> Any:
-        if self.is_single_value:
-            return self.sampler_value[self.sampler_name]
-        else:
-            return self.sampler_value
+    @abc.abstractmethod
+    def set_stop_tokens(self, tokens: List[str]):
+        pass
 
-    def set_value(self, value: Any) -> None:
-        if self.is_single_value:
-            self.sampler_value[self.sampler_name] = value
-        else:
-            self.sampler_value = value
+    @abc.abstractmethod
+    def set_max_new_tokens(self, max_new_tokens: int):
+        pass
 
-    def reset(self) -> None:
-        self.sampler_value = self.default_value
+    @abc.abstractmethod
+    def set(self, setting_key: str, setting_value: Any):
+        pass
 
-    def neutralize(self) -> None:
-        self.sampler_value = self.neutral_value
+    @abc.abstractmethod
+    def neutralize_sampler(self, sampler_name: str):
+        pass
 
-class ChatAPISettings(BaseModel):
-    general_settings: Dict[str, Any] = Field(..., description="The settings of the LLM provider.")
-    samplers: Dict[str, SamplerSetting] = Field(..., description="The settings of the sampler.")
+    @abc.abstractmethod
+    def neutralize_all_samplers(self):
+        pass
 
-    def get_general_settings(self) -> Dict[str, Any]:
-        return self.general_settings
+    @abc.abstractmethod
+    def set_response_format(self, response_format: dict[str, Any]):
+        pass
 
-    def get_sampler_settings(self) -> Dict[str, SamplerSetting]:
-        return self.samplers
+    @abc.abstractmethod
+    def set_extra_body(self, extra_body: dict[str, Any]):
+        pass
 
-    def set_general_setting(self, settings_name: str, setting_value: Any) -> None:
-        self.general_settings[settings_name] = setting_value
+    @abc.abstractmethod
+    def set_extra_request_kwargs(self, **kwargs):
+        pass
 
-    def set_sampler(self, sampler_name: str, sampler_value: Any) -> None:
-        self.samplers[sampler_name].set_value(sampler_value)
-
-    def neutralize_all_samplers(self) -> None:
-        for name, sampler in self.samplers.items():
-            sampler.neutralize()
-
-    def reset_all_samplers(self) -> None:
-        for name, sampler in self.samplers.items():
-            sampler.reset()
-
-    def neutralize_sampler(self, sampler_name: str) -> None:
-        self.samplers[sampler_name].neutralize()
-
-    def reset_sampler(self, sampler_name: str) -> None:
-        self.samplers[sampler_name].reset()
-
-    def get_combined_dict(self) -> Dict[str, Any]:
-        result = {}
-        for name, setting in self.general_settings.items():
-            result[name] = setting
-        for name, sampler in self.samplers.items():
-            result[name] = sampler.get_value()
-
-        return result
-
-    def __getattr__(self, name: str):
-        try:
-            if name in self.model_fields():
-                return super().__getattr__(name)
-            else:
-                data = self.get_combined_dict()
-                return data[name]
-        except KeyError:
-            raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")
-
-    def __setattr__(self, name: str, value):
-        if name in self.model_fields():
-            super().__setattr__(name, value)
-        else:
-            if name in self.samplers:
-                self.samplers[name].set_value(value)
-                return None
-            self.set_general_setting(name, value)
+    @abc.abstractmethod
+    def set_tool_choice(self, tool_choice: str):
+        pass
 
 class ChatAPIProvider(abc.ABC):
 
     @abc.abstractmethod
-    def get_default_settings(self) -> ChatAPISettings:
+    def get_default_settings(self):
         pass
 
     @abc.abstractmethod
-    def set_default_settings(self, settings: ChatAPISettings) -> None:
+    def set_default_settings(self, settings) -> None:
         pass
 
     @abc.abstractmethod
-    def get_response(self, messages: List[Dict[str, Any]], settings: ChatAPISettings=None,
+    def get_response(self, messages: List[Dict[str, Any]], settings=None,
                      tools: Optional[List[FunctionTool]] = None) -> ChatMessage:
         pass
 
     @abc.abstractmethod
-    def get_streaming_response(self, messages: List[Dict[str, Any]], settings: ChatAPISettings=None,
+    def get_streaming_response(self, messages: List[Dict[str, Any]], settings=None,
                                tools: Optional[List[FunctionTool]] = None) -> Generator[StreamingChatAPIResponse, None, None]:
         pass
 
