@@ -50,8 +50,7 @@ def create_dynamic_model_from_function(
 
     # Parse the docstring
     assert func.__doc__ is not None
-    docstring = parse(func.__doc__, style=DocstringStyle.GOOGLE)
-
+    docstring = parse(func.__doc__, style=DocstringStyle.AUTO)
     dynamic_fields = {}
     param_docs = []
     if add_inner_thoughts:
@@ -74,9 +73,14 @@ def create_dynamic_model_from_function(
 
         # Assert that the parameter has a description
         if not param_doc or not param_doc.description:
-            raise ValueError(
-                f"Parameter '{param.name}' in function '{func.__name__}' lacks a description in the docstring"
+            # Find the parameter's description in the docstring
+            param_doc = next(
+                (d for d in docstring2.params if d.arg_name == param.name), None
             )
+            if not param_doc or not param_doc.description:
+                raise ValueError(
+                    f"Parameter '{param.name}' in function '{func.__name__}' lacks a description in the docstring"
+                )
 
         # Add parameter details to the schema
         param_docs.append((param.name, param_doc))

@@ -15,7 +15,7 @@ from ToolAgents.messages.chat_message import BinaryStorageType, ToolCallResultCo
 from ToolAgents.provider.message_converter.message_converter import BaseMessageConverter
 from ToolAgents.provider.llm_provider import ProviderSettings, SamplerSetting
 from ToolAgents.provider.completion_provider.completion_interfaces import LLMTokenizer, LLMToolCallHandler, generate_id, \
-    CompletionEndpoint
+    CompletionEndpoint, AsyncCompletionEndpoint
 
 from ToolAgents import FunctionTool
 
@@ -168,7 +168,8 @@ class MistralMessageConverterLlamaCpp(BaseMessageConverter):
         if open_ai_tools and len(open_ai_tools) > 0:
             request_kwargs['tools'] = open_ai_tools
         else:
-            request_kwargs.pop('tool_choice')
+            if "tool_choice" in request_kwargs:
+                request_kwargs.pop('tool_choice')
         return request_kwargs
 
     def to_provider_format(self, messages: List[ChatMessage]) -> List[Dict[str, Any]]:
@@ -335,3 +336,104 @@ class LlamaCppServer(CompletionEndpoint):
                     decoded_chunk = ""
 
         return generate_text_chunks()
+
+
+import json
+import aiohttp
+import requests
+from typing import AsyncGenerator, Dict, Any
+
+
+class AsyncLlamaCppServer(AsyncCompletionEndpoint):
+    def __init__(self, server_address: str, api_key: str = None):
+        super().__init__()
+        self.server_address = server_address
+        self.api_key = api_key
+        self.server_completion_endpoint = f"{server_address}/completion"
+
+    async def create_completion(self, prompt: str, settings: LlamaCppProviderSettings) -> str:
+        """
+        Async completion implementation
+        """
+        headers = self._get_headers()
+        data = self._prepare_data(settings, prompt=prompt)
+        data["stream"] = False
+
+        async with aiohttp.ClientSession() as session:
+            async with session.post(self.server_completion_endpoint, headers=headers, json=data) as response:
+                response.raise_for_status()
+                data = await response.json()
+                return data["content"]
+
+    async def create_streaming_completion(
+            self, prompt: str, settings: ProviderSettings
+    ) -> AsyncGenerator[str, None]:
+        """
+        Async streaming completion implementation
+        """
+        headers = self._get_headers()
+        data = self._prepare_data(settings, prompt=prompt)
+        data["stream"] = True
+
+        async for chunk in self._get_async_response_stream(headers, data, self.server_completion_endpoint):
+            yield chunk
+
+    def get_default_settings(self) -> LlamaCppProviderSettings:
+        return LlamaCppProviderSettings()
+
+    def _get_headers(self) -> Dict[str, str]:
+        headers = {"Content-Type": "application/json"}
+        if self.api_key:
+            headers["Authorization"] = f"Bearer {self.api_key}"
+        return headers
+
+    def _prepare_data(self, settings: ProviderSettings, **kwargs) -> Dict[str, Any]:
+        data = settings.to_dict()
+        data.update(kwargs)
+
+        # Set default samplers if not provided
+        if 'samplers' not in data or data['samplers'] is None:
+            data['samplers'] = ["top_k", "tfs_z", "typical_p", "top_p", "min_p", "temperature"]
+
+        return data
+
+    async def _get_async_response_stream(
+            self, headers: Dict[str, str], data: Dict[str, Any], endpoint_address: str
+    ) -> AsyncGenerator[str, None]:
+        async with aiohttp.ClientSession() as session:
+            async with session.post(endpoint_address, headers=headers, json=data) as response:
+                response.raise_for_status()
+
+                # Buffer for incomplete chunks
+                buffer = ""
+
+                async for chunk in response.content.iter_chunks():
+                    if chunk[0]:  # Only process non-empty chunks
+                        buffer += chunk[0].decode("utf-8")
+
+                        # Process complete lines in buffer
+                        while "\n" in buffer:
+                            line, buffer = buffer.split("\n", 1)
+                            if line.strip():
+                                if line.strip().startswith("error:"):
+                                    raise RuntimeError(line)
+
+                                if line.startswith("data:"):
+                                    line = line.replace("data:", "").strip()
+                                    try:
+                                        data = json.loads(line)
+                                        yield data["content"]
+                                    except json.JSONDecodeError as e:
+                                        raise RuntimeError(f"Failed to parse JSON: {line}") from e
+
+                # Process any remaining data in buffer
+                if buffer.strip():
+                    if buffer.strip().startswith("error:"):
+                        raise RuntimeError(buffer)
+                    if buffer.startswith("data:"):
+                        buffer = buffer.replace("data:", "").strip()
+                        try:
+                            data = json.loads(buffer)
+                            yield data["content"]
+                        except json.JSONDecodeError as e:
+                            raise RuntimeError(f"Failed to parse JSON: {buffer}") from e

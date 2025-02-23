@@ -1,7 +1,7 @@
 import abc
 import random
 import string
-from typing import List, Dict, Union, Generator
+from typing import List, Dict, Union, Generator, AsyncGenerator
 
 from ToolAgents.messages import ToolCallContent, TextContent
 from ToolAgents.provider import ProviderSettings
@@ -28,14 +28,26 @@ class LLMTokenizer(abc.ABC):
 
 class CompletionEndpoint(abc.ABC):
     @abc.abstractmethod
-    def create_completion(self, prompt, settings: ProviderSettings)-> Union[str, Generator[str, None, None]]:
+    def create_completion(self, prompt, settings: ProviderSettings)-> str:
         pass
     @abc.abstractmethod
-    def create_streaming_completion(self, prompt, settings: ProviderSettings) -> Union[str, Generator[str, None, None]]:
+    def create_streaming_completion(self, prompt, settings: ProviderSettings) ->  Generator[str, None, None]:
         pass
     @abc.abstractmethod
     def get_default_settings(self):
         pass
+
+class AsyncCompletionEndpoint(abc.ABC):
+    @abc.abstractmethod
+    async def create_completion(self, prompt, settings: ProviderSettings)-> str:
+        pass
+    @abc.abstractmethod
+    async def create_streaming_completion(self, prompt, settings: ProviderSettings) -> AsyncGenerator[str, None]:
+        pass
+    @abc.abstractmethod
+    def get_default_settings(self):
+        pass
+
 
 class LLMToolCallHandler(abc.ABC):
 
