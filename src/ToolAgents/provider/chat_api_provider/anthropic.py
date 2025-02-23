@@ -12,13 +12,13 @@ from ToolAgents import FunctionTool
 from ToolAgents.messages.message_converter.anthropic_message_converter import AnthropicMessageConverter, \
     AnthropicResponseConverter
 from ToolAgents.messages.message_converter.message_converter import BaseMessageConverter, BaseResponseConverter
-from ToolAgents.provider.llm_provider import ChatAPIProvider, SamplingSettings, StreamingChatAPIResponse
+from ToolAgents.provider.llm_provider import ChatAPIProvider, ChatAPISettings, StreamingChatAPIResponse
 from ToolAgents.messages.chat_message import ChatMessage, ToolCallContent, TextContent, ChatMessageRole, BinaryContent, \
     BinaryStorageType, ToolCallResultContent
 
 
 
-class AnthropicSettings(SamplingSettings):
+class AnthropicSettings(ChatAPISettings):
 
     def __init__(self):
         self.temperature = 1.0
