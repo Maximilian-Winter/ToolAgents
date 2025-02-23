@@ -39,7 +39,7 @@ class StreamingChatMessage(BaseModel):
         arbitrary_types_allowed = True  # To allow ChatMessage custom type
 
 class ProviderSettings(abc.ABC):
-    def __init__(self, initial_tool_choice: Union[str, dict], : dict[str, (Any, Any)]):
+    def __init__(self, initial_tool_choice: Union[str, dict], samplers: dict[str, (Any, Any)]):
         self.extra_body = None
         self.response_format = None
         self.request_kwargs = {}
