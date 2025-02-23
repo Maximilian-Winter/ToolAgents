@@ -201,7 +201,7 @@ class OpenAIResponseConverter(BaseResponseConverter):
                     finished=True,
                     finished_chat_message=finished_message
                 )
-    async def async_yield_from_provider(self, stream_generator: Any) -> AsyncGenerator[StreamingChatMessage]:
+    async def async_yield_from_provider(self, stream_generator: Any) -> AsyncGenerator[StreamingChatMessage, None]:
         current_content = ""
         current_tool_calls = []
         alt_index = 0

@@ -183,7 +183,7 @@ class AnthropicResponseConverter(BaseResponseConverter):
                                                                          created_at=datetime.datetime.now(),
                                                                          updated_at=datetime.datetime.now()))
 
-    async def async_yield_from_provider(self, stream_generator: Any) -> AsyncGenerator[StreamingChatMessage]:
+    async def async_yield_from_provider(self, stream_generator: Any) -> AsyncGenerator[StreamingChatMessage, None]:
         current_tool_call = None
         content = None
         has_tool_call = False

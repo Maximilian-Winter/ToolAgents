@@ -83,7 +83,7 @@ class AsyncOpenAIChatAPI(AsyncChatAPIProvider):
 
     async def get_streaming_response(self, messages: List[ChatMessage], settings=None,
                                tools: Optional[List[FunctionTool]] = None) -> AsyncGenerator[
-        StreamingChatMessage]:
+        StreamingChatMessage, None]:
         request_kwargs = self._prepare_request(messages, settings, tools)
 
         request_kwargs["stream"] = True

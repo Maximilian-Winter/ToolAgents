@@ -42,5 +42,5 @@ class BaseResponseConverter(ABC):
         pass
 
     @abstractmethod
-    async def async_yield_from_provider(self, stream_generator: Any) -> AsyncGenerator[StreamingChatMessage]:
+    async def async_yield_from_provider(self, stream_generator: Any) -> AsyncGenerator[StreamingChatMessage, None]:
         pass

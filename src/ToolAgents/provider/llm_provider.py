@@ -249,7 +249,7 @@ class AsyncChatAPIProvider(abc.ABC):
     @abc.abstractmethod
     async def get_streaming_response(self, messages: List[ChatMessage], settings: ProviderSettings=None,
                                tools: Optional[List[FunctionTool]] = None) -> AsyncGenerator[
-        StreamingChatMessage]:
+        StreamingChatMessage, None]:
         pass
 
     @abc.abstractmethod

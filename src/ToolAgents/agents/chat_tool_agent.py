@@ -282,7 +282,7 @@ class AsyncChatToolAgent(AsyncBaseToolAgent):
             tool_registry: ToolRegistry = None,
             settings: Optional[Any] = None,
             reset_last_messages_buffer: bool = True,
-    ) -> AsyncGenerator[StreamingChatMessage]:
+    ) -> AsyncGenerator[StreamingChatMessage, None]:
         """
         Performs a single streaming step of interaction with the chat API,
         yielding chunks and whether they contain tool calls.
@@ -353,7 +353,7 @@ class AsyncChatToolAgent(AsyncBaseToolAgent):
             tool_registry: ToolRegistry = None,
             settings: Optional[Any] = None,
             reset_last_messages_buffer: bool = True,
-    ) -> AsyncGenerator[ChatResponseChunk]:
+    ) -> AsyncGenerator[ChatResponseChunk, None]:
         """
         Gets a streaming response from the chat API, handling any tool calls.
 
