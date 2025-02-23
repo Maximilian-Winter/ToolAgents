@@ -6,7 +6,7 @@ from typing import List, Dict, Any, Generator
 from .message_converter import BaseMessageConverter, BaseResponseConverter
 from ToolAgents.messages.chat_message import ChatMessage, ChatMessageRole, TextContent, ToolCallContent, BinaryContent, \
     BinaryStorageType, ToolCallResultContent
-from ToolAgents.provider.llm_provider import StreamingChatAPIResponse
+from ToolAgents.provider.llm_provider import StreamingChatMessage
 
 
 class MistralMessageConverter(BaseMessageConverter):
@@ -82,7 +82,7 @@ class MistralResponseConverter(BaseResponseConverter):
         return ChatMessage(id=str(uuid.uuid4()), role=ChatMessageRole.Assistant, content=content,
                            created_at=datetime.datetime.now(), updated_at=datetime.datetime.now(),
                            additional_information=additional_information)
-    def yield_from_provider(self, stream_generator: Any) -> Generator[StreamingChatAPIResponse, None, None]:
+    def yield_from_provider(self, stream_generator: Any) -> Generator[StreamingChatMessage, None, None]:
         current_content = ""
         current_tool_calls = []
         alt_index = 0
@@ -92,7 +92,7 @@ class MistralResponseConverter(BaseResponseConverter):
 
             if delta.content:
                 current_content += delta.content
-                yield StreamingChatAPIResponse(
+                yield StreamingChatMessage(
                     chunk=delta.content,
                     is_tool_call=False,
                     finished=False,
@@ -116,7 +116,7 @@ class MistralResponseConverter(BaseResponseConverter):
                     if tool_call.function.arguments:
                         current_tool_calls[tool_call.index]["function"]["arguments"] += tool_call.function.arguments
                 if "yielded" not in current_tool_calls[-1]:
-                    yield StreamingChatAPIResponse(
+                    yield StreamingChatMessage(
                         chunk="",
                         is_tool_call=True,
                         tool_call=current_tool_calls[-1],
@@ -153,7 +153,7 @@ class MistralResponseConverter(BaseResponseConverter):
                     additional_information=additional_data
                 )
 
-                yield StreamingChatAPIResponse(
+                yield StreamingChatMessage(
                     chunk="",
                     is_tool_call=has_tool_call,
                     tool_call=current_tool_calls[-1] if len(current_tool_calls) > 0 else None,

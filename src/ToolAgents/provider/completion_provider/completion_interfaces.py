@@ -4,7 +4,7 @@ import string
 from typing import List, Dict, Union, Generator
 
 from ToolAgents.messages import ToolCallContent, TextContent
-from ToolAgents.provider import SamplingSettings
+from ToolAgents.provider import ProviderSettings
 
 
 def generate_id(length=8):
@@ -28,7 +28,7 @@ class LLMTokenizer(abc.ABC):
 
 class CompletionEndpoint(abc.ABC):
     @abc.abstractmethod
-    def create_completion(self, prompt, settings: SamplingSettings)-> Union[str, Generator[str, None, None]]:
+    def create_completion(self, prompt, settings: ProviderSettings)-> Union[str, Generator[str, None, None]]:
         pass
 
     @abc.abstractmethod

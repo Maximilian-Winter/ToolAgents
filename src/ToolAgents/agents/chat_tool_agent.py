@@ -4,7 +4,7 @@ from typing import Optional, List, Any, Generator
 from ToolAgents import ToolRegistry
 from ToolAgents.agents.base_llm_agent import BaseToolAgent, ChatResponse, ChatResponseChunk
 
-from ToolAgents.provider.llm_provider import ChatAPIProvider, StreamingChatAPIResponse
+from ToolAgents.provider.llm_provider import ChatAPIProvider, StreamingChatMessage
 from ToolAgents.messages.chat_message import ChatMessage, ChatMessageRole, ToolCallResultContent
 
 
@@ -53,7 +53,7 @@ class ChatToolAgent(BaseToolAgent):
         if self.debug_output:
             print("Input messages:", '\n'.join([msg.model_dump_json(indent=4) for msg in messages]))
 
-        result = self.chat_api.get_response(self.chat_api.convert_chat_messages(messages), settings=settings, tools=tools)
+        result = self.chat_api.get_response(messages, settings=settings, tools=tools)
 
         return result
 
@@ -64,7 +64,7 @@ class ChatToolAgent(BaseToolAgent):
             tool_registry: ToolRegistry = None,
             settings: Optional[Any] = None,
             reset_last_messages_buffer: bool = True,
-    ) -> Generator[StreamingChatAPIResponse, None, None]:
+    ) -> Generator[StreamingChatMessage, None, None]:
         """
         Performs a single streaming step of interaction with the chat API,
         yielding chunks and whether they contain tool calls.
@@ -90,7 +90,7 @@ class ChatToolAgent(BaseToolAgent):
         if self.debug_output:
             print("Input messages:", '\n'.join([msg.model_dump_json(indent=4, exclude_none=True) for msg in messages]))
 
-        for chunk in self.chat_api.get_streaming_response(self.chat_api.convert_chat_messages(messages), settings=settings, tools=tools):
+        for chunk in self.chat_api.get_streaming_response(messages, settings=settings, tools=tools):
             yield chunk
 
 

@@ -5,7 +5,7 @@ import json
 from typing import List, Dict, Any, Generator
 
 from ToolAgents.messages.message_converter.message_converter import BaseResponseConverter
-from ToolAgents.provider.llm_provider import StreamingChatAPIResponse
+from ToolAgents.provider.llm_provider import StreamingChatMessage
 from .message_converter import BaseMessageConverter
 from ToolAgents.messages.chat_message import ChatMessage, ChatMessageRole, TextContent, ToolCallContent, BinaryContent, \
     BinaryStorageType, ToolCallResultContent
@@ -91,7 +91,7 @@ class OpenAIResponseConverter(BaseResponseConverter):
                            created_at=datetime.datetime.now(), updated_at=datetime.datetime.now(),
                            additional_information=additional_information)
 
-    def yield_from_provider(self, stream_generator: Any) -> Generator[StreamingChatAPIResponse, None, None]:
+    def yield_from_provider(self, stream_generator: Any) -> Generator[StreamingChatMessage, None, None]:
         current_content = ""
         current_tool_calls = []
         alt_index = 0
@@ -101,7 +101,7 @@ class OpenAIResponseConverter(BaseResponseConverter):
 
             if delta.content:
                 current_content += delta.content
-                yield StreamingChatAPIResponse(
+                yield StreamingChatMessage(
                     chunk=delta.content,
                     is_tool_call=False,
                     finished=False,
@@ -125,7 +125,7 @@ class OpenAIResponseConverter(BaseResponseConverter):
                     if tool_call.function.arguments:
                         current_tool_calls[tool_call.index]["function"]["arguments"] += tool_call.function.arguments
                 if "yielded" not in current_tool_calls[-1]:
-                    yield StreamingChatAPIResponse(
+                    yield StreamingChatMessage(
                         chunk="",
                         is_tool_call=True,
                         tool_call=current_tool_calls[-1],
@@ -162,7 +162,7 @@ class OpenAIResponseConverter(BaseResponseConverter):
                     updated_at=datetime.datetime.now(),
                     additional_information=additional_data
                 )
-                yield StreamingChatAPIResponse(
+                yield StreamingChatMessage(
                     chunk="",
                     is_tool_call=has_tool_call,
                     tool_call=current_tool_calls[-1] if has_tool_call else None,

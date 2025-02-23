@@ -2,7 +2,7 @@
 from abc import ABC, abstractmethod
 from typing import List, Dict, Any, Generator
 from ToolAgents.messages.chat_message import ChatMessage
-from ToolAgents.provider.llm_provider import StreamingChatAPIResponse
+from ToolAgents.provider.llm_provider import StreamingChatMessage
 
 
 class BaseMessageConverter(ABC):
@@ -22,7 +22,7 @@ class BaseResponseConverter(ABC):
         pass
 
     @abstractmethod
-    def yield_from_provider(self, stream_generator: Any) -> Generator[StreamingChatAPIResponse, None, None]:
+    def yield_from_provider(self, stream_generator: Any) -> Generator[StreamingChatMessage, None, None]:
         """
         Yield a universal StreamingChatAPIResponse from the provider-specific response.
         """

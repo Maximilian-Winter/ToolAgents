@@ -9,13 +9,13 @@ from groq import Groq
 from ToolAgents import FunctionTool
 from ToolAgents.messages.message_converter.groq_message_converter import GroqMessageConverter, GroqResponseConverter
 from ToolAgents.messages.message_converter.mistral_message_converter import MistralMessageConverter
-from ToolAgents.provider.llm_provider import SamplingSettings
-from ToolAgents.provider.llm_provider import ChatAPIProvider, StreamingChatAPIResponse
+from ToolAgents.provider.llm_provider import ProviderSettings
+from ToolAgents.provider.llm_provider import ChatAPIProvider, StreamingChatMessage
 from ToolAgents.messages.chat_message import ChatMessage, TextContent, BinaryContent, BinaryStorageType, \
     ToolCallContent, ToolCallResultContent, ChatMessageRole
 
 
-class GroqSettings(SamplingSettings):
+class GroqSettings(ProviderSettings):
 
     def __init__(self):
         self.temperature = 0.4
@@ -29,7 +29,7 @@ class GroqSettings(SamplingSettings):
 
     def save_to_file(self, settings_file: str):
         with open(settings_file, 'w') as f:
-            json.dump(self.as_dict(), f, indent=2)
+            json.dump(self.to_dict(), f, indent=2)
 
     def load_from_file(self, settings_file: str):
         with open(settings_file, 'r') as f:
@@ -37,7 +37,7 @@ class GroqSettings(SamplingSettings):
         for key, value in data.items():
             setattr(self, key, value)
 
-    def as_dict(self):
+    def to_dict(self):
         return copy(self.__dict__)
 
     def set_stop_tokens(self, tokens: List[str]):
@@ -125,7 +125,7 @@ class GroqChatAPI(ChatAPIProvider):
 
     def get_streaming_response(self, messages: List[Dict[str, str]], settings=None,
                                tools: Optional[List[FunctionTool]] = None) -> Generator[
-        StreamingChatAPIResponse, None, None]:
+        StreamingChatMessage, None, None]:
         openai_tools = [tool.to_openai_tool() for tool in tools] if tools else None
 
         # Prepare base request kwargs

@@ -3,10 +3,10 @@ from typing import Any
 from ToolAgents.agents import ChatToolAgent
 from ToolAgents.function_tool import PostProcessor
 from ToolAgents.messages import ChatMessage, MessageTemplate
-from ToolAgents.provider import SamplingSettings
+from ToolAgents.provider import ProviderSettings
 
 
-def summarize_list_of_strings(agent: ChatToolAgent, settings: SamplingSettings, strings: list[str]):
+def summarize_list_of_strings(agent: ChatToolAgent, settings: ProviderSettings, strings: list[str]):
     template = MessageTemplate.from_string("""You are an expert document analyst and summarizer. Your task is to create a comprehensive summary of multiple documents. Here are the documents you need to analyze and summarize:
 
 <documents>
@@ -102,7 +102,7 @@ Conclusions:
 
 
 class SummarizingFunctionToolPostProcessor(PostProcessor):
-    def __init__(self, summarizing_agent: ChatToolAgent, settings: SamplingSettings):
+    def __init__(self, summarizing_agent: ChatToolAgent, settings: ProviderSettings):
         super().__init__()
         self.summarizing_agent = summarizing_agent
         self.settings = settings

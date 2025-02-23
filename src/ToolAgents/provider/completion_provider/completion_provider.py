@@ -10,7 +10,7 @@ import requests
 
 from ToolAgents import FunctionTool
 from ToolAgents.messages import ChatMessage, ChatMessageRole, TextContent
-from ToolAgents.provider.llm_provider import SamplingSettings, ChatAPIProvider, StreamingChatAPIResponse
+from ToolAgents.provider.llm_provider import ProviderSettings, ChatAPIProvider, StreamingChatMessage
 from .default_implementations import TemplateToolCallHandler, MistralMessageConverterLlamaCpp, MistralTokenizer
 from .completion_interfaces import LLMTokenizer, LLMToolCallHandler, CompletionEndpoint
 from ToolAgents.messages.message_converter.message_converter import BaseMessageConverter
@@ -26,10 +26,10 @@ class CompletionProvider(ChatAPIProvider):
         self.tool_call_handler = tool_call_handler
         self.default_settings = completion_endpoint.get_default_settings()
 
-    def get_default_settings(self) -> SamplingSettings:
+    def get_default_settings(self) -> ProviderSettings:
         return copy.copy(self.default_settings)
 
-    def set_default_settings(self, settings: SamplingSettings):
+    def set_default_settings(self, settings: ProviderSettings):
         self.default_settings = settings
 
     def get_response(self, messages: List[Dict[str, Any]], settings=None,
@@ -49,7 +49,7 @@ class CompletionProvider(ChatAPIProvider):
 
     def get_streaming_response(self, messages: List[Dict[str, Any]], settings=None,
                                tools: Optional[List[FunctionTool]] = None) -> Generator[
-        StreamingChatAPIResponse, None, None]:
+        StreamingChatMessage, None, None]:
 
         prompt = self.tokenizer.apply_template(messages=messages, tools=[tool.to_openai_tool() for tool in tools])
         if settings is None:
@@ -92,13 +92,13 @@ class CompletionProvider(ChatAPIProvider):
             else:
                 # If we have buffered tokens and no tool call detected, stream them
                 if buffer:
-                    chunk = StreamingChatAPIResponse(chunk=buffer)
+                    chunk = StreamingChatMessage(chunk=buffer)
                     complete_response += buffer
                     buffer = ""
                     yield chunk
 
                 # Stream current token
-                chunk = StreamingChatAPIResponse(chunk=current_token)
+                chunk = StreamingChatMessage(chunk=current_token)
                 complete_response += current_token
                 yield chunk
 
@@ -106,7 +106,7 @@ class CompletionProvider(ChatAPIProvider):
         if buffer:
             complete_response += buffer
 
-        final_chunk = StreamingChatAPIResponse(chunk="", finished=True)
+        final_chunk = StreamingChatMessage(chunk="", finished=True)
 
         if self.tool_call_handler.contains_tool_calls(complete_response):
             final_chunk.is_tool_call = True

@@ -5,8 +5,8 @@ from typing import Optional, List, Any, Generator
 from pydantic import BaseModel, Field
 
 from ToolAgents import ToolRegistry
-from ToolAgents.provider.llm_provider import SamplingSettings
-from ToolAgents.provider.llm_provider import StreamingChatAPIResponse
+from ToolAgents.provider.llm_provider import ProviderSettings
+from ToolAgents.provider.llm_provider import StreamingChatMessage
 from ToolAgents.messages.chat_message import ChatMessage
 
 
@@ -33,7 +33,7 @@ class BaseToolAgent(ABC):
         self.last_messages_buffer = []
 
     @abstractmethod
-    def get_default_settings(self) -> SamplingSettings:
+    def get_default_settings(self) -> ProviderSettings:
         pass
 
     @abstractmethod
@@ -65,7 +65,7 @@ class BaseToolAgent(ABC):
             tool_registry: ToolRegistry = None,
             settings: Optional[Any] = None,
             reset_last_messages_buffer: bool = True,
-    ) -> Generator[StreamingChatAPIResponse, None, None]:
+    ) -> Generator[StreamingChatMessage, None, None]:
         """
         Performs a single streaming step of interaction with the agent, yielding chunks.
 

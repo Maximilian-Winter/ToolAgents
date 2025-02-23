@@ -6,7 +6,7 @@ from typing import Any
 from ToolAgents import ToolRegistry, FunctionTool
 from ToolAgents.agent_memory.context_app_state import ContextAppState
 
-from ToolAgents.provider.llm_provider import SamplingSettings
+from ToolAgents.provider.llm_provider import ProviderSettings
 from ToolAgents.agents.base_llm_agent import BaseToolAgent, ChatResponse
 from ToolAgents.messages import ChatHistory, ChatMessage, MessageTemplate
 
@@ -256,7 +256,7 @@ class AdvancedAgent:
         self.tool_registry = None
 
     def chat_with_agent(self, chat_input: str, tool_registry: ToolRegistry = None,
-                        settings: SamplingSettings = None):
+                        settings: ProviderSettings = None):
         """
         Have a conversation with the agent using a given input.
 
@@ -293,7 +293,7 @@ class AdvancedAgent:
         return result
 
     def stream_chat_with_agent(self, chat_input: str, tool_registry: ToolRegistry = None,
-                               settings: SamplingSettings = None):
+                               settings: ProviderSettings = None):
         """
         Stream a conversation with the agent, yielding tokens as they become available.
 

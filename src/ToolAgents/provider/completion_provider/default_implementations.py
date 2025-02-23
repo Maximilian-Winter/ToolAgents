@@ -14,7 +14,7 @@ from mistral_common.tokens.tokenizers.mistral import MistralTokenizer as Mistral
 from ToolAgents.messages import ToolCallContent, TextContent, ChatMessage, BinaryContent
 from ToolAgents.messages.chat_message import BinaryStorageType, ToolCallResultContent
 from ToolAgents.messages.message_converter.message_converter import BaseMessageConverter
-from ToolAgents.provider.llm_provider import SamplingSettings
+from ToolAgents.provider.llm_provider import ProviderSettings
 from ToolAgents.provider.completion_provider.completion_interfaces import LLMTokenizer, LLMToolCallHandler, generate_id, \
     CompletionEndpoint
 
@@ -200,7 +200,7 @@ class MistralMessageConverterLlamaCpp(BaseMessageConverter):
         return converted_messages
 
 
-class LlamaCppSamplingSettings(SamplingSettings):
+class LlamaCppProviderSettings(ProviderSettings):
     def set_response_format(self, response_format: dict[str, Any]):
         pass
 
@@ -296,7 +296,7 @@ class LlamaCppServer(CompletionEndpoint):
         self.api_key = api_key
         self.server_completion_endpoint = f"{server_address}/completion"
 
-    def create_completion(self, prompt: str, settings: LlamaCppSamplingSettings):
+    def create_completion(self, prompt: str, settings: LlamaCppProviderSettings):
         settings = copy.deepcopy(settings.as_dict())
         headers = self._get_headers()
         data = self._prepare_data(settings, prompt=prompt)
@@ -309,7 +309,7 @@ class LlamaCppServer(CompletionEndpoint):
         return data["content"]
 
     def get_default_settings(self):
-        return LlamaCppSamplingSettings()
+        return LlamaCppProviderSettings()
 
     def _get_headers(self):
         headers = {"Content-Type": "application/json"}

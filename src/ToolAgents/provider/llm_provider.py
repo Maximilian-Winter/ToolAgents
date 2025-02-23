@@ -1,4 +1,6 @@
 import abc
+import copy
+import json
 from typing import List, Dict, Optional, Generator, Any, Union
 
 from ToolAgents import FunctionTool, ToolRegistry
@@ -8,7 +10,7 @@ from typing import Dict, Optional, Any, Union
 
 from ToolAgents.messages.chat_message import ChatMessage
 
-class StreamingChatAPIResponse(BaseModel):
+class StreamingChatMessage(BaseModel):
     """
     Represents a streaming chat API response.
     """
@@ -36,32 +38,61 @@ class StreamingChatAPIResponse(BaseModel):
     class Config:
         arbitrary_types_allowed = True  # To allow ChatMessage custom type
 
-class SamplingSettings(abc.ABC):
+class ProviderSettings(abc.ABC):
+    def __init__(self, initial_tool_choice: Union[str, dict], : dict[str, (Any, Any)]):
+        self.extra_body = None
+        self.response_format = None
+        self.request_kwargs = {}
+        self.tool_choice = initial_tool_choice
+        self.max_tokens = 512
+        self.stop_sequences = []
+        self.samplers = samplers
 
+    def set(self, setting_key: str, setting_value: str):
+        if hasattr(self, setting_key):
+            setattr(self, setting_key, setting_value)
+        else:
+            if self.request_kwargs is None:
+                self.request_kwargs = {}
+            self.request_kwargs[setting_key] = setting_value
 
-    @abc.abstractmethod
     def save_to_file(self, settings_file: str):
-        pass
+        with open(settings_file, 'w') as f:
+            json.dump(self.to_dict(), f, indent=2)
 
-    @abc.abstractmethod
     def load_from_file(self, settings_file: str):
-        pass
+        with open(settings_file, 'r') as f:
+            data = json.load(f)
+        for key, value in data.items():
+            setattr(self, key, value)
 
-    @abc.abstractmethod
-    def as_dict(self):
-        pass
+    def to_dict(self, include: list[str] = None):
+        result = {"max_tokens": self.max_tokens, "stop_sequences": self.stop_sequences}
+        if self.extra_body:
+            result['extra_body'] = self.extra_body
+        if self.response_format:
+            result['response_format'] = self.response_format
 
-    @abc.abstractmethod
+        if len(self.request_kwargs) > 0:
+            for key, value in self.request_kwargs.items():
+                result[key] = value
+
+        for key, value in self.samplers.items():
+            result[key] = value
+
+        if include is not None:
+            for key in filter_out:
+                if key in result:
+                    result.pop(key)
+
+        return result
+
+
     def set_stop_tokens(self, tokens: List[str]):
-        pass
+        self.stop_sequences = tokens
 
-    @abc.abstractmethod
     def set_max_new_tokens(self, max_new_tokens: int):
-        pass
-
-    @abc.abstractmethod
-    def set(self, setting_key: str, setting_value: Any):
-        pass
+        self.max_tokens = max_new_tokens
 
     @abc.abstractmethod
     def neutralize_sampler(self, sampler_name: str):
@@ -71,23 +102,31 @@ class SamplingSettings(abc.ABC):
     def neutralize_all_samplers(self):
         pass
 
-    @abc.abstractmethod
     def set_response_format(self, response_format: dict[str, Any]):
-        pass
+        self.response_format = response_format
 
-    @abc.abstractmethod
     def set_extra_body(self, extra_body: dict[str, Any]):
-        pass
+        self.extra_body = extra_body
 
-    @abc.abstractmethod
     def set_extra_request_kwargs(self, **kwargs):
-        pass
+        for key, value in kwargs.items():
+            self.request_kwargs[key] = value
 
-    @abc.abstractmethod
-    def set_tool_choice(self, tool_choice: str):
-        pass
+    def set_tool_choice(self, tool_choice):
+        self.tool_choice = tool_choice
 
 class ChatAPIProvider(abc.ABC):
+
+    @abc.abstractmethod
+    def get_response(self, messages: List[ChatMessage], settings=None,
+                     tools: Optional[List[FunctionTool]] = None) -> ChatMessage:
+        pass
+
+    @abc.abstractmethod
+    def get_streaming_response(self, messages: List[ChatMessage], settings=None,
+                               tools: Optional[List[FunctionTool]] = None) -> Generator[
+        StreamingChatMessage, None, None]:
+        pass
 
     @abc.abstractmethod
     def get_default_settings(self):
@@ -95,20 +134,6 @@ class ChatAPIProvider(abc.ABC):
 
     @abc.abstractmethod
     def set_default_settings(self, settings) -> None:
-        pass
-
-    @abc.abstractmethod
-    def get_response(self, messages: List[Dict[str, Any]], settings=None,
-                     tools: Optional[List[FunctionTool]] = None) -> ChatMessage:
-        pass
-
-    @abc.abstractmethod
-    def get_streaming_response(self, messages: List[Dict[str, Any]], settings=None,
-                               tools: Optional[List[FunctionTool]] = None) -> Generator[StreamingChatAPIResponse, None, None]:
-        pass
-
-    @abc.abstractmethod
-    def convert_chat_messages(self, messages: List[ChatMessage]) -> List[Dict[str, Any]]:
         pass
 
     @abc.abstractmethod

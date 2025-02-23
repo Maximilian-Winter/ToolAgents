@@ -11,7 +11,7 @@ import httpx
 from .message_converter import BaseMessageConverter, BaseResponseConverter
 from ToolAgents.messages.chat_message import ChatMessage, ChatMessageRole, TextContent, ToolCallContent, BinaryContent, \
     BinaryStorageType, ToolCallResultContent
-from ...provider.llm_provider import StreamingChatAPIResponse
+from ...provider.llm_provider import StreamingChatMessage
 
 
 class AnthropicMessageConverter(BaseMessageConverter):
@@ -96,7 +96,7 @@ class AnthropicResponseConverter(BaseResponseConverter):
             updated_at=datetime.datetime.now()
         )
 
-    def yield_from_provider(self, stream_generator: Any) -> Generator[StreamingChatAPIResponse, None, None]:
+    def yield_from_provider(self, stream_generator: Any) -> Generator[StreamingChatMessage, None, None]:
         current_tool_call = None
         contents = []
         content = None
@@ -112,14 +112,14 @@ class AnthropicResponseConverter(BaseResponseConverter):
                             "arguments": ""
                         }
                     }
-                    yield StreamingChatAPIResponse(chunk="", is_tool_call=True, tool_call=current_tool_call)
+                    yield StreamingChatMessage(chunk="", is_tool_call=True, tool_call=current_tool_call)
                 if chunk.content_block.type == "text":
                     content = chunk.content_block.text
-                    yield StreamingChatAPIResponse(chunk=chunk.content_block.text)
+                    yield StreamingChatMessage(chunk=chunk.content_block.text)
             elif chunk.type == "content_block_delta":
                 if chunk.delta.type == "text_delta":
                     content += chunk.delta.text
-                    yield StreamingChatAPIResponse(chunk=chunk.delta.text)
+                    yield StreamingChatMessage(chunk=chunk.delta.text)
                 elif chunk.delta.type == "input_json_delta":
                     if current_tool_call:
                         current_tool_call["function"]["arguments"] += chunk.delta.partial_json
@@ -138,8 +138,8 @@ class AnthropicResponseConverter(BaseResponseConverter):
                                                         tool_call_name=current_tool_call["function"]["name"],
                                                         tool_call_arguments=arguments))
                     current_tool_call = None
-        yield StreamingChatAPIResponse(chunk="", is_tool_call=has_tool_call, finished=True, tool_call=current_tool_call,
-                                       finished_chat_message=ChatMessage(id=str(uuid.uuid4()),
+        yield StreamingChatMessage(chunk="", is_tool_call=has_tool_call, finished=True, tool_call=current_tool_call,
+                                   finished_chat_message=ChatMessage(id=str(uuid.uuid4()),
                                                                          role=ChatMessageRole.Assistant,
                                                                          content=contents,
                                                                          created_at=datetime.datetime.now(),

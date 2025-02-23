@@ -10,13 +10,13 @@ from ToolAgents import FunctionTool
 from ToolAgents.messages.message_converter.message_converter import BaseMessageConverter, BaseResponseConverter
 from ToolAgents.messages.message_converter.open_ai_message_converter import OpenAIMessageConverter, \
     OpenAIResponseConverter
-from ToolAgents.provider.llm_provider import SamplingSettings
-from ToolAgents.provider.llm_provider import ChatAPIProvider, StreamingChatAPIResponse
+from ToolAgents.provider.llm_provider import ProviderSettings
+from ToolAgents.provider.llm_provider import ChatAPIProvider, StreamingChatMessage
 from ToolAgents.messages.chat_message import ChatMessage, ChatMessageRole, TextContent, ToolCallContent, ToolCallResultContent, \
     BinaryContent, BinaryStorageType
 
 
-class OpenAISettings(SamplingSettings):
+class OpenAISettings(ProviderSettings):
     def __init__(self):
         self.temperature = 1.0
         self.top_p = 1.0
@@ -133,7 +133,7 @@ class OpenAIChatAPI(ChatAPIProvider):
 
     def get_streaming_response(self, messages: List[Dict[str, str]], settings=None,
                                tools: Optional[List[FunctionTool]] = None) -> Generator[
-        StreamingChatAPIResponse, None, None]:
+        StreamingChatMessage, None, None]:
         openai_tools = [tool.to_openai_tool() for tool in tools] if tools else None
 
         # Prepare base request kwargs

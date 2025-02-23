@@ -20,7 +20,7 @@ import numpy as np
 from torch import Tensor
 
 from ToolAgents.messages import ChatMessage, MessageTemplate
-from ToolAgents.provider.llm_provider import SamplingSettings
+from ToolAgents.provider.llm_provider import ProviderSettings
 from ToolAgents.agents.base_llm_agent import BaseToolAgent
 
 
@@ -135,7 +135,7 @@ class SummarizationExtractPatternStrategy(ExtractPatternStrategy):
     to summarize and extract a pattern from multiple documents.
     """
 
-    def __init__(self, agent: BaseToolAgent, summarizer_settings: SamplingSettings,
+    def __init__(self, agent: BaseToolAgent, summarizer_settings: ProviderSettings,
                  user_name: str, assistant_name: str,
                  debug_mode: bool = False):
         """

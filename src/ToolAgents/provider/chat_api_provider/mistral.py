@@ -9,13 +9,13 @@ from mistralai import Mistral
 from ToolAgents import FunctionTool
 from ToolAgents.messages.message_converter.mistral_message_converter import MistralMessageConverter, \
     MistralResponseConverter
-from ToolAgents.provider.llm_provider import SamplingSettings
-from ToolAgents.provider.llm_provider import ChatAPIProvider, StreamingChatAPIResponse
+from ToolAgents.provider.llm_provider import ProviderSettings
+from ToolAgents.provider.llm_provider import ChatAPIProvider, StreamingChatMessage
 from ToolAgents.messages.chat_message import ChatMessage, TextContent, ToolCallContent, ChatMessageRole, \
     ToolCallResultContent, BinaryStorageType, BinaryContent
 
 
-class MistralSettings(SamplingSettings):
+class MistralSettings(ProviderSettings):
 
     def __init__(self):
         self.temperature = 0.4
@@ -122,7 +122,7 @@ class MistralChatAPI(ChatAPIProvider):
 
     def get_streaming_response(self, messages: List[Dict[str, str]], settings=None,
                                tools: Optional[List[FunctionTool]] = None) -> Generator[
-        StreamingChatAPIResponse, None, None]:
+        StreamingChatMessage, None, None]:
         openai_tools = [tool.to_openai_tool() for tool in tools] if tools else None
 
         # Prepare base request kwargs
