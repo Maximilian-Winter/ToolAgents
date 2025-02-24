@@ -20,10 +20,10 @@ load_dotenv()
 api = OpenAIChatAPI(api_key=os.getenv("OPENAI_API_KEY"), model="gpt-4o-mini")
 
 # Anthropic API
-api = AnthropicChatAPI(api_key=os.getenv("ANTHROPIC_API_KEY"), model="claude-3-5-sonnet-20241022")
+#api = AnthropicChatAPI(api_key=os.getenv("ANTHROPIC_API_KEY"), model="claude-3-5-sonnet-20241022")
 
 # Groq API
-api = GroqChatAPI(api_key=os.getenv("GROQ_API_KEY"), model="llama-3.3-70b-versatile")
+#api = GroqChatAPI(api_key=os.getenv("GROQ_API_KEY"), model="llama-3.3-70b-versatile")
 
 # Llama Cpp Server Completion Based API without --jinja flag and with streaming, works best with --special flag
 #api = CompletionProvider(completion_endpoint=LlamaCppServer("http://127.0.0.1:8080"))
