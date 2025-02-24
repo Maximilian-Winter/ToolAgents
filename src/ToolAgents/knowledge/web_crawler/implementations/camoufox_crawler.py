@@ -1,8 +1,6 @@
-import markdownify
-from camoufox_crawler.sync_api import Camoufox
+from camoufox.sync_api import Camoufox
 
-
-
+from ToolAgents.knowledge.html2markdown import HTML2Markdown
 from ToolAgents.knowledge.web_crawler.web_crawler import WebCrawler
 
 
@@ -23,7 +21,7 @@ class CamoufoxWebCrawler(WebCrawler):
             page.goto(url, timeout=300000)
             content = page.content()
             page.close()
-        return markdownify.markdownify(content)
+        return HTML2Markdown().convert(content)
 
     def get_website_content_from_urls(self, urls: list[str]) -> list[str]:
         results = []
@@ -32,6 +30,6 @@ class CamoufoxWebCrawler(WebCrawler):
                 page = browser.new_page()
                 page.goto(url, timeout=300000)
                 content = page.content()
-                results.append(markdownify.markdownify(content))
+                results.append(HTML2Markdown().convert(content))
                 page.close()
         return results
