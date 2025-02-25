@@ -18,7 +18,7 @@ from pydantic_core import PydanticUndefined
 from ToolAgents.utilities.gbnf_grammar_generator.gbnf_grammar_from_pydantic_models import \
     generate_gbnf_grammar_from_pydantic_models
 
-from ToolAgents.utilities.documentation_generation import generate_text_documentation, generate_function_definition
+from ToolAgents.utilities.llm_documentation.documentation_generation import generate_text_documentation, generate_function_definition
 
 
 def format_model_and_field_name(model_name: str) -> str:

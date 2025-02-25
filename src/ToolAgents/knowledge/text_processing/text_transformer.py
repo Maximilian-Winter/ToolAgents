@@ -1,3 +1,4 @@
+import dataclasses
 from typing import Union
 
 from pydantic import BaseModel
@@ -6,14 +7,12 @@ from ToolAgents.agents import ChatToolAgent
 from ToolAgents.messages import MessageTemplate, ChatMessage
 from ToolAgents.provider import ProviderSettings
 
-
-
-
-class TextTransformer(BaseModel):
+@dataclasses.dataclass
+class TextTransformer:
     agent: ChatToolAgent
     settings: ProviderSettings
-    system_prompt: str = None
     prompt_template: MessageTemplate
+    system_prompt: str = None
 
     def transform(self, document: str, **kwargs) -> str:
         if self.system_prompt is None:

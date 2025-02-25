@@ -1,6 +1,6 @@
 from camoufox.sync_api import Camoufox
 
-from ToolAgents.knowledge.html2markdown import HTML2Markdown
+from ToolAgents.knowledge.web_crawler.html2markdown import HTML2Markdown
 from ToolAgents.knowledge.web_crawler.web_crawler import WebCrawler
 
 

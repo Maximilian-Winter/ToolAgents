@@ -5,7 +5,7 @@ import PyPDF2
 
 from ToolAgents.knowledge import DocumentGenerator, Document
 from ToolAgents.knowledge.document import DocumentProvider
-from ToolAgents.utilities.text_splitter import TextSplitter
+from ToolAgents.knowledge.text_processing.text_splitter import TextSplitter
 
 
 class PDFProvider(DocumentProvider):

@@ -64,3 +64,6 @@ examples/agents/knowledge_graph6.gv.pdf
 examples/agents/knowledge_graph6.gv
 examples/agents/knowledge_graph44446.gv.pdf
 /src/ToolAgents/provider/completion_provider/implementations/__pycache__
+/src/ToolAgents/knowledge/text_processing/__pycache__
+/src/ToolAgents/work_in_progress/processes/__pycache__
+/src/ToolAgents/work_in_progress/__pycache__

@@ -8,7 +8,7 @@ from typing import List
 from pydantic import BaseModel
 from ToolAgents import FunctionTool
 from ToolAgents.utilities import ChatHistory
-from ToolAgents.utilities.documentation_generation import generate_type_definitions
+from ToolAgents.utilities.llm_documentation.documentation_generation import generate_type_definitions
 from ToolAgents.messages.message_template import MessageTemplate
 
 system_message_code_agent = """You are an advanced AI assistant with the ability to execute Python code. You have access to a Python code interpreter that allows you to execute Python code to accomplish various tasks. This capability enables you to perform a wide range of operations, from simple calculations to complex data analysis and system interactions.

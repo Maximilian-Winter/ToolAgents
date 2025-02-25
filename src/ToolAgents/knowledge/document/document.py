@@ -3,7 +3,7 @@ import typing
 import uuid
 from typing import Optional
 
-from ToolAgents.utilities.text_splitter import TextSplitter
+from ToolAgents.knowledge.text_processing.text_splitter import TextSplitter
 
 
 @dataclasses.dataclass

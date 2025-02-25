@@ -94,7 +94,7 @@ class ProviderSettings(abc.ABC):
         self.response_format = None
         self.request_kwargs = {}
         self.tool_choice = initial_tool_choice
-        self.max_tokens = 512
+        self.max_tokens = 4096
         self.stop_sequences = []
         self.samplers = {}
         for sampler in samplers:

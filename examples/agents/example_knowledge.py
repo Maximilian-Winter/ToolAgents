@@ -5,12 +5,11 @@ from ToolAgents.agents import ChatToolAgent
 from ToolAgents.knowledge.agent_tools.web_search_tool import WebSearchTool
 from ToolAgents.messages import ChatMessage
 
-from ToolAgents.provider import AnthropicChatAPI, CompletionProvider
+from ToolAgents.provider import AnthropicChatAPI, OpenAIChatAPI
 from ToolAgents.knowledge.web_search.implementations.googlesearch import GoogleWebSearchProvider
 from ToolAgents.knowledge.web_crawler.implementations.camoufox_crawler import CamoufoxWebCrawler
 from dotenv import load_dotenv
 
-from ToolAgents.provider.completion_provider.default_implementations import LlamaCppServer
 
 load_dotenv()
 
@@ -23,8 +22,13 @@ settings.temperature = 0.45
 agent = ChatToolAgent(chat_api=api, debug_output=True)
 web_crawler = CamoufoxWebCrawler()
 web_search_provider = GoogleWebSearchProvider()
-# Llama Cpp Server Completion Based API with Mistral model
-summary_api = CompletionProvider(completion_endpoint=LlamaCppServer("http://127.0.0.1:8080"))
+
+
+summary_api = OpenAIChatAPI(api_key="xxx", base_url="http://127.0.0.1:8080/v1", model="xxx")
+summary_settings = summary_api.get_default_settings()
+summary_settings.temperature = 0.35
+summary_api.set_default_settings(summary_settings)
+
 web_search_tool = WebSearchTool(web_crawler=web_crawler, web_provider=web_search_provider, summarizing_api=summary_api)
 
 tool_registry = ToolRegistry()

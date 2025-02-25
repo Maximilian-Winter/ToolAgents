@@ -16,7 +16,7 @@ sum_prompt_alt_template = MessageTemplate.from_string("""You will be analyzing a
 {CHAT_TURN}
 </chat_turn>
 
-Your task is to carefully read through these chat turns and extract all relevant information about the user named {USER_NAME} and their relationship with the AI assistant named {ASSISTANT_NAME}. This information may include personal details, preferences, interactions, or any other relevant data that can be inferred from the conversation.
+Your task is to carefully read through these chat turns and extract all relevant information about the user named {USER_NAME} and their relationship with {ASSISTANT_NAME}. This information may include personal details, preferences, interactions, or any other relevant data that can be inferred from the conversation.
 
 Follow these steps:
 
@@ -41,9 +41,9 @@ Follow these steps:
 Present your findings in the following format:
 
 <extracted_information>
-<user_info>
+<{USER_NAME}>
 [List all relevant information about {USER_NAME} here]
-</user_info>
+</{USER_NAME}>
 
 <relationship_info>
 [Describe the relationship between {USER_NAME} and {ASSISTANT_NAME} based on the analyzed interactions]
@@ -489,8 +489,7 @@ class AdvancedAgent:
         if max_chat_history_length is None:
             max_chat_history_length = self.max_chat_history_length
         # Only process if the chat history length exceeds the allowed limit and the limit is set (not -1)
-        if (
-                self.chat_history.get_message_count() - self.chat_history_index) > max_chat_history_length and max_chat_history_length > -1:
+        if (self.chat_history.get_message_count() - self.chat_history_index) > max_chat_history_length > -1:
             while (self.chat_history.get_message_count() - self.chat_history_index) > max_chat_history_length:
                 # Determine how many messages are associated with the current chat block
                 msg_count = self.tool_usage_history.get(self.chat_history_index, 1)

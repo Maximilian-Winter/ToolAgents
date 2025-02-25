@@ -35,7 +35,7 @@ from typing import List
 
 from pydantic import BaseModel, Field
 
-from ToolAgents.utilities.text_splitter import RecursiveCharacterTextSplitter
+from ToolAgents.knowledge.text_processing.text_splitter import RecursiveCharacterTextSplitter
 
 rag = RAG(ChromaDbVectorDatabaseProvider(SentenceTransformerEmbeddingProvider(), MXBAIRerankingProvider()))
 

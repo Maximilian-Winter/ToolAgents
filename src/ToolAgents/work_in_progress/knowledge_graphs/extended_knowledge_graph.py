@@ -1,3 +1,5 @@
+from types import NoneType
+
 import graphviz
 from pydantic import BaseModel, Field
 import numpy as np
@@ -24,7 +26,7 @@ class Entity(BaseModel):
     """
     Represents an entity in the knowledge graph.
     """
-    entity_id: str = Field(default="",
+    entity_id: str = Field(default_factory=str,
                            description="The entity id. Gets automatically set when added to the knowledge graph.")
     entity_type: str = Field(..., description="The type of entity")
     attributes: Dict[str, Any] = Field(..., description="The entity attributes")
@@ -34,8 +36,8 @@ class EntityQuery(BaseModel):
     """
     Represents an entity query.
     """
-    entity_type: Optional[str] = Field(None, description="The type of entity to query")
-    attribute_filter: Optional[Dict[str, Any]] = Field(None, description="The attribute filter")
+    entity_type: Optional[str] = Field(default_factory=NoneType, description="The type of entity to query")
+    attribute_filter: Optional[Dict[str, Any]] = Field(default_factory=NoneType, description="The attribute filter")
 
 
 class KnowledgeGraph:
@@ -44,6 +46,22 @@ class KnowledgeGraph:
         self.entity_counters = {}
         self.embeddings = {}
         self.embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
+
+    @staticmethod
+    def entity_to_string(entity) -> str:
+        """
+        Converts an entity to a string.
+        :param entity:
+        :return:
+        """
+        result = f"Id: {entity['id']}\n"
+        result += f"Type: {entity['entity_type']}\n"
+        result += "Attributes:\n"
+        for key, value in entity.items():
+            if key not in ['id', 'entity_type']:
+                result += f"  {key}: {value}\n"
+        result += "\n"
+        return result
 
     def generate_entity_id(self, entity_type: str) -> str:
         """
@@ -75,7 +93,7 @@ class KnowledgeGraph:
             entity.entity_id = self.generate_entity_id(entity.entity_type)
         self.graph.add_node(entity.entity_id, entity_type=entity.entity_type, **entity.attributes)
 
-        entity_text = f"{entity.entity_type}, {', '.join(str(v) for v in entity.attributes.values())}"
+        entity_text = KnowledgeGraph.entity_to_string(self.graph.nodes[entity.entity_id])
         self.embeddings[entity.entity_id] = self.embedding_model.encode(entity_text)
 
         return entity.entity_id
@@ -97,7 +115,7 @@ class KnowledgeGraph:
         entity_data = self.graph.nodes[entity_id]
         entity_data.update(new_attributes)
 
-        entity_text = f"{entity_data['entity_type']} {' '.join(str(v) for v in entity_data.values() if v != entity_data['entity_type'])}"
+        entity_text = KnowledgeGraph.entity_to_string(entity_data)
         self.embeddings[entity_id] = self.embedding_model.encode(entity_text)
 
         return f"Entity {entity_id} updated successfully"

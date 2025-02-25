@@ -16,7 +16,7 @@ from ToolAgents import FunctionTool
 
 
 def prepare_messages(messages: List[Dict[str, str]]) -> tuple:
-    system_message = None
+    system_message = []
     other_messages = []
     cleaned_messages = messages
     for i, message in enumerate(cleaned_messages):

@@ -51,10 +51,10 @@ nav:
           - TGIServer: api/providers/tgi_server.md
           - VLLMServer: api/providers/vllm_server.md
       - Utilities:
-          - Overview: api/utilities/index.md
-          - ChatHistory: api/utilities/chat_history.md
-          - DocumentationGeneration: api/utilities/documentation_generation.md
-          - MessageTemplate: api/utilities/message_template.md
+          - Overview: api/text_processing/index.md
+          - ChatHistory: api/text_processing/chat_history.md
+          - DocumentationGeneration: api/text_processing/documentation_generation.md
+          - MessageTemplate: api/text_processing/message_template.md
       - FunctionTool: api/function_tool.md
   - Development:
       - Contributing: development/contributing.md
