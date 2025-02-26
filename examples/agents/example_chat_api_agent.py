@@ -15,13 +15,13 @@ load_dotenv()
 #api = OpenAIChatAPI(api_key="token-abc123", base_url="http://127.0.0.1:8080/v1", model="unsloth/Meta-Llama-3.1-8B-Instruct-bnb-4bit")
 
 # Official OpenAI API
-api = OpenAIChatAPI(api_key=os.getenv("OPENAI_API_KEY"), model="gpt-4o-mini")
+#api = OpenAIChatAPI(api_key=os.getenv("OPENAI_API_KEY"), model="gpt-4o-mini")
 
 # Openrouter API
 #api = OpenAIChatAPI(api_key=os.getenv("OPENROUTER_API_KEY"), model="meta-llama/llama-3.3-70b-instruct", base_url="https://openrouter.ai/api/v1")
 
 # Anthropic API
-#api = AnthropicChatAPI(api_key=os.getenv("ANTHROPIC_API_KEY"), model="claude-3-5-sonnet-20241022")
+api = AnthropicChatAPI(api_key=os.getenv("ANTHROPIC_API_KEY"), model="claude-3-5-sonnet-20241022")
 
 # Groq API
 #api = GroqChatAPI(api_key=os.getenv("GROQ_API_KEY"), model="llama-3.3-70b-versatile")
