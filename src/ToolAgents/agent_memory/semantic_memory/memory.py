@@ -1,12 +1,7 @@
-"""
-This module implements a semantic memory system that supports storing, recalling,
-and consolidating memories based on embeddings and clustering strategies.
-It includes several strategies for extracting patterns, clustering embeddings,
-and cleaning up old memories.
-"""
 
 import abc
 import dataclasses
+import re
 import uuid
 import json
 from datetime import datetime, timedelta
@@ -19,9 +14,10 @@ from chromadb.api.types import IncludeEnum
 import numpy as np
 from torch import Tensor
 
-from ToolAgents.messages import ChatMessage
-from ToolAgents.provider.llm_provider import SamplingSettings
+from ToolAgents.messages import ChatMessage, MessageTemplate
+from ToolAgents.provider.llm_provider import ProviderSettings
 from ToolAgents.agents.base_llm_agent import BaseToolAgent
+
 
 
 # =============================================================================
@@ -87,15 +83,55 @@ class SimpleExtractPatternStrategy(ExtractPatternStrategy):
         }
 
 
+sum_chat_turns_template = MessageTemplate.from_string("""You will be analyzing a collection of chat turns to extract information about {USER_NAME} and their relationship with {ASSISTANT_NAME}. Here are the chat turns:
 
+<chat_turns>
+{CHAT_TURNS}
+</chat_turns>
+
+Your task is to carefully read through these chat turns and extract all relevant information about the user named {USER_NAME} and their relationship with {ASSISTANT_NAME}. This information may include personal details, preferences, interactions, or any other relevant data that can be inferred from the conversation.
+
+Follow these steps:
+
+1. Read through the chat turns thoroughly, paying close attention to any mentions of {USER_NAME} or interactions between {USER_NAME} and {ASSISTANT_NAME}.
+
+2. Extract and note down any information about {USER_NAME}, such as:
+   - Personal details (age, occupation, location, etc.)
+   - Preferences or interests
+   - Personality traits
+   - Any other relevant information
+
+3. Analyze the interactions between {USER_NAME} and {ASSISTANT_NAME} to understand their relationship. Look for:
+   - Frequency of interactions
+   - Tone of conversation
+   - Types of requests or questions from {USER_NAME}
+   - Any expressed feelings or attitudes towards {ASSISTANT_NAME}
+
+4. Organize the extracted information into two main categories:
+   a) Information about {USER_NAME}
+   b) Relationship between {USER_NAME} and {ASSISTANT_NAME}
+
+Present your findings in the following format:
+
+<extracted_information>
+<user_info>
+[List all relevant information about {USER_NAME} here]
+</user_info>
+
+<relationship_info>
+[Describe the relationship between {USER_NAME} and {ASSISTANT_NAME} based on the analyzed interactions]
+</relationship_info>
+</extracted_information>
+
+Remember to base your analysis solely on the information provided in the chat turns. Do not make assumptions or include information that is not directly stated or strongly implied in the conversation.""")
 class SummarizationExtractPatternStrategy(ExtractPatternStrategy):
     """
     An extraction strategy that uses a language model (via a provided agent)
     to summarize and extract a pattern from multiple documents.
     """
 
-    def __init__(self, agent: BaseToolAgent, summarizer_settings: SamplingSettings,
-                 system_prompt_and_prefix: tuple[str, str] = None, pattern_type: str = "chat",
+    def __init__(self, agent: BaseToolAgent, summarizer_settings: ProviderSettings,
+                 user_name: str, assistant_name: str, chat_turn_summary: MessageTemplate = sum_chat_turns_template,
                  debug_mode: bool = False):
         """
         Initialize the summarization extraction strategy.
@@ -103,49 +139,16 @@ class SummarizationExtractPatternStrategy(ExtractPatternStrategy):
         Args:
             agent: The language model agent used to generate summaries.
             summarizer_settings: Sampling settings for the language model.
-            system_prompt_and_prefix: Optional tuple containing a system prompt and a prefix.
-            pattern_type: Type of pattern (learning, observation, conversation, or other).
+            user_name: The name of the user
+            assistant_name: The name of the assistant.
             debug_mode: If True, print debug information.
         """
         self.agent = agent
-        self.system_prompt = system_prompt_and_prefix
-        if self.system_prompt is None:
-            # Generate a dynamic prompt based on the pattern type if not provided
-            self.system_prompt = self.get_dynamic_prompt(pattern_type)
+        self.user_name = user_name
+        self.assistant_name = assistant_name
         self.debug_mode = debug_mode
         self.summarizer_settings = summarizer_settings
-
-    @staticmethod
-    def get_dynamic_prompt(pattern_type: str):
-        """
-        Generate a dynamic prompt and prefix based on the type of pattern.
-
-        Args:
-            pattern_type: The type of pattern to summarize.
-
-        Returns:
-            A tuple of (system_prompt, prefix) for the summarization task.
-        """
-        if pattern_type == "learning":
-            return "Summarize this knowledge into a structured explanation.", "Knowledge:\n"
-        elif pattern_type == "observation":
-            return "Condense these observations into a high-level summary.", "Observations:\n"
-        elif pattern_type == "conversation":
-            return "Extract key discussion points from this chat history.", "Conversation:\n"
-        elif pattern_type == "chat":
-            prompt = """Your task is to create a concise but detailed summary of these chat messages that:
-1. Preserves specific facts, preferences, and details mentioned
-2. Maintains the temporal sequence of information
-3. Keeps concrete information that might be needed later
-4. Avoids generalizations or abstractions that might lose details
-
-""".strip()
-            return prompt, "Chat Messages to Summarize:\n"
-        else:
-            return ("Summarize the information from different chat turns into one summary while keeping "
-                    "information as close to the original as possible. Only summarize what is explicitly mentioned. "
-                    "Keep the context (a chat) in which the information appeared clear in your summary!",
-                    "Chat turns:\n")
+        self.chat_turn_summary = chat_turn_summary
 
     def extract_pattern(self, pattern_id, documents: List[str],
                         metadatas: List[Dict],
@@ -162,30 +165,22 @@ class SummarizationExtractPatternStrategy(ExtractPatternStrategy):
             "source_count": len(documents),
             "source_timestamps": json.dumps([m['timestamp'] for m in metadatas])
         }
-
-        # Start with a prompt prefix; default to "Chat turns:" if none provided
-        if len(self.system_prompt) == 2:
-            docs_prompt = f"{self.system_prompt[1]}"
-        else:
-            docs_prompt = "Chat turns:\n"
-
-        # Append each document with its timestamp to the prompt
-        for meta, doc in zip(metadatas, documents):
-            docs_prompt += meta["timestamp"] + "\n"
-            docs_prompt += doc + "\n---\n"
-
+        prompt = self.chat_turn_summary.generate_message_content(CHAT_TURNS="\n\n---\n\n".join(documents), USER_NAME=self.user_name, ASSISTANT_NAME=self.assistant_name)
+        if self.debug_mode:
+            print(prompt)
         # Use the language model agent to generate a summary based on the prompt
         result = self.agent.get_response(
-            messages=ChatMessage.from_dictionaries([
-                {"role": "system", "content": self.system_prompt[0]},
-                {"role": "user", "content": docs_prompt}
-            ]),
-            settings=self.summarizer_settings
+            messages=[ChatMessage.create_user_message(prompt)
+            ], settings=self.summarizer_settings
         )
-        if self.debug_mode:
-            print(result, flush=True)
+        match = re.findall(r'<memory_summary>(.*?)</memory_summary>', result.response, re.DOTALL)
+        patterns = []
+        for content in match:
+            patterns.append(content.replace("**", ""))
+            if self.debug_mode:
+                print(content.replace("**", ""), flush=True)
         return {
-            "content": result.response,
+            "content": '\n'.join(patterns),
             "metadata": pattern_metadata
         }
 
@@ -405,14 +400,14 @@ class SemanticMemoryConfig:
     embeddings_config: EmbeddingsConfig = dataclasses.field(default_factory=EmbeddingsConfig)
     extract_pattern_strategy: ExtractPatternStrategy = SimpleExtractPatternStrategy()
     cluster_embeddings_strategy: ClusterEmbeddingsStrategy = SimpleClusterEmbeddingsStrategy()
-    cleanup_strategy: CleanupStrategy = TimeBasedCleanupStrategy()
+    cleanup_strategy: CleanupStrategy = None
     enable_long_term_memory: bool = True
     cleanup_interval_hours: float = 1.0  # How often to run cleanup
     decay_factor: float = 0.98
-    query_result_multiplier = 4
+    query_result_multiplier = 8
     minimum_cluster_size: int = 4
-    minimum_cluster_similarity: float = 0.75
-    minimum_similarity_threshold: float = 0.60
+    minimum_cluster_similarity: float = 0.875
+    minimum_similarity_threshold: float = 0.70
     debug_mode: bool = False
 
 
@@ -554,7 +549,7 @@ class SemanticMemory:
             ids=[memory_id]
         )
         # If long-term memory is enabled and enough memories are available, consolidate patterns
-        if self.enable_long_term_memory and self.working.count() > self.minimum_cluster_size:
+        if self.enable_long_term_memory:
             self._consolidate_patterns(timestamp)
         # Perform cleanup if necessary
         self._maybe_cleanup(datetime.fromisoformat(timestamp))
@@ -631,6 +626,8 @@ class SemanticMemory:
         unique_results = []
         for result in results:
             if result['content'] not in seen_contents:
+                if self.debug_mode:
+                    print(f"Similarity: {result['similarity']}", flush=True)
                 if result['similarity'] > self.minimum_similarity_threshold:
                     seen_contents += result['content'] + '\n'
                     # Compute a rank score based on recency, relevance, and frequency
@@ -700,7 +697,10 @@ class SemanticMemory:
             )
 
             # Compute an embedding for the consolidated pattern
-            pattern_embedding = self.encoder.encode(pattern['content']).tolist()
+            if self.embeddings_store_prefix:
+                pattern_embedding = self.encoder.encode(self.embeddings_store_prefix + pattern['content']).tolist()
+            else:
+                pattern_embedding = self.encoder.encode(pattern['content']).tolist()
 
             # Delete the individual memories that were consolidated into a pattern
             self.working.delete(ids=[t["memory_id"] for t in [working_memories['metadatas'][i] for i in cluster]])

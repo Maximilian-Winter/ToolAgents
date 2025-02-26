@@ -1,16 +1,19 @@
 from ToolAgents.agent_memory import SemanticMemory, semantic_memory_nomic_text_gpu_config
 from ToolAgents.agent_memory.semantic_memory.hdbscan_cluster_embeddings_strategy import HDBSCANClusterEmbeddingsStrategy
-from ToolAgents.agents.hosted_tool_agents import MistralAgent
-from ToolAgents.provider import LlamaCppServerProvider
+from ToolAgents.agents import ChatToolAgent
+from ToolAgents.messages import ChatMessage
 
-provider = LlamaCppServerProvider("http://127.0.0.1:8080/")
+from ToolAgents.provider import CompletionProvider
+from ToolAgents.provider.completion_provider.default_implementations import LlamaCppServer
 
-agent = MistralAgent(provider=provider, debug_output=True)
+api = CompletionProvider(completion_endpoint=LlamaCppServer("http://127.0.0.1:8080"))
 
-settings = provider.get_default_settings()
+agent = ChatToolAgent(chat_api=api, debug_output=True)
+
+settings = api.get_default_settings()
 settings.neutralize_all_samplers()
 settings.temperature = 0.4
-settings.set_stop_tokens(["</s>", "<|im_end|>"], None)
+settings.set_stop_tokens(["</s>", "<|im_end|>"])
 settings.set_max_new_tokens(4096)
 
 pair = []
@@ -131,11 +134,8 @@ for r in results:
 user_input += '\n' + additional_context.strip()
 
 result = agent.get_streaming_response(
-    messages=[
-    {"role": "system", "content": system_prompt},
-    {"role": "user", "content": user_input}
-  ],
+    messages=[ChatMessage.create_system_message(system_prompt), ChatMessage.create_user_message(user_input)],
     settings=settings)
 for tok in result:
-    print(tok, end="", flush=True)
+    print(tok.chunk, end="", flush=True)
 print()

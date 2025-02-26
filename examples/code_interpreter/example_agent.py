@@ -2,7 +2,7 @@ import os
 
 from ToolAgents import ToolRegistry
 from ToolAgents.agents import ChatToolAgent
-from ToolAgents.provider import AnthropicChatAPI, AnthropicSettings
+from ToolAgents.provider import AnthropicChatAPI
 
 from ToolAgents.messages import ChatHistory
 

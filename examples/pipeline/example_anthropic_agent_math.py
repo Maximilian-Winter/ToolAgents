@@ -15,7 +15,7 @@ load_dotenv()
 api = AnthropicChatAPI(api_key=os.getenv("ANTHROPIC_API_KEY"), model="claude-3-5-sonnet-20241022")
 
 # Create the ChatAPIAgent
-agent = ChatToolAgent(chat_api=api, debug_output=True)
+agent = ChatToolAgent(chat_api=api)
 
 settings = api.get_default_settings()
 settings.neutralize_all_samplers()

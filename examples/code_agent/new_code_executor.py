@@ -3,15 +3,14 @@ import io
 import re
 import sys
 import asyncio
-import inspect
 from enum import Enum
-from typing import List, Dict, Any, Optional, Tuple, Union, Callable
+from typing import List, Dict, Any, Optional, Tuple
 from dataclasses import dataclass
 from contextlib import contextmanager
 from pydantic import BaseModel
 from ToolAgents import FunctionTool
 from ToolAgents.messages import ChatHistory
-from ToolAgents.utilities.documentation_generation import generate_type_definitions
+from ToolAgents.utilities.llm_documentation.documentation_generation import generate_type_definitions
 
 # System messages for LLM instruction
 SYSTEM_MESSAGES = {

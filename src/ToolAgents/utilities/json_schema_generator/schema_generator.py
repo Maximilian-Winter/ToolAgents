@@ -1,355 +1,263 @@
+from collections import OrderedDict
 from inspect import isclass
-from pydantic import BaseModel, Field
 from enum import Enum
-from typing import Union, get_origin, get_args, List, Set, Dict, Any
+from pydantic import BaseModel, Field
+from typing import Union, get_origin, get_args, List, Any, Type
 from types import NoneType
 
 
-def custom_json_schema(model: BaseModel):
-    def get_type_str(annotation):
-        """Resolve the JSON type string from the Python annotation."""
-        basic_types = {
-            int: "integer",
-            float: "number",
-            str: "string",
-            bool: "boolean",
-            NoneType: "null",
-        }
-        return basic_types.get(annotation, None)
+# New models for customization
 
-    def refine_schema(schema, model, index):
-        """Refine the generated schema based on the model's annotations and field details."""
-        if "properties" in schema:
-            for name, prop in schema["properties"].items():
-                field = model.__fields__[name]
-                prop["title"] = name.replace("_", " ").title()
-                prop["description"] = field.description or ""
+class AdditionalFieldPosition(Enum):
+    before = "before"
+    after = "after"
 
-                # Handle Enums
-                if isclass(field.annotation) and issubclass(field.annotation, Enum):
-                    if "allOf" in prop:
-                        prop.pop("allOf")
-                    prop["enum"] = [e.value for e in field.annotation]
-                    prop["type"] = get_type_str(
-                        type(next(iter(field.annotation)).value)
-                    )
 
-                # Handle Unions, including Optional
-                origin = get_origin(field.annotation)
-                if origin is Union:
-                    types = get_args(field.annotation)
-                    new_anyof = []
-                    for sub_type in types:
-                        type_str = get_type_str(sub_type)
-                        if sub_type is NoneType:
-                            new_anyof.append({"type": type_str})
-                        elif isclass(sub_type) and issubclass(sub_type, BaseModel):
-                            new_anyof.append(
-                                refine_schema(sub_type.schema(), sub_type, index + 1)
-                            )
-                        elif type_str:
-                            new_anyof.append({"type": type_str})
-                    prop["anyOf"] = new_anyof
+class AdditionalSchemaField(BaseModel):
+    """
+    Represents an additional schema field.
+    """
+    name: str = Field(..., description="The name of the field.")
+    title: str = Field(..., description="The title of the field.")
+    description: str = Field(..., description="The description of the field.")
+    type: str = Field(..., description="The type of the field.")
+    required: bool = Field(..., description="Whether the field is required.")
+    position: AdditionalFieldPosition = Field(
+        default=AdditionalFieldPosition.after,
+        description="The position at which the field should be inserted."
+    )
 
-                # Handle lists and sets containing Pydantic models or basic types
-                elif origin in [list, set]:
-                    item_type = get_args(field.annotation)[0]
-                    if isclass(item_type) and issubclass(item_type, BaseModel):
-                        prop["items"] = refine_schema(
-                            item_type.schema(), item_type, index + 1
-                        )
-                    elif item_type is Any:
-                        prop["items"] = {
-                            "type": "object",
-                            "anyOf": [
-                                {"type": "boolean"},
-                                {"type": "number"},
-                                {"type": "null"},
-                                {"type": "string"},
-                            ],
-                        }
-                    else:
-                        origin = get_origin(item_type)
-                        if origin is Union:
-                            types = get_args(item_type)
-                            new_anyof = []
-                            for sub_type in types:
-                                type_str = get_type_str(sub_type)
-                                if sub_type is NoneType:
-                                    new_anyof.append({"type": type_str})
-                                elif isclass(sub_type) and issubclass(
-                                    sub_type, BaseModel
-                                ):
-                                    new_anyof.append(
-                                        refine_schema(
-                                            sub_type.schema(), sub_type, index + 1
-                                        )
-                                    )
-                                elif type_str:
-                                    new_anyof.append({"type": type_str})
-                            prop["items"]["anyOf"] = new_anyof
-                        else:
-                            type_str = get_type_str(item_type)
-                            if type_str:
-                                prop["items"] = {"type": type_str}
 
-                    prop["minItems"] = 1
+class SchemaObject(BaseModel):
+    """
+    Represents a schema object.
+    """
+    model: Type[BaseModel]
+    additional_fields: List[AdditionalSchemaField] = []
 
-                # Handle dictionaries
-                elif origin is dict:
-                    key_type, value_type = get_args(field.annotation)
-                    key_type_str = get_type_str(key_type)
-                    if isclass(value_type) and issubclass(value_type, BaseModel):
-                        prop["additionalProperties"] = refine_schema(
-                            value_type.schema(), value_type, index + 1
-                        )
-                    else:
-                        value_type_str = get_type_str(value_type)
-                        prop["additionalProperties"] = {"type": value_type_str}
-                    prop["type"] = "object"
 
-                # Handle nested Pydantic models
-                elif isclass(field.annotation) and issubclass(
-                    field.annotation, BaseModel
-                ):
-                    prop.update(
-                        refine_schema(
-                            field.annotation.schema(), field.annotation, index + 1
-                        )
-                    )
+class OuterSchemaObject(BaseModel):
+    """
+    Represents an outer object around a schema.
+    """
+    name: str = Field(..., description="The name of the outer object.")
+    description: str = Field(..., description="The description of the outer object.")
+    schemas: List[SchemaObject] = Field(..., description="The list of schema objects.")
+    additional_fields: List[AdditionalSchemaField] = Field(default_factory=list)
+    type: str = Field(..., description="The type of the outer object.")
 
-        new_schema = None
-        if "properties" in schema:
-            new_schema = {}
-            count = 1
-            for name, prop in schema["properties"].items():
-                if name == "$defs":
-                    continue
-                else:
-                    if "required" in prop:
-                        new_schema["required"] = [
-                            "{:03}".format(count) + "_" + name
-                            for name in prop["required"]
-                        ]
-                    else:
-                        new_schema["{:03}".format(count) + "_" + name] = prop
-                    count += 1
-            schema["properties"] = new_schema
-            if "required" in schema:
-                schema["required"] = [
-                    "{:03}".format(idx + 1) + "_" + name
-                    for idx, name in enumerate(schema["required"])
-                ]
-        schema["title"] = model.__name__
-        schema["description"] = model.__doc__.strip() if model.__doc__ else ""
 
-        if "$defs" in schema:
-            schema.pop("$defs")
+# Original custom JSON schema generator (refined for clarity)
+
+def get_json_type(annotation):
+    """Map Python basic types to JSON types."""
+    mapping = {
+        int: "integer",
+        float: "number",
+        str: "string",
+        bool: "boolean",
+        NoneType: "null",
+    }
+    return mapping.get(annotation)
+
+
+def refine_schema(schema: dict, model: Type[BaseModel]) -> dict:
+    """
+    Refine the generated schema based on the model's annotations and field details.
+    Recursively handles Enums, Unions, lists/sets, dictionaries, and nested Pydantic models.
+    """
+    if "properties" not in schema:
         return schema
 
-    return refine_schema(model.schema(), model, 0)
+    for name, prop in schema["properties"].items():
+        field = model.model_fields.get(name)
+        if not field:
+            continue
 
+        # Update title and description
+        prop["title"] = name.replace("_", " ").title()
+        prop["description"] = field.description or ""
 
-def generate_list(
-    models: List[BaseModel],
-    outer_object_name=None,
-    outer_object_properties_name=None,
-    add_inner_thoughts: bool = False,
-    inner_thoughts_name: str = "thoughts_and_reasoning",
-    add_heartbeat: bool = False,
-    heartbeat_name: str = "heartbeat",
-    heartbeat_list: List[str] = None,
-    min_items: int = 1,
-    max_items: int = 1000,
-):
-    if max_items == 1:
-        list_of_models = []
-        for model in models:
-            schema = custom_json_schema(model)
-            if (
-                outer_object_name is not None
-                and outer_object_properties_name is not None
-            ):
-                function_name_object = {"enum": [model.__name__], "type": "string"}
-                model_schema_object = schema
-                if (add_inner_thoughts and not add_heartbeat) or (add_inner_thoughts and add_heartbeat and model.__name__ not in heartbeat_list):
-                    # Create a wrapper object that contains the function name and the model schema
-                    wrapper_object = {
-                        "type": "object",
-                        "properties": {
-                            inner_thoughts_name: {"type": "string"},
-                            outer_object_name: function_name_object,
-                            outer_object_properties_name: model_schema_object,
-                        },
-                        "required": [
-                            inner_thoughts_name,
-                            outer_object_name,
-                            outer_object_properties_name,
-                        ],
-                    }
-                elif add_inner_thoughts and add_heartbeat and model.__name__ in heartbeat_list:
-                    # Create a wrapper object that contains the function name and the model schema
-                    wrapper_object = {
-                        "type": "object",
-                        "properties": {
-                            inner_thoughts_name: {"type": "string"},
-                            outer_object_name: function_name_object,
-                            outer_object_properties_name: model_schema_object,
-                            heartbeat_name: {"type": "boolean"},
-                        },
-                        "required": [
-                            inner_thoughts_name,
-                            outer_object_name,
-                            outer_object_properties_name,
-                            heartbeat_name
-                        ],
-                    }
-                elif not add_inner_thoughts and add_heartbeat and model.__name__ in heartbeat_list:
-                    # Create a wrapper object that contains the function name and the model schema
-                    wrapper_object = {
-                        "type": "object",
-                        "properties": {
-                            outer_object_name: function_name_object,
-                            outer_object_properties_name: model_schema_object,
-                            heartbeat_name: {"type": "boolean"},
-                        },
-                        "required": [
-                            outer_object_name,
-                            outer_object_properties_name,
-                            heartbeat_name
-                        ],
-                    }
-                else:
-                    # Create a wrapper object that contains the function name and the model schema
-                    wrapper_object = {
-                        "type": "object",
-                        "properties": {
-                            outer_object_name: function_name_object,
-                            outer_object_properties_name: model_schema_object,
-                        },
-                        "required": [
-                            outer_object_name,
-                            outer_object_properties_name,
-                        ],
-                    }
-                list_of_models.append(wrapper_object)
-        return {"type": "object", "anyOf": list_of_models}
-    list_object = {"type": "array", "items": {"type": "object", "anyOf": []}}
+        annotation = field.annotation
+        origin = get_origin(annotation)
 
-    for model in models:
-        schema = custom_json_schema(model)
-        outer_object = {}
+        # Handle Enums
+        if isclass(annotation) and issubclass(annotation, Enum):
+            prop.pop("allOf", None)
+            prop["enum"] = [e.value for e in annotation]
+            first_value = next(iter(annotation)).value  # Assume uniform type
+            prop["type"] = get_json_type(type(first_value))
+            prop.pop("$ref", None)
+            continue
 
-        if outer_object_name is not None and outer_object_properties_name is not None:
-            function_name_object = {"enum": [model.__name__], "type": "string"}
-            model_schema_object = schema
+        # Handle Unions (including Optional)
+        if origin is Union:
+            types = get_args(annotation)
+            anyof_list = []
+            for sub_type in types:
+                type_str = get_json_type(sub_type)
+                if sub_type is NoneType:
+                    anyof_list.append({"type": "null"})
+                elif isclass(sub_type) and issubclass(sub_type, BaseModel):
+                    sub_schema = refine_schema(sub_type.model_json_schema(), sub_type)
+                    anyof_list.append(sub_schema)
+                elif type_str:
+                    anyof_list.append({"type": type_str})
+            prop["anyOf"] = anyof_list
+            continue
 
-            if (add_inner_thoughts and not add_heartbeat) or (add_inner_thoughts and add_heartbeat and model.__name__ not in heartbeat_list):
-                # Create a wrapper object that contains the function name and the model schema
-                wrapper_object = {
+        # Handle lists and sets
+        if origin in [list, set]:
+            item_type = get_args(annotation)[0]
+            if isclass(item_type) and issubclass(item_type, BaseModel):
+                prop["items"] = refine_schema(item_type.model_json_schema(), item_type)
+            elif item_type is Any:
+                prop["items"] = {
                     "type": "object",
-                    "properties": {
-                        inner_thoughts_name: {"type": "string"},
-                        outer_object_name: function_name_object,
-                        outer_object_properties_name: model_schema_object,
-                    },
-                    "required": [
-                        inner_thoughts_name,
-                        outer_object_name,
-                        outer_object_properties_name,
-                    ],
-                }
-
-            elif add_inner_thoughts and add_heartbeat and model.__name__ in heartbeat_list:
-                # Create a wrapper object that contains the function name and the model schema
-                wrapper_object = {
-                    "type": "object",
-                    "properties": {
-                        inner_thoughts_name: {"type": "string"},
-                        outer_object_name: function_name_object,
-                        outer_object_properties_name: model_schema_object,
-                        heartbeat_name: {"type": "boolean"},
-                    },
-                    "required": [
-                        inner_thoughts_name,
-                        outer_object_name,
-                        outer_object_properties_name,
-                        heartbeat_name
-                    ],
-                }
-
-            elif not add_inner_thoughts and add_heartbeat and model.__name__ in heartbeat_list:
-                # Create a wrapper object that contains the function name and the model schema
-                wrapper_object = {
-                    "type": "object",
-                    "properties": {
-                        outer_object_name: function_name_object,
-                        outer_object_properties_name: model_schema_object,
-                        heartbeat_name: {"type": "boolean"},
-                    },
-                    "required": [
-                        outer_object_name,
-                        outer_object_properties_name,
-                        heartbeat_name
-                    ],
+                    "anyOf": [{"type": t} for t in ["boolean", "number", "null", "string"]],
                 }
             else:
-                # Create a wrapper object that contains the function name and the model schema
-                wrapper_object = {
-                    "type": "object",
-                    "properties": {
-                        outer_object_name: function_name_object,
-                        outer_object_properties_name: model_schema_object,
-                    },
-                    "required": [
-                        outer_object_name,
-                        outer_object_properties_name,
-                    ],
-                }
+                item_origin = get_origin(item_type)
+                if item_origin is Union:
+                    types = get_args(item_type)
+                    anyof_list = []
+                    for sub_type in types:
+                        type_str = get_json_type(sub_type)
+                        if sub_type is NoneType:
+                            anyof_list.append({"type": "null"})
+                        elif isclass(sub_type) and issubclass(sub_type, BaseModel):
+                            sub_schema = refine_schema(sub_type.model_json_schema(), sub_type)
+                            anyof_list.append(sub_schema)
+                        elif type_str:
+                            anyof_list.append({"type": type_str})
+                    prop["items"] = {"anyOf": anyof_list}
+                else:
+                    type_str = get_json_type(item_type)
+                    if type_str:
+                        prop["items"] = {"type": type_str}
+            prop["minItems"] = 1
+            continue
 
-            outer_object.update(wrapper_object)
+        # Handle dictionaries
+        if origin is dict:
+            _, value_type = get_args(annotation)
+            if isclass(value_type) and issubclass(value_type, BaseModel):
+                prop["additionalProperties"] = refine_schema(value_type.model_json_schema(), value_type)
+            else:
+                value_type_str = get_json_type(value_type)
+                prop["additionalProperties"] = {"type": value_type_str} if value_type_str else {}
+            prop["type"] = "object"
+            continue
+
+        # Handle nested Pydantic models
+        if isclass(annotation) and issubclass(annotation, BaseModel):
+            nested_schema = refine_schema(annotation.model_json_schema(), annotation)
+            prop.update(nested_schema)
+
+    # Set top-level title and description
+    schema["title"] = model.__name__
+    schema["description"] = (model.__doc__ or "").strip()
+
+    # Define required fields based on the model definition
+    required_fields = [name for name, field in model.model_fields.items() if field.is_required()]
+    if required_fields:
+        schema["required"] = required_fields
+
+    # Clean up unwanted keys
+    schema.pop("$defs", None)
+    schema.pop("$ref", None)
+
+    return schema
+
+
+def custom_json_schema(model: Type[BaseModel]) -> dict:
+    """
+    Generate a custom JSON schema for a given Pydantic model.
+    """
+    base_schema = model.model_json_schema()
+    return refine_schema(base_schema, model)
+
+
+# New helper to merge additional schema fields into an existing schema
+
+def insert_additional_fields(schema: dict, additional_fields: List[AdditionalSchemaField]) -> dict:
+    """
+    Insert additional fields into the schema's properties.
+    Fields with position 'before' will be added at the start,
+    and those with 'after' will be appended at the end.
+    """
+    if "properties" not in schema:
+        schema["properties"] = {}
+
+    # Convert properties to an OrderedDict to preserve insertion order.
+    orig_props = OrderedDict(schema["properties"])
+    before = OrderedDict()
+    after = OrderedDict()
+    before_required_fields = []
+    after_required_fields = []
+    # Create property definitions for additional fields.
+    for field in additional_fields:
+        field_schema = {
+            "description": field.description,
+            "title": field.title,
+            "type": field.type,
+        }
+        if field.position == AdditionalFieldPosition.before:
+            before[field.name] = field_schema
+            if field.required:
+                before_required_fields.append(field.name)
         else:
-            outer_object = schema
-        list_object["items"]["anyOf"].append(outer_object)
-        list_object["minItems"] = min_items
+            after[field.name] = field_schema
+            if field.required:
+                after_required_fields.append(field.name)
+    # Merge additional fields with original properties.
+    merged = OrderedDict()
+    merged.update(before)
+    merged.update(orig_props)
+    merged.update(after)
+    schema["properties"] = dict(merged)
+    before_required_fields.extend(schema["required"])
+    schema["required"] = before_required_fields
+    schema["required"].extend(after_required_fields)
+    return schema
 
-    return list_object
+
+# New function to generate a JSON schema for a single SchemaObject
+
+def generate_schema_object(schema_obj: SchemaObject) -> dict:
+    """
+    Generate the JSON schema for a SchemaObject by processing its model
+    and inserting any additional fields.
+    """
+    # Generate the base schema from the model.
+    base_schema = custom_json_schema(schema_obj.model)
+    # Insert additional fields (if any) into the schema.
+    return insert_additional_fields(base_schema, schema_obj.additional_fields)
 
 
-def generate_json_schemas(
-    models: List[BaseModel],
-    outer_object_name=None,
-    outer_object_properties_name=None,
-    allow_list=False,
-    add_inner_thoughts: bool = False,
-    inner_thoughts_name: str = "thoughts_and_reasoning",
-    add_heartbeat: bool = False,
-    heartbeat_name: str = "heartbeat",
-    heartbeat_list=None,
-):
-    if heartbeat_list is None:
-        heartbeat_list = []
-    if allow_list:
-        model_schema_list = generate_list(
-            models,
-            outer_object_name,
-            outer_object_properties_name,
-            add_inner_thoughts,
-            inner_thoughts_name,
-            add_heartbeat=add_heartbeat,
-            heartbeat_name=heartbeat_name,
-            heartbeat_list=heartbeat_list
-        )
+# New function to generate the outer JSON schema from an OuterSchemaObject
+
+def generate_outer_json_schema(outer_obj: OuterSchemaObject) -> dict:
+    """
+    Generate the outer JSON schema based on an OuterSchemaObject.
+    Combines inner schemas (from each SchemaObject) using "anyOf" if needed,
+    and then merges in outer additional fields.
+    """
+    # Process each inner schema.
+    inner_schemas = [generate_schema_object(s) for s in outer_obj.schemas]
+
+    # Combine inner schemas: if only one, use it directly; otherwise use "anyOf".
+    if len(inner_schemas) == 1:
+        combined_schema = inner_schemas[0]
     else:
-        model_schema_list = generate_list(
-            models,
-            outer_object_name,
-            outer_object_properties_name,
-            add_inner_thoughts,
-            inner_thoughts_name,
-            add_heartbeat=add_heartbeat,
-            heartbeat_name=heartbeat_name,
-            heartbeat_list=heartbeat_list,
-            max_items=1,
-        )
-    return model_schema_list
+        combined_schema = {"anyOf": inner_schemas}
+
+    # Insert additional outer fields.
+    combined_schema = insert_additional_fields(combined_schema, outer_obj.additional_fields)
+
+    # Set the outer schema details.
+    combined_schema["title"] = outer_obj.name
+    combined_schema["description"] = outer_obj.description
+    combined_schema["type"] = outer_obj.type
+
+    return combined_schema

@@ -33,35 +33,32 @@ repo_url: https://github.com/Maximilian-Winter/ToolAgents
 
 nav:
   - Home: index.md
-  - User Guide:
-      - Getting Started: user-guide/getting-started.md
-      - Installation: user-guide/installation.md
-      - Configuration: user-guide/usage.md
+  - Getting Started:
+    - Installation: getting-started/installation.md
+    - Quick Start: getting-started/quick-start.md
+  - Guides:
+    - Basic Usage: guides/basic-usage.md
+    - Custom Tools: guides/custom-tools.md
+    - Chat History: guides/chat-history.md
+    - Streaming: guides/streaming.md
+  - Components:
+    - Agents: components/agents.md
+    - Tools: components/tools.md
+    - Providers: components/providers.md
+    - Messages: components/messages.md
   - API Reference:
-      - Agents:
-          - Overview: api/agents/index.md
-          - ChatAPIAgent: api/agents/chat_api_agent.md
-          - Llama31Agent: api/agents/llama_31_agent.md
-          - MistralAgent: api/agents/mistral_agent.md
-          - OllamaAgent: api/agents/ollama_agent.md
-      - Providers:
-          - Overview: api/providers/index.md
-          - ChatAPIWithTools: api/providers/chat_api_with_tools.md
-          - LlamaCppServer: api/providers/llama_cpp_server.md
-          - TGIServer: api/providers/tgi_server.md
-          - VLLMServer: api/providers/vllm_server.md
-      - Utilities:
-          - Overview: api/utilities/index.md
-          - ChatHistory: api/utilities/chat_history.md
-          - DocumentationGeneration: api/utilities/documentation_generation.md
-          - MessageTemplate: api/utilities/message_template.md
-      - FunctionTool: api/function_tool.md
-  - Development:
-      - Contributing: development/contributing.md
-      - Testing: development/testing.md
-  - About:
-      - License: about/license.md
-      - Changelog: about/changelog.md
+    - Agents: api/agents.md
+    - Tools: api/tools.md
+    - Providers: api/providers.md
+    - Messages: api/messages.md
+    - Knowledge: api/knowledge.md
+    - Utilities: api/utilities.md
+  - Examples:
+    - Basic Agents: examples/basic-agents.md
+    - Advanced Agents: examples/advanced-agents.md
+    - Web Research: examples/web-research.md
+    - Code Interpreter: examples/code-interpreter.md
+    - Memory: examples/memory.md
 
 markdown_extensions:
   - pymdownx.highlight:

@@ -35,11 +35,11 @@ You can edit the app state with the help of your tools, use these tools to devel
 ### 🔧 App State Editing Tools:
 You can modify the app state using the following tools:
 
-1️⃣ Appending New Information (`app_state_append_to_field`):
+1️⃣ Appending New Information (`append_to_field`):
    - Use this tool to add new content without overwriting existing data.
    - Example: If the user mentions a new favorite book, append it instead of replacing previous entries.
 
-2️⃣ Replacing Information (`app_state_replace_field`):
+2️⃣ Replacing Information (`replace_field`):
    - Use this tool to update or correct information by replacing old content.
    - Example: If the user changes their wake-up time, replace the old time with the new one.
 

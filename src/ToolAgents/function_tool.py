@@ -4,7 +4,12 @@ import re
 
 import typing
 
-from typing import Type, List, Callable, Any, Union, Tuple, Dict
+from typing import Type,  Dict
+
+
+from abc import ABC, abstractmethod
+from typing import Any, List, Union, Callable, Tuple, TypeVar
+
 
 from docstring_parser import DocstringStyle, parse
 from pydantic import BaseModel, create_model, Field
@@ -12,8 +17,8 @@ from pydantic_core import PydanticUndefined
 
 from ToolAgents.utilities.gbnf_grammar_generator.gbnf_grammar_from_pydantic_models import \
     generate_gbnf_grammar_from_pydantic_models
-from ToolAgents.utilities.json_schema_generator import generate_json_schemas
-from ToolAgents.utilities.documentation_generation import generate_text_documentation, generate_function_definition
+
+from ToolAgents.utilities.llm_documentation.documentation_generation import generate_text_documentation, generate_function_definition
 
 
 def format_model_and_field_name(model_name: str) -> str:
@@ -45,8 +50,7 @@ def create_dynamic_model_from_function(
 
     # Parse the docstring
     assert func.__doc__ is not None
-    docstring = parse(func.__doc__, style=DocstringStyle.GOOGLE)
-
+    docstring = parse(func.__doc__, style=DocstringStyle.AUTO)
     dynamic_fields = {}
     param_docs = []
     if add_inner_thoughts:
@@ -69,9 +73,14 @@ def create_dynamic_model_from_function(
 
         # Assert that the parameter has a description
         if not param_doc or not param_doc.description:
-            raise ValueError(
-                f"Parameter '{param.name}' in function '{func.__name__}' lacks a description in the docstring"
+            # Find the parameter's description in the docstring
+            param_doc = next(
+                (d for d in docstring2.params if d.arg_name == param.name), None
             )
+            if not param_doc or not param_doc.description:
+                raise ValueError(
+                    f"Parameter '{param.name}' in function '{func.__name__}' lacks a description in the docstring"
+                )
 
         # Add parameter details to the schema
         param_docs.append((param.name, param_doc))
@@ -450,31 +459,102 @@ def add_field_to_model(
 
     return new_model
 
+T = TypeVar('T')
+U = TypeVar('U')
+
+
+class BaseProcessor(ABC):
+    """
+    Abstract base class for all processors (pre and post).
+    """
+
+    @abstractmethod
+    def process(self, data: Any) -> Any:
+        """
+        Process the input data and return transformed data.
+
+        Args:
+            data: Input data to process
+
+        Returns:
+            Processed data
+        """
+        pass
+
+    def __call__(self, data: Any) -> Any:
+        """
+        Make the processor callable.
+
+        Args:
+            data: Input data to process
+
+        Returns:
+            Processed data
+        """
+        return self.process(data)
+
+
+class PreProcessor(BaseProcessor):
+    """
+    Abstract base class for preprocessing parameters before function execution.
+    """
+
+    @abstractmethod
+    def process(self, parameters: dict[str, Any]) -> dict[str, Any]:
+        """
+        Process the input parameters before function execution.
+
+        Args:
+            parameters: Dictionary of input parameters
+
+        Returns:
+            Processed parameters dictionary
+        """
+        pass
+
+
+class PostProcessor(BaseProcessor):
+    """
+    Abstract base class for postprocessing function results.
+    """
+
+    @abstractmethod
+    def process(self, result: Any) -> Any:
+        """
+        Process the function result.
+
+        Args:
+            result: Function execution result
+
+        Returns:
+            Processed result
+        """
+        pass
+
 
 class FunctionTool:
     """
     Class representing a function tool for a LLM.
 
     Args:
-        function_tool (Union[Type[BaseModel], Callable, Tuple[Dict[str, Any], Callable]]): The function tool, can be either a pydantic model with a run method, a python function or a tuple of a OpenAI tool specification and a function as callback.
+        function_tool: The function tool, can be either a pydantic model with a run method,
+            a python function or a tuple of a OpenAI tool specification and a function as callback.
+        pre_processors: Single preprocessor or list of preprocessors to apply before function execution
+        post_processors: Single postprocessor or list of postprocessors to apply after function execution
+        debug_mode: Enable debug mode to print parameters
         **additional_parameters: Additional parameters to pass to the call if function is called.
-
-    Attributes:
-        model (Type[BaseModel]): The Pydantic model representing the function parameters.
-        additional_parameters (dict): Additional parameters to pass to the Pydantic model during function call.
-
-    Methods:
-        __call__(*args, **kwargs): Calls the Pydantic model with the provided keyword arguments.
     """
 
     def __init__(
             self,
-            function_tool: Union[BaseModel, Callable, Tuple[Dict[str, Any], Callable]], pre_processor: Callable[[dict[str, Any]], dict[str, Any]] = None, post_processor: Callable[[Any], Any] = None, debug_mode: bool = False,
+            function_tool: Union[BaseModel, Callable, Tuple[Dict[str, Any], Callable]],
+            pre_processors: Union[PreProcessor, List[PreProcessor], Callable, List[Callable], None] = None,
+            post_processors: Union[PostProcessor, List[PostProcessor], Callable, List[Callable], None] = None,
+            debug_mode: bool = False,
             **additional_parameters,
     ):
-        # Determine the type of function_tool and set up the appropriate handling
+        # Initialize function tool as before...
         if isinstance(function_tool, type) and issubclass(function_tool, BaseModel):
-            # Handle BaseModel subclass
             self.model = function_tool
         elif (
                 isinstance(function_tool, tuple)
@@ -482,7 +562,6 @@ class FunctionTool:
                 and isinstance(function_tool[0], dict)
                 and callable(function_tool[1])
         ):
-            # Handle OpenAI functions
             models = create_dynamic_models_from_dictionaries([function_tool[0]])
             self.model = add_run_method_to_dynamic_model(models[0], function_tool[1])
         elif callable(function_tool):
@@ -490,13 +569,47 @@ class FunctionTool:
         else:
             raise ValueError("Invalid function_tool type provided")
 
-        self.pre_processor = pre_processor
-        self.post_processor = post_processor
+        # Initialize processors
+        self.pre_processors = self._normalize_processors(pre_processors)
+        self.post_processors = self._normalize_processors(post_processors)
 
         self.debug_mode = debug_mode
-        self.additional_parameters = (
-            additional_parameters if additional_parameters else {}
-        )
+        self.additional_parameters = additional_parameters if additional_parameters else {}
+
+    @staticmethod
+    def _normalize_processors(
+            processors: Union[BaseProcessor, List[BaseProcessor], Callable, List[Callable], None]
+    ) -> List[BaseProcessor]:
+        """
+        Normalize processors input to a list of BaseProcessor instances.
+
+        Args:
+            processors: Single processor or list of processors
+
+        Returns:
+            List of BaseProcessor instances
+        """
+        if processors is None:
+            return []
+
+        if not isinstance(processors, list):
+            processors = [processors]
+
+        normalized = []
+        for proc in processors:
+            if isinstance(proc, BaseProcessor):
+                normalized.append(proc)
+            elif callable(proc):
+                # Wrap callable in an anonymous processor class
+                normalized.append(
+                    type('CallableProcessor', (BaseProcessor,), {
+                        'process': staticmethod(proc)
+                    })()
+                )
+            else:
+                raise ValueError(f"Invalid processor type: {type(proc)}")
+
+        return normalized
 
     def set_name(self, new_name: str):
         self.model.__name__ = new_name
@@ -621,21 +734,89 @@ class FunctionTool:
 
         return nous_hermes_pro_tool
 
-    def execute(self, parameters):
+    def execute(self, parameters: dict[str, Any]) -> Any:
+        """
+        Execute the function tool with the given parameters.
+
+        Args:
+            parameters: Input parameters for the function
+
+        Returns:
+            Processed result from the function execution
+        """
         if self.debug_mode:
+            print("Input parameters:")
             print(json.dumps(parameters, indent=4))
-        if self.pre_processor:
-            parameters = self.pre_processor(parameters)
+
+        # Apply pre-processors in sequence
+        processed_params = parameters
+        for processor in self.pre_processors:
+            try:
+                processed_params = processor(processed_params)
+                if self.debug_mode:
+                    print(f"After {processor.__class__.__name__}:")
+                    print(json.dumps(processed_params, indent=4))
+            except Exception as e:
+                print(f"Error in {processor.__class__.__name__}: {str(e)}")
+                raise Exception(f"Error in {processor.__class__.__name__}: {str(e)}")
+
+        # Execute function
         try:
-            instance = self.model(**parameters)
+            instance = self.model(**processed_params)
             result = instance.run(**self.additional_parameters)
         except Exception as e:
-            print(e)
-            result = str(e)
-        if self.post_processor:
-            result = self.post_processor(result)
-        return result
+            print(f"Error in function execution: {str(e)}")
+            return f"Error in function execution: {str(e)}"
 
+        # Apply post-processors in sequence
+        processed_result = result
+        for processor in self.post_processors:
+            try:
+                processed_result = processor(processed_result)
+                if self.debug_mode:
+                    print(f"After {processor.__class__.__name__}:")
+                    print(processed_result)
+            except Exception as e:
+                print(f"Error in {processor.__class__.__name__}: {str(e)}")
+                raise Exception(f"Error in {processor.__class__.__name__}: {str(e)}")
+
+        return processed_result
+
+    def add_pre_processor(
+            self,
+            processor: Union[PreProcessor, Callable],
+            position: int = None
+    ) -> None:
+        """
+        Add a new preprocessor to the function tool.
+
+        Args:
+            processor: Preprocessor to add (either PreProcessor instance or callable)
+            position: Optional position to insert the processor (None = append to end)
+        """
+        normalized = self._normalize_processors([processor])[0]
+        if position is None:
+            self.pre_processors.append(normalized)
+        else:
+            self.pre_processors.insert(position, normalized)
+
+    def add_post_processor(
+            self,
+            processor: Union[PostProcessor, Callable],
+            position: int = None
+    ) -> None:
+        """
+        Add a new postprocessor to the function tool.
+
+        Args:
+            processor: Postprocessor to add (either PostProcessor instance or callable)
+            position: Optional position to insert the processor (None = append to end)
+        """
+        normalized = self._normalize_processors([processor])[0]
+        if position is None:
+            self.post_processors.append(normalized)
+        else:
+            self.post_processors.insert(position, normalized)
 
 class ToolRegistry:
     def __init__(self, guided_sampling_enabled: bool = False):
@@ -683,8 +864,9 @@ class ToolRegistry:
                                                           allow_only_inner_thoughts=False, add_request_heartbeat=False)
 
     def get_guided_sampling_json_schema(self):
-        return generate_json_schemas(models=[tool.model for tool in self.tools.values()], outer_object_name="name",
-                                     allow_list=True, outer_object_properties_name="arguments")
+        pass
+        #return generate_json_schemas(models=[tool.model for tool in self.tools.values()], outer_object_name="name",
+        #                             allow_list=True, outer_object_properties_name="arguments")
 
     def get_tools_documentation(self):
         return generate_text_documentation([tool.model for tool in self.tools.values()], model_prefix="Tool",

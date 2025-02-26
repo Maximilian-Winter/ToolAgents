@@ -12,7 +12,7 @@ class Entity(BaseModel):
     """
     Represents an entity in the knowledge graph.
     """
-    entity_id: str = Field(default="",
+    entity_id: str = Field(default=None,
                            description="The entity id. Gets automatically set when added to the knowledge graph.")
     entity_type: str = Field(..., description="The type of entity")
     attributes: Dict[str, Any] = Field(..., description="The entity attributes")
@@ -22,8 +22,8 @@ class EntityQuery(BaseModel):
     """
     Represents an entity query.
     """
-    entity_type: Optional[str] = Field(None, description="The type of entity to query")
-    attribute_filter: Optional[Dict[str, Any]] = Field(None, description="The attribute filter")
+    entity_type: Optional[str] = Field(default=None, description="The type of entity to query")
+    attribute_filter: Optional[Dict[str, Any]] = Field(default=None, description="The attribute filter")
 
 
 class GeneralizedKnowledgeGraph:
@@ -304,3 +304,4 @@ if __name__ == "__main__":
     kg.save_to_file("knowledge_graph.json")
     loaded_kg = GeneralizedKnowledgeGraph.load_from_file("knowledge_graph.json")
     print(loaded_kg.get_entity_details(alice_id))
+    loaded_kg.visualize()

@@ -13,7 +13,7 @@ class ContextAppState:
         if initial_state_file is not None:
             self.template_fields = self.load_yaml_initial_app_state(initial_state_file)
 
-        def app_state_append_to_field( state_name: str, field_name: str, content: str = None):
+        def append_to_field( state_name: str, field_name: str, content: str = None):
             """
             Appends content to a field in an app state.
             Args:
@@ -31,7 +31,7 @@ class ContextAppState:
 
             return "App state edited successfully."
 
-        def app_state_replace_field(state_name: str, field_name: str, content: str = None):
+        def replace_field(state_name: str, field_name: str, content: str = None):
             """
             Replaces content of a field in an app state.
             Args:
@@ -43,8 +43,8 @@ class ContextAppState:
 
             return "App state edited successfully."
 
-        self.app_state_append_to_field_tool = FunctionTool(app_state_append_to_field)
-        self.app_state_replace_field_tool = FunctionTool(app_state_replace_field)
+        self.app_state_append_to_field_tool = FunctionTool(append_to_field)
+        self.app_state_replace_field_tool = FunctionTool(replace_field)
 
     def load_yaml_initial_app_state(self, file_path: str) -> Dict[str, Any]:
         if not os.path.exists(file_path):
@@ -157,10 +157,26 @@ class ContextAppState:
         output = ""
         for key, value in self.template_fields.items():
             output += begin_section_marker.format(section_name=key)
-            for k, v in value.items():
-                output += f"  {begin_section_marker.format(section_name=k).rstrip()}\n"
-                output += f"    {str(v)}\n"
-                output += f"  {end_section_marker.format(section_name=k).strip()}\n"
+            if isinstance(value, str):
+                output += value
+            elif isinstance(value, list):
+                for subitem in value:
+                    if isinstance(subitem, dict):
+                        for k, v in subitem.items():
+                            output += f"  {begin_section_marker.format(section_name=k).rstrip()}\n"
+                            output += f"    {str(v)}\n"
+                            output += f"  {end_section_marker.format(section_name=k).strip()}\n"
+                    elif isinstance(subitem, list):
+                        output += ", ".join(subitem)
+                    else:
+                        output += str(subitem)
+            elif isinstance(value, dict):
+                for k, v in value.items():
+                    output += f"  {begin_section_marker.format(section_name=k).rstrip()}\n"
+                    output += f"    {str(v)}\n"
+                    output += f"  {end_section_marker.format(section_name=k).strip()}\n"
+            else:
+                output += str(value)
             output += end_section_marker.format(section_name=key).lstrip()
             output += "\n"
         return output

@@ -8,10 +8,10 @@ ToolAgents is a lightweight and flexible framework for creating function-calling
 1. [Features](#features)
 2. [Installation](#installation)
 3. [Usage](#usage)
-  - [MistralAgent with llama.cpp Server](#mistralagent-with-llamacpp-server)
-  - [LlamaAgent with llama.cpp Server](#llamaagent-with-llamacpp-server)
-  - [ChatAPIAgent with Anthropic API](#chatapiagent-with-anthropic-api)
-  - [OllamaAgent](#ollamaagent)
+  - [Simple ChatToolAgent Usage](#ChatToolAgent)
+  - [Using different Providers](#Different-Providers)
+  - [ChatToolAgent with User Loop and Chat History](#Use-ChatToolAgent-with-ChatHistory-class)
+  - [Streaming ChatToolAgent with User Loop and Chat History](#Use-Streaming-ChatToolAgent-with-ChatHistory-class)
 4. [Custom Tools](#custom-tools)
   - [Pydantic Model-based Tools](#1-pydantic-model-based-tools)
   - [Function-based Tools](#2-function-based-tools)
@@ -151,7 +151,7 @@ while True:
     elif user_input == "save":
         chat_history.save_to_json("example_chat_history.json")
     elif user_input == "load":
-        chat_history.load_from_json("example_chat_history.json")
+        chat_history = ChatHistory.load_from_json("example_chat_history.json")
     else:
         chat_history.add_user_message(user_input)
 
@@ -209,7 +209,7 @@ while True:
     elif user_input == "save":
         chat_history.save_to_json("example_chat_history.json")
     elif user_input == "load":
-        chat_history.load_from_json("example_chat_history.json")
+        chat_history = ChatHistory.load_from_json("example_chat_history.json")
     else:
         chat_history.add_user_message(user_input)
 
