@@ -27,9 +27,6 @@ class GitHubTools:
         if not self.token:
             raise ValueError("GitHub token is required. Provide as parameter or set GITHUB_TOKEN env var.")
 
-        if not owner or not repo:
-            raise ValueError("Repository owner and name are required parameters")
-
         self.owner = owner
         self.repo = repo
         self.base_url = "https://api.github.com"
@@ -110,6 +107,21 @@ class GitHubTools:
         if not self.owner or not self.repo:
             raise ValueError(
                 "Repository owner and name must be set either at initialization or when calling this method.")
+
+    def github_set_owner_and_repo(self, owner: str, repo: str):
+        """
+        Change the current owner and repo settings for GitHub API.
+
+        Args:
+            owner: GitHub username.
+            repo: GitHub repo name.
+
+        Returns:
+            Formatted string listing repositories
+        """
+        self.owner = owner
+        self.repo = repo
+        self._ensure_repo_info()
 
     # Repository operations
     def github_list_repositories(self, username: Optional[str] = None) -> str:
@@ -820,6 +832,7 @@ class GitHubTools:
         """
 
         return [
+            FunctionTool(self.github_set_owner_and_repo),
             FunctionTool(self.github_list_branches),
             FunctionTool(self.github_create_branch),
             FunctionTool(self.github_list_issues),

@@ -344,7 +344,10 @@ class FilesystemTools:
             str: A message indicating the result of the operation.
         """
         try:
-            new_dir = f"{self.working_directory}/{directory}"
+            if os.path.isabs(directory):
+                new_dir = directory
+            else:
+                new_dir = os.path.join(self.working_directory, directory)
 
             if not os.path.exists(new_dir):
                 os.makedirs(new_dir, exist_ok=True)

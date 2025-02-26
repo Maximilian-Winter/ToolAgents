@@ -1,21 +1,21 @@
 import os
 import subprocess
-from typing import List, Dict, Optional, Tuple
+from typing import List, Dict, Optional, Tuple, Callable
 from pathlib import Path
 
 from ToolAgents import FunctionTool
 
 
 class GitTools:
-    def __init__(self, working_directory: Optional[str] = None):
+    def __init__(self, get_working_directory: Callable[[], str]):
         """
         Initialize the GitTools with a working directory.
 
         Args:
-            working_directory (Optional[str]): The directory where git operations will be performed.
-                                              If None, the current working directory is used.
+            get_working_directory (Callable[[], str]): A function that returns the working directory.
         """
-        self.working_directory = working_directory or os.getcwd()
+        self.get_working_directory = get_working_directory
+
 
     def _run_git_command(self, command: List[str]) -> Tuple[str, str, int]:
         """
@@ -32,7 +32,7 @@ class GitTools:
                 ['git'] + command,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
-                cwd=self.working_directory,
+                cwd=self.get_working_directory(),
                 text=True
             )
             stdout, stderr = process.communicate()
