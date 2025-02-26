@@ -67,3 +67,4 @@ examples/agents/knowledge_graph44446.gv.pdf
 /src/ToolAgents/knowledge/text_processing/__pycache__
 /src/ToolAgents/work_in_progress/processes/__pycache__
 /src/ToolAgents/work_in_progress/__pycache__
+/src/ToolAgents/agent_tools/__pycache__

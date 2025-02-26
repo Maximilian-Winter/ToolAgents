@@ -119,8 +119,8 @@ class ToolCallContent(ContentBase):
     )
 
     def get_as_text(self) -> str:
-        result = f"{self.tool_call_name}\n"
-        result += f"{json.dumps(self.tool_call_arguments)}"
+        result = f"Tool Use: {self.tool_call_name}\n"
+        result += f"Tool Arguments: {json.dumps(self.tool_call_arguments)}"
         return result
 
 
@@ -148,8 +148,8 @@ class ToolCallResultContent(ContentBase):
     )
 
     def get_as_text(self) -> str:
-        result = f"{self.tool_call_name}\n"
-        result += f"{self.tool_call_result}"
+        result = f"Tool Use: {self.tool_call_name}\n"
+        result += f"Tool Result: {self.tool_call_result}"
         return result
 
 
@@ -287,6 +287,12 @@ class ChatMessage(BaseModel):
         """
         return any(content.type == ContentType.ToolCall for content in self.content)
 
+    def contains_tool_call_results(self) -> bool:
+        """
+        Returns True if the chat message contains a tool call.
+        """
+        return any(content.type == ContentType.ToolCallResult for content in self.content)
+
     def get_tool_calls(self) -> List[ToolCallContent]:
         """
         Returns a list of ToolCallContent objects.
@@ -298,6 +304,7 @@ class ChatMessage(BaseModel):
         Returns a list of ToolCallContent objects.
         """
         return [content for content in self.content if isinstance(content, ToolCallResultContent)]
+
     def get_as_text(self) -> str:
         result = []
         for content in self.content:

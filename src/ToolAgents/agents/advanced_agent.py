@@ -1,6 +1,7 @@
 import dataclasses
 import json
 import os
+import re
 from typing import Any
 
 from ToolAgents import ToolRegistry, FunctionTool
@@ -8,7 +9,7 @@ from ToolAgents.agent_memory.context_app_state import ContextAppState
 
 from ToolAgents.provider.llm_provider import ProviderSettings
 from ToolAgents.agents.base_llm_agent import BaseToolAgent, ChatResponse
-from ToolAgents.messages import ChatHistory, ChatMessage, MessageTemplate
+from ToolAgents.messages import ChatHistory, ChatMessage, MessageTemplate, ChatMessageRole
 
 sum_prompt_alt_template = MessageTemplate.from_string("""You will be analyzing a chat turn to extract information about {USER_NAME} and their relationship with {ASSISTANT_NAME}. Here are the chat turns:
 
@@ -159,7 +160,7 @@ class AdvancedAgent:
         save_dir = agent_config.save_dir
         initial_state_file = agent_config.initial_app_state_file
         system_message = agent_config.system_message
-
+        self.should_process_chat_history = True
         self.give_agent_edit_tool = agent_config.give_agent_edit_tool
         self.use_semantic_memory = agent_config.use_semantic_chat_history_memory
         self.max_chat_history_length = agent_config.max_chat_history_length
@@ -440,13 +441,28 @@ class AdvancedAgent:
 
         # If semantic memory is enabled, retrieve additional context and append it to the user input
         if self.use_semantic_memory:
-            results = self.semantic_memory.recall(f"{self.user_name}: {user}", 3)
+            if len(chat_history) >= 3:
+                query = []
+                query_messages = chat_history[-2:]
+                template = "{role}: {content}"
+                for msg in query_messages:
+                    if msg.role == ChatMessageRole.Assistant:
+                        query.append(template.format(role=self.assistant_name, content=msg.get_as_text().strip()))
+                    elif msg.role == ChatMessageRole.User:
+                        query.append(template.format(role=self.user_name, content=msg.get_as_text().strip()))
+                    else:
+                        query.append(template.format(role=msg.role.value, content=msg.get_as_text().strip()))
+                query.append(f"{self.user_name}: {user}")
+                results = self.semantic_memory.recall('\n\n'.join(query), 3)
+            else:
+                results = self.semantic_memory.recall(f"{self.user_name}: {user}", 3)
+
             if len(results) > 0:
-                additional_context = f"{user}\n\n\n<additional_context>\n"
+                additional_context = f"The following memories are from past interactions outside of the current chat history:\n<memories>\n"
                 for r in results:
-                    additional_context += f"{r['content'].replace('extracted_information', 'memory')}\n\n---\n\n"
+                    additional_context += f"<memory>\n{r['content']}\n</memory>\n\n"
                 # Append the additional context to the user input
-                user = additional_context.strip() + f"\n\n</additional_context>\n\n"
+                user = additional_context.strip() + f"\n</memories>\n\nLatest message from {self.user_name}:\n{user}"
                 if self.debug_mode:
                     print(user, flush=True)
 
@@ -473,7 +489,8 @@ class AdvancedAgent:
         # Append the agent's response messages to the chat history
         self.chat_history.add_messages(response.messages)
         # Process the chat history to enforce any maximum length limits
-        self.process_chat_history()
+        if self.should_process_chat_history:
+            self.process_chat_history()
 
     def process_chat_history(self, max_chat_history_length: int = None):
         """
@@ -505,19 +522,26 @@ class AdvancedAgent:
                     message2 = self.chat_history.get_messages()[self.chat_history_index + (msg_count - 1)]
                 # If there are at least two messages to consolidate, build a memory string and store it
                 if self.use_semantic_memory and msg_count >= 2:
-                    memory = f"{self.user_name}: {message.get_as_text().strip()}\n\n\n"
-                    memory += f"{self.assistant_name}: {message2.get_as_text().strip()}"
+                    template="{role}: {content}\n\n"
+                    formatted_msgs = template.format(role=self.user_name, content=message.get_as_text().strip())
+                    formatted_msgs += template.format(role=self.assistant_name, content=message2.get_as_text().strip())
 
                     if self.summarize_chat_pairs_before_storing and isinstance(self.summarization_prompt, MessageTemplate):
-
-                        summarization_history = [ChatMessage.create_user_message(self.summarization_prompt.generate_message_content(CHAT_TURN=memory, USER_NAME=self.user_name, ASSISTANT_NAME=self.assistant_name))]
+                        prompt = self.summarization_prompt.generate_message_content(CHAT_TURN=formatted_msgs, USER_NAME=self.user_name, ASSISTANT_NAME=self.assistant_name)
+                        if self.debug_mode:
+                            print(prompt, flush=True)
+                        summarization_history = [ChatMessage.create_user_message(prompt)]
                         settings = self.agent.get_default_settings()
                         settings.neutralize_all_samplers()
                         settings.temperature = 0.4
                         settings.set_max_new_tokens(4096)
-                        memory = self.agent.get_response(summarization_history, settings=settings).response
-                        if self.debug_mode:
-                            print(memory, flush=True)
-                    self.semantic_memory.store(memory)
+                        formatted_msgs = self.agent.get_response(summarization_history, settings=settings).response
+                        match = re.findall(r'<memory>(.*?)</memory>', formatted_msgs, re.DOTALL)
+                        for content in match:
+                            if self.debug_mode:
+                                print(content.replace("**", ""), flush=True)
+                            self.semantic_memory.store(content.replace("**", ""))
+                    else:
+                        self.semantic_memory.store(formatted_msgs)
                 # Move the chat history index forward by the number of messages consolidated
                 self.chat_history_index += msg_count

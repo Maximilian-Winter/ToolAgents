@@ -422,9 +422,8 @@ class SendDiscordMessage(BaseModel):
     content: Optional[str] = Field(None, description="Content of the message if it's a text message")
     embed_data: Optional[DiscordEmbedData] = Field(None, description="Embed data if message_type is embed")
     
-    def run(self):
-        discord_client = get_discord_client()
-        
+    def run(self, discord_client):
+
         import asyncio
         loop = asyncio.get_event_loop()
         
@@ -468,9 +467,8 @@ class GetDiscordChannels(BaseModel):
     """
     guild_id: int = Field(..., description="ID of the Discord server/guild")
     
-    def run(self):
-        discord_client = get_discord_client()
-        
+    def run(self, discord_client):
+
         import asyncio
         loop = asyncio.get_event_loop()
         
@@ -495,9 +493,8 @@ class GetDiscordMessages(BaseModel):
     channel_id: int = Field(..., description="ID of the channel to get messages from")
     limit: int = Field(50, description="Maximum number of messages to retrieve (max 100)")
     
-    def run(self):
-        discord_client = get_discord_client()
-        
+    def run(self, discord_client):
+
         import asyncio
         loop = asyncio.get_event_loop()
         
@@ -525,9 +522,8 @@ class GetDiscordMembers(BaseModel):
     """
     guild_id: int = Field(..., description="ID of the Discord server/guild")
     
-    def run(self):
-        discord_client = get_discord_client()
-        
+    def run(self, discord_client):
+
         import asyncio
         loop = asyncio.get_event_loop()
         
@@ -555,9 +551,8 @@ class CreateDiscordChannel(BaseModel):
     category_id: Optional[int] = Field(None, description="ID of the category to place the channel in")
     topic: Optional[str] = Field(None, description="Topic/description for text channels")
     
-    def run(self):
-        discord_client = get_discord_client()
-        
+    def run(self, discord_client):
+
         import asyncio
         loop = asyncio.get_event_loop()
         
@@ -586,9 +581,8 @@ class GetDiscordGuildInfo(BaseModel):
     """
     guild_id: int = Field(..., description="ID of the Discord server/guild")
     
-    def run(self):
-        discord_client = get_discord_client()
-        
+    def run(self, discord_client):
+
         import asyncio
         loop = asyncio.get_event_loop()
         
@@ -611,9 +605,8 @@ class AddDiscordReaction(BaseModel):
     message_id: int = Field(..., description="ID of the message to react to")
     emoji: str = Field(..., description="Emoji to add as a reaction (Unicode emoji or custom emoji ID)")
     
-    def run(self):
-        discord_client = get_discord_client()
-        
+    def run(self, discord_client):
+
         import asyncio
         loop = asyncio.get_event_loop()
         
@@ -668,16 +661,16 @@ def init_discord_tools(enable_privileged_intents: bool = False):
         List of FunctionTool instances for Discord operations
     """
     # Initialize the global Discord client with the specified intent settings
-    _ = get_discord_client(enable_privileged_intents=enable_privileged_intents)
+    discord_client = get_discord_client(enable_privileged_intents=enable_privileged_intents)
     
     # Create function tools
-    send_message_tool = FunctionTool(SendDiscordMessage)
-    get_channels_tool = FunctionTool(GetDiscordChannels)
-    get_messages_tool = FunctionTool(GetDiscordMessages)
-    get_members_tool = FunctionTool(GetDiscordMembers)
-    create_channel_tool = FunctionTool(CreateDiscordChannel)
-    get_guild_info_tool = FunctionTool(GetDiscordGuildInfo)
-    add_reaction_tool = FunctionTool(AddDiscordReaction)
+    send_message_tool = FunctionTool(SendDiscordMessage, discord_client=discord_client)
+    get_channels_tool = FunctionTool(GetDiscordChannels, discord_client=discord_client)
+    get_messages_tool = FunctionTool(GetDiscordMessages, discord_client=discord_client)
+    get_members_tool = FunctionTool(GetDiscordMembers, discord_client=discord_client)
+    create_channel_tool = FunctionTool(CreateDiscordChannel, discord_client=discord_client)
+    get_guild_info_tool = FunctionTool(GetDiscordGuildInfo, discord_client=discord_client)
+    add_reaction_tool = FunctionTool(AddDiscordReaction, discord_client=discord_client)
     
     return [
         send_message_tool,

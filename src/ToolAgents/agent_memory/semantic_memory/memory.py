@@ -1,12 +1,7 @@
-"""
-This module implements a semantic memory system that supports storing, recalling,
-and consolidating memories based on embeddings and clustering strategies.
-It includes several strategies for extracting patterns, clustering embeddings,
-and cleaning up old memories.
-"""
 
 import abc
 import dataclasses
+import re
 import uuid
 import json
 from datetime import datetime, timedelta
@@ -136,7 +131,7 @@ class SummarizationExtractPatternStrategy(ExtractPatternStrategy):
     """
 
     def __init__(self, agent: BaseToolAgent, summarizer_settings: ProviderSettings,
-                 user_name: str, assistant_name: str,
+                 user_name: str, assistant_name: str, chat_turn_summary: MessageTemplate = sum_chat_turns_template,
                  debug_mode: bool = False):
         """
         Initialize the summarization extraction strategy.
@@ -153,7 +148,7 @@ class SummarizationExtractPatternStrategy(ExtractPatternStrategy):
         self.assistant_name = assistant_name
         self.debug_mode = debug_mode
         self.summarizer_settings = summarizer_settings
-
+        self.chat_turn_summary = chat_turn_summary
 
     def extract_pattern(self, pattern_id, documents: List[str],
                         metadatas: List[Dict],
@@ -170,7 +165,7 @@ class SummarizationExtractPatternStrategy(ExtractPatternStrategy):
             "source_count": len(documents),
             "source_timestamps": json.dumps([m['timestamp'] for m in metadatas])
         }
-        prompt = sum_chat_turns_template.generate_message_content(CHAT_TURNS="\n\n---\n\n".join(documents), USER_NAME=self.user_name, ASSISTANT_NAME=self.assistant_name)
+        prompt = self.chat_turn_summary.generate_message_content(CHAT_TURNS="\n\n---\n\n".join(documents), USER_NAME=self.user_name, ASSISTANT_NAME=self.assistant_name)
         if self.debug_mode:
             print(prompt)
         # Use the language model agent to generate a summary based on the prompt
@@ -178,10 +173,14 @@ class SummarizationExtractPatternStrategy(ExtractPatternStrategy):
             messages=[ChatMessage.create_user_message(prompt)
             ], settings=self.summarizer_settings
         )
-        if self.debug_mode:
-            print(result.response, flush=True)
+        match = re.findall(r'<memory_summary>(.*?)</memory_summary>', result.response, re.DOTALL)
+        patterns = []
+        for content in match:
+            patterns.append(content.replace("**", ""))
+            if self.debug_mode:
+                print(content.replace("**", ""), flush=True)
         return {
-            "content": result.response,
+            "content": '\n'.join(patterns),
             "metadata": pattern_metadata
         }
 
