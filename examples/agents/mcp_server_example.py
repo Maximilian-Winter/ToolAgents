@@ -1,3 +1,4 @@
+import logging
 import os
 import time
 from enum import Enum
@@ -9,7 +10,15 @@ from ToolAgents.mcp_server import MCPServer, MCPServerConfig, create_and_run_mcp
 from ToolAgents.mcp_tool import MCPToolRegistry, MCPTool, MCPToolDefinition
 from pydantic import BaseModel, Field
 
+
 # Define some example tools to expose via the MCP server
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[logging.StreamHandler()]
+)
+logger = logging.getLogger(__name__)
 
 class WeatherUnit(Enum):
     CELSIUS = "celsius"

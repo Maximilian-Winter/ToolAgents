@@ -7,7 +7,7 @@ from ToolAgents.agents import ChatToolAgent
 from ToolAgents.messages import ChatHistory
 from ToolAgents.messages.chat_message import ChatMessage
 from ToolAgents.provider import OpenAIChatAPI, AnthropicChatAPI
-from ToolAgents.knowledge.agent_tools.web_search_tool import WebSearchTool
+from ToolAgents.agent_tools.web_search_tool import WebSearchTool
 from ToolAgents.knowledge.web_search.implementations.googlesearch import GoogleWebSearchProvider
 from ToolAgents.knowledge.web_crawler.implementations.camoufox_crawler import CamoufoxWebCrawler
 from pydantic import BaseModel, Field

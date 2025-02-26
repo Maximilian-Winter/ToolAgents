@@ -2,7 +2,7 @@ import os
 
 from ToolAgents import ToolRegistry
 from ToolAgents.agents import ChatToolAgent
-from ToolAgents.knowledge.agent_tools.web_search_tool import WebSearchTool
+from ToolAgents.agent_tools.web_search_tool import WebSearchTool
 from ToolAgents.messages import ChatMessage
 
 from ToolAgents.provider import AnthropicChatAPI, OpenAIChatAPI
