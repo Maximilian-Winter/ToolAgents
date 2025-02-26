@@ -7,6 +7,7 @@ from typing import Optional, List, Any, Generator, AsyncGenerator, Union
 from pydantic import BaseModel, Field
 
 from ToolAgents import ToolRegistry
+from ToolAgents.messages import ToolCallContent, ToolCallResultContent
 from ToolAgents.provider.llm_provider import ProviderSettings
 from ToolAgents.provider.llm_provider import StreamingChatMessage
 from ToolAgents.messages.chat_message import ChatMessage
@@ -71,7 +72,7 @@ class BaseToolAgent(ABC):
             self,
             messages: List[ChatMessage],
             tool_registry: ToolRegistry = None,
-            settings: Optional[Any] = None,
+            settings: Optional[ProviderSettings] = None,
             reset_last_messages_buffer: bool = True,
     ) -> ChatMessage:
         """
@@ -93,7 +94,7 @@ class BaseToolAgent(ABC):
             self,
             messages: List[ChatMessage],
             tool_registry: ToolRegistry = None,
-            settings: Optional[Any] = None,
+            settings: Optional[ProviderSettings] = None,
             reset_last_messages_buffer: bool = True,
     ) -> Generator[StreamingChatMessage, None, None]:
         """
@@ -115,7 +116,7 @@ class BaseToolAgent(ABC):
             self,
             messages: List[ChatMessage],
             tool_registry: ToolRegistry = None,
-            settings: Optional[Any] = None,
+            settings: Optional[ProviderSettings] = None,
             reset_last_messages_buffer: bool = True,
     ) -> ChatResponse:
         """
@@ -137,7 +138,7 @@ class BaseToolAgent(ABC):
             self,
             messages: List[ChatMessage],
             tool_registry: ToolRegistry = None,
-            settings: Optional[Any] = None,
+            settings: Optional[ProviderSettings] = None,
             reset_last_messages_buffer: bool = True,
     ) -> Generator[ChatResponseChunk, None, None]:
         """
@@ -176,7 +177,7 @@ class AsyncBaseToolAgent(ABC):
             self,
             messages: List[ChatMessage],
             tool_registry: ToolRegistry = None,
-            settings: Optional[Any] = None,
+            settings: Optional[ProviderSettings] = None,
             reset_last_messages_buffer: bool = True,
     ) -> ChatMessage:
         """
@@ -198,7 +199,7 @@ class AsyncBaseToolAgent(ABC):
             self,
             messages: List[ChatMessage],
             tool_registry: ToolRegistry = None,
-            settings: Optional[Any] = None,
+            settings: Optional[ProviderSettings] = None,
             reset_last_messages_buffer: bool = True,
     ) -> Generator[StreamingChatMessage, None, None]:
         """
@@ -220,7 +221,7 @@ class AsyncBaseToolAgent(ABC):
             self,
             messages: List[ChatMessage],
             tool_registry: ToolRegistry = None,
-            settings: Optional[Any] = None,
+            settings: Optional[ProviderSettings] = None,
             reset_last_messages_buffer: bool = True,
     ) -> ChatResponse:
         """
@@ -242,7 +243,7 @@ class AsyncBaseToolAgent(ABC):
             self,
             messages: List[ChatMessage],
             tool_registry: ToolRegistry = None,
-            settings: Optional[Any] = None,
+            settings: Optional[ProviderSettings] = None,
             reset_last_messages_buffer: bool = True,
     ) -> AsyncGenerator[ChatResponseChunk, None]:
         """
@@ -266,4 +267,29 @@ class AsyncBaseToolAgent(ABC):
         Returns:
             Last response(ChatResponse)
         """
+        pass
+
+
+class AgentObservabilityHandler(ABC):
+
+    @abstractmethod
+    def on_request(self,
+            messages: List[ChatMessage],
+            tool_registry: ToolRegistry,
+            settings: Optional[ProviderSettings],
+            reset_last_messages_buffer: bool,
+            result_chat_message: ChatMessage):
+        pass
+
+    @abstractmethod
+    def on_streaming_request(self,
+                        messages: List[ChatMessage],
+                        tool_registry: ToolRegistry,
+                        settings: Optional[ProviderSettings],
+                        reset_last_messages_buffer: bool,
+                        result_chat_message: ChatMessage):
+        pass
+
+    @abstractmethod
+    def on_tool_call(self, tool_call: ToolCallContent, tool_call_result: ToolCallResultContent):
         pass

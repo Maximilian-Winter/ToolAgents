@@ -441,28 +441,13 @@ class AdvancedAgent:
 
         # If semantic memory is enabled, retrieve additional context and append it to the user input
         if self.use_semantic_memory:
-            if len(chat_history) >= 3:
-                query = []
-                query_messages = chat_history[-2:]
-                template = "{role}: {content}"
-                for msg in query_messages:
-                    if msg.role == ChatMessageRole.Assistant:
-                        query.append(template.format(role=self.assistant_name, content=msg.get_as_text().strip()))
-                    elif msg.role == ChatMessageRole.User:
-                        query.append(template.format(role=self.user_name, content=msg.get_as_text().strip()))
-                    else:
-                        query.append(template.format(role=msg.role.value, content=msg.get_as_text().strip()))
-                query.append(f"{self.user_name}: {user}")
-                results = self.semantic_memory.recall('\n\n'.join(query), 3)
-            else:
-                results = self.semantic_memory.recall(f"{self.user_name}: {user}", 3)
-
+            results = self.semantic_memory.recall(f"{self.user_name}: {user}", 3)
             if len(results) > 0:
-                additional_context = f"The following memories are from past interactions outside of the current chat history:\n<memories>\n"
+                additional_context = f"{user}\n\n---\n\n<additional_context>\n"
                 for r in results:
                     additional_context += f"<memory>\n{r['content']}\n</memory>\n\n"
                 # Append the additional context to the user input
-                user = additional_context.strip() + f"\n</memories>\n\nLatest message from {self.user_name}:\n{user}"
+                user = additional_context.strip() + f"\n</additional_context>"
                 if self.debug_mode:
                     print(user, flush=True)
 

@@ -24,6 +24,11 @@ class ChatHistory(BaseModel):
         default_factory=dict,
         description="Additional metadata about the chat history"
     )
+    def clear(self):
+        """
+        Clears the chat history.
+        """
+        self.messages = []
     def add_message(self, message: ChatMessage) -> None:
         """
         Add a new message to the chat history.

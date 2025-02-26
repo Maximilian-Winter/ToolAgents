@@ -173,12 +173,17 @@ class SummarizationExtractPatternStrategy(ExtractPatternStrategy):
             messages=[ChatMessage.create_user_message(prompt)
             ], settings=self.summarizer_settings
         )
-        match = re.findall(r'<memory_summary>(.*?)</memory_summary>', result.response, re.DOTALL)
+        match = re.findall(r'<summary>(.*?)</summary>', result.response, re.DOTALL)
         patterns = []
         for content in match:
             patterns.append(content.replace("**", ""))
             if self.debug_mode:
                 print(content.replace("**", ""), flush=True)
+        if len(patterns) == 0:
+            return {
+                "content": result.response.replace("**", ""),
+                "metadata": pattern_metadata
+            }
         return {
             "content": '\n'.join(patterns),
             "metadata": pattern_metadata

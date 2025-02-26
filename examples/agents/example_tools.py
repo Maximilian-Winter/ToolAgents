@@ -6,6 +6,7 @@ from typing import  List
 from pydantic import BaseModel, Field
 
 from ToolAgents import FunctionTool
+from ToolAgents.function_tool import cli_confirmation_handler
 
 
 # Simple tool for the agent, to get the current date and time in a specific format.
@@ -155,6 +156,7 @@ def list_files(input_data: ListFilesInput) -> List[str]:
 
 calculator_function_tool = FunctionTool(calculator)
 current_datetime_function_tool = FunctionTool(get_current_datetime)
+
 get_weather_function_tool = FunctionTool.from_openai_tool(open_ai_tool_spec, get_current_weather)
 
 read_file_tool = FunctionTool(read_file)

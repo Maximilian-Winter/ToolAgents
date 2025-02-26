@@ -1,3 +1,4 @@
+import datetime
 import os
 import json
 from typing import List, Dict, Any, Optional
@@ -16,58 +17,18 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Check for required environment variables
-if not os.getenv("OPENAI_API_KEY") and not os.getenv("ANTHROPIC_API_KEY"):
-    raise EnvironmentError(
-        "Either OPENAI_API_KEY or ANTHROPIC_API_KEY environment variable must be set."
-    )
-
-class ResearchQuery(BaseModel):
-    """
-    Submit a query for deep, iterative research
-    """
-    query: str = Field(..., description="The research query to investigate in depth")
-    max_search_depth: int = Field(3, description="Maximum number of iterative search levels to perform (1-5)")
-    results_per_search: int = Field(3, description="Number of search results to retrieve per query (1-5)")
-    
-    def run(self):
-        # This is a utility function that will be replaced by the agent's actual research process
-        return f"Research query '{self.query}' registered for deep investigation."
-
-class ExtractKeyInsight(BaseModel):
-    """
-    Extract a key insight or subtopic from research findings
-    """
-    research_findings: str = Field(..., description="The research findings to analyze")
-    focus_area: str = Field(..., description="The specific area or aspect to focus on")
-    
-    def run(self):
-        # This function helps the agent identify important subtopics to explore further
-        return f"Analyzing '{self.focus_area}' from the research findings."
-
-class SynthesizeFindings(BaseModel):
-    """
-    Synthesize multiple research findings into a coherent summary
-    """
-    findings: List[str] = Field(..., description="List of research findings to synthesize")
-    research_question: str = Field(..., description="The original research question")
-    
-    def run(self):
-        # This function helps the agent combine multiple search results
-        return f"Synthesizing {len(self.findings)} findings related to '{self.research_question}'."
 
 def setup_deep_research_agent():
     """Set up the deep research agent with all necessary tools"""
     # Set up the primary LLM agent
-    if os.getenv("ANTHROPIC_API_KEY"):
-        primary_api = AnthropicChatAPI(api_key=os.getenv("ANTHROPIC_API_KEY"), model="claude-3-5-sonnet-20241022")
-    else:
-        primary_api = OpenAIChatAPI(api_key=os.getenv("OPENAI_API_KEY"), model="gpt-4o")
+    primary_api = AnthropicChatAPI(api_key=os.getenv("ANTHROPIC_API_KEY"), model="claude-3-7-sonnet-20250219")
     
     # Get default settings with appropriate temperature
     settings = primary_api.get_default_settings()
     settings.temperature = 0.2  # Lower temperature for research tasks
-    
+
+    primary_api.set_default_settings(settings)
+
     # Create the agent
     agent = ChatToolAgent(chat_api=primary_api)
     
@@ -91,22 +52,10 @@ def setup_deep_research_agent():
     
     # Add the web search tool
     tool_registry.add_tool(web_search_tool.get_tool())
-    
-    # Add the research management tools
-    research_query_tool = FunctionTool(ResearchQuery)
-    extract_insight_tool = FunctionTool(ExtractKeyInsight)
-    synthesize_tool = FunctionTool(SynthesizeFindings)
-    
-    tool_registry.add_tools([
-        research_query_tool,
-        extract_insight_tool,
-        synthesize_tool
-    ])
-    
+
     # Initialize chat history with system prompt
     chat_history = ChatHistory()
-    chat_history.add_system_message("""
-You are DeepResearch, an advanced research agent specialized in conducting iterative, in-depth investigations on any topic. 
+    chat_history.add_system_message("""You are DeepResearch, an advanced research agent specialized in conducting iterative, in-depth investigations on any topic. 
 Your research methodology follows these principles:
 
 1. EXPLORE BROADLY: Begin with a broad exploration of the topic to understand the landscape.
@@ -159,10 +108,12 @@ def conduct_deep_research(query: str, max_depth: int = 3, results_per_search: in
     agent, settings, tool_registry, chat_history = setup_deep_research_agent()
     
     # Format the research request
-    research_prompt = f"""
+    research_prompt = f"""The current date and time is (Format: %Y-%m-%d %H:%M:%S): {datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")} 
+
 Please conduct a deep, iterative research investigation on the following topic:
 
 RESEARCH TOPIC: {query}
+
 
 Use the following research parameters:
 - Maximum search depth: {max_depth} levels
@@ -187,8 +138,7 @@ Your final report should include:
 - Multiple perspectives when the topic is debated
 - Clear organization with sections and subsections
 - Citations to sources (URLs)
-- Recommendations for further research
-"""
+- Recommendations for further research"""
     
     # Add the user's message to the chat history
     chat_history.add_user_message(research_prompt)

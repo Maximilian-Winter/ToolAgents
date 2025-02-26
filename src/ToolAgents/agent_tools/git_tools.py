@@ -57,7 +57,7 @@ class GitTools:
         stdout, stderr, return_code = self._run_git_command(command)
 
         if return_code == 0:
-            return f"Repository initialized successfully in {self.working_directory}"
+            return f"Repository initialized successfully in {self.get_working_directory}"
         else:
             return f"Failed to initialize repository: {stderr}"
 

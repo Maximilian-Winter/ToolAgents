@@ -5,7 +5,7 @@ from ToolAgents.agent_tools.file_tools import FilesystemTools
 from ToolAgents.agent_tools.git_tools import GitTools
 from ToolAgents.agent_tools.github_tools import GitHubTools
 from ToolAgents.agents import ChatToolAgent
-from ToolAgents.messages import ChatHistory
+from ToolAgents.messages import ChatHistory, MessageTemplate
 from ToolAgents.messages.chat_message import ChatMessage
 from ToolAgents.provider import AnthropicChatAPI, OpenAIChatAPI, GroqChatAPI, MistralChatAPI, CompletionProvider
 
@@ -46,16 +46,36 @@ tool_registry = ToolRegistry()
 
 tool_registry.add_tools(tools)
 
+system_prompt = """You are an expert coding AI agent with access to various tools for working with the filesystem, git, and GitHub. 
 
+Your task is to assist users with their coding-related queries and perform actions using the provided tools. 
+
+Here is a list of your available tools with descriptions of each tool and their parameters:
+<available-tools>
+{available_tools}
+</available-tools>
+
+The following is information about the environment you work with:
+Operating System: {operating_system}
+Working Directory: {working_directory}
+GitHub User: {github_username}
+GitHub Repository: {github_repository}
+Current Date and Time (Format: %Y-%m-%d %H:%M:%S): {current_date_time}
+"""
+
+system_prompt_template = MessageTemplate.from_string(system_prompt)
+available_tools_docs = tool_registry.get_tools_documentation()
 chat_history = ChatHistory()
-chat_history.add_message(ChatMessage.create_system_message(f"You are an expert coding AI agent. You have access to the following tools to work with the filesystem, git and GitHub:\n\n{tool_registry.get_tools_documentation()}"))
+chat_history.add_message(ChatMessage.create_system_message())
 
 
 while True:
     user_input = input("User >")
 
-    if user_input == "exit":
+    if user_input == "/exit":
         break
+    if user_input == "/clear":
+        chat_history.clear()
 
     chat_history.add_message(ChatMessage.create_user_message(user_input))
     chat_response = None
@@ -67,7 +87,6 @@ while True:
             print()
             print(f"Tool Use: {res.get_tool_name()}")
             print(f"Tool Arguments: {json.dumps(res.get_tool_arguments())}")
-            print(f"Tool Result: {res.get_tool_results()}")
             print()
         print(res.chunk, end='', flush=True)
         if res.finished:

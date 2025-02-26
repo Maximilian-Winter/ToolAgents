@@ -1,14 +1,16 @@
 import abc
 import copy
+import datetime
 import json
 from typing import List, Dict, Optional, Generator, Any, Union, AsyncGenerator
 
 from ToolAgents import FunctionTool, ToolRegistry
-from ToolAgents.messages.chat_message import ChatMessage
 from pydantic import BaseModel, Field
 from typing import Dict, Optional, Any, Union
 
 from ToolAgents.messages.chat_message import ChatMessage
+from ToolAgents.utilities.logging import EasyLogger
+
 
 class StreamingChatMessage(BaseModel):
     """

@@ -6,14 +6,24 @@ from ToolAgents.agents.base_llm_agent import BaseToolAgent, ChatResponse, ChatRe
 
 from ToolAgents.provider.llm_provider import ChatAPIProvider, StreamingChatMessage, AsyncChatAPIProvider
 from ToolAgents.messages.chat_message import ChatMessage, ChatMessageRole, ToolCallResultContent
+from ToolAgents.utilities.logging import EasyLogger
 
 
 class ChatToolAgent(BaseToolAgent):
 
-    def __init__(self, chat_api: ChatAPIProvider, debug_output: bool = False):
+    def __init__(self, chat_api: ChatAPIProvider, log_output: bool = False, log_to_file: bool = False):
         super().__init__()
         self.chat_api = chat_api
-        self.debug_output = debug_output
+        self.log_output = log_output
+        if log_output:
+            self.logger = EasyLogger(
+                name="ToolAgents",
+                level=EasyLogger.INFO,
+                format_string=EasyLogger.FORMAT_DETAILED,
+                log_to_file=f"log_{datetime.datetime.now().strftime('%Y_%m_%d_%H_%M_%S')}.log" if log_to_file else None
+            )
+        else:
+            self.logger = None
         self.last_messages_buffer: list[ChatMessage] = []
         self.tool_registry = ToolRegistry()
         self.last_response_has_tool_calls = False
@@ -50,11 +60,12 @@ class ChatToolAgent(BaseToolAgent):
         self.tool_registry = tool_registry
         tools = [tool for tool in tool_registry.tools.values()]
 
-        if self.debug_output:
-            print("Input messages:", '\n'.join([msg.model_dump_json(indent=4) for msg in messages]))
+        if self.log_output:
+            self.logger.info("Step Input Messages:" + '\n'.join([msg.model_dump_json(indent=4) for msg in messages]))
 
         result = self.chat_api.get_response(messages, settings=settings, tools=tools)
-
+        if self.log_output:
+            self.logger.info("Step Output Message:" + result.model_dump_json(indent=4))
         return result
 
     def stream_step(
@@ -86,11 +97,16 @@ class ChatToolAgent(BaseToolAgent):
         self.tool_registry = tool_registry
         tools = [tool for tool in tool_registry.tools.values()]
 
-        if self.debug_output:
-            print("Input messages:", '\n'.join([msg.model_dump_json(indent=4, exclude_none=True) for msg in messages]))
+        if self.log_output:
+            self.logger.info("Streaming Step Input Messages:" + '\n'.join([msg.model_dump_json(indent=4) for msg in messages]))
 
+        final_chunk = None
         for chunk in self.chat_api.get_streaming_response(messages, settings=settings, tools=tools):
             yield chunk
+            if chunk.get_finished():
+                final_chunk = chunk
+        if self.log_output and final_chunk is not None:
+            self.logger.info("Streaming Step Final Chunk:" + final_chunk.model_dump_json(indent=4))
 
     def get_response(
             self,
@@ -336,7 +352,7 @@ class AsyncChatToolAgent(AsyncBaseToolAgent):
 
         if result.contains_tool_call():
             self.last_response_has_tool_calls = True
-            self.handle_function_calling_response(result, messages)
+            await self.handle_function_calling_response(result, messages)
             return await self.get_response(
                 messages=messages,
                 tool_registry=tool_registry,
@@ -389,7 +405,7 @@ class AsyncChatToolAgent(AsyncBaseToolAgent):
             has_tool_call = chunk.is_tool_call
         if finished_message.contains_tool_call():
             self.last_response_has_tool_calls = True
-            self.handle_function_calling_response(finished_message, messages)
+            await self.handle_function_calling_response(finished_message, messages)
             tool_calls = messages[-2].get_tool_calls()
             tool_call_results = messages[-1].get_tool_call_results()
             for tool_call, tool_call_result in zip(tool_calls, tool_call_results):
@@ -413,7 +429,7 @@ class AsyncChatToolAgent(AsyncBaseToolAgent):
         return ChatResponse(messages=self.last_messages_buffer,
                             response=self.last_messages_buffer[-1].get_as_text())
 
-    def handle_function_calling_response(
+    async def handle_function_calling_response(
             self,
             chat_message: ChatMessage,
             current_messages: List[ChatMessage],
@@ -433,7 +449,7 @@ class AsyncChatToolAgent(AsyncBaseToolAgent):
 
             if tool:
                 call_parameters = tool_call.tool_call_arguments
-                output = tool.execute(call_parameters)
+                output = await tool.execute_async(call_parameters)
                 content.append(
                     ToolCallResultContent(tool_call_result_id=str(uuid.uuid4()), tool_call_id=tool_call.tool_call_id,
                                           tool_call_name=tool_call.tool_call_name, tool_call_result=str(output)))

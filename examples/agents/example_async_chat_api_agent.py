@@ -28,7 +28,7 @@ load_dotenv()
 #api = AsyncGroqChatAPI(api_key=os.getenv("GROQ_API_KEY"), model="llama-3.3-70b-versatile")
 
 # Mistral API
-#api = AsyncMistralChatAPI(api_key=os.getenv("MISTRAL_API_KEY"), model="mistral-small-latest")
+api = AsyncMistralChatAPI(api_key=os.getenv("MISTRAL_API_KEY"), model="mistral-small-latest")
 
 #api = AsyncCompletionProvider(completion_endpoint=AsyncLlamaCppServer("http://127.0.0.1:8080"))
 

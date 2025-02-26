@@ -34,6 +34,22 @@ class FilesystemTools:
             return path
         return os.path.join(self.working_directory, path)
 
+    def _format_file_size(self, size_in_bytes: int) -> str:
+        """
+        Format file size in a human-readable format.
+
+        Args:
+            size_in_bytes (int): File size in bytes.
+
+        Returns:
+            str: Formatted file size string (e.g., "4.2 KB").
+        """
+        for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
+            if size_in_bytes < 1024.0 or unit == 'TB':
+                break
+            size_in_bytes /= 1024.0
+        return f"{size_in_bytes:.1f} {unit}"
+
     def glob_files(self, pattern: str) -> str:
         """
         List files matching a pattern in the working directory.
@@ -63,23 +79,6 @@ class FilesystemTools:
                     result.append(f"- {rel_path} ({file_type})")
 
         return "\n".join(result)
-
-    def _format_file_size(self, size_in_bytes: int) -> str:
-        """
-        Format file size in a human-readable format.
-
-        Args:
-            size_in_bytes (int): File size in bytes.
-
-        Returns:
-            str: Formatted file size string (e.g., "4.2 KB").
-        """
-        for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
-            if size_in_bytes < 1024.0 or unit == 'TB':
-                break
-            size_in_bytes /= 1024.0
-        return f"{size_in_bytes:.1f} {unit}"
-
 
 
     def create_file(self, file_path: str, content: str = "") -> str:
