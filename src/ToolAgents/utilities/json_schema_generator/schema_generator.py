@@ -203,6 +203,8 @@ def insert_additional_fields(
     Fields with position 'before' will be added at the start,
     and those with 'after' will be appended at the end.
     """
+    if len(additional_fields) == 0:
+        return schema
     if "properties" not in schema:
         schema["properties"] = {}
 
@@ -296,4 +298,4 @@ def get_tools_schema(tool_registry):
     tools_schema = OuterSchemaObject(
         name="tool_calls", description="Tool calls", schemas=tool_schema_objects
     )
-    return generate_outer_json_schema(tools_schema)
+    return generate_outer_json_schema(tools_schema, True)

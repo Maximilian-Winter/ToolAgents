@@ -92,7 +92,7 @@ class DiscordClient:
         return self.bot.get_channel(channel_id)
 
     async def send_message(
-        self, channel_id: int, content: str = None, embed_data: DiscordEmbedData = None
+        self, channel_id: int, content: Optional[str] = None, embed_data: Optional[DiscordEmbedData] = None
     ):
         """Send a message to a channel"""
         channel = self.bot.get_channel(channel_id)

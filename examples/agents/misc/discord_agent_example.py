@@ -7,7 +7,7 @@ from ToolAgents.agents import ChatToolAgent
 from ToolAgents.messages import ChatHistory
 from ToolAgents.messages.chat_message import ChatMessage
 from ToolAgents.provider import OpenAIChatAPI
-from ToolAgents.knowledge.agent_tools.discord_tool import (
+from ToolAgents.agent_tools.discord_tool import (
     init_discord_tools,
     DiscordEmbedData,
 )
