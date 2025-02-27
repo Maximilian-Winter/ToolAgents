@@ -3,7 +3,9 @@ from ToolAgents.agents import ChatToolAgent
 from ToolAgents.messages import ChatMessage
 
 from ToolAgents.provider import CompletionProvider
-from ToolAgents.provider.completion_provider.default_implementations import LlamaCppServer
+from ToolAgents.provider.completion_provider.default_implementations import (
+    LlamaCppServer,
+)
 
 api = CompletionProvider(completion_endpoint=LlamaCppServer("http://127.0.0.1:8080"))
 
@@ -81,9 +83,14 @@ What's your next move, Jane? How do you want to approach investigating this ware
 
 
 result = agent.get_streaming_response(
-    messages=[ChatMessage.create_system_message(system_prompt), ChatMessage.create_user_message("Me and Lyra are on our way to Waterdeep. (Start of the Game).")
-  ],
-    settings=settings)
+    messages=[
+        ChatMessage.create_system_message(system_prompt),
+        ChatMessage.create_user_message(
+            "Me and Lyra are on our way to Waterdeep. (Start of the Game)."
+        ),
+    ],
+    settings=settings,
+)
 for tok in result:
     print(tok.chunk, end="", flush=True)
 print()

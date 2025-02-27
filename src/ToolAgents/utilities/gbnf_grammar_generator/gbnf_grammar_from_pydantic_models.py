@@ -19,8 +19,13 @@ from typing import (
 from docstring_parser import parse
 from pydantic import BaseModel, create_model
 
-from ToolAgents.utilities.llm_documentation import generate_markdown_documentation, generate_text_documentation
-from ToolAgents.utilities.pydantic_utilites import create_dynamic_models_from_dictionaries
+from ToolAgents.utilities.llm_documentation import (
+    generate_markdown_documentation,
+    generate_text_documentation,
+)
+from ToolAgents.utilities.pydantic_utilites import (
+    create_dynamic_models_from_dictionaries,
+)
 
 if TYPE_CHECKING:
     from types import GenericAlias
@@ -1065,4 +1070,3 @@ def generate_gbnf_grammar_and_documentation_from_dictionaries(
     )
     grammar = remove_empty_lines(grammar + get_primitive_grammar(grammar))
     return grammar, documentation
-

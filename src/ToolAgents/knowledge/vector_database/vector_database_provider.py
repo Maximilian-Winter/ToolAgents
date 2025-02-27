@@ -15,9 +15,14 @@ class VectorSearchResult:
     scores: list[float]
     metadata: Optional[list[dict[str, Any]]] = None
 
+
 class VectorDatabaseProvider(abc.ABC):
 
-    def __init__(self, embedding_provider: EmbeddingProvider, reranking_provider: RerankingProvider):
+    def __init__(
+        self,
+        embedding_provider: EmbeddingProvider,
+        reranking_provider: RerankingProvider,
+    ):
         self.embedding_provider = embedding_provider
         self.reranking_provider = reranking_provider
 
@@ -30,7 +35,9 @@ class VectorDatabaseProvider(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def query(self, query: str, query_filter: Any = None, k: int = 3, **kwargs) -> VectorSearchResult:
+    def query(
+        self, query: str, query_filter: Any = None, k: int = 3, **kwargs
+    ) -> VectorSearchResult:
         pass
 
     @abc.abstractmethod
@@ -41,4 +48,3 @@ class VectorDatabaseProvider(abc.ABC):
     def generate_unique_id():
         unique_id = str(uuid.uuid4())
         return unique_id
-

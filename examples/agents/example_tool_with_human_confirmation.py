@@ -23,6 +23,7 @@ def get_current_datetime(output_format: str):
 
     return datetime.datetime.now().strftime(output_format)
 
+
 # Simple confirmation handler that will ask the user for confirmation before using a tool
 def cli_confirmation_handler(request: ConfirmationRequest):
     """Simple CLI-based confirmation handler."""
@@ -35,10 +36,11 @@ def cli_confirmation_handler(request: ConfirmationRequest):
 
     response = input("\nApprove this execution? (y/n): ").strip().lower()
 
-    if response == 'y':
+    if response == "y":
         request.approve()
     else:
         request.reject()
+
 
 current_datetime_function_tool = FunctionTool(get_current_datetime)
 
@@ -63,12 +65,16 @@ tool_registry = ToolRegistry()
 tool_registry.add_tool(current_datetime_function_tool)
 
 messages = [
-    ChatMessage.create_system_message("You are a helpful assistant with tool calling capabilities. Only reply with a tool call if the function exists in the library provided by the user. Use JSON format to output your function calls. If it doesn't exist, just reply directly in natural language. When you receive a tool call response, use the output to format an answer to the original user question."),
-    ChatMessage.create_user_message("Retrieve the date and time in the format: %Y-%m-%d %H:%M:%S.")
+    ChatMessage.create_system_message(
+        "You are a helpful assistant with tool calling capabilities. Only reply with a tool call if the function exists in the library provided by the user. Use JSON format to output your function calls. If it doesn't exist, just reply directly in natural language. When you receive a tool call response, use the output to format an answer to the original user question."
+    ),
+    ChatMessage.create_user_message(
+        "Retrieve the date and time in the format: %Y-%m-%d %H:%M:%S."
+    ),
 ]
 
 chat_response = agent.get_response(
-    messages=messages,
-    settings=settings, tool_registry=tool_registry)
+    messages=messages, settings=settings, tool_registry=tool_registry
+)
 
 print(chat_response.response)

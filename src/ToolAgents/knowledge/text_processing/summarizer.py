@@ -6,8 +6,11 @@ from ToolAgents.messages import ChatMessage, MessageTemplate
 from ToolAgents.provider import ProviderSettings
 
 
-def summarize_list_of_strings(agent: ChatToolAgent, settings: ProviderSettings, strings: list[str]):
-    template = MessageTemplate.from_string("""You are an expert document analyst and summarizer. Your task is to create a comprehensive summary of multiple documents. Here are the documents you need to analyze and summarize:
+def summarize_list_of_strings(
+    agent: ChatToolAgent, settings: ProviderSettings, strings: list[str]
+):
+    template = MessageTemplate.from_string(
+        """You are an expert document analyst and summarizer. Your task is to create a comprehensive summary of multiple documents. Here are the documents you need to analyze and summarize:
 
 <documents>
 {{DOCUMENTS}}
@@ -84,21 +87,21 @@ Conclusions:
 [Body paragraph 3 discussing key arguments and important facts]
 
 [Conclusion paragraph tying together the key points]
-</summary>""")
+</summary>"""
+    )
     results = []
     for doc in strings:
         messages = [
             ChatMessage.create_system_message("You are a helpful assistant."),
-            ChatMessage.create_user_message(template.generate_message_content(DOCUMENTS=doc))
+            ChatMessage.create_user_message(
+                template.generate_message_content(DOCUMENTS=doc)
+            ),
         ]
         print(messages[1].model_dump_json(indent=2))
-        chat_response = agent.get_response(
-            messages=messages,
-            settings=settings)
+        chat_response = agent.get_response(messages=messages, settings=settings)
         print(chat_response.response.strip())
         results.append(chat_response.response.strip())
     return results
-
 
 
 class SummarizingFunctionToolPostProcessor(PostProcessor):
@@ -108,4 +111,6 @@ class SummarizingFunctionToolPostProcessor(PostProcessor):
         self.settings = settings
 
     def process(self, result: Any) -> Any:
-        return summarize_list_of_strings(self.summarizing_agent, self.settings, [f"{result}"])[0]
+        return summarize_list_of_strings(
+            self.summarizing_agent, self.settings, [f"{result}"]
+        )[0]

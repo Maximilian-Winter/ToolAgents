@@ -83,7 +83,11 @@ Example output structure:
 
 Please proceed with your analysis and summary of the document. It's OK for the document_analysis section to be quite long."""
 
-summarize_documents_based_on_document_type_and_user_query_message_template = MessageTemplate.from_string(summarize_documents_based_on_document_type_and_user_query_prompt)
+summarize_documents_based_on_document_type_and_user_query_message_template = (
+    MessageTemplate.from_string(
+        summarize_documents_based_on_document_type_and_user_query_prompt
+    )
+)
 
 
 summarize_documents_prompt = """You are an expert document analyst and summarizer. Your task is to create a comprehensive summary of multiple documents. Here are the documents you need to analyze and summarize:
@@ -165,7 +169,9 @@ Conclusions:
 [Conclusion paragraph tying together the key points]
 </summary>"""
 
-summarize_documents_message_template = MessageTemplate.from_string(summarize_documents_prompt)
+summarize_documents_message_template = MessageTemplate.from_string(
+    summarize_documents_prompt
+)
 
 extract_information_according_to_json_schema_prompt = """You are an expert information extractor. Your task is to analyze a given document and extract information from it according to a specified JSON schema. Follow these instructions carefully:
 
@@ -202,4 +208,6 @@ extract_information_according_to_json_schema_prompt = """You are an expert infor
 
 Remember, accuracy and completeness are crucial. Extract as much relevant information as possible from the document while ensuring strict adherence to the provided JSON schema."""
 
-extract_information_according_to_json_schema_message_template = MessageTemplate.from_string(extract_information_according_to_json_schema_prompt)
+extract_information_according_to_json_schema_message_template = (
+    MessageTemplate.from_string(extract_information_according_to_json_schema_prompt)
+)

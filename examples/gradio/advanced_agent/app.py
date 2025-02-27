@@ -4,6 +4,7 @@ from typing import Iterator
 from ToolAgents.messages import ChatMessageRole
 from agent import configurable_agent
 
+
 def stream_chat_response(chat_history: list) -> Iterator[list]:
     """Handles streaming chat responses"""
     chat_history.append(gr.ChatMessage(role="assistant", content=""))
@@ -74,20 +75,23 @@ with gr.Blocks(css=css) as demo:
     # Initialize chat history
     value = []
     for chat_entry in configurable_agent.chat_history.get_messages():
-        if chat_entry.role == ChatMessageRole.Assistant or chat_entry.role == ChatMessageRole.User:
-            value.append(gr.ChatMessage(role=chat_entry.role.value, content=chat_entry.get_as_text()))
+        if (
+            chat_entry.role == ChatMessageRole.Assistant
+            or chat_entry.role == ChatMessageRole.User
+        ):
+            value.append(
+                gr.ChatMessage(
+                    role=chat_entry.role.value, content=chat_entry.get_as_text()
+                )
+            )
 
-    chatbox = gr.Chatbot(
-        value=value,
-        type="messages",
-        show_copy_button=True
-    )
+    chatbox = gr.Chatbot(value=value, type="messages", show_copy_button=True)
 
     with gr.Row():
         chat_input = gr.Textbox(
             label="Chat Input",
             placeholder="Type your message here...",
-            scale=9  # Makes the textbox wider
+            scale=9,  # Makes the textbox wider
         )
         send_button = gr.Button("Send", scale=1)  # Makes the button narrower
 
@@ -95,21 +99,15 @@ with gr.Blocks(css=css) as demo:
     submit_click = send_button.click(
         fn=user,
         inputs=[chat_input, chatbox],
-        outputs=[chat_input, chatbox], queue=False
-    ).then(
-        stream_chat_response,
-        chatbox,
-        chatbox
-    )
+        outputs=[chat_input, chatbox],
+        queue=False,
+    ).then(stream_chat_response, chatbox, chatbox)
 
     chat_input.submit(
         fn=user,
         inputs=[chat_input, chatbox],
-        outputs=[chat_input, chatbox], queue=False
-    ).then(
-        stream_chat_response,
-        chatbox,
-        chatbox
-    )
+        outputs=[chat_input, chatbox],
+        queue=False,
+    ).then(stream_chat_response, chatbox, chatbox)
 
 demo.launch()

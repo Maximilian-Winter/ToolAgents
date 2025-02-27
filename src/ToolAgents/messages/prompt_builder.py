@@ -8,9 +8,10 @@ class PromptPart(abc.ABC):
     def build(self) -> str:
         pass
 
+
 class PromptVar(PromptPart):
 
-    def __init__(self, var = None) -> None:
+    def __init__(self, var=None) -> None:
         self.var = var
 
     def set_var(self, var) -> None:
@@ -21,6 +22,7 @@ class PromptVar(PromptPart):
 
     def build(self) -> str:
         return str(self.var)
+
 
 class PromptLine(PromptPart):
 
@@ -69,7 +71,7 @@ class PromptBuilder:
         if not os.path.exists(file_path):
             raise FileNotFoundError(f"File not found: {file_path}")
 
-        with open(file_path, 'r') as file:
+        with open(file_path, "r") as file:
             content = file.read()
         self.content.append(content)
         return self
@@ -110,14 +112,15 @@ class PromptBuilder:
         return section
 
 
-
 if __name__ == "__main__":
     builder = PromptBuilder()
-    builder.add_text("You are helpful assistant.").add_separator('#', 15)
+    builder.add_text("You are helpful assistant.").add_separator("#", 15)
     line = PromptLine()
     builder.add_prompt_part(line)
     var = PromptVar(42)
-    line.add_characters('#', 10).add_characters(' ').add_part(var).add_characters(' ').add_characters('#', 10)
+    line.add_characters("#", 10).add_characters(" ").add_part(var).add_characters(
+        " "
+    ).add_characters("#", 10)
     var.set_var(24)
     print(line.build())
     print(builder.build())

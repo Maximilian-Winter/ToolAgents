@@ -7,7 +7,10 @@ from ToolAgents.agents import ChatToolAgent
 from ToolAgents.messages import ChatHistory
 from ToolAgents.messages.chat_message import ChatMessage
 from ToolAgents.provider import OpenAIChatAPI
-from ToolAgents.knowledge.agent_tools.discord_tool import init_discord_tools, DiscordEmbedData
+from ToolAgents.knowledge.agent_tools.discord_tool import (
+    init_discord_tools,
+    DiscordEmbedData,
+)
 
 from dotenv import load_dotenv
 
@@ -51,14 +54,15 @@ ENABLE_PRIVILEGED_INTENTS = False  # Change to True if you've enabled privileged
 # If you're getting PrivilegedIntentsRequired errors, either:
 # 1. Set ENABLE_PRIVILEGED_INTENTS to False (limits some functionality)
 # 2. Go to https://discord.com/developers/applications/ and enable the intents for your bot:
-#    - Message Content Intent 
+#    - Message Content Intent
 #    - Server Members Intent
 discord_tools = init_discord_tools(enable_privileged_intents=ENABLE_PRIVILEGED_INTENTS)
 tool_registry.add_tools(discord_tools)
 
 # Initialize chat history
 chat_history = ChatHistory()
-chat_history.add_system_message("""
+chat_history.add_system_message(
+    """
 You are a Discord management agent with the ability to interact with Discord servers.
 You can send messages, list channels, get server information, and more.
 
@@ -77,7 +81,9 @@ Available Discord tools:
 
 When the user requests an action, ask for any missing information needed to
 complete the request. Always prioritize security and privacy.
-""")
+"""
+)
+
 
 def run_conversation():
     """Run an interactive conversation with the Discord agent"""
@@ -86,21 +92,23 @@ def run_conversation():
     print("This agent can help you manage your Discord server.")
     print("Type 'exit' to end the conversation")
     print("Type 'help' to see available Discord tools")
-    
+
     guild_id = None
     while True:
         user_input = input("\nYou > ")
-        
+
         if user_input.lower() == "exit":
             break
-            
+
         elif user_input.lower() == "help":
             print("\nAvailable Discord tools:")
             for tool in discord_tools:
                 openai_tool = tool.to_openai_tool()
-                print(f"- {openai_tool['function']['name']}: {openai_tool['function']['description']}")
+                print(
+                    f"- {openai_tool['function']['name']}: {openai_tool['function']['description']}"
+                )
             continue
-            
+
         # Process guild_id from input
         if "guild_id:" in user_input:
             try:
@@ -108,49 +116,54 @@ def run_conversation():
                 guild_id_part = user_input.split("guild_id:")[1].split()[0].strip()
                 guild_id = int(guild_id_part)
                 print(f"Set current guild ID to: {guild_id}")
-                
+
                 # Remove the guild_id part from the user input
-                user_input = user_input.replace(f"guild_id: {guild_id_part}", "").strip()
-                
+                user_input = user_input.replace(
+                    f"guild_id: {guild_id_part}", ""
+                ).strip()
+
                 if not user_input:
                     # If there's no other input, skip processing
                     continue
             except (IndexError, ValueError):
                 print("Invalid guild ID format. Please use 'guild_id: 123456789'")
                 continue
-            
+
         # Add guild_id to the user message if available but not explicitly mentioned
         if guild_id and "guild_id" not in user_input:
             user_input = f"{user_input} (Using guild_id: {guild_id})"
-            
+
         # Add the user's message to the chat history
         chat_history.add_user_message(user_input)
-        
+
         # Get a response from the agent
         print("\nAgent is thinking...")
         response = agent.get_response(
             messages=chat_history.get_messages(),
             settings=settings,
-            tool_registry=tool_registry
+            tool_registry=tool_registry,
         )
-        
+
         # Print the response
         print(f"Agent > {response.response}")
-        
+
         # Add the agent's messages to the chat history
         chat_history.add_messages(response.messages)
 
+
 # Example of using the Discord agent programmatically
-def send_announcement(guild_id: int, channel_id: int, title: str, message: str, color: int = 3447003):
+def send_announcement(
+    guild_id: int, channel_id: int, title: str, message: str, color: int = 3447003
+):
     """Send an announcement with an embed to a Discord channel"""
     # Create the embed data
     embed_data = DiscordEmbedData(
         title=title,
         description=message,
         color=color,  # Blue color by default
-        footer_text="Sent by Discord Agent"
+        footer_text="Sent by Discord Agent",
     )
-    
+
     # Create the input for the Discord tool
     prompt = f"""
     Please send an embed message to the Discord channel with ID {channel_id} in guild {guild_id}.
@@ -161,32 +174,33 @@ def send_announcement(guild_id: int, channel_id: int, title: str, message: str, 
     - Color: Blue
     - Footer text: "Sent by Discord Agent"
     """
-    
+
     # Add the message to chat history
     chat_history.add_user_message(prompt)
-    
+
     # Get a response from the agent
     response = agent.get_response(
         messages=chat_history.get_messages(),
         settings=settings,
-        tool_registry=tool_registry
+        tool_registry=tool_registry,
     )
-    
+
     # Add the agent's messages to the chat history
     chat_history.add_messages(response.messages)
-    
+
     return response.response
+
 
 if __name__ == "__main__":
     # You can either run the interactive conversation
     run_conversation()
-    
+
     # Or use the agent programmatically (uncomment to use)
     # Replace these with your actual guild_id and channel_id
     # GUILD_ID = 1234567890
     # CHANNEL_ID = 1234567890
     # result = send_announcement(
-    #     guild_id=GUILD_ID, 
+    #     guild_id=GUILD_ID,
     #     channel_id=CHANNEL_ID,
     #     title="Important Announcement",
     #     message="Hello everyone! This message was sent by an AI Discord agent."

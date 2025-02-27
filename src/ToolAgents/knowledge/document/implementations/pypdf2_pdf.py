@@ -50,7 +50,7 @@ class PDFProvider(DocumentProvider):
         pdf_files = []
         for root, _, files in os.walk(folder_path):
             for file in files:
-                if file.lower().endswith('.pdf'):
+                if file.lower().endswith(".pdf"):
                     pdf_files.append(os.path.join(root, file))
         return pdf_files
 
@@ -69,7 +69,7 @@ class PDFProvider(DocumentProvider):
 
         for pdf_path in pdf_files:
             try:
-                with open(pdf_path, 'rb') as file:
+                with open(pdf_path, "rb") as file:
                     # Create PDF reader object
                     pdf_reader = PyPDF2.PdfReader(file)
 
@@ -79,7 +79,7 @@ class PDFProvider(DocumentProvider):
                         text_content.append(page.extract_text())
 
                     # Join all pages with newlines
-                    full_text = '\n'.join(text_content)
+                    full_text = "\n".join(text_content)
                     results.append(full_text)
 
             except Exception as e:
@@ -87,4 +87,3 @@ class PDFProvider(DocumentProvider):
                 continue
 
         return results
-

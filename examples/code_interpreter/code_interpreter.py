@@ -16,13 +16,14 @@ from ToolAgents import FunctionTool
 
 
 class CodeInterpreter:
-    def __init__(self, venv_path, additional_packages=None,
-                 additional_blocking_commands=None):
+    def __init__(
+        self, venv_path, additional_packages=None, additional_blocking_commands=None
+    ):
         self.cwd = os.getcwd()
         self.venv_path = venv_path
         if not os.path.exists(venv_path):
             self.create_venv(venv_path)
-            default_packages = ['numpy', 'pandas', 'matplotlib', 'seaborn']
+            default_packages = ["numpy", "pandas", "matplotlib", "seaborn"]
             if additional_packages is not None:
                 default_packages.extend(additional_packages)
             self.install_dependencies(default_packages)
@@ -84,7 +85,9 @@ class CodeInterpreter:
                 subprocess.Popen(command, shell=True, cwd=self.cwd)
                 return f"Started blocking command: {command}\n"
             else:
-                result = subprocess.run(command, shell=True, cwd=self.cwd, capture_output=True, text=True)
+                result = subprocess.run(
+                    command, shell=True, cwd=self.cwd, capture_output=True, text=True
+                )
                 if result.returncode == 0:
                     return result.stdout
                 else:
@@ -106,7 +109,7 @@ class CodeInterpreter:
         results = []
 
         for command in commands:
-            sub_commands = command.split('&&')
+            sub_commands = command.split("&&")
             for sub_command in sub_commands:
                 sub_command = sub_command.strip()
                 if sub_command.startswith("cd "):
@@ -118,7 +121,7 @@ class CodeInterpreter:
                 else:
                     results.append(self.execute_command(sub_command))
 
-        return '\n'.join(results)
+        return "\n".join(results)
 
     def create_venv(self, venv_path: str):
         """
@@ -141,8 +144,8 @@ class CodeInterpreter:
         if not self.venv_path:
             raise ValueError("Virtual environment path must be specified.")
 
-        pip_executable = os.path.join(self.venv_path, 'Scripts', 'pip')
-        command = [pip_executable, 'install']
+        pip_executable = os.path.join(self.venv_path, "Scripts", "pip")
+        command = [pip_executable, "install"]
         command.extend(packages)
         subprocess.check_call(command)
 
@@ -159,13 +162,18 @@ class CodeInterpreter:
         if not self.venv_path:
             raise ValueError("Virtual environment path must be specified.")
 
-        python_executable = os.path.join(self.venv_path, 'Scripts', 'python')
+        python_executable = os.path.join(self.venv_path, "Scripts", "python")
         try:
-            with tempfile.NamedTemporaryFile(delete=False, suffix='.py') as temp_script:
-                temp_script.write(code.encode('utf-8'))
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".py") as temp_script:
+                temp_script.write(code.encode("utf-8"))
                 temp_script_path = temp_script.name
 
-            result = subprocess.run([python_executable, temp_script_path], cwd=self.cwd, capture_output=True, text=True)
+            result = subprocess.run(
+                [python_executable, temp_script_path],
+                cwd=self.cwd,
+                capture_output=True,
+                text=True,
+            )
 
             os.remove(temp_script_path)
             if result.returncode == 0:
@@ -195,7 +203,7 @@ class CodeInterpreter:
             "Available RAM": f"{psutil.virtual_memory().available / (1024 ** 3):.2f} GB",
             "Disk Usage": f"{shutil.disk_usage('/').used / (1024 ** 3):.2f} GB / {shutil.disk_usage('/').total / (1024 ** 3):.2f} GB",
             "Current Working Directory": self.cwd,
-            "Virtual Environment Path": self.venv_path
+            "Virtual Environment Path": self.venv_path,
         }
         return info
 
@@ -227,7 +235,7 @@ class CodeInterpreter:
             str: The contents of the file.
         """
         try:
-            with open(file_path, 'r') as file:
+            with open(file_path, "r") as file:
                 return file.read()
         except Exception as e:
             return f"Error reading file: {str(e)}"
@@ -244,7 +252,7 @@ class CodeInterpreter:
             str: A message indicating success or failure.
         """
         try:
-            with open(file_path, 'w') as file:
+            with open(file_path, "w") as file:
                 file.write(content)
             return f"Successfully wrote to {file_path}"
         except Exception as e:
@@ -264,7 +272,7 @@ class CodeInterpreter:
         try:
             response = requests.get(url)
             response.raise_for_status()
-            with open(save_path, 'wb') as file:
+            with open(save_path, "wb") as file:
                 file.write(response.content)
             return f"Successfully downloaded file to {save_path}"
         except Exception as e:
@@ -279,5 +287,5 @@ class CodeInterpreter:
             FunctionTool(self.list_directory_contents),
             FunctionTool(self.read_file_contents),
             FunctionTool(self.write_file_contents),
-            FunctionTool(self.download_file)
+            FunctionTool(self.download_file),
         ]

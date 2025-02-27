@@ -18,7 +18,7 @@ def get_current_datetime(output_format: Optional[str] = None):
          output_format: formatting string for the date and time, defaults to '%Y-%m-%d %H:%M:%S'
     """
     if output_format is None:
-        output_format = '%Y-%m-%d %H:%M:%S'
+        output_format = "%Y-%m-%d %H:%M:%S"
     return datetime.datetime.now().strftime(output_format)
 
 
@@ -35,6 +35,7 @@ class calculator(BaseModel):
     """
     Perform a math operation on two numbers.
     """
+
     number_one: float = Field(..., description="First number.")
     operation: MathOperation = Field(..., description="Math operation to perform.")
     number_two: float = Field(..., description="Second number.")
@@ -79,7 +80,11 @@ open_ai_tool_spec = {
                     "type": "string",
                     "description": "The city and state, e.g. San Francisco, CA",
                 },
-                "unit": {"type": "string", "description": "The unit of measurement. Should be celsius or fahrenheit", "enum": ["celsius", "fahrenheit"]},
+                "unit": {
+                    "type": "string",
+                    "description": "The unit of measurement. Should be celsius or fahrenheit",
+                    "enum": ["celsius", "fahrenheit"],
+                },
             },
             "required": ["location", "unit"],
         },
@@ -89,18 +94,23 @@ open_ai_tool_spec = {
 
 class ReadFileInput(BaseModel):
     """Input for reading a file."""
+
     filename: str = Field(..., description="The name of the file to read")
 
 
 class WriteFileInput(BaseModel):
     """Input for writing to a file."""
+
     filename: str = Field(..., description="The name of the file to write to")
     content: str = Field(..., description="The content to write to the file")
 
 
 class ListFilesInput(BaseModel):
     """Input for listing files in a directory."""
-    directory: str = Field(..., description="The directory to list files from (optional)")
+
+    directory: str = Field(
+        ..., description="The directory to list files from (optional)"
+    )
 
 
 def read_file(input_data: ReadFileInput) -> str:
@@ -113,7 +123,7 @@ def read_file(input_data: ReadFileInput) -> str:
     """
     full_path = input_data.filename
     try:
-        with open(full_path, 'r') as file:
+        with open(full_path, "r") as file:
             return file.read()
     except FileNotFoundError:
         return f"Error: File '{input_data.filename}' not found."
@@ -131,7 +141,7 @@ def write_file(input_data: WriteFileInput) -> str:
     """
     full_path = input_data.filename
     try:
-        with open(full_path, 'w') as file:
+        with open(full_path, "w") as file:
             file.write(input_data.content)
         return f"Successfully wrote to file '{input_data.filename}'."
     except Exception as e:
@@ -167,23 +177,19 @@ class FlightTimes(BaseModel):
         ...,
         description="The departure location (airport code)",
         min_length=3,
-        max_length=3
+        max_length=3,
     )
     arrival: str = Field(
         ...,
         description="The arrival location (airport code)",
         min_length=3,
-        max_length=3
+        max_length=3,
     )
 
     class Config:
         """Pydantic configuration class"""
-        json_schema_extra = {
-            "example": {
-                "departure": "NYC",
-                "arrival": "LAX"
-            }
-        }
+
+        json_schema_extra = {"example": {"departure": "NYC", "arrival": "LAX"}}
 
     def run(self) -> str:
         """
@@ -194,22 +200,49 @@ class FlightTimes(BaseModel):
                  arrival time, and flight duration. If no flight is found, returns an error message.
         """
         flights: Dict[str, Dict[str, str]] = {
-            'NYC-LAX': {'departure': '08:00 AM', 'arrival': '11:30 AM', 'duration': '5h 30m'},
-            'LAX-NYC': {'departure': '02:00 PM', 'arrival': '10:30 PM', 'duration': '5h 30m'},
-            'LHR-JFK': {'departure': '10:00 AM', 'arrival': '01:00 PM', 'duration': '8h 00m'},
-            'JFK-LHR': {'departure': '09:00 PM', 'arrival': '09:00 AM', 'duration': '7h 00m'},
-            'CDG-DXB': {'departure': '11:00 AM', 'arrival': '08:00 PM', 'duration': '6h 00m'},
-            'DXB-CDG': {'departure': '03:00 AM', 'arrival': '07:30 AM', 'duration': '7h 30m'},
+            "NYC-LAX": {
+                "departure": "08:00 AM",
+                "arrival": "11:30 AM",
+                "duration": "5h 30m",
+            },
+            "LAX-NYC": {
+                "departure": "02:00 PM",
+                "arrival": "10:30 PM",
+                "duration": "5h 30m",
+            },
+            "LHR-JFK": {
+                "departure": "10:00 AM",
+                "arrival": "01:00 PM",
+                "duration": "8h 00m",
+            },
+            "JFK-LHR": {
+                "departure": "09:00 PM",
+                "arrival": "09:00 AM",
+                "duration": "7h 00m",
+            },
+            "CDG-DXB": {
+                "departure": "11:00 AM",
+                "arrival": "08:00 PM",
+                "duration": "6h 00m",
+            },
+            "DXB-CDG": {
+                "departure": "03:00 AM",
+                "arrival": "07:30 AM",
+                "duration": "7h 30m",
+            },
         }
 
-        key: str = f'{self.departure}-{self.arrival}'.upper()
-        result: Dict[str, Any] = flights.get(key, {'error': 'Flight not found'})
+        key: str = f"{self.departure}-{self.arrival}".upper()
+        result: Dict[str, Any] = flights.get(key, {"error": "Flight not found"})
         return json.dumps(result)
+
 
 get_flight_times_tool = FunctionTool(FlightTimes)
 calculator_function_tool = FunctionTool(calculator)
 current_datetime_function_tool = FunctionTool(get_current_datetime)
-get_weather_function_tool = FunctionTool.from_openai_tool(open_ai_tool_spec, get_current_weather)
+get_weather_function_tool = FunctionTool.from_openai_tool(
+    open_ai_tool_spec, get_current_weather
+)
 
 read_file_tool = FunctionTool(read_file)
 write_file_tool = FunctionTool(write_file)

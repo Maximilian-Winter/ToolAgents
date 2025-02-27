@@ -1,7 +1,7 @@
 import datetime
 import os
 from enum import Enum
-from typing import  List
+from typing import List
 
 from pydantic import BaseModel, Field
 
@@ -34,6 +34,7 @@ class calculator(BaseModel):
     """
     Perform a math operation on two numbers.
     """
+
     number_one: float = Field(..., description="First number.")
     operation: MathOperation = Field(..., description="Math operation to perform.")
     number_two: float = Field(..., description="Second number.")
@@ -78,7 +79,11 @@ open_ai_tool_spec = {
                     "type": "string",
                     "description": "The city and state, e.g. San Francisco, CA",
                 },
-                "unit": {"type": "string", "description": "The unit of measurement. Should be celsius or fahrenheit", "enum": ["celsius", "fahrenheit"]},
+                "unit": {
+                    "type": "string",
+                    "description": "The unit of measurement. Should be celsius or fahrenheit",
+                    "enum": ["celsius", "fahrenheit"],
+                },
             },
             "required": ["location", "unit"],
         },
@@ -88,18 +93,23 @@ open_ai_tool_spec = {
 
 class ReadFileInput(BaseModel):
     """Input for reading a file."""
+
     filename: str = Field(..., description="The name of the file to read")
 
 
 class WriteFileInput(BaseModel):
     """Input for writing to a file."""
+
     filename: str = Field(..., description="The name of the file to write to")
     content: str = Field(..., description="The content to write to the file")
 
 
 class ListFilesInput(BaseModel):
     """Input for listing files in a directory."""
-    directory: str = Field(..., description="The directory to list files from (optional)")
+
+    directory: str = Field(
+        ..., description="The directory to list files from (optional)"
+    )
 
 
 def read_file(input_data: ReadFileInput) -> str:
@@ -112,7 +122,7 @@ def read_file(input_data: ReadFileInput) -> str:
     """
     full_path = input_data.filename
     try:
-        with open(full_path, 'r') as file:
+        with open(full_path, "r") as file:
             return file.read()
     except FileNotFoundError:
         return f"Error: File '{input_data.filename}' not found."
@@ -130,7 +140,7 @@ def write_file(input_data: WriteFileInput) -> str:
     """
     full_path = input_data.filename
     try:
-        with open(full_path, 'w') as file:
+        with open(full_path, "w") as file:
             file.write(input_data.content)
         return f"Successfully wrote to file '{input_data.filename}'."
     except Exception as e:
@@ -157,7 +167,9 @@ def list_files(input_data: ListFilesInput) -> List[str]:
 calculator_function_tool = FunctionTool(calculator)
 current_datetime_function_tool = FunctionTool(get_current_datetime)
 
-get_weather_function_tool = FunctionTool.from_openai_tool(open_ai_tool_spec, get_current_weather)
+get_weather_function_tool = FunctionTool.from_openai_tool(
+    open_ai_tool_spec, get_current_weather
+)
 
 read_file_tool = FunctionTool(read_file)
 write_file_tool = FunctionTool(write_file)

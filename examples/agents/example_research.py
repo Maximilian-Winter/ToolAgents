@@ -6,8 +6,12 @@ from ToolAgents.agent_tools.web_search_tool import WebSearchTool
 from ToolAgents.messages import ChatMessage
 
 from ToolAgents.provider import AnthropicChatAPI, OpenAIChatAPI
-from ToolAgents.knowledge.web_search.implementations.googlesearch import GoogleWebSearchProvider
-from ToolAgents.knowledge.web_crawler.implementations.camoufox_crawler import CamoufoxWebCrawler
+from ToolAgents.knowledge.web_search.implementations.googlesearch import (
+    GoogleWebSearchProvider,
+)
+from ToolAgents.knowledge.web_crawler.implementations.camoufox_crawler import (
+    CamoufoxWebCrawler,
+)
 from dotenv import load_dotenv
 
 
@@ -15,7 +19,9 @@ load_dotenv()
 
 # Local OpenAI like API, like vllm or llama-cpp-server
 # Groq API
-api = AnthropicChatAPI(api_key=os.getenv("ANTHROPIC_API_KEY"), model="claude-3-5-sonnet-20241022")
+api = AnthropicChatAPI(
+    api_key=os.getenv("ANTHROPIC_API_KEY"), model="claude-3-5-sonnet-20241022"
+)
 settings = api.get_default_settings()
 settings.temperature = 0.45
 # Create the ChatAPIAgent
@@ -24,12 +30,18 @@ web_crawler = CamoufoxWebCrawler()
 web_search_provider = GoogleWebSearchProvider()
 
 
-summary_api = OpenAIChatAPI(api_key="xxx", base_url="http://127.0.0.1:8080/v1", model="xxx")
+summary_api = OpenAIChatAPI(
+    api_key="xxx", base_url="http://127.0.0.1:8080/v1", model="xxx"
+)
 summary_settings = summary_api.get_default_settings()
 summary_settings.temperature = 0.35
 summary_api.set_default_settings(summary_settings)
 
-web_search_tool = WebSearchTool(web_crawler=web_crawler, web_provider=web_search_provider, summarizing_api=summary_api)
+web_search_tool = WebSearchTool(
+    web_crawler=web_crawler,
+    web_provider=web_search_provider,
+    summarizing_api=summary_api,
+)
 
 tool_registry = ToolRegistry()
 
@@ -37,7 +49,8 @@ tool_registry.add_tool(web_search_tool.get_tool())
 
 
 messages = [
-    ChatMessage.create_user_message("""You are an expert research engineer tasked with conducting comprehensive research based on user requests. Your goal is to create an in-depth, well-structured document that thoroughly explores the given topic. Here's the user's request:
+    ChatMessage.create_user_message(
+        """You are an expert research engineer tasked with conducting comprehensive research based on user requests. Your goal is to create an in-depth, well-structured document that thoroughly explores the given topic. Here's the user's request:
 
 <user_request>
 Advancements in reasoning of large language models.
@@ -139,14 +152,15 @@ In conclusion, [summary of main points]. This research suggests [implications]. 
 
 Remember to maintain a neutral and objective tone throughout your document. Your goal is to provide a thorough and balanced exploration of the topic based on the user's request.
 
-Begin your research process now, starting with your initial research planning.""")
+Begin your research process now, starting with your initial research planning."""
+    )
 ]
 
 
 chat_response = agent.get_response(
-    messages=messages,
-    settings=settings, tool_registry=tool_registry)
+    messages=messages, settings=settings, tool_registry=tool_registry
+)
 
 print(chat_response.response.strip())
 
-print('\n'.join([msg.model_dump_json(indent=4) for msg in chat_response.messages]))
+print("\n".join([msg.model_dump_json(indent=4) for msg in chat_response.messages]))

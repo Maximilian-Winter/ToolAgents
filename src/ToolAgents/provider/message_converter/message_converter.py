@@ -9,8 +9,13 @@ from ToolAgents.provider.llm_provider import StreamingChatMessage, ProviderSetti
 
 class BaseMessageConverter(ABC):
     @abstractmethod
-    def prepare_request(self, model: str, messages: List[ChatMessage], settings: ProviderSettings = None,
-                         tools: Optional[List[FunctionTool]] = None) -> Dict[str, Any]:
+    def prepare_request(
+        self,
+        model: str,
+        messages: List[ChatMessage],
+        settings: ProviderSettings = None,
+        tools: Optional[List[FunctionTool]] = None,
+    ) -> Dict[str, Any]:
         """
         Prepare the request for the provider
         Returns:
@@ -25,6 +30,7 @@ class BaseMessageConverter(ABC):
         """
         pass
 
+
 class BaseResponseConverter(ABC):
 
     @abstractmethod
@@ -35,12 +41,16 @@ class BaseResponseConverter(ABC):
         pass
 
     @abstractmethod
-    def yield_from_provider(self, stream_generator: Any) -> Generator[StreamingChatMessage, None, None]:
+    def yield_from_provider(
+        self, stream_generator: Any
+    ) -> Generator[StreamingChatMessage, None, None]:
         """
         Yield a universal StreamingChatAPIResponse from the provider-specific response.
         """
         pass
 
     @abstractmethod
-    async def async_yield_from_provider(self, stream_generator: Any) -> AsyncGenerator[StreamingChatMessage, None]:
+    async def async_yield_from_provider(
+        self, stream_generator: Any
+    ) -> AsyncGenerator[StreamingChatMessage, None]:
         pass

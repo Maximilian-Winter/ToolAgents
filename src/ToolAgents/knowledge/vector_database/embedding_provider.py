@@ -9,6 +9,7 @@ from numpy import ndarray
 class EmbeddingResult:
     embeddings: ndarray
 
+
 class EmbeddingProvider(abc.ABC):
 
     @abc.abstractmethod

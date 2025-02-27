@@ -8,10 +8,13 @@ from pydantic import BaseModel, Field
 from ToolAgents.agents import ChatToolAgent
 from ToolAgents.messages import ChatMessage
 from ToolAgents.provider import OpenAIChatAPI
-from ToolAgents.utilities.json_schema_generator.schema_generator import custom_json_schema
+from ToolAgents.utilities.json_schema_generator.schema_generator import (
+    custom_json_schema,
+)
 
-api = OpenAIChatAPI(api_key="unknown", base_url="http://127.0.0.1:8080/v1",
-                    model="unknown")
+api = OpenAIChatAPI(
+    api_key="unknown", base_url="http://127.0.0.1:8080/v1", model="unknown"
+)
 
 # Create the ChatAPIAgent
 agent = ChatToolAgent(chat_api=api)
@@ -51,20 +54,21 @@ print(json.dumps(schema, indent=2))
 
 settings.set_response_format({"type": "json_object", "schema": schema})
 messages = [
-    ChatMessage.create_system_message(f"""You are an advanced information extraction system designed to extract structured data from unstructured or semi-structured input. Your task is to extract user information based on a provided JSON schema and format it according to that schema.
+    ChatMessage.create_system_message(
+        f"""You are an advanced information extraction system designed to extract structured data from unstructured or semi-structured input. Your task is to extract user information based on a provided JSON schema and format it according to that schema.
 
 Here is the JSON schema that defines the structure of the information you need to extract:
 
 <json_schema>
 {json.dumps(schema, indent=2)}
-</json_schema>"""),
+</json_schema>"""
+    ),
     ChatMessage.create_user_message(
-        """The book 'The Feynman Lectures on Physics' is a physics textbook based on some lectures by Richard Feynman, a Nobel laureate who has sometimes been called "The Great Explainer". The lectures were presented before undergraduate students at the California Institute of Technology (Caltech), during 1961–1963. The book's co-authors are Feynman, Robert B. Leighton, and Matthew Sands.""")
+        """The book 'The Feynman Lectures on Physics' is a physics textbook based on some lectures by Richard Feynman, a Nobel laureate who has sometimes been called "The Great Explainer". The lectures were presented before undergraduate students at the California Institute of Technology (Caltech), during 1961–1963. The book's co-authors are Feynman, Robert B. Leighton, and Matthew Sands."""
+    ),
 ]
 
-chat_response = agent.get_response(
-    messages=messages,
-    settings=settings)
+chat_response = agent.get_response(messages=messages, settings=settings)
 
 print(chat_response.response, flush=True)
 

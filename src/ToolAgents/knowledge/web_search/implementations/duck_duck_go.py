@@ -14,5 +14,7 @@ class DDGWebSearchProvider(WebSearchProvider):
         Returns:
             List[str]: List of URLs with search results.
         """
-        results = DDGS().text(search_query, region='wt-wt', safesearch='off', max_results=num_results)
+        results = DDGS().text(
+            search_query, region="wt-wt", safesearch="off", max_results=num_results
+        )
         return [res["href"] for res in results]

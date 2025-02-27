@@ -23,8 +23,14 @@ class ProcessStep:
         agent (BaseToolAgent): The LLM agent responsible for executing this step
     """
 
-    def __init__(self, step_name: str, system_message: str, prompt_template: str,
-                 tools: list[FunctionTool] = None, agent: BaseToolAgent = None):
+    def __init__(
+        self,
+        step_name: str,
+        system_message: str,
+        prompt_template: str,
+        tools: list[FunctionTool] = None,
+        agent: BaseToolAgent = None,
+    ):
         """
         Initialize a new process step.
 
@@ -158,7 +164,9 @@ class SequentialProcess(Process):
     to subsequent steps through the results dictionary.
     """
 
-    def __init__(self, process_name: str = "SequentialProcess", agent: BaseToolAgent = None):
+    def __init__(
+        self, process_name: str = "SequentialProcess", agent: BaseToolAgent = None
+    ):
         """Initialize a sequential process with optional default agent."""
         Process.__init__(self, process_name, agent)
 
@@ -186,7 +194,10 @@ class SequentialProcess(Process):
             tool_registry = ToolRegistry() if step.get_tools() else None
 
             # Prepare messages for the step
-            messages = [ChatMessage.create_system_message( step.get_system_message()), ChatMessage.create_user_message(step.get_prompt(**results))]
+            messages = [
+                ChatMessage.create_system_message(step.get_system_message()),
+                ChatMessage.create_user_message(step.get_prompt(**results)),
+            ]
 
             # Add tools to registry if available
             if tool_registry is not None:
@@ -196,15 +207,13 @@ class SequentialProcess(Process):
             if step.get_agent() is not None:
                 # Use step-specific agent if available
                 process_result = step.get_agent().get_response(
-                    messages=messages,
-                    tool_registry=tool_registry
+                    messages=messages, tool_registry=tool_registry
                 )
             else:
                 if self.agent is not None:
                     # Fall back to process-level agent
                     process_result = self.agent.get_response(
-                        messages=messages,
-                        tool_registry=tool_registry
+                        messages=messages, tool_registry=tool_registry
                     )
                 else:
                     # No agent available

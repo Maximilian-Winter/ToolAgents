@@ -10,11 +10,13 @@ from contextlib import contextmanager
 from pydantic import BaseModel
 from ToolAgents import FunctionTool
 from ToolAgents.messages import ChatHistory
-from ToolAgents.utilities.llm_documentation.documentation_generation import generate_type_definitions
+from ToolAgents.utilities.llm_documentation.documentation_generation import (
+    generate_type_definitions,
+)
 
 # System messages for LLM instruction
 SYSTEM_MESSAGES = {
-    'base': """You are an advanced AI assistant with the ability to execute Python code. You have access to a Python code interpreter that allows you to execute Python code to accomplish various tasks. This capability enables you to perform a wide range of operations, from simple calculations to complex data analysis and system interactions. Only you can see the direct results of the last code execution.
+    "base": """You are an advanced AI assistant with the ability to execute Python code. You have access to a Python code interpreter that allows you to execute Python code to accomplish various tasks. This capability enables you to perform a wide range of operations, from simple calculations to complex data analysis and system interactions. Only you can see the direct results of the last code execution.
 
 ## Using the Python Interpreter
 
@@ -24,8 +26,7 @@ Example: Print 'Hello World!'
 ```python-interpreter
 print('Hello, World!')
 ```""",
-
-    'debug': """You can use debug mode by using the python-debug code block:
+    "debug": """You can use debug mode by using the python-debug code block:
 ```python-debug
 x = 1
 y = 2
@@ -33,24 +34,23 @@ print(x + y)
 ```
 
 In debug mode, you'll receive step-by-step information about the execution.""",
-
-    'async': """For asynchronous operations, use the python-async code block:
+    "async": """For asynchronous operations, use the python-async code block:
 ```python-async
 await asyncio.sleep(1)
 print("Async operation completed")
 ```""",
-
-    'safe_file': """For safe file operations, use the provided safe_open function:
+    "safe_file": """For safe file operations, use the provided safe_open function:
 ```python-interpreter
 with safe_open('example.txt', 'w') as f:
     f.write('Hello from safe file operation!')
-```"""
+```""",
 }
 
 
 @dataclass
 class ExecutionResult:
     """Represents the result of a code execution for LLM consumption."""
+
     output: str
     error: Optional[str]
     has_error: bool
@@ -70,16 +70,20 @@ class CodeBlock:
 class PythonExecutor:
     """Python Code Executor designed specifically for LLM interaction."""
 
-    def __init__(self,
-                 predefined_types: Optional[List[type]] = None,
-                 predefined_functions: Optional[List[FunctionTool]] = None,
-                 predefined_variables: Optional[List[Any]] = None,
-                 enable_safety_features: bool = True):
+    def __init__(
+        self,
+        predefined_types: Optional[List[type]] = None,
+        predefined_functions: Optional[List[FunctionTool]] = None,
+        predefined_variables: Optional[List[Any]] = None,
+        enable_safety_features: bool = True,
+    ):
         """Initialize the executor with LLM-friendly features."""
         self.code_patterns = {
-            'python-interpreter': re.compile(r'```python-interpreter\n(.*?)```', re.DOTALL),
-            'python-debug': re.compile(r'```python-debug\n(.*?)```', re.DOTALL),
-            'python-async': re.compile(r'```python-async\n(.*?)```', re.DOTALL)
+            "python-interpreter": re.compile(
+                r"```python-interpreter\n(.*?)```", re.DOTALL
+            ),
+            "python-debug": re.compile(r"```python-debug\n(.*?)```", re.DOTALL),
+            "python-async": re.compile(r"```python-async\n(.*?)```", re.DOTALL),
         }
 
         self.global_context = {}
@@ -93,22 +97,28 @@ class PythonExecutor:
 
         # Setup execution environment
         self._setup_safe_environment()
-        self._initialize_resources(predefined_types, predefined_functions, predefined_variables)
+        self._initialize_resources(
+            predefined_types, predefined_functions, predefined_variables
+        )
 
         # Generate system message for LLM
         self.system_message = self._generate_system_message()
 
-    def _initialize_resources(self,
-                              types: Optional[List[type]] = None,
-                              functions: Optional[List[FunctionTool]] = None,
-                              variables: Optional[List[Any]] = None) -> None:
+    def _initialize_resources(
+        self,
+        types: Optional[List[type]] = None,
+        functions: Optional[List[FunctionTool]] = None,
+        variables: Optional[List[Any]] = None,
+    ) -> None:
         """Initialize all predefined resources and make them available in the execution context."""
         # Initialize types
         if types:
             for type_cls in types:
                 self.predefined_types[type_cls.__name__] = type_cls
                 if issubclass(type_cls, BaseModel):
-                    self.global_context[type_cls.__name__] = self._create_wrapped_class(type_cls)
+                    self.global_context[type_cls.__name__] = self._create_wrapped_class(
+                        type_cls
+                    )
                 else:
                     self.global_context[type_cls.__name__] = type_cls
 
@@ -148,6 +158,7 @@ class PythonExecutor:
 
     def _create_wrapped_class(self, class_obj):
         if issubclass(class_obj, BaseModel):
+
             def wrapped_class(*args, **kwargs):
                 model_class = class_obj
 
@@ -170,31 +181,33 @@ class PythonExecutor:
         def safe_print(*args, **kwargs):
             """Safe print function that captures output for LLM consumption."""
             output = io.StringIO()
-            kwargs['file'] = output
+            kwargs["file"] = output
             print(*args, **kwargs)
             return output.getvalue()
 
         def safe_input(prompt=""):
             """Safe input function that notifies about input requests."""
-            raise NotImplementedError("Input operations are not supported in this environment")
+            raise NotImplementedError(
+                "Input operations are not supported in this environment"
+            )
 
-        self.global_context['print'] = safe_print
-        self.global_context['input'] = safe_input
+        self.global_context["print"] = safe_print
+        self.global_context["input"] = safe_input
 
         # Add safe file operations
-        self.global_context['safe_open'] = self._create_safe_file_handler()
+        self.global_context["safe_open"] = self._create_safe_file_handler()
 
     def _create_safe_file_handler(self):
         """Create a safe file handling function for LLM use."""
         import tempfile
         import pathlib
 
-        temp_dir = tempfile.mkdtemp(prefix='llm_safe_')
+        temp_dir = tempfile.mkdtemp(prefix="llm_safe_")
         safe_path = pathlib.Path(temp_dir)
 
-        def safe_open(filename: str, mode: str = 'r') -> io.IOBase:
+        def safe_open(filename: str, mode: str = "r") -> io.IOBase:
             """Safely open files within a temporary directory."""
-            if mode[0] not in {'r', 'w', 'a'}:
+            if mode[0] not in {"r", "w", "a"}:
                 raise ValueError("Unsupported file mode")
             return open(safe_path / filename, mode)
 
@@ -203,18 +216,14 @@ class PythonExecutor:
     async def execute_code_block(self, block: CodeBlock) -> ExecutionResult:
         """Execute a code block based on its type."""
         try:
-            if block.block_type == 'python-async':
+            if block.block_type == "python-async":
                 return await self._execute_async_code(block.code)
-            elif block.block_type == 'python-debug':
+            elif block.block_type == "python-debug":
                 return await self._execute_debug_code(block.code)
             else:
                 return self._execute_normal_code(block.code)
         except Exception as e:
-            return ExecutionResult(
-                output="",
-                error=str(e),
-                has_error=True
-            )
+            return ExecutionResult(output="", error=str(e), has_error=True)
 
     def _execute_normal_code(self, code: str) -> ExecutionResult:
         """Execute code in normal mode with proper output capturing."""
@@ -235,7 +244,7 @@ class PythonExecutor:
                     output=stdout.getvalue(),
                     error=stderr.getvalue(),
                     has_error=False,
-                    return_value=last_value
+                    return_value=last_value,
                 )
             except Exception as e:
                 return ExecutionResult("", str(e), True)
@@ -244,18 +253,19 @@ class PythonExecutor:
         """Execute asynchronous code."""
         try:
             # Wrap code in async function
-            wrapped_code = f"async def __async_exec():\n" + \
-                           "\n".join(f"    {line}" for line in code.split("\n"))
+            wrapped_code = f"async def __async_exec():\n" + "\n".join(
+                f"    {line}" for line in code.split("\n")
+            )
 
             local_vars = {}
             exec(wrapped_code, self.global_context, local_vars)
-            result = await local_vars['__async_exec']()
+            result = await local_vars["__async_exec"]()
 
             return ExecutionResult(
                 output="Async execution completed successfully",
                 error=None,
                 has_error=False,
-                return_value=result
+                return_value=result,
             )
         except Exception as e:
             return ExecutionResult("", str(e), True)
@@ -265,11 +275,11 @@ class PythonExecutor:
         debug_info = []
 
         def trace_lines(frame, event, arg):
-            if event == 'line':
+            if event == "line":
                 info = {
-                    'line': frame.f_lineno,
-                    'locals': dict(frame.f_locals),
-                    'code': frame.f_code.co_name
+                    "line": frame.f_lineno,
+                    "locals": dict(frame.f_locals),
+                    "code": frame.f_code.co_name,
                 }
                 debug_info.append(info)
             return trace_lines
@@ -281,7 +291,7 @@ class PythonExecutor:
                 output="Debug execution completed",
                 error=None,
                 has_error=False,
-                debug_info={"steps": debug_info}
+                debug_info={"steps": debug_info},
             )
         finally:
             sys.settrace(None)
@@ -300,28 +310,51 @@ class PythonExecutor:
 
     def _generate_system_message(self) -> str:
         """Generate the system message for LLM instruction."""
-        message_parts = [SYSTEM_MESSAGES['base']]
+        message_parts = [SYSTEM_MESSAGES["base"]]
 
-        if self.predefined_types or self.predefined_functions or self.predefined_variables:
+        if (
+            self.predefined_types
+            or self.predefined_functions
+            or self.predefined_variables
+        ):
             message_parts.append("\n## Available Resources\n")
 
             if self.predefined_types:
-                types_doc = generate_type_definitions(list(self.predefined_types.values()))
-                message_parts.append("### Predefined Types\n```python\n{}\n```".format('\n\n'.join(types_doc)))
+                types_doc = generate_type_definitions(
+                    list(self.predefined_types.values())
+                )
+                message_parts.append(
+                    "### Predefined Types\n```python\n{}\n```".format(
+                        "\n\n".join(types_doc)
+                    )
+                )
 
             if self.predefined_functions:
-                funcs_doc = [func.get_python_documentation() for func in self.predefined_functions.values()]
-                message_parts.append("### Predefined Functions\n```python\n{}\n```".format('\n\n'.join(funcs_doc)))
+                funcs_doc = [
+                    func.get_python_documentation()
+                    for func in self.predefined_functions.values()
+                ]
+                message_parts.append(
+                    "### Predefined Functions\n```python\n{}\n```".format(
+                        "\n\n".join(funcs_doc)
+                    )
+                )
 
             if self.predefined_variables:
-                vars_doc = [f"{var.__name__}" for var in self.predefined_variables.values()]
-                message_parts.append("### Predefined Variables\n```python\n{}\n```".format('\n'.join(vars_doc)))
+                vars_doc = [
+                    f"{var.__name__}" for var in self.predefined_variables.values()
+                ]
+                message_parts.append(
+                    "### Predefined Variables\n```python\n{}\n```".format(
+                        "\n".join(vars_doc)
+                    )
+                )
 
-        message_parts.append(SYSTEM_MESSAGES['debug'])
-        message_parts.append(SYSTEM_MESSAGES['async'])
-        message_parts.append(SYSTEM_MESSAGES['safe_file'])
+        message_parts.append(SYSTEM_MESSAGES["debug"])
+        message_parts.append(SYSTEM_MESSAGES["async"])
+        message_parts.append(SYSTEM_MESSAGES["safe_file"])
 
-        return '\n\n'.join(message_parts)
+        return "\n\n".join(message_parts)
 
     def get_system_message(self) -> str:
         """Get the system message for LLM instruction."""
@@ -352,16 +385,21 @@ class PythonExecutor:
         return "\n".join(outputs), has_error
 
 
-def run_llm_code_agent(agent, settings, chat_history: ChatHistory, user_input: str,
-                       executor: PythonExecutor):
+def run_llm_code_agent(
+    agent,
+    settings,
+    chat_history: ChatHistory,
+    user_input: str,
+    executor: PythonExecutor,
+):
     """Run the code agent with LLM interaction."""
     print("User: " + user_input)
     print("Response: ", end="")
     chat_history.add_user_message(user_input)
 
     result_gen = agent.get_streaming_response(
-        messages=chat_history.get_messages(),
-        settings=settings)
+        messages=chat_history.get_messages(), settings=settings
+    )
 
     full_response = ""
     for tok in result_gen:
@@ -371,7 +409,14 @@ def run_llm_code_agent(agent, settings, chat_history: ChatHistory, user_input: s
 
     while True:
         chat_history.add_assistant_message(message=full_response)
-        if any(pattern in full_response for pattern in ['```python-interpreter', '```python-debug', '```python-async']):
+        if any(
+            pattern in full_response
+            for pattern in [
+                "```python-interpreter",
+                "```python-debug",
+                "```python-async",
+            ]
+        ):
             output, has_error = asyncio.run(executor.run(full_response))
             print("Execution Output:")
             print(output)
@@ -379,8 +424,8 @@ def run_llm_code_agent(agent, settings, chat_history: ChatHistory, user_input: s
 
             print("Response: ", end="")
             result_gen = agent.get_streaming_response(
-                messages=chat_history.get_messages(),
-                settings=settings)
+                messages=chat_history.get_messages(), settings=settings
+            )
             full_response = ""
             for tok in result_gen:
                 print(tok.chunk, end="", flush=True)

@@ -6,12 +6,19 @@ from agent import agent, tool_registry, system_prompt
 
 chat = ChatHistory()
 
+
 def stream_chat_response(chat_history: list) -> Iterator[list]:
     """Handles streaming chat responses"""
     chat_history.append(gr.ChatMessage(role="assistant", content=""))
     partial_message = ""
     # Get the streaming response from the agent
-    for chunk in agent.get_streaming_response([ChatMessage.create_system_message(system_prompt), ChatMessage.create_user_message(chat_history[-2]["content"])], tool_registry=tool_registry):
+    for chunk in agent.get_streaming_response(
+        [
+            ChatMessage.create_system_message(system_prompt),
+            ChatMessage.create_user_message(chat_history[-2]["content"]),
+        ],
+        tool_registry=tool_registry,
+    ):
         partial_message += chunk.chunk
         chat_history[-1].content = partial_message
         yield chat_history
@@ -75,8 +82,15 @@ with gr.Blocks(css=css) as demo:
     def update_chat_history():
         value = []
         for chat_entry in chat.get_messages():
-            if chat_entry.role == ChatMessageRole.Assistant or chat_entry.role == ChatMessageRole.User:
-                value.append(gr.ChatMessage(role=chat_entry.role.value, content=chat_entry.get_as_text()))
+            if (
+                chat_entry.role == ChatMessageRole.Assistant
+                or chat_entry.role == ChatMessageRole.User
+            ):
+                value.append(
+                    gr.ChatMessage(
+                        role=chat_entry.role.value, content=chat_entry.get_as_text()
+                    )
+                )
         return value
 
     chatbox = gr.Chatbot(
@@ -84,14 +98,14 @@ with gr.Blocks(css=css) as demo:
         editable="all",
         type="messages",
         show_copy_button=True,
-        height=1000
+        height=1000,
     )
 
     with gr.Row():
         chat_input = gr.Textbox(
             label="Chat Input",
             placeholder="Type your message here...",
-            scale=9  # Makes the textbox wider
+            scale=9,  # Makes the textbox wider
         )
         send_button = gr.Button("Send", scale=1)  # Makes the button narrower
 
@@ -99,21 +113,15 @@ with gr.Blocks(css=css) as demo:
     submit_click = send_button.click(
         fn=user,
         inputs=[chat_input, chatbox],
-        outputs=[chat_input, chatbox], queue=False
-    ).then(
-        stream_chat_response,
-        chatbox,
-        chatbox
-    )
+        outputs=[chat_input, chatbox],
+        queue=False,
+    ).then(stream_chat_response, chatbox, chatbox)
 
     chat_input.submit(
         fn=user,
         inputs=[chat_input, chatbox],
-        outputs=[chat_input, chatbox], queue=False
-    ).then(
-        stream_chat_response,
-        chatbox,
-        chatbox
-    )
+        outputs=[chat_input, chatbox],
+        queue=False,
+    ).then(stream_chat_response, chatbox, chatbox)
 
 demo.launch()

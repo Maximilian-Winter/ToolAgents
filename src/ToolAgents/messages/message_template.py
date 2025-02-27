@@ -39,7 +39,7 @@ class MessageTemplate:
             )
 
     @classmethod
-    def from_string(cls, template_string) -> 'MessageTemplate':
+    def from_string(cls, template_string) -> "MessageTemplate":
         """
         Create a PromptTemplate instance from a string.
 
@@ -52,7 +52,7 @@ class MessageTemplate:
         return cls(template_string=template_string)
 
     @classmethod
-    def from_file(cls, template_file) -> 'MessageTemplate':
+    def from_file(cls, template_file) -> "MessageTemplate":
         """
         Create a PromptTemplate instance from a file.
 
@@ -77,22 +77,22 @@ class MessageTemplate:
         Returns:
             str: Text with empty placeholders removed.
         """
-        lines = text.split('\n')
+        lines = text.split("\n")
         processed_lines = []
         for line in lines:
-            if '__EMPTY_TEMPLATE_FIELD__' in line:
-                new_line = line.replace('__EMPTY_TEMPLATE_FIELD__', '')
+            if "__EMPTY_TEMPLATE_FIELD__" in line:
+                new_line = line.replace("__EMPTY_TEMPLATE_FIELD__", "")
                 if new_line.strip():
                     processed_lines.append(new_line)
             else:
                 processed_lines.append(line)
-        return '\n'.join(processed_lines)
+        return "\n".join(processed_lines)
 
     def generate_message_content(
-            self,
-            template_fields: Dict[str, Any] = None,
-            remove_empty_template_field: bool = True,
-            **kwargs
+        self,
+        template_fields: Dict[str, Any] = None,
+        remove_empty_template_field: bool = True,
+        **kwargs,
     ) -> str:
         """
         Generate a prompt by replacing placeholders in the template with values.
@@ -114,6 +114,7 @@ class MessageTemplate:
         }
 
         if not remove_empty_template_field:
+
             def replace_placeholder(match):
                 placeholder = match.group(1)
                 return cleaned_fields.get(placeholder, match.group(0))
@@ -132,7 +133,3 @@ class MessageTemplate:
         prompt = re.sub(r"\{(\w+)\}", replace_placeholder, self.template)
 
         return self._remove_empty_placeholders(prompt)
-
-
-
-

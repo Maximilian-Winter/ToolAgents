@@ -8,6 +8,7 @@ from types import NoneType
 
 # New models for customization
 
+
 class AdditionalFieldPosition(Enum):
     before = "before"
     after = "after"
@@ -17,6 +18,7 @@ class AdditionalSchemaField(BaseModel):
     """
     Represents an additional schema field.
     """
+
     name: str = Field(..., description="The name of the field.")
     title: str = Field(..., description="The title of the field.")
     description: str = Field(..., description="The description of the field.")
@@ -24,7 +26,7 @@ class AdditionalSchemaField(BaseModel):
     required: bool = Field(..., description="Whether the field is required.")
     position: AdditionalFieldPosition = Field(
         default=AdditionalFieldPosition.after,
-        description="The position at which the field should be inserted."
+        description="The position at which the field should be inserted.",
     )
 
 
@@ -32,6 +34,7 @@ class SchemaObject(BaseModel):
     """
     Represents a schema object.
     """
+
     model: Type[BaseModel]
     additional_fields: List[AdditionalSchemaField] = []
 
@@ -40,6 +43,7 @@ class OuterSchemaObject(BaseModel):
     """
     Represents an outer object around a schema.
     """
+
     name: str = Field(..., description="The name of the outer object.")
     description: str = Field(..., description="The description of the outer object.")
     schemas: List[SchemaObject] = Field(..., description="The list of schema objects.")
@@ -48,6 +52,7 @@ class OuterSchemaObject(BaseModel):
 
 
 # Original custom JSON schema generator (refined for clarity)
+
 
 def get_json_type(annotation):
     """Map Python basic types to JSON types."""
@@ -114,7 +119,9 @@ def refine_schema(schema: dict, model: Type[BaseModel]) -> dict:
             elif item_type is Any:
                 prop["items"] = {
                     "type": "object",
-                    "anyOf": [{"type": t} for t in ["boolean", "number", "null", "string"]],
+                    "anyOf": [
+                        {"type": t} for t in ["boolean", "number", "null", "string"]
+                    ],
                 }
             else:
                 item_origin = get_origin(item_type)
@@ -126,7 +133,9 @@ def refine_schema(schema: dict, model: Type[BaseModel]) -> dict:
                         if sub_type is NoneType:
                             anyof_list.append({"type": "null"})
                         elif isclass(sub_type) and issubclass(sub_type, BaseModel):
-                            sub_schema = refine_schema(sub_type.model_json_schema(), sub_type)
+                            sub_schema = refine_schema(
+                                sub_type.model_json_schema(), sub_type
+                            )
                             anyof_list.append(sub_schema)
                         elif type_str:
                             anyof_list.append({"type": type_str})
@@ -142,10 +151,14 @@ def refine_schema(schema: dict, model: Type[BaseModel]) -> dict:
         if origin is dict:
             _, value_type = get_args(annotation)
             if isclass(value_type) and issubclass(value_type, BaseModel):
-                prop["additionalProperties"] = refine_schema(value_type.model_json_schema(), value_type)
+                prop["additionalProperties"] = refine_schema(
+                    value_type.model_json_schema(), value_type
+                )
             else:
                 value_type_str = get_json_type(value_type)
-                prop["additionalProperties"] = {"type": value_type_str} if value_type_str else {}
+                prop["additionalProperties"] = (
+                    {"type": value_type_str} if value_type_str else {}
+                )
             prop["type"] = "object"
             continue
 
@@ -159,7 +172,9 @@ def refine_schema(schema: dict, model: Type[BaseModel]) -> dict:
     schema["description"] = (model.__doc__ or "").strip()
 
     # Define required fields based on the model definition
-    required_fields = [name for name, field in model.model_fields.items() if field.is_required()]
+    required_fields = [
+        name for name, field in model.model_fields.items() if field.is_required()
+    ]
     if required_fields:
         schema["required"] = required_fields
 
@@ -180,7 +195,10 @@ def custom_json_schema(model: Type[BaseModel]) -> dict:
 
 # New helper to merge additional schema fields into an existing schema
 
-def insert_additional_fields(schema: dict, additional_fields: List[AdditionalSchemaField]) -> dict:
+
+def insert_additional_fields(
+    schema: dict, additional_fields: List[AdditionalSchemaField]
+) -> dict:
     """
     Insert additional fields into the schema's properties.
     Fields with position 'before' will be added at the start,
@@ -224,6 +242,7 @@ def insert_additional_fields(schema: dict, additional_fields: List[AdditionalSch
 
 # New function to generate a JSON schema for a single SchemaObject
 
+
 def generate_schema_object(schema_obj: SchemaObject) -> dict:
     """
     Generate the JSON schema for a SchemaObject by processing its model
@@ -236,6 +255,7 @@ def generate_schema_object(schema_obj: SchemaObject) -> dict:
 
 
 # New function to generate the outer JSON schema from an OuterSchemaObject
+
 
 def generate_outer_json_schema(outer_obj: OuterSchemaObject) -> dict:
     """
@@ -253,7 +273,9 @@ def generate_outer_json_schema(outer_obj: OuterSchemaObject) -> dict:
         combined_schema = {"anyOf": inner_schemas}
 
     # Insert additional outer fields.
-    combined_schema = insert_additional_fields(combined_schema, outer_obj.additional_fields)
+    combined_schema = insert_additional_fields(
+        combined_schema, outer_obj.additional_fields
+    )
 
     # Set the outer schema details.
     combined_schema["title"] = outer_obj.name

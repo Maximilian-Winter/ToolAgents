@@ -1,6 +1,8 @@
 from ToolAgents.agents import ChatToolAgent
 from ToolAgents.provider import CompletionProvider
-from ToolAgents.provider.completion_provider.default_implementations import LlamaCppServer
+from ToolAgents.provider.completion_provider.default_implementations import (
+    LlamaCppServer,
+)
 
 api = CompletionProvider(completion_endpoint=LlamaCppServer("http://127.0.0.1:8080"))
 
