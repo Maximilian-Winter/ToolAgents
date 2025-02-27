@@ -12,14 +12,13 @@ from ToolAgents.messages import ChatHistory, MessageTemplate
 from ToolAgents.messages.chat_message import ChatMessage
 from ToolAgents.provider import AnthropicChatAPI, OpenAIChatAPI, GroqChatAPI, MistralChatAPI, CompletionProvider
 
-
 from dotenv import load_dotenv
-
 
 load_dotenv()
 
 # Mistral API
-api = OpenAIChatAPI(api_key=os.getenv("OPENROUTER_API_KEY"), model="meta-llama/llama-3.1-405b-instruct", base_url="https://openrouter.ai/api/v1")
+api = OpenAIChatAPI(api_key=os.getenv("OPENROUTER_API_KEY"), model="meta-llama/llama-3.1-405b-instruct",
+                    base_url="https://openrouter.ai/api/v1")
 
 # Create the ChatAPIAgent
 agent = ChatToolAgent(chat_api=api)
@@ -67,11 +66,13 @@ Current Date and Time (Format: %Y-%m-%d %H:%M:%S): {current_date_time}
 """
 
 system_prompt_template = MessageTemplate.from_string(system_prompt)
-system_message = system_prompt_template.generate_message_content(available_tools=tool_registry.get_tools_documentation(), operating_system=platform.system(), working_directory=file_tools.get_working_directory(), github_username=git_hub_tools.owner, github_repository=git_hub_tools.repo, current_date_time=datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+system_message = system_prompt_template.generate_message_content(
+    available_tools=tool_registry.get_tools_documentation(), operating_system=platform.system(),
+    working_directory=file_tools.get_working_directory(), github_username=git_hub_tools.owner,
+    github_repository=git_hub_tools.repo, current_date_time=datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 available_tools_docs = tool_registry.get_tools_documentation()
 chat_history = ChatHistory()
 chat_history.add_message(ChatMessage.create_system_message(system_message))
-
 
 while True:
     user_input = input("User >")
