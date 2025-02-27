@@ -33,16 +33,6 @@ settings = api.get_default_settings()
 settings.temperature = 0.45
 settings.top_p = 1.0
 
-# Define the tools
-tools = [
-    calculator_function_tool,
-    current_datetime_function_tool,
-    get_weather_function_tool,
-]
-tool_registry = ToolRegistry()
-
-tool_registry.add_tools(tools)
-
 chat_history = ChatHistory()
 chat_history.add_system_message(
     "You are a helpful assistant with tool calling capabilities. Only reply with a tool call if the function exists in the library provided by the user. Use JSON format to output your function calls. If it doesn't exist, just reply directly in natural language. When you receive a tool call response, use the output to format an answer to the original user question."
@@ -62,7 +52,6 @@ while True:
         stream = agent.get_streaming_response(
             messages=chat_history.get_messages(),
             settings=settings,
-            tool_registry=tool_registry,
         )
         chat_response = None
         for res in stream:

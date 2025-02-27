@@ -1,8 +1,10 @@
 import json
+import os
 
 from enum import Enum
 from typing import List
 
+from dotenv import load_dotenv
 from pydantic import BaseModel, Field
 
 from ToolAgents.agents import ChatToolAgent
@@ -11,9 +13,9 @@ from ToolAgents.provider import OpenAIChatAPI
 from ToolAgents.utilities.json_schema_generator.schema_generator import (
     custom_json_schema,
 )
-
+load_dotenv()
 api = OpenAIChatAPI(
-    api_key="unknown", base_url="http://127.0.0.1:8080/v1", model="unknown"
+    api_key=os.getenv("OPENROUTER_API_KEY"), base_url="https://openrouter.ai/api/v1", model="openai/o3-mini"
 )
 
 # Create the ChatAPIAgent

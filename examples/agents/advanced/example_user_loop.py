@@ -33,15 +33,6 @@ settings = api.get_default_settings()
 settings.temperature = 0.45
 settings.top_p = 1.0
 
-# Define the tools
-tools = [
-    calculator_function_tool,
-    current_datetime_function_tool,
-    get_weather_function_tool,
-]
-tool_registry = ToolRegistry()
-
-tool_registry.add_tools(tools)
 
 chat_history = ChatHistory()
 chat_history.add_system_message(
@@ -61,8 +52,7 @@ while True:
 
         chat_response = agent.get_response(
             messages=chat_history.get_messages(),
-            settings=settings,
-            tool_registry=tool_registry,
+            settings=settings
         )
 
         print(chat_response.response.strip())
