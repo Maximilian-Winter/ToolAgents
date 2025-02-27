@@ -1,7 +1,4 @@
 import asyncio
-import inspect
-import json
-import re
 
 import typing
 from enum import auto, Enum
@@ -12,14 +9,12 @@ from typing import Type, Dict
 from abc import ABC, abstractmethod
 from typing import Any, List, Union, Callable, Tuple
 
-
-from docstring_parser import DocstringStyle, parse
-from pydantic import BaseModel, create_model, Field
-from pydantic_core import PydanticUndefined
+from pydantic import BaseModel
 
 from ToolAgents.utilities.gbnf_grammar_generator.gbnf_grammar_from_pydantic_models import (
     generate_gbnf_grammar_from_pydantic_models,
 )
+from ToolAgents.utilities.json_schema_generator.old_schema_generator import generate_json_schemas
 
 from ToolAgents.utilities.llm_documentation.documentation_generation import (
     generate_text_documentation,
@@ -690,8 +685,8 @@ class ToolRegistry:
     def get_guided_sampling_grammar(self):
         return generate_gbnf_grammar_from_pydantic_models(
             models=[tool.model for tool in self.tools.values()],
-            outer_object_name="name",
-            outer_object_content="arguments",
+            outer_object_name="tool",
+            outer_object_content="parameters",
             list_of_outputs=True,
             add_inner_thoughts=False,
             allow_only_inner_thoughts=False,
@@ -699,9 +694,8 @@ class ToolRegistry:
         )
 
     def get_guided_sampling_json_schema(self):
-        pass
-        # return generate_json_schemas(models=[tool.model for tool in self.tools.values()], outer_object_name="name",
-        #                             allow_list=True, outer_object_properties_name="arguments")
+        return generate_json_schemas(models=[tool.model for tool in self.tools.values()], outer_object_name="tool_calls",
+                                    allow_list=True, outer_object_properties_name="tool")
 
     def get_tools_documentation(self):
         return generate_text_documentation(

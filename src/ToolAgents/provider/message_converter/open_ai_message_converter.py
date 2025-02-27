@@ -108,7 +108,7 @@ class OpenAIMessageConverter(BaseMessageConverter):
                         )
             elif len(tool_calls) > 0:
                 converted_messages.append(
-                    {"role": role, "content": "", "tool_calls": tool_calls}
+                    {"role": role, "tool_calls": tool_calls}
                 )
         return converted_messages
 

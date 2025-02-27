@@ -29,24 +29,13 @@ settings.temperature = 0.4
 settings.top_p = 1.0
 settings.set_max_new_tokens(8192)
 
-
-# Example enum for our output model
-class Category(Enum):
-    Fiction = "Fiction"
-    NonFiction = "Non-Fiction"
-
-
 # Example output model
-class Book(BaseModel):
+class ToolCalls(BaseModel):
     """
     Represents an entry about a book.
     """
 
-    book_title: str = Field(..., description="Title of the book.")
-    author: str = Field(..., description="Author of the book.")
-    published_year: int = Field(..., description="Publishing year of the book.")
-    keywords: List[str] = Field(..., description="A list of keywords.")
-    category: Category = Field(..., description="Category of the book.")
+    category: Function = Field(..., description="Category of the book.")
     summary: str = Field(..., description="Summary of the book.")
 
 
