@@ -9,7 +9,7 @@ from ToolAgents.agents import ChatToolAgent
 from ToolAgents.messages import ChatHistory
 from ToolAgents.messages.chat_message import ChatMessage
 from ToolAgents.provider import OpenAIChatAPI
-from ToolAgents.mcp_server import MCPServer, MCPServerConfig, create_and_run_mcp_server
+from ToolAgents.utilities.mcp_server import MCPServer, MCPServerConfig, create_and_run_mcp_server
 from ToolAgents.mcp_tool import MCPToolRegistry, MCPTool, MCPToolDefinition
 
 from pydantic import BaseModel, Field
