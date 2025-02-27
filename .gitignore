@@ -70,3 +70,4 @@ examples/agents/knowledge_graph44446.gv.pdf
 /src/ToolAgents/agent_tools/__pycache__
 /examples/agents/code_interpreter/.venv
 /examples/agents/memory/memory
+/examples/agents/misc/code_interpreter/.venv
