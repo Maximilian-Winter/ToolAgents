@@ -3,13 +3,20 @@ import requests
 from ToolAgents import ToolRegistry, FunctionTool
 from ToolAgents.agents import ChatToolAgent
 from ToolAgents.knowledge.vector_database import RAG
-from ToolAgents.knowledge.vector_database.implementations.chroma_db import ChromaDbVectorDatabaseProvider
-from ToolAgents.knowledge.vector_database.implementations.mbxai_reranking import MXBAIRerankingProvider
-from ToolAgents.knowledge.vector_database.implementations.sentence_transformer_embeddings import \
-    SentenceTransformerEmbeddingProvider
+from ToolAgents.knowledge.vector_database.implementations.chroma_db import (
+    ChromaDbVectorDatabaseProvider,
+)
+from ToolAgents.knowledge.vector_database.implementations.mbxai_reranking import (
+    MXBAIRerankingProvider,
+)
+from ToolAgents.knowledge.vector_database.implementations.sentence_transformer_embeddings import (
+    SentenceTransformerEmbeddingProvider,
+)
 from ToolAgents.messages import ChatMessage
 from ToolAgents.provider import CompletionProvider
-from ToolAgents.provider.completion_provider.default_implementations import LlamaCppServer
+from ToolAgents.provider.completion_provider.default_implementations import (
+    LlamaCppServer,
+)
 
 
 def get_wikipedia_page(title: str):
@@ -31,22 +38,40 @@ def get_wikipedia_page(title: str):
     page = next(iter(data["query"]["pages"].values()))
     return page["extract"] if "extract" in page else None
 
+
 from typing import List
 
 from pydantic import BaseModel, Field
 
-from ToolAgents.knowledge.text_processing.text_splitter import RecursiveCharacterTextSplitter
+from ToolAgents.knowledge.text_processing.text_splitter import (
+    RecursiveCharacterTextSplitter,
+)
 
-rag = RAG(ChromaDbVectorDatabaseProvider(SentenceTransformerEmbeddingProvider(), MXBAIRerankingProvider()))
+rag = RAG(
+    ChromaDbVectorDatabaseProvider(
+        SentenceTransformerEmbeddingProvider(), MXBAIRerankingProvider()
+    )
+)
 
 # Initialize a recursive character text splitter with the correct chunk size of the embedding model.
 length_function = len
 splitter = RecursiveCharacterTextSplitter(
-    separators=["\n\n\n\n\n","\n\n\n\n","\n\n\n","\n\n", "\n", ".", "!", "?"," ", ""],
+    separators=[
+        "\n\n\n\n\n",
+        "\n\n\n\n",
+        "\n\n\n",
+        "\n\n",
+        "\n",
+        ".",
+        "!",
+        "?",
+        " ",
+        "",
+    ],
     chunk_size=512,
     chunk_overlap=30,
     length_function=length_function,
-    keep_separator=True
+    keep_separator=True,
 )
 
 # Use the helper function to get the content of a wikipedia page.
@@ -76,7 +101,10 @@ api.set_default_settings(settings)
 # Define the query we want to ask based on the retrieved information
 query = "What is a BARS apparatus?"
 
-chat_history = [ChatMessage.create_system_message(system_message), ChatMessage.create_user_message(query)]
+chat_history = [
+    ChatMessage.create_system_message(system_message),
+    ChatMessage.create_user_message(query),
+]
 
 # Ask the query without retrieved information.
 result = agent.get_response(chat_history)
@@ -88,9 +116,12 @@ class QueryExtension(BaseModel):
     """
     Represents an extension of a query as additional queries.
     """
+
     queries: List[str] = Field(default_factory=list, description="List of queries.")
 
+
 output_settings = QueryExtension()
+
 
 def create_query_extension(query_extension: QueryExtension):
     """
@@ -101,10 +132,14 @@ def create_query_extension(query_extension: QueryExtension):
     global output_settings
     output_settings = query_extension
 
+
 # Define a query extension agent which will extend the query with additional queries.
 system_message = "You are a world class query extension algorithm capable of extending queries by writing new queries. Do not answer the queries, use your 'create_query_extension' tool to create new queries."
 
-chat_history = [ChatMessage.create_system_message(system_message), ChatMessage.create_user_message(f"Consider the following query: {query}")]
+chat_history = [
+    ChatMessage.create_system_message(system_message),
+    ChatMessage.create_user_message(f"Consider the following query: {query}"),
+]
 
 tool_registry = ToolRegistry()
 
@@ -133,12 +168,13 @@ for qu in queries.queries:
 prompt += "\n======================\nQuestion: " + query
 
 
-
 # Define a query extension agent which will extend the query with additional queries.
 system_message = "You are an advanced AI assistant, trained by OpenAI. Only answer question based on the context information provided."
-chat_history = [ChatMessage.create_system_message(system_message), ChatMessage.create_user_message(prompt)]
+chat_history = [
+    ChatMessage.create_system_message(system_message),
+    ChatMessage.create_user_message(prompt),
+]
 
 # Perform the query extension with the agent.
 output = agent.get_response(chat_history)
 print(output.response)
-

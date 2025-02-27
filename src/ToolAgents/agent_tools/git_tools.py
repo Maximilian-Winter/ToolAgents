@@ -16,7 +16,6 @@ class GitTools:
         """
         self.get_working_directory = get_working_directory
 
-
     def _run_git_command(self, command: List[str]) -> Tuple[str, str, int]:
         """
         Run a git command and return the result.
@@ -29,11 +28,11 @@ class GitTools:
         """
         try:
             process = subprocess.Popen(
-                ['git'] + command,
+                ["git"] + command,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 cwd=self.get_working_directory(),
-                text=True
+                text=True,
             )
             stdout, stderr = process.communicate()
             return stdout.strip(), stderr.strip(), process.returncode
@@ -50,14 +49,16 @@ class GitTools:
         Returns:
             str: A message indicating the result of the operation.
         """
-        command = ['init']
+        command = ["init"]
         if bare:
-            command.append('--bare')
+            command.append("--bare")
 
         stdout, stderr, return_code = self._run_git_command(command)
 
         if return_code == 0:
-            return f"Repository initialized successfully in {self.get_working_directory}"
+            return (
+                f"Repository initialized successfully in {self.get_working_directory}"
+            )
         else:
             return f"Failed to initialize repository: {stderr}"
 
@@ -73,7 +74,7 @@ class GitTools:
         Returns:
             str: A message indicating the result of the operation.
         """
-        command = ['clone', repo_url]
+        command = ["clone", repo_url]
         if destination:
             command.append(destination)
 
@@ -94,11 +95,11 @@ class GitTools:
         Returns:
             str: A message indicating the result of the operation.
         """
-        command = ['add']
+        command = ["add"]
         if files:
             command.extend(files)
         else:
-            command.append('.')
+            command.append(".")
 
         stdout, stderr, return_code = self._run_git_command(command)
 
@@ -119,9 +120,9 @@ class GitTools:
         Returns:
             str: A message indicating the result of the operation.
         """
-        command = ['commit', '-m', message]
+        command = ["commit", "-m", message]
         if author:
-            command.extend(['--author', author])
+            command.extend(["--author", author])
 
         stdout, stderr, return_code = self._run_git_command(command)
 
@@ -130,7 +131,9 @@ class GitTools:
         else:
             return f"Failed to commit changes: {stderr}"
 
-    def git_push(self, remote: str = 'origin', branch: str = 'main', force: bool = False) -> str:
+    def git_push(
+        self, remote: str = "origin", branch: str = "main", force: bool = False
+    ) -> str:
         """
         Push commits to a remote repository.
 
@@ -142,9 +145,9 @@ class GitTools:
         Returns:
             str: A message indicating the result of the operation.
         """
-        command = ['push', remote, branch]
+        command = ["push", remote, branch]
         if force:
-            command.append('--force')
+            command.append("--force")
 
         stdout, stderr, return_code = self._run_git_command(command)
 
@@ -153,7 +156,7 @@ class GitTools:
         else:
             return f"Failed to push changes: {stderr}"
 
-    def git_pull(self, remote: str = 'origin', branch: str = 'main') -> str:
+    def git_pull(self, remote: str = "origin", branch: str = "main") -> str:
         """
         Pull changes from a remote repository.
 
@@ -164,7 +167,7 @@ class GitTools:
         Returns:
             str: A message indicating the result of the operation.
         """
-        command = ['pull', remote, branch]
+        command = ["pull", remote, branch]
 
         stdout, stderr, return_code = self._run_git_command(command)
 
@@ -184,9 +187,9 @@ class GitTools:
         Returns:
             str: A message indicating the result of the operation.
         """
-        command = ['checkout']
+        command = ["checkout"]
         if create_branch:
-            command.append('-b')
+            command.append("-b")
         command.append(branch_or_commit)
 
         stdout, stderr, return_code = self._run_git_command(command)
@@ -203,7 +206,7 @@ class GitTools:
         Returns:
             str: The git status output.
         """
-        stdout, stderr, return_code = self._run_git_command(['status'])
+        stdout, stderr, return_code = self._run_git_command(["status"])
 
         if return_code == 0:
             return stdout
@@ -221,9 +224,9 @@ class GitTools:
         Returns:
             str: The git log output.
         """
-        command = ['log', f'-n{n}']
+        command = ["log", f"-n{n}"]
         if oneline:
-            command.append('--oneline')
+            command.append("--oneline")
 
         stdout, stderr, return_code = self._run_git_command(command)
 
@@ -242,9 +245,9 @@ class GitTools:
         Returns:
             str: The list of branches.
         """
-        command = ['branch']
+        command = ["branch"]
         if all_branches:
-            command.append('-a')
+            command.append("-a")
 
         stdout, stderr, return_code = self._run_git_command(command)
 
@@ -253,7 +256,9 @@ class GitTools:
         else:
             return f"Failed to list branches: {stderr}"
 
-    def git_branch_create(self, branch_name: str, start_point: Optional[str] = None) -> str:
+    def git_branch_create(
+        self, branch_name: str, start_point: Optional[str] = None
+    ) -> str:
         """
         Create a new branch.
 
@@ -265,7 +270,7 @@ class GitTools:
         Returns:
             str: A message indicating the result of the operation.
         """
-        command = ['branch', branch_name]
+        command = ["branch", branch_name]
         if start_point:
             command.append(start_point)
 
@@ -287,7 +292,7 @@ class GitTools:
         Returns:
             str: A message indicating the result of the operation.
         """
-        command = ['branch', '-d' if not force else '-D', branch_name]
+        command = ["branch", "-d" if not force else "-D", branch_name]
 
         stdout, stderr, return_code = self._run_git_command(command)
 
@@ -307,7 +312,7 @@ class GitTools:
         Returns:
             str: The git diff output.
         """
-        command = ['diff']
+        command = ["diff"]
         if file_path:
             command.append(file_path)
 
@@ -318,7 +323,9 @@ class GitTools:
         else:
             return f"Failed to get diff: {stderr}"
 
-    def git_reset(self, commit: str = 'HEAD', mode: str = 'mixed', file_path: Optional[str] = None) -> str:
+    def git_reset(
+        self, commit: str = "HEAD", mode: str = "mixed", file_path: Optional[str] = None
+    ) -> str:
         """
         Reset current HEAD to the specified state.
 
@@ -331,18 +338,18 @@ class GitTools:
         Returns:
             str: A message indicating the result of the operation.
         """
-        command = ['reset']
+        command = ["reset"]
 
-        if mode.lower() == 'soft':
-            command.append('--soft')
-        elif mode.lower() == 'hard':
-            command.append('--hard')
+        if mode.lower() == "soft":
+            command.append("--soft")
+        elif mode.lower() == "hard":
+            command.append("--hard")
         # 'mixed' is the default
 
         command.append(commit)
 
         if file_path:
-            command.append('--')
+            command.append("--")
             command.append(file_path)
 
         stdout, stderr, return_code = self._run_git_command(command)
@@ -352,7 +359,7 @@ class GitTools:
         else:
             return f"Failed to reset: {stderr}"
 
-    def git_stash(self, action: str = 'push', stash_name: Optional[str] = None) -> str:
+    def git_stash(self, action: str = "push", stash_name: Optional[str] = None) -> str:
         """
         Stash changes in the working directory.
 
@@ -363,10 +370,10 @@ class GitTools:
         Returns:
             str: A message indicating the result of the operation.
         """
-        command = ['stash', action]
+        command = ["stash", action]
 
-        if action == 'push' and stash_name:
-            command.extend(['save', stash_name])
+        if action == "push" and stash_name:
+            command.extend(["save", stash_name])
 
         stdout, stderr, return_code = self._run_git_command(command)
 
@@ -388,9 +395,9 @@ class GitTools:
         Returns:
             str: The list of remote repositories.
         """
-        command = ['remote']
+        command = ["remote"]
         if verbose:
-            command.append('-v')
+            command.append("-v")
 
         stdout, stderr, return_code = self._run_git_command(command)
 
@@ -410,7 +417,7 @@ class GitTools:
         Returns:
             str: A message indicating the result of the operation.
         """
-        command = ['remote', 'add', name, url]
+        command = ["remote", "add", name, url]
 
         stdout, stderr, return_code = self._run_git_command(command)
 
@@ -429,7 +436,7 @@ class GitTools:
         Returns:
             str: A message indicating the result of the operation.
         """
-        command = ['remote', 'remove', name]
+        command = ["remote", "remove", name]
 
         stdout, stderr, return_code = self._run_git_command(command)
 
@@ -457,5 +464,5 @@ class GitTools:
             FunctionTool(self.git_log),
             FunctionTool(self.git_branch_list),
             FunctionTool(self.git_branch_create),
-            FunctionTool(self.git_diff)
+            FunctionTool(self.git_diff),
         ]

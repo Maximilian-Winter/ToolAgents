@@ -20,7 +20,13 @@ class TrafilaturaWebCrawler(WebCrawler):
         try:
             downloaded = fetch_url(url)
 
-            result = extract(downloaded, include_formatting=True, include_links=True, output_format='json', url=url)
+            result = extract(
+                downloaded,
+                include_formatting=True,
+                include_links=True,
+                output_format="json",
+                url=url,
+            )
 
             if result:
                 result = json.loads(result)
@@ -36,11 +42,19 @@ class TrafilaturaWebCrawler(WebCrawler):
             try:
                 downloaded = fetch_url(url)
 
-                result = extract(downloaded, include_formatting=True, include_links=True, output_format='json', url=url)
+                result = extract(
+                    downloaded,
+                    include_formatting=True,
+                    include_links=True,
+                    output_format="json",
+                    url=url,
+                )
 
                 if result:
                     result = json.loads(result)
-                    results.append(f'=========== Website Title: {result["title"]} ===========\n\n=========== Website URL: {url} ===========\n\n=========== Website Content ===========\n\n{result["raw_text"]}\n\n=========== Website Content End ===========\n\n')
+                    results.append(
+                        f'=========== Website Title: {result["title"]} ===========\n\n=========== Website URL: {url} ===========\n\n=========== Website Content ===========\n\n{result["raw_text"]}\n\n=========== Website Content End ===========\n\n'
+                    )
                 else:
                     results.append("NO RESULT")
             except Exception as e:

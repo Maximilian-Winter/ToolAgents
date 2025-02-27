@@ -1,5 +1,8 @@
 # This show an advanced agent that will handle all the things like chat history by itself, also contains optional memory and app state functionality.
-from ToolAgents.agent_memory import semantic_memory_nomic_text_gpu_config, SummarizationExtractPatternStrategy
+from ToolAgents.agent_memory import (
+    semantic_memory_nomic_text_gpu_config,
+    SummarizationExtractPatternStrategy,
+)
 from ToolAgents.agents import AdvancedAgent
 from ToolAgents.agents.advanced_agent import AgentConfig
 from ToolAgents.agents.hosted_tool_agents import MistralAgent
@@ -53,7 +56,11 @@ agent_config.give_agent_edit_tool = True
 agent_config.initial_app_state_file = "example_app_state.yaml"
 agent_config.semantic_chat_history_config = semantic_memory_nomic_text_gpu_config
 agent_config.semantic_chat_history_config.debug_mode = False
-agent_config.semantic_chat_history_config.extract_pattern_strategy = SummarizationExtractPatternStrategy(agent=agent, summarizer_settings=summarizer_settings, debug_mode=True)
+agent_config.semantic_chat_history_config.extract_pattern_strategy = (
+    SummarizationExtractPatternStrategy(
+        agent=agent, summarizer_settings=summarizer_settings, debug_mode=True
+    )
+)
 
 configurable_agent = AdvancedAgent(agent=agent, agent_config=agent_config)
 configurable_agent.add_to_chat_history_from_json("./test_chat_history_adv_agent.json")
@@ -68,13 +75,11 @@ semantic_memory_test_questions = [
     "Which album do I love the most?",
     "What book by Haruki Murakami do I like the most?",
     "Can you recommend authors similar to Murakami?",
-
     # 🍣 Food Preferences
     "What’s my favorite dish?",
     "Is there any food I dislike?",
     "Do I have any food allergies?",
     "What do I usually drink with sushi?",
-
     # 📸 Hobbies & Daily Habits
     "What’s my hobby?",
     "Do I prefer landscapes or street photography?",
@@ -82,12 +87,11 @@ semantic_memory_test_questions = [
     "Which software do I edit my photos with?",
     "What time do I want to wake up every day?",
     "Can you give me some morning motivation?",
-
     # 📢 Memory Validation & Contextual Understanding
     "Remind me of everything you know about my preferences.",
     "Summarize my favorite things in a few sentences.",
     "Did I ever mention anything I dislike?",
-    "What have I told you about my morning routine?"
+    "What have I told you about my morning routine?",
 ]
 
 for question in semantic_memory_test_questions:

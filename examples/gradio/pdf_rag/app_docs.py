@@ -3,17 +3,26 @@ import os
 import shutil
 
 from ToolAgents import FunctionTool, ToolRegistry
-from ToolAgents.knowledge.default_providers import PDFOCRProvider, ChromaDbVectorDatabaseProvider, \
-    SentenceTransformerEmbeddingProvider, MXBAIRerankingProvider
+from ToolAgents.knowledge.default_providers import (
+    PDFOCRProvider,
+    ChromaDbVectorDatabaseProvider,
+    SentenceTransformerEmbeddingProvider,
+    MXBAIRerankingProvider,
+)
 from ToolAgents.utilities import SimpleTextSplitter
 from ToolAgents.messages.chat_history import ChatHistory
 from agent import answer_agent
 
 has_ingested = False
-vector_database = ChromaDbVectorDatabaseProvider(SentenceTransformerEmbeddingProvider(), MXBAIRerankingProvider())
+vector_database = ChromaDbVectorDatabaseProvider(
+    SentenceTransformerEmbeddingProvider(), MXBAIRerankingProvider()
+)
 pdf_provider = PDFOCRProvider("uploaded_files", SimpleTextSplitter(512, 0))
 history = ChatHistory()
-history.add_system_message("Your task is write detailed and comprehensive answers to the requests of the user, based on PDFs the user uploaded. Use the 'query_pdf_information' tool to retrieve information from the PDF.")
+history.add_system_message(
+    "Your task is write detailed and comprehensive answers to the requests of the user, based on PDFs the user uploaded. Use the 'query_pdf_information' tool to retrieve information from the PDF."
+)
+
 
 def query_pdf_information(query: str):
     """
@@ -37,7 +46,12 @@ def ingest():
     global has_ingested, pdf_provider, vector_database
     upload_folder = "uploaded_files"
     if not os.path.isdir(upload_folder) or not os.listdir(upload_folder):
-        return "No uploaded files!", gr.update(visible=False), gr.update(visible=False), gr.update(visible=False)
+        return (
+            "No uploaded files!",
+            gr.update(visible=False),
+            gr.update(visible=False),
+            gr.update(visible=False),
+        )
 
     documents = pdf_provider.get_documents()
     vector_database.add_documents(documents)
@@ -47,7 +61,7 @@ def ingest():
         "Documents pre-processed successfully. You can now start the chat.",
         gr.update(visible=True),
         gr.update(visible=True),
-        gr.update(visible=True)
+        gr.update(visible=True),
     )
 
 
@@ -66,7 +80,9 @@ def chat_response(message, chat_history=None):
 
     history.add_user_message(message)
     history_list = history.get_messages()
-    response = answer_agent.get_response(messages=history_list, tool_registry=tool_registry)
+    response = answer_agent.get_response(
+        messages=history_list, tool_registry=tool_registry
+    )
 
     chat_history.append(gr.ChatMessage(role="user", content=message))
     chat_history.append(gr.ChatMessage(role="assistant", content=response.response))
@@ -144,15 +160,11 @@ with gr.Blocks(css=css) as demo:
 
     with gr.Row():
         with gr.Column():
-            chatbox = gr.Chatbot(
-                type="messages",
-                show_copy_button=True,
-                visible=False
-            )
+            chatbox = gr.Chatbot(type="messages", show_copy_button=True, visible=False)
             chat_input = gr.Textbox(
                 label="Chat Input",
                 placeholder="Type your message here...",
-                visible=False
+                visible=False,
             )
             send_button = gr.Button("Send", visible=False)
 
@@ -160,7 +172,7 @@ with gr.Blocks(css=css) as demo:
             status_output = gr.Textbox(
                 label="Document Status",
                 interactive=False,
-                placeholder="Please upload your documents and pre-process them below"
+                placeholder="Please upload your documents and pre-process them below",
             )
             file_uploader = gr.File(label="Upload Files", file_count="multiple")
             upload_button = gr.Button("Upload")
@@ -168,18 +180,12 @@ with gr.Blocks(css=css) as demo:
             clear_button = gr.Button("Delete uploaded documents")
 
     # Chat response handler
-    send_button.click(
-        chat_response,
-        [chat_input, chatbox],
-        [chat_input, chatbox]
-    )
+    send_button.click(chat_response, [chat_input, chatbox], [chat_input, chatbox])
 
     # Ingest documents handler with proper visibility updates
     ingest_documents.click(
-        ingest,
-        outputs=[status_output, chatbox, chat_input, send_button]
+        ingest, outputs=[status_output, chatbox, chat_input, send_button]
     )
-
 
     def clear():
         global has_ingested
@@ -191,21 +197,13 @@ with gr.Blocks(css=css) as demo:
             "Documents cleared.",
             gr.update(visible=False),
             gr.update(visible=False),
-            gr.update(visible=False)
+            gr.update(visible=False),
         )
 
-
     # Clear button handler
-    clear_button.click(
-        clear,
-        outputs=[status_output, chatbox, chat_input, send_button]
-    )
+    clear_button.click(clear, outputs=[status_output, chatbox, chat_input, send_button])
 
     # File upload handler
-    upload_button.click(
-        upload_files,
-        [file_uploader],
-        status_output
-    )
+    upload_button.click(upload_files, [file_uploader], status_output)
 
 demo.launch()

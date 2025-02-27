@@ -9,9 +9,15 @@ from ToolAgents.agent_memory.context_app_state import ContextAppState
 
 from ToolAgents.provider.llm_provider import ProviderSettings
 from ToolAgents.agents.base_llm_agent import BaseToolAgent, ChatResponse
-from ToolAgents.messages import ChatHistory, ChatMessage, MessageTemplate, ChatMessageRole
+from ToolAgents.messages import (
+    ChatHistory,
+    ChatMessage,
+    MessageTemplate,
+    ChatMessageRole,
+)
 
-sum_prompt_alt_template = MessageTemplate.from_string("""You will be analyzing a chat turn to extract information about {USER_NAME} and their relationship with {ASSISTANT_NAME}. Here are the chat turns:
+sum_prompt_alt_template = MessageTemplate.from_string(
+    """You will be analyzing a chat turn to extract information about {USER_NAME} and their relationship with {ASSISTANT_NAME}. Here are the chat turns:
 
 <chat_turn>
 {CHAT_TURN}
@@ -57,8 +63,10 @@ If you cannot find any relevant information about {USER_NAME} or their relations
 No relevant information found about {USER_NAME} or their relationship with {ASSISTANT_NAME} in the provided chat turns.
 </extracted_information>
 
-Remember to base your analysis solely on the information provided in the chat turns. Do not make assumptions or include information that is not directly stated or strongly implied in the conversation.""")
-sum_prompt_template = MessageTemplate.from_string("""Here is the chat message to summarize:
+Remember to base your analysis solely on the information provided in the chat turns. Do not make assumptions or include information that is not directly stated or strongly implied in the conversation."""
+)
+sum_prompt_template = MessageTemplate.from_string(
+    """Here is the chat message to summarize:
 
 <chat_message>
 {chat_message}
@@ -101,7 +109,9 @@ Example output structure:
 [A concise yet detailed summary of the chat conversation, preserving specific facts, preferences, and important details]
 </summary>
 
-Please proceed with your conversation breakdown and summary of the chat message.""")
+Please proceed with your conversation breakdown and summary of the chat message."""
+)
+
 
 @dataclasses.dataclass
 class AgentConfig:
@@ -118,6 +128,7 @@ class AgentConfig:
         save_on_creation (bool): Whether to automatically save the agent upon creation.
         semantic_chat_history_config (SemanticMemoryConfig): Configuration for semantic memory.
     """
+
     system_message: str = "You are a helpful assistant."
     save_dir: str = "./default_agent"
     initial_app_state_file: str = None
@@ -127,7 +138,10 @@ class AgentConfig:
     save_on_creation: bool = False
     summarize_chat_pairs_before_storing: bool = False
     from ToolAgents.agent_memory.semantic_memory.memory import SemanticMemoryConfig
-    semantic_chat_history_config: SemanticMemoryConfig = dataclasses.field(default_factory=SemanticMemoryConfig)
+
+    semantic_chat_history_config: SemanticMemoryConfig = dataclasses.field(
+        default_factory=SemanticMemoryConfig
+    )
 
 
 class AdvancedAgent:
@@ -139,7 +153,15 @@ class AdvancedAgent:
     to interact with the underlying language model.
     """
 
-    def __init__(self, agent: BaseToolAgent, tool_registry: ToolRegistry = None, agent_config: AgentConfig = None, user_name: str = None, assistant_name: str = None, debug_mode: bool = False):
+    def __init__(
+        self,
+        agent: BaseToolAgent,
+        tool_registry: ToolRegistry = None,
+        agent_config: AgentConfig = None,
+        user_name: str = None,
+        assistant_name: str = None,
+        debug_mode: bool = False,
+    ):
         """
         Initialize the AdvancedAgent.
 
@@ -164,7 +186,9 @@ class AdvancedAgent:
         self.give_agent_edit_tool = agent_config.give_agent_edit_tool
         self.use_semantic_memory = agent_config.use_semantic_chat_history_memory
         self.max_chat_history_length = agent_config.max_chat_history_length
-        self.summarize_chat_pairs_before_storing = agent_config.summarize_chat_pairs_before_storing
+        self.summarize_chat_pairs_before_storing = (
+            agent_config.summarize_chat_pairs_before_storing
+        )
         if user_name is None:
             self.user_name = "User"
         else:
@@ -188,7 +212,9 @@ class AdvancedAgent:
         self.agent_config_path = os.path.join(self.save_dir, "agent_config.json")
         self.app_state_path = os.path.join(save_dir, "app_state.json")
         self.semantic_memory_path = os.path.join(save_dir, "semantic_memory")
-        self.agent_chat_history_path = os.path.join(self.save_dir, "agent_chat_history.json")
+        self.agent_chat_history_path = os.path.join(
+            self.save_dir, "agent_chat_history.json"
+        )
         # Determine if we should load an existing agent state based on file existence
         if os.path.exists(save_dir) and os.path.exists(self.agent_config_path):
             load = True
@@ -216,13 +242,22 @@ class AdvancedAgent:
             if not os.path.isdir(self.save_dir):
                 os.makedirs(self.save_dir)
             # Set the directory where semantic memory will persist
-            agent_config.semantic_chat_history_config.persist_directory = self.semantic_memory_path
+            agent_config.semantic_chat_history_config.persist_directory = (
+                self.semantic_memory_path
+            )
             from ToolAgents.agent_memory.semantic_memory.memory import SemanticMemory
-            self.semantic_memory = SemanticMemory(agent_config.semantic_chat_history_config)
+
+            self.semantic_memory = SemanticMemory(
+                agent_config.semantic_chat_history_config
+            )
 
         # If a tool registry and initial app state exist, and edit tools are enabled,
         # add the edit tools to the tool registry.
-        if self.tool_registry is not None and initial_state_file and self.give_agent_edit_tool:
+        if (
+            self.tool_registry is not None
+            and initial_state_file
+            and self.give_agent_edit_tool
+        ):
             self.tool_registry.add_tools(self.app_state.get_edit_tools())
 
     def set_tool_registry(self, tool_registry: ToolRegistry):
@@ -256,8 +291,12 @@ class AdvancedAgent:
         """
         self.tool_registry = None
 
-    def chat_with_agent(self, chat_input: str, tool_registry: ToolRegistry = None,
-                        settings: ProviderSettings = None):
+    def chat_with_agent(
+        self,
+        chat_input: str,
+        tool_registry: ToolRegistry = None,
+        settings: ProviderSettings = None,
+    ):
         """
         Have a conversation with the agent using a given input.
 
@@ -279,7 +318,11 @@ class AdvancedAgent:
 
         # If no tool registry is provided but edit tools are required,
         # create a new one and add the edit tools.
-        if self.tool_registry is None and tool_registry is None and self.give_agent_edit_tool:
+        if (
+            self.tool_registry is None
+            and tool_registry is None
+            and self.give_agent_edit_tool
+        ):
             tool_registry = ToolRegistry()
             tool_registry.add_tools(self.app_state.get_edit_tools())
 
@@ -287,14 +330,18 @@ class AdvancedAgent:
         result = self.agent.get_response(
             chat_history,
             self.tool_registry if tool_registry is None else tool_registry,
-            settings=settings
+            settings=settings,
         )
         # Update chat history and state after the conversation
         self._after_run(chat_input, result)
         return result
 
-    def stream_chat_with_agent(self, chat_input: str, tool_registry: ToolRegistry = None,
-                               settings: ProviderSettings = None):
+    def stream_chat_with_agent(
+        self,
+        chat_input: str,
+        tool_registry: ToolRegistry = None,
+        settings: ProviderSettings = None,
+    ):
         """
         Stream a conversation with the agent, yielding tokens as they become available.
 
@@ -312,7 +359,11 @@ class AdvancedAgent:
         if tool_registry is not None and self.give_agent_edit_tool:
             tool_registry.add_tools(self.app_state.get_edit_tools())
 
-        if self.tool_registry is None and tool_registry is None and self.give_agent_edit_tool:
+        if (
+            self.tool_registry is None
+            and tool_registry is None
+            and self.give_agent_edit_tool
+        ):
             tool_registry = ToolRegistry()
             tool_registry.add_tools(self.app_state.get_edit_tools())
 
@@ -320,7 +371,7 @@ class AdvancedAgent:
         result = self.agent.get_streaming_response(
             chat_history,
             self.tool_registry if tool_registry is None else tool_registry,
-            settings=settings
+            settings=settings,
         )
         response = None
         for tok in result:
@@ -388,9 +439,15 @@ class AdvancedAgent:
             chat_history = [ChatMessage.create_system_message(self.system_message)]
         else:
             # Format system message with app state if needed
-            chat_history = [ChatMessage.create_system_message(self.system_message.format(app_state=self.app_state.get_app_state_string()))]
+            chat_history = [
+                ChatMessage.create_system_message(
+                    self.system_message.format(
+                        app_state=self.app_state.get_app_state_string()
+                    )
+                )
+            ]
         # Add any existing chat history beyond the current index
-        chat_history.extend(self.chat_history.get_messages()[self.chat_history_index:])
+        chat_history.extend(self.chat_history.get_messages()[self.chat_history_index :])
         return chat_history
 
     def add_to_chat_history(self, messages: list[dict[str, Any]]):
@@ -435,9 +492,15 @@ class AdvancedAgent:
             chat_history = [ChatMessage.create_system_message(self.system_message)]
         else:
             # Format system message with app state if needed
-            chat_history = [ChatMessage.create_system_message(self.system_message.format(app_state=self.app_state.get_app_state_string()))]
+            chat_history = [
+                ChatMessage.create_system_message(
+                    self.system_message.format(
+                        app_state=self.app_state.get_app_state_string()
+                    )
+                )
+            ]
         # Add any existing chat history beyond the current index
-        chat_history.extend(self.chat_history.get_messages()[self.chat_history_index:])
+        chat_history.extend(self.chat_history.get_messages()[self.chat_history_index :])
 
         # If semantic memory is enabled, retrieve additional context and append it to the user input
         if self.use_semantic_memory:
@@ -470,7 +533,9 @@ class AdvancedAgent:
         # Append the user's message to the chat history
         self.chat_history.add_user_message(chat_input)
         # Record the length of the agent's response buffer as tool usage
-        self.tool_usage_history[self.chat_history.get_message_count()] = len(response.messages)
+        self.tool_usage_history[self.chat_history.get_message_count()] = len(
+            response.messages
+        )
         # Append the agent's response messages to the chat history
         self.chat_history.add_messages(response.messages)
         # Process the chat history to enforce any maximum length limits
@@ -491,8 +556,14 @@ class AdvancedAgent:
         if max_chat_history_length is None:
             max_chat_history_length = self.max_chat_history_length
         # Only process if the chat history length exceeds the allowed limit and the limit is set (not -1)
-        if (self.chat_history.get_message_count() - self.chat_history_index) > max_chat_history_length > -1:
-            while (self.chat_history.get_message_count() - self.chat_history_index) > max_chat_history_length:
+        if (
+            (self.chat_history.get_message_count() - self.chat_history_index)
+            > max_chat_history_length
+            > -1
+        ):
+            while (
+                self.chat_history.get_message_count() - self.chat_history_index
+            ) > max_chat_history_length:
                 # Determine how many messages are associated with the current chat block
                 msg_count = self.tool_usage_history.get(self.chat_history_index, 1)
                 msg_count += self.tool_usage_history.get(self.chat_history_index + 1, 1)
@@ -501,27 +572,47 @@ class AdvancedAgent:
                 # If semantic memory is enabled, select messages to be consolidated
                 if self.use_semantic_memory and msg_count == 2:
                     message = self.chat_history.get_messages()[self.chat_history_index]
-                    message2 = self.chat_history.get_messages()[self.chat_history_index + 1]
+                    message2 = self.chat_history.get_messages()[
+                        self.chat_history_index + 1
+                    ]
                 elif self.use_semantic_memory and msg_count > 2:
                     message = self.chat_history.get_messages()[self.chat_history_index]
-                    message2 = self.chat_history.get_messages()[self.chat_history_index + (msg_count - 1)]
+                    message2 = self.chat_history.get_messages()[
+                        self.chat_history_index + (msg_count - 1)
+                    ]
                 # If there are at least two messages to consolidate, build a memory string and store it
                 if self.use_semantic_memory and msg_count >= 2:
-                    template="{role}: {content}\n\n"
-                    formatted_msgs = template.format(role=self.user_name, content=message.get_as_text().strip())
-                    formatted_msgs += template.format(role=self.assistant_name, content=message2.get_as_text().strip())
+                    template = "{role}: {content}\n\n"
+                    formatted_msgs = template.format(
+                        role=self.user_name, content=message.get_as_text().strip()
+                    )
+                    formatted_msgs += template.format(
+                        role=self.assistant_name, content=message2.get_as_text().strip()
+                    )
 
-                    if self.summarize_chat_pairs_before_storing and isinstance(self.summarization_prompt, MessageTemplate):
-                        prompt = self.summarization_prompt.generate_message_content(CHAT_TURN=formatted_msgs, USER_NAME=self.user_name, ASSISTANT_NAME=self.assistant_name)
+                    if self.summarize_chat_pairs_before_storing and isinstance(
+                        self.summarization_prompt, MessageTemplate
+                    ):
+                        prompt = self.summarization_prompt.generate_message_content(
+                            CHAT_TURN=formatted_msgs,
+                            USER_NAME=self.user_name,
+                            ASSISTANT_NAME=self.assistant_name,
+                        )
                         if self.debug_mode:
                             print(prompt, flush=True)
-                        summarization_history = [ChatMessage.create_user_message(prompt)]
+                        summarization_history = [
+                            ChatMessage.create_user_message(prompt)
+                        ]
                         settings = self.agent.get_default_settings()
                         settings.neutralize_all_samplers()
                         settings.temperature = 0.4
                         settings.set_max_new_tokens(4096)
-                        formatted_msgs = self.agent.get_response(summarization_history, settings=settings).response
-                        match = re.findall(r'<memory>(.*?)</memory>', formatted_msgs, re.DOTALL)
+                        formatted_msgs = self.agent.get_response(
+                            summarization_history, settings=settings
+                        ).response
+                        match = re.findall(
+                            r"<memory>(.*?)</memory>", formatted_msgs, re.DOTALL
+                        )
                         for content in match:
                             if self.debug_mode:
                                 print(content.replace("**", ""), flush=True)

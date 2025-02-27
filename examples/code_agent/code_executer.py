@@ -8,7 +8,9 @@ from typing import List
 from pydantic import BaseModel
 from ToolAgents import FunctionTool
 from ToolAgents.utilities import ChatHistory
-from ToolAgents.utilities.llm_documentation.documentation_generation import generate_type_definitions
+from ToolAgents.utilities.llm_documentation.documentation_generation import (
+    generate_type_definitions,
+)
 from ToolAgents.messages.message_template import MessageTemplate
 
 system_message_code_agent = """You are an advanced AI assistant with the ability to execute Python code. You have access to a Python code interpreter that allows you to execute Python code to accomplish various tasks. This capability enables you to perform a wide range of operations, from simple calculations to complex data analysis and system interactions.
@@ -53,9 +55,13 @@ Remember, your goal is to assist users effectively while working within the cons
 
 
 class PythonCodeExecutor:
-    def __init__(self, predefined_types: list = None, predefined_functions: List[FunctionTool] = None,
-                 predefined_variables: list = None):
-        self.code_pattern = re.compile(r'```python\n(.*?)```', re.DOTALL)
+    def __init__(
+        self,
+        predefined_types: list = None,
+        predefined_functions: List[FunctionTool] = None,
+        predefined_variables: list = None,
+    ):
+        self.code_pattern = re.compile(r"```python\n(.*?)```", re.DOTALL)
         self.global_context = {}
         self.predefined_types = {}
         self.predefined_functions = {}
@@ -88,9 +94,10 @@ class PythonCodeExecutor:
 
         template = MessageTemplate.from_string(system_message_code_agent)
         self.system_message_code_agent = template.generate_message_content(
-            predefined_types='\n\n'.join(predefined_types_docs),
-            predefined_functions='\n\n'.join(predefined_functions_docs),
-            predefined_variables='\n'.join(predefined_variables_docs))
+            predefined_types="\n\n".join(predefined_types_docs),
+            predefined_functions="\n\n".join(predefined_functions_docs),
+            predefined_variables="\n".join(predefined_variables_docs),
+        )
         self._setup_predefined_types()
         self._setup_predefined_functions()
         self._setup_predefined_variables()
@@ -132,6 +139,7 @@ class PythonCodeExecutor:
 
     def _create_wrapped_class(self, class_obj):
         if issubclass(class_obj, BaseModel):
+
             def wrapped_class(*args, **kwargs):
                 model_class = class_obj
 
@@ -206,20 +214,27 @@ class PythonCodeExecutor:
             return "No Python code found in the response.", False
 
     def get_variable(self, var_name):
-        return self.global_context.get(var_name, f"Variable '{var_name}' not found in the context.")
+        return self.global_context.get(
+            var_name, f"Variable '{var_name}' not found in the context."
+        )
 
     def get_context(self):
-        return {k: v for k, v in self.global_context.items() if not k.startswith('__')}
+        return {k: v for k, v in self.global_context.items() if not k.startswith("__")}
 
 
-def run_code_agent(agent, settings, chat_history: ChatHistory, user_input: str,
-                   python_code_executor: PythonCodeExecutor):
+def run_code_agent(
+    agent,
+    settings,
+    chat_history: ChatHistory,
+    user_input: str,
+    python_code_executor: PythonCodeExecutor,
+):
     print("User: " + user_input)
     print("Response: ", end="")
     chat_history.add_user_message(user_input)
     result_gen = agent.get_streaming_response(
-        messages=chat_history.to_list(),
-        settings=settings)
+        messages=chat_history.to_list(), settings=settings
+    )
 
     full_response = ""
     for tok in result_gen:
@@ -233,13 +248,14 @@ def run_code_agent(agent, settings, chat_history: ChatHistory, user_input: str,
             code_ex, has_error = python_code_executor.run(full_response)
             print("Python Execution Output: ")
             print(code_ex)
-            chat_history.add_message("user",
-                                     "Results of last Code execution:\n" + code_ex)
+            chat_history.add_message(
+                "user", "Results of last Code execution:\n" + code_ex
+            )
 
             print("Response: ", end="")
             result_gen = agent.get_streaming_response(
-                messages=chat_history.to_list(),
-                settings=settings)
+                messages=chat_history.to_list(), settings=settings
+            )
             full_response = ""
             for tok in result_gen:
                 print(tok, end="", flush=True)

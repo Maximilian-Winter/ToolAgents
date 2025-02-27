@@ -1,4 +1,3 @@
-
 import abc
 import dataclasses
 import re
@@ -19,10 +18,10 @@ from ToolAgents.provider.llm_provider import ProviderSettings
 from ToolAgents.agents.base_llm_agent import BaseToolAgent
 
 
-
 # =============================================================================
 # Extraction Pattern Strategies
 # =============================================================================
+
 
 class ExtractPatternStrategy(abc.ABC):
     """
@@ -33,9 +32,13 @@ class ExtractPatternStrategy(abc.ABC):
     """
 
     @abc.abstractmethod
-    def extract_pattern(self, pattern_id, documents: List[str],
-                        metadatas: list[Mapping[str, str | int | float | bool]],
-                        timestamp=datetime.now().isoformat()) -> Dict:
+    def extract_pattern(
+        self,
+        pattern_id,
+        documents: List[str],
+        metadatas: list[Mapping[str, str | int | float | bool]],
+        timestamp=datetime.now().isoformat(),
+    ) -> Dict:
         """
         Extract a pattern from the given documents and metadata.
 
@@ -57,12 +60,16 @@ class SimpleExtractPatternStrategy(ExtractPatternStrategy):
     and merges metadata by summing access counts and combining timestamps.
     """
 
-    def extract_pattern(self, pattern_id, documents: List[str],
-                        metadatas: List[Dict],
-                        timestamp=datetime.now().isoformat()) -> Dict:
+    def extract_pattern(
+        self,
+        pattern_id,
+        documents: List[str],
+        metadatas: List[Dict],
+        timestamp=datetime.now().isoformat(),
+    ) -> Dict:
         """Extract pattern from a cluster of similar memories by simple concatenation."""
         # Extract the 'access_count' from each metadata entry
-        counters = [m['access_count'] for m in metadatas]
+        counters = [m["access_count"] for m in metadatas]
 
         # Prepare metadata for the extracted pattern
         pattern_metadata = {
@@ -73,17 +80,15 @@ class SimpleExtractPatternStrategy(ExtractPatternStrategy):
             "access_count": sum(counters),
             "source_count": len(documents),
             # Convert source timestamps list into a JSON string
-            "source_timestamps": json.dumps([m['timestamp'] for m in metadatas])
+            "source_timestamps": json.dumps([m["timestamp"] for m in metadatas]),
         }
 
         # Return the consolidated content and metadata
-        return {
-            "content": '\n'.join(documents),
-            "metadata": pattern_metadata
-        }
+        return {"content": "\n".join(documents), "metadata": pattern_metadata}
 
 
-sum_chat_turns_template = MessageTemplate.from_string("""You will be analyzing a collection of chat turns to extract information about {USER_NAME} and their relationship with {ASSISTANT_NAME}. Here are the chat turns:
+sum_chat_turns_template = MessageTemplate.from_string(
+    """You will be analyzing a collection of chat turns to extract information about {USER_NAME} and their relationship with {ASSISTANT_NAME}. Here are the chat turns:
 
 <chat_turns>
 {CHAT_TURNS}
@@ -123,16 +128,25 @@ Present your findings in the following format:
 </relationship_info>
 </extracted_information>
 
-Remember to base your analysis solely on the information provided in the chat turns. Do not make assumptions or include information that is not directly stated or strongly implied in the conversation.""")
+Remember to base your analysis solely on the information provided in the chat turns. Do not make assumptions or include information that is not directly stated or strongly implied in the conversation."""
+)
+
+
 class SummarizationExtractPatternStrategy(ExtractPatternStrategy):
     """
     An extraction strategy that uses a language model (via a provided agent)
     to summarize and extract a pattern from multiple documents.
     """
 
-    def __init__(self, agent: BaseToolAgent, summarizer_settings: ProviderSettings,
-                 user_name: str, assistant_name: str, chat_turn_summary: MessageTemplate = sum_chat_turns_template,
-                 debug_mode: bool = False):
+    def __init__(
+        self,
+        agent: BaseToolAgent,
+        summarizer_settings: ProviderSettings,
+        user_name: str,
+        assistant_name: str,
+        chat_turn_summary: MessageTemplate = sum_chat_turns_template,
+        debug_mode: bool = False,
+    ):
         """
         Initialize the summarization extraction strategy.
 
@@ -150,12 +164,16 @@ class SummarizationExtractPatternStrategy(ExtractPatternStrategy):
         self.summarizer_settings = summarizer_settings
         self.chat_turn_summary = chat_turn_summary
 
-    def extract_pattern(self, pattern_id, documents: List[str],
-                        metadatas: List[Dict],
-                        timestamp=datetime.now().isoformat()) -> Dict:
+    def extract_pattern(
+        self,
+        pattern_id,
+        documents: List[str],
+        metadatas: List[Dict],
+        timestamp=datetime.now().isoformat(),
+    ) -> Dict:
         """Extract pattern from a cluster of similar memories using a language model for summarization."""
         # Sum the access counts from all provided metadata
-        counters = [m['access_count'] for m in metadatas]
+        counters = [m["access_count"] for m in metadatas]
         pattern_metadata = {
             "type": "pattern",
             "timestamp": timestamp,
@@ -163,17 +181,21 @@ class SummarizationExtractPatternStrategy(ExtractPatternStrategy):
             "last_access_timestamp": timestamp,
             "access_count": sum(counters),
             "source_count": len(documents),
-            "source_timestamps": json.dumps([m['timestamp'] for m in metadatas])
+            "source_timestamps": json.dumps([m["timestamp"] for m in metadatas]),
         }
-        prompt = self.chat_turn_summary.generate_message_content(CHAT_TURNS="\n\n---\n\n".join(documents), USER_NAME=self.user_name, ASSISTANT_NAME=self.assistant_name)
+        prompt = self.chat_turn_summary.generate_message_content(
+            CHAT_TURNS="\n\n---\n\n".join(documents),
+            USER_NAME=self.user_name,
+            ASSISTANT_NAME=self.assistant_name,
+        )
         if self.debug_mode:
             print(prompt)
         # Use the language model agent to generate a summary based on the prompt
         result = self.agent.get_response(
-            messages=[ChatMessage.create_user_message(prompt)
-            ], settings=self.summarizer_settings
+            messages=[ChatMessage.create_user_message(prompt)],
+            settings=self.summarizer_settings,
         )
-        match = re.findall(r'<summary>(.*?)</summary>', result.response, re.DOTALL)
+        match = re.findall(r"<summary>(.*?)</summary>", result.response, re.DOTALL)
         patterns = []
         for content in match:
             patterns.append(content.replace("**", ""))
@@ -182,17 +204,15 @@ class SummarizationExtractPatternStrategy(ExtractPatternStrategy):
         if len(patterns) == 0:
             return {
                 "content": result.response.replace("**", ""),
-                "metadata": pattern_metadata
+                "metadata": pattern_metadata,
             }
-        return {
-            "content": '\n'.join(patterns),
-            "metadata": pattern_metadata
-        }
+        return {"content": "\n".join(patterns), "metadata": pattern_metadata}
 
 
 # =============================================================================
 # Embedding Clustering Strategies
 # =============================================================================
+
 
 class ClusterEmbeddingsStrategy(abc.ABC):
     """
@@ -202,8 +222,9 @@ class ClusterEmbeddingsStrategy(abc.ABC):
     """
 
     @abc.abstractmethod
-    def cluster_embeddings(self, embeddings: List[np.ndarray], minimum_cluster_similarity: float = 0.75) -> List[
-        List[int]]:
+    def cluster_embeddings(
+        self, embeddings: List[np.ndarray], minimum_cluster_similarity: float = 0.75
+    ) -> List[List[int]]:
         """
         Cluster the provided embeddings based on a similarity threshold.
 
@@ -222,8 +243,11 @@ class SimpleClusterEmbeddingsStrategy(ClusterEmbeddingsStrategy):
     A simple clustering strategy that uses cosine similarity to group embeddings.
     """
 
-    def cluster_embeddings(self, embeddings: List[np.ndarray | Tensor],
-                           minimum_cluster_similarity: float = 0.75) -> List[List[int]]:
+    def cluster_embeddings(
+        self,
+        embeddings: List[np.ndarray | Tensor],
+        minimum_cluster_similarity: float = 0.75,
+    ) -> List[List[int]]:
         """Cluster embeddings using cosine similarity."""
         # Stack embeddings into a numpy array for vectorized operations
         embeddings_array = np.stack(embeddings)
@@ -250,7 +274,10 @@ class SimpleClusterEmbeddingsStrategy(ClusterEmbeddingsStrategy):
 
             # Check subsequent embeddings for similarity
             for j in range(i + 1, len(embeddings)):
-                if j not in used_indices and similarity_matrix[i, j] > minimum_cluster_similarity:
+                if (
+                    j not in used_indices
+                    and similarity_matrix[i, j] > minimum_cluster_similarity
+                ):
                     cluster.append(j)
                     used_indices.add(j)
 
@@ -263,6 +290,7 @@ class SimpleClusterEmbeddingsStrategy(ClusterEmbeddingsStrategy):
 # Cleanup Strategies
 # =============================================================================
 
+
 class CleanupStrategy(abc.ABC):
     """
     Abstract base class for memory cleanup strategies.
@@ -271,16 +299,18 @@ class CleanupStrategy(abc.ABC):
     """
 
     @abc.abstractmethod
-    def cleanup_working_memory(self, collection: chromadb.Collection,
-                               current_date: datetime) -> None:
+    def cleanup_working_memory(
+        self, collection: chromadb.Collection, current_date: datetime
+    ) -> None:
         """
         Clean up the working memory based on time and access counts.
         """
         pass
 
     @abc.abstractmethod
-    def cleanup_long_term_memory(self, collection: chromadb.Collection,
-                                 current_date: datetime) -> None:
+    def cleanup_long_term_memory(
+        self, collection: chromadb.Collection, current_date: datetime
+    ) -> None:
         """
         Clean up the long-term memory based on time since last access.
         """
@@ -292,10 +322,12 @@ class TimeBasedCleanupStrategy(CleanupStrategy):
     A cleanup strategy that removes memories based on their age and access frequency.
     """
 
-    def __init__(self,
-                 working_memory_ttl_hours: float = 24.0,
-                 long_term_memory_ttl_days: float = 30.0,
-                 min_access_count: int = 3):
+    def __init__(
+        self,
+        working_memory_ttl_hours: float = 24.0,
+        long_term_memory_ttl_days: float = 30.0,
+        min_access_count: int = 3,
+    ):
         """
         Initialize the time-based cleanup strategy.
 
@@ -308,40 +340,44 @@ class TimeBasedCleanupStrategy(CleanupStrategy):
         self.long_term_memory_ttl = timedelta(days=long_term_memory_ttl_days)
         self.min_access_count = min_access_count
 
-    def cleanup_working_memory(self, collection: chromadb.Collection,
-                               current_date: datetime) -> None:
+    def cleanup_working_memory(
+        self, collection: chromadb.Collection, current_date: datetime
+    ) -> None:
         """Remove old working memories with low access counts."""
         # Retrieve all memories along with their metadata
         memories = collection.get(include=[IncludeEnum.metadatas])
 
-        if not memories['metadatas']:
+        if not memories["metadatas"]:
             return
 
         to_delete = []
         # Iterate over memories to determine which should be deleted
-        for memory_id, metadata in zip(memories['ids'], memories['metadatas']):
-            last_access = datetime.fromisoformat(metadata['last_access_timestamp'])
+        for memory_id, metadata in zip(memories["ids"], memories["metadatas"]):
+            last_access = datetime.fromisoformat(metadata["last_access_timestamp"])
             age = current_date - last_access
 
             # Delete if the memory is older than the TTL and has low access frequency
-            if (age > self.working_memory_ttl and
-                    metadata['access_count'] < self.min_access_count):
+            if (
+                age > self.working_memory_ttl
+                and metadata["access_count"] < self.min_access_count
+            ):
                 to_delete.append(memory_id)
 
         if to_delete:
             collection.delete(ids=to_delete)
 
-    def cleanup_long_term_memory(self, collection: chromadb.Collection,
-                                 current_date: datetime) -> None:
+    def cleanup_long_term_memory(
+        self, collection: chromadb.Collection, current_date: datetime
+    ) -> None:
         """Remove very old long-term memories that haven't been accessed recently."""
         memories = collection.get(include=[IncludeEnum.metadatas])
 
-        if not memories['metadatas']:
+        if not memories["metadatas"]:
             return
 
         to_delete = []
-        for memory_id, metadata in zip(memories['ids'], memories['metadatas']):
-            last_access = datetime.fromisoformat(metadata['last_access_timestamp'])
+        for memory_id, metadata in zip(memories["ids"], memories["metadatas"]):
+            last_access = datetime.fromisoformat(metadata["last_access_timestamp"])
             age = current_date - last_access
 
             # Delete if the memory's age exceeds the long-term TTL
@@ -355,6 +391,7 @@ class TimeBasedCleanupStrategy(CleanupStrategy):
 # =============================================================================
 # Configuration Dataclasses
 # =============================================================================
+
 
 @dataclasses.dataclass
 class EmbeddingsConfig:
@@ -370,6 +407,7 @@ class EmbeddingsConfig:
         embeddings_recall_prefix: Optional prefix to add when recalling embeddings.
         embeddings_clusters_prefix: Optional prefix to add when clustering embeddings.
     """
+
     sentence_transformer_model_path: str = "all-MiniLM-L6-v2"
     trust_remote_code: bool = False
     device: str = "cpu"
@@ -400,11 +438,16 @@ class SemanticMemoryConfig:
         minimum_similarity_threshold: Minimum similarity threshold to consider memories relevant.
         debug_mode: Whether to enable debug logging.
     """
+
     persist: bool = True
     persist_directory: Optional[str] = "./memory"
-    embeddings_config: EmbeddingsConfig = dataclasses.field(default_factory=EmbeddingsConfig)
+    embeddings_config: EmbeddingsConfig = dataclasses.field(
+        default_factory=EmbeddingsConfig
+    )
     extract_pattern_strategy: ExtractPatternStrategy = SimpleExtractPatternStrategy()
-    cluster_embeddings_strategy: ClusterEmbeddingsStrategy = SimpleClusterEmbeddingsStrategy()
+    cluster_embeddings_strategy: ClusterEmbeddingsStrategy = (
+        SimpleClusterEmbeddingsStrategy()
+    )
     cleanup_strategy: CleanupStrategy = None
     enable_long_term_memory: bool = True
     cleanup_interval_hours: float = 1.0  # How often to run cleanup
@@ -423,14 +466,17 @@ nomic_text_embeddings_gpu_config = EmbeddingsConfig(
     embeddings_recall_prefix="search_query: ",
     embeddings_clusters_prefix="cluster: ",
     trust_remote_code=True,
-    device="cuda"
+    device="cuda",
 )
-semantic_memory_nomic_text_gpu_config = SemanticMemoryConfig(embeddings_config=nomic_text_embeddings_gpu_config)
+semantic_memory_nomic_text_gpu_config = SemanticMemoryConfig(
+    embeddings_config=nomic_text_embeddings_gpu_config
+)
 
 
 # =============================================================================
 # SemanticMemory Class
 # =============================================================================
+
 
 class SemanticMemory:
     """
@@ -449,18 +495,23 @@ class SemanticMemory:
             config: An instance of SemanticMemoryConfig defining system parameters.
         """
         from sentence_transformers import SentenceTransformer
+
         # Initialize the sentence transformer encoder using the provided model configuration
         self.encoder = SentenceTransformer(
             config.embeddings_config.sentence_transformer_model_path,
             trust_remote_code=config.embeddings_config.trust_remote_code,
-            device=config.embeddings_config.device
+            device=config.embeddings_config.device,
         )
 
         self.enable_long_term_memory = config.enable_long_term_memory
         self.embeddings_store_prefix = config.embeddings_config.embeddings_store_prefix
-        self.embeddings_recall_prefix = config.embeddings_config.embeddings_recall_prefix
+        self.embeddings_recall_prefix = (
+            config.embeddings_config.embeddings_recall_prefix
+        )
         self.embedding_kwargs = config.embeddings_config.embedding_kwargs
-        self.embeddings_clusters_prefix = config.embeddings_config.embeddings_clusters_prefix
+        self.embeddings_clusters_prefix = (
+            config.embeddings_config.embeddings_clusters_prefix
+        )
         self.minimum_similarity_threshold = config.minimum_similarity_threshold
         self.debug_mode = config.debug_mode
 
@@ -485,14 +536,12 @@ class SemanticMemory:
 
         # Create or get the working memory collection with cosine similarity as the metric
         self.working = self.client.get_or_create_collection(
-            name="working_memory",
-            metadata={"hnsw:space": "cosine"}
+            name="working_memory", metadata={"hnsw:space": "cosine"}
         )
         # Create or get the long-term memory collection if enabled
         if self.enable_long_term_memory:
             self.long_term = self.client.get_or_create_collection(
-                name="long_term_memory",
-                metadata={"hnsw:space": "cosine"}
+                name="long_term_memory", metadata={"hnsw:space": "cosine"}
             )
         else:
             self.long_term = None
@@ -504,7 +553,10 @@ class SemanticMemory:
         Args:
             current_date: The current date/time used to compare against the last cleanup.
         """
-        if not self.cleanup_strategy or current_date - self.last_cleanup < self.cleanup_interval:
+        if (
+            not self.cleanup_strategy
+            or current_date - self.last_cleanup < self.cleanup_interval
+        ):
             return
 
         # Clean up working and long-term memories
@@ -512,8 +564,12 @@ class SemanticMemory:
         self.cleanup_strategy.cleanup_long_term_memory(self.long_term, current_date)
         self.last_cleanup = current_date
 
-    def store(self, content: str, context: Optional[Dict] = None,
-              timestamp=datetime.now().isoformat()) -> str:
+    def store(
+        self,
+        content: str,
+        context: Optional[Dict] = None,
+        timestamp=datetime.now().isoformat(),
+    ) -> str:
         """
         Store a new memory with optional context metadata.
 
@@ -530,7 +586,9 @@ class SemanticMemory:
 
         # Compute the embedding; optionally prepend a store prefix if configured
         if self.embeddings_store_prefix:
-            embedding = self.encoder.encode(self.embeddings_store_prefix + content, **self.embedding_kwargs).tolist()
+            embedding = self.encoder.encode(
+                self.embeddings_store_prefix + content, **self.embedding_kwargs
+            ).tolist()
         else:
             embedding = self.encoder.encode(content, **self.embedding_kwargs).tolist()
 
@@ -540,7 +598,7 @@ class SemanticMemory:
             "last_access_timestamp": timestamp,
             "access_count": 1,
             "memory_id": memory_id,
-            "type": "memory"
+            "type": "memory",
         }
         # Update metadata with any additional context provided
         if context:
@@ -551,7 +609,7 @@ class SemanticMemory:
             documents=[content],
             metadatas=[metadata],
             embeddings=[embedding],
-            ids=[memory_id]
+            ids=[memory_id],
         )
         # If long-term memory is enabled and enough memories are available, consolidate patterns
         if self.enable_long_term_memory:
@@ -560,9 +618,16 @@ class SemanticMemory:
         self._maybe_cleanup(datetime.fromisoformat(timestamp))
         return memory_id
 
-    def recall(self, query: str, n_results: int = 5, context_filter: Optional[Dict] = None,
-               current_date: datetime = datetime.now(), alpha_recency=1, alpha_relevance=1, alpha_frequency=1) -> List[
-        Dict]:
+    def recall(
+        self,
+        query: str,
+        n_results: int = 5,
+        context_filter: Optional[Dict] = None,
+        current_date: datetime = datetime.now(),
+        alpha_recency=1,
+        alpha_relevance=1,
+        alpha_frequency=1,
+    ) -> List[Dict]:
         """
         Recall memories that are similar to the query by performing a parallel search.
 
@@ -583,10 +648,13 @@ class SemanticMemory:
 
         # Compute the query embedding; optionally add a recall prefix if configured
         if self.embeddings_recall_prefix:
-            query_embedding = self.encoder.encode(self.embeddings_recall_prefix + query,
-                                                  **self.embedding_kwargs).tolist()
+            query_embedding = self.encoder.encode(
+                self.embeddings_recall_prefix + query, **self.embedding_kwargs
+            ).tolist()
         else:
-            query_embedding = self.encoder.encode(query, **self.embedding_kwargs).tolist()
+            query_embedding = self.encoder.encode(
+                query, **self.embedding_kwargs
+            ).tolist()
 
         def search(collection: chromadb.Collection, mem_type):
             """
@@ -605,8 +673,14 @@ class SemanticMemory:
                 # Query the collection with the query embedding and an adjusted number of results
                 layer_results = collection.query(
                     query_embeddings=[query_embedding],
-                    n_results=min(n_results * self.query_result_multiplier, collection.count()),
-                    where=context_filter if context_filter and len(context_filter) > 0 else None
+                    n_results=min(
+                        n_results * self.query_result_multiplier, collection.count()
+                    ),
+                    where=(
+                        context_filter
+                        if context_filter and len(context_filter) > 0
+                        else None
+                    ),
                 )
                 return self._format_results(layer_results, mem_type)
             except Exception as e:
@@ -618,7 +692,7 @@ class SemanticMemory:
             if self.enable_long_term_memory:
                 futures = {
                     executor.submit(search, self.working, "working"),
-                    executor.submit(search, self.long_term, "long_term")
+                    executor.submit(search, self.long_term, "long_term"),
                 }
                 results = []
                 for future in futures:
@@ -630,11 +704,11 @@ class SemanticMemory:
         seen_contents = ""
         unique_results = []
         for result in results:
-            if result['content'] not in seen_contents:
+            if result["content"] not in seen_contents:
                 if self.debug_mode:
                     print(f"Similarity: {result['similarity']}", flush=True)
-                if result['similarity'] > self.minimum_similarity_threshold:
-                    seen_contents += result['content'] + '\n'
+                if result["similarity"] > self.minimum_similarity_threshold:
+                    seen_contents += result["content"] + "\n"
                     # Compute a rank score based on recency, relevance, and frequency
                     result["rank_score"] = self.compute_memory_score(
                         result["metadata"],
@@ -642,24 +716,37 @@ class SemanticMemory:
                         current_date,
                         alpha_recency,
                         alpha_relevance,
-                        alpha_frequency
+                        alpha_frequency,
                     )
                     if self.debug_mode:
-                        print(f"RS: {result['rank_score']}, S: {result['similarity']}", flush=True)
+                        print(
+                            f"RS: {result['rank_score']}, S: {result['similarity']}",
+                            flush=True,
+                        )
                     unique_results.append(result)
 
         # Sort the unique results in descending order of rank score and select the top n_results
-        unique_results.sort(key=lambda x: x['rank_score'], reverse=True)
+        unique_results.sort(key=lambda x: x["rank_score"], reverse=True)
         unique_results = unique_results[:n_results]
 
         # Update metadata for each recalled memory to reflect the access
         for unique_result in unique_results:
-            unique_result["metadata"]["last_access_timestamp"] = current_date.isoformat()
-            unique_result["metadata"]["access_count"] = unique_result["metadata"]["access_count"] + 1
+            unique_result["metadata"][
+                "last_access_timestamp"
+            ] = current_date.isoformat()
+            unique_result["metadata"]["access_count"] = (
+                unique_result["metadata"]["access_count"] + 1
+            )
             if unique_result["metadata"]["type"] == "working":
-                self.working.update([unique_result["metadata"]["memory_id"]], metadatas=[unique_result["metadata"]])
+                self.working.update(
+                    [unique_result["metadata"]["memory_id"]],
+                    metadatas=[unique_result["metadata"]],
+                )
             elif unique_result["metadata"]["type"] == "long_term":
-                self.long_term.update([unique_result["metadata"]["pattern_id"]], metadatas=[unique_result["metadata"]])
+                self.long_term.update(
+                    [unique_result["metadata"]["pattern_id"]],
+                    metadatas=[unique_result["metadata"]],
+                )
 
         return unique_results
 
@@ -673,22 +760,35 @@ class SemanticMemory:
         # Depending on the configuration, either use the clusters prefix or not when generating embeddings
         if self.embeddings_clusters_prefix is None:
             working_memories = self.working.get(
-                include=[IncludeEnum.metadatas, IncludeEnum.embeddings, IncludeEnum.documents])
-            if not working_memories['documents']:
+                include=[
+                    IncludeEnum.metadatas,
+                    IncludeEnum.embeddings,
+                    IncludeEnum.documents,
+                ]
+            )
+            if not working_memories["documents"]:
                 return
             # Directly use the stored embeddings
-            embeddings = [embed for embed in working_memories['embeddings']]
+            embeddings = [embed for embed in working_memories["embeddings"]]
         else:
-            working_memories = self.working.get(include=[IncludeEnum.metadatas, IncludeEnum.documents])
+            working_memories = self.working.get(
+                include=[IncludeEnum.metadatas, IncludeEnum.documents]
+            )
             # Compute embeddings with the clusters prefix
-            embeddings = [self.encoder.encode(self.embeddings_clusters_prefix + doc, **self.embedding_kwargs)
-                          for doc in working_memories['documents']]
+            embeddings = [
+                self.encoder.encode(
+                    self.embeddings_clusters_prefix + doc, **self.embedding_kwargs
+                )
+                for doc in working_memories["documents"]
+            ]
         # Cluster the embeddings based on the similarity threshold
         clusters = self._cluster_embeddings(embeddings, self.minimum_cluster_similarity)
 
         # Process each cluster: if it's large enough, extract a pattern and store it in long-term memory
         for cluster_idx, cluster in enumerate(clusters):
-            if len(cluster) < self.minimum_cluster_size:  # Skip clusters that are too small
+            if (
+                len(cluster) < self.minimum_cluster_size
+            ):  # Skip clusters that are too small
                 continue
 
             pattern_id = f"pattern_{uuid.uuid4()}"
@@ -696,34 +796,44 @@ class SemanticMemory:
             # Extract a pattern from the cluster using the configured extraction strategy
             pattern = self._extract_pattern(
                 pattern_id,
-                [working_memories['documents'][i] for i in cluster],
-                [working_memories['metadatas'][i] for i in cluster],
-                timestamp
+                [working_memories["documents"][i] for i in cluster],
+                [working_memories["metadatas"][i] for i in cluster],
+                timestamp,
             )
 
             # Compute an embedding for the consolidated pattern
             if self.embeddings_store_prefix:
-                pattern_embedding = self.encoder.encode(self.embeddings_store_prefix + pattern['content']).tolist()
+                pattern_embedding = self.encoder.encode(
+                    self.embeddings_store_prefix + pattern["content"]
+                ).tolist()
             else:
-                pattern_embedding = self.encoder.encode(pattern['content']).tolist()
+                pattern_embedding = self.encoder.encode(pattern["content"]).tolist()
 
             # Delete the individual memories that were consolidated into a pattern
-            self.working.delete(ids=[t["memory_id"] for t in [working_memories['metadatas'][i] for i in cluster]])
+            self.working.delete(
+                ids=[
+                    t["memory_id"]
+                    for t in [working_memories["metadatas"][i] for i in cluster]
+                ]
+            )
             # Check for duplicate patterns in long-term memory
             existing = self.long_term.query(
-                query_embeddings=[pattern_embedding],
-                n_results=1
+                query_embeddings=[pattern_embedding], n_results=1
             )
             # If a nearly identical pattern already exists, skip adding the duplicate
-            if existing['distances'] and len(existing['distances'][0]) > 0 and existing['distances'][0][0] <= 0.01:
+            if (
+                existing["distances"]
+                and len(existing["distances"][0]) > 0
+                and existing["distances"][0][0] <= 0.01
+            ):
                 continue
 
             # Add the new pattern to long-term memory
             self.long_term.add(
-                documents=[pattern['content']],
-                metadatas=[pattern['metadata']],
+                documents=[pattern["content"]],
+                metadatas=[pattern["metadata"]],
                 embeddings=[pattern_embedding],
-                ids=[pattern_id]
+                ids=[pattern_id],
             )
 
     def _format_results(self, results: Dict, memory_type: str) -> List[Dict]:
@@ -739,28 +849,32 @@ class SemanticMemory:
         """
         formatted = []
 
-        if not results['documents']:
+        if not results["documents"]:
             return formatted
 
         # Extract the first (and only) set of documents, metadata, and distances from the query results
-        documents = results['documents'][0]
-        metadatas = results['metadatas'][0]
-        distances = results['distances'][0]
+        documents = results["documents"][0]
+        metadatas = results["metadatas"][0]
+        distances = results["distances"][0]
 
         for doc, meta, dist in zip(documents, metadatas, distances):
             # Convert distance to similarity score (ensuring it remains between 0 and 1)
             similarity = max(0, min(1, 1 - dist))
             if similarity > 0:  # Only include results with meaningful similarity
-                formatted.append({
-                    'content': doc,
-                    'metadata': meta,
-                    'similarity': similarity,
-                    'memory_type': memory_type
-                })
+                formatted.append(
+                    {
+                        "content": doc,
+                        "metadata": meta,
+                        "similarity": similarity,
+                        "memory_type": memory_type,
+                    }
+                )
 
         return formatted
 
-    def compute_memory_score(self, metadata, relevance, date, alpha_recency, alpha_relevance, alpha_frequency):
+    def compute_memory_score(
+        self, metadata, relevance, date, alpha_recency, alpha_relevance, alpha_frequency
+    ):
         """
         Compute a composite score for a memory based on recency, relevance, and frequency.
 
@@ -780,9 +894,9 @@ class SemanticMemory:
         # Compute the frequency score using logarithmic scaling to reduce the impact of very high counts
         frequency = np.log1p(metadata["access_count"])
         return (
-                alpha_recency * recency +  # Contribution from recency
-                alpha_relevance * relevance +  # Contribution from similarity
-                alpha_frequency * frequency  # Contribution from frequency of access
+            alpha_recency * recency  # Contribution from recency
+            + alpha_relevance * relevance  # Contribution from similarity
+            + alpha_frequency * frequency  # Contribution from frequency of access
         )
 
     def compute_recency(self, metadata, date):
@@ -800,7 +914,7 @@ class SemanticMemory:
         """
         time_diff = date - datetime.fromisoformat(metadata["last_access_timestamp"])
         hours_diff = time_diff.total_seconds() / 3600
-        recency = self.decay_factor ** hours_diff
+        recency = self.decay_factor**hours_diff
         return recency
 
     def get_stats(self) -> Dict:
@@ -812,5 +926,5 @@ class SemanticMemory:
         """
         return {
             "working_count": self.working.count(),
-            "long_term_count": self.long_term.count()
+            "long_term_count": self.long_term.count(),
         }

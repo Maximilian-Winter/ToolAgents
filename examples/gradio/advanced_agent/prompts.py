@@ -1,17 +1,23 @@
-summarization_prompt_pairs = """Your task is to create a concise but detailed summary of chat messages between an user and an assistant:
+summarization_prompt_pairs = (
+    """Your task is to create a concise but detailed summary of chat messages between an user and an assistant:
 1. Preserves specific facts, preferences, and details mentioned
 2. Maintains the temporal sequence of information
 3. Keeps concrete information that might be needed later
 4. Avoids generalizations or abstractions that might lose details
 
-""".rstrip(), "Chat Messages to Summarize:\n"
+""".rstrip(),
+    "Chat Messages to Summarize:\n",
+)
 
 
-summarization_prompt_summaries = """Your task is to create a concise but detailed summary of chat summaries between an user and an assistant:
+summarization_prompt_summaries = (
+    """Your task is to create a concise but detailed summary of chat summaries between an user and an assistant:
 1. Preserves specific facts, preferences, and details mentioned
 2. Maintains the temporal sequence of information
 3. Keeps concrete information that might be needed later
-4. Avoids generalizations or abstractions that might lose details""".rstrip(), "Chat Summaries to Summarize:\n"
+4. Avoids generalizations or abstractions that might lose details""".rstrip(),
+    "Chat Summaries to Summarize:\n",
+)
 
 
 system_message = """You are a personal AI assistant, your task is to engage in conversations with user and help them with daily problems.

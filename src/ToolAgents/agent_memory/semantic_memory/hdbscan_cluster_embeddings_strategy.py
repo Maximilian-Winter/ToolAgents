@@ -16,11 +16,17 @@ class HDBSCANClusterEmbeddingsStrategy(ClusterEmbeddingsStrategy):
         self.min_cluster_size = min_cluster_size
         self.min_samples = min_samples
 
-    def cluster_embeddings(self, embeddings: List[np.ndarray | Tensor], minimum_cluster_similarity: float = 0.75) -> List[List[int]]:
+    def cluster_embeddings(
+        self,
+        embeddings: List[np.ndarray | Tensor],
+        minimum_cluster_similarity: float = 0.75,
+    ) -> List[List[int]]:
         """Cluster embeddings using HDBSCAN with cosine similarity."""
 
         if len(embeddings) < self.min_cluster_size:
-            return [[i] for i in range(len(embeddings))]  # If too few points, return single-point clusters
+            return [
+                [i] for i in range(len(embeddings))
+            ]  # If too few points, return single-point clusters
 
         # Convert embeddings to numpy array (force float64)
         embeddings_array = np.array([e.astype(np.float64) for e in embeddings])
@@ -32,14 +38,16 @@ class HDBSCANClusterEmbeddingsStrategy(ClusterEmbeddingsStrategy):
 
         # Compute cosine distance matrix (1 - cosine similarity)
         similarity_matrix = np.dot(normalized_embeddings, normalized_embeddings.T)
-        distance_matrix = (1 - similarity_matrix).astype(np.float64)  # Convert to float64 explicitly
+        distance_matrix = (1 - similarity_matrix).astype(
+            np.float64
+        )  # Convert to float64 explicitly
 
         # Run HDBSCAN clustering
         clusterer = hdbscan.HDBSCAN(
             metric="precomputed",  # Using cosine distance matrix
             min_cluster_size=self.min_cluster_size,
             min_samples=self.min_samples,
-            cluster_selection_method="eom"  # Excess of mass, good for dense regions
+            cluster_selection_method="eom",  # Excess of mass, good for dense regions
         )
 
         labels = clusterer.fit_predict(distance_matrix)

@@ -6,7 +6,7 @@ import re
 import typing
 from enum import auto, Enum
 
-from typing import Type,  Dict
+from typing import Type, Dict
 
 
 from abc import ABC, abstractmethod
@@ -17,12 +17,20 @@ from docstring_parser import DocstringStyle, parse
 from pydantic import BaseModel, create_model, Field
 from pydantic_core import PydanticUndefined
 
-from ToolAgents.utilities.gbnf_grammar_generator.gbnf_grammar_from_pydantic_models import \
-    generate_gbnf_grammar_from_pydantic_models
+from ToolAgents.utilities.gbnf_grammar_generator.gbnf_grammar_from_pydantic_models import (
+    generate_gbnf_grammar_from_pydantic_models,
+)
 
-from ToolAgents.utilities.llm_documentation.documentation_generation import generate_text_documentation, generate_function_definition
-from ToolAgents.utilities.pydantic_utilites import create_dynamic_models_from_dictionaries, \
-    add_run_method_to_dynamic_model, create_dynamic_model_from_function, pydantic_model_to_openai_function_definition
+from ToolAgents.utilities.llm_documentation.documentation_generation import (
+    generate_text_documentation,
+    generate_function_definition,
+)
+from ToolAgents.utilities.pydantic_utilites import (
+    create_dynamic_models_from_dictionaries,
+    add_run_method_to_dynamic_model,
+    create_dynamic_model_from_function,
+    pydantic_model_to_openai_function_definition,
+)
 
 
 class BaseProcessor(ABC):
@@ -94,9 +102,9 @@ class PostProcessor(BaseProcessor):
         pass
 
 
-
 class ConfirmationState(Enum):
     """Represents the state of a confirmation request."""
+
     PENDING = auto()
     APPROVED = auto()
     REJECTED = auto()
@@ -105,7 +113,12 @@ class ConfirmationState(Enum):
 class ConfirmationRequest:
     """Represents a confirmation request for a function execution."""
 
-    def __init__(self, function_name: str, parameters: Dict[str, Any], description: typing.Optional[str] = None):
+    def __init__(
+        self,
+        function_name: str,
+        parameters: Dict[str, Any],
+        description: typing.Optional[str] = None,
+    ):
         self.function_name = function_name
         self.parameters = parameters
         self.description = description
@@ -126,6 +139,7 @@ class ConfirmationRequest:
         """Wait for user decision on the confirmation request."""
         return await self._future
 
+
 class FunctionTool:
     """
     Class representing a function tool for a LLM.
@@ -143,24 +157,26 @@ class FunctionTool:
     """
 
     def __init__(
-            self,
-            function_tool: Union[BaseModel, Callable, Tuple[Dict[str, Any], Callable]],
-            pre_processors = None,
-            post_processors = None,
-            debug_mode: bool = False,
-            require_confirmation: bool = False,
-            confirmation_description: typing.Optional[str] = None,
-            confirmation_handler: typing.Optional[Callable[[ConfirmationRequest], None]] = None,
-            **additional_parameters,
+        self,
+        function_tool: Union[BaseModel, Callable, Tuple[Dict[str, Any], Callable]],
+        pre_processors=None,
+        post_processors=None,
+        debug_mode: bool = False,
+        require_confirmation: bool = False,
+        confirmation_description: typing.Optional[str] = None,
+        confirmation_handler: typing.Optional[
+            Callable[[ConfirmationRequest], None]
+        ] = None,
+        **additional_parameters,
     ):
         # Initialize function tool as before...
         if isinstance(function_tool, type) and issubclass(function_tool, BaseModel):
             self.model = function_tool
         elif (
-                isinstance(function_tool, tuple)
-                and len(function_tool) == 2
-                and isinstance(function_tool[0], dict)
-                and callable(function_tool[1])
+            isinstance(function_tool, tuple)
+            and len(function_tool) == 2
+            and isinstance(function_tool[0], dict)
+            and callable(function_tool[1])
         ):
             models = create_dynamic_models_from_dictionaries([function_tool[0]])
             self.model = add_run_method_to_dynamic_model(models[0], function_tool[1])
@@ -174,7 +190,9 @@ class FunctionTool:
         self.post_processors = self._normalize_processors(post_processors)
 
         self.debug_mode = debug_mode
-        self.additional_parameters = additional_parameters if additional_parameters else {}
+        self.additional_parameters = (
+            additional_parameters if additional_parameters else {}
+        )
 
         # Confirmation-related properties
         self.require_confirmation = require_confirmation
@@ -183,7 +201,9 @@ class FunctionTool:
 
     @staticmethod
     def _normalize_processors(
-            processors: Union[BaseProcessor, List[BaseProcessor], Callable, List[Callable], None]
+        processors: Union[
+            BaseProcessor, List[BaseProcessor], Callable, List[Callable], None
+        ],
     ) -> List[BaseProcessor]:
         """
         Normalize processors input to a list of BaseProcessor instances.
@@ -207,9 +227,11 @@ class FunctionTool:
             elif callable(proc):
                 # Wrap callable in an anonymous processor class
                 normalized.append(
-                    type('CallableProcessor', (BaseProcessor,), {
-                        'process': staticmethod(proc)
-                    })()
+                    type(
+                        "CallableProcessor",
+                        (BaseProcessor,),
+                        {"process": staticmethod(proc)},
+                    )()
                 )
             else:
                 raise ValueError(f"Invalid processor type: {type(proc)}")
@@ -223,14 +245,16 @@ class FunctionTool:
         self.additional_parameters[key] = value
 
     def get_python_documentation(self):
-        return generate_function_definition(self.model, self.model.__name__, self.model.__doc__)
+        return generate_function_definition(
+            self.model, self.model.__name__, self.model.__doc__
+        )
 
     def get_text_documentation(self):
         return generate_text_documentation([self.model], "Function", "Arguments")
 
     @staticmethod
     def from_pydantic_model_and_callable(
-            pydantic_model: BaseModel, tool_function: Callable
+        pydantic_model: BaseModel, tool_function: Callable
     ):
         """
         Converts an OpenAI tool schema and a callable function into a LlamaCppFunctionTool
@@ -298,7 +322,7 @@ class FunctionTool:
         return {
             "name": function["name"],
             "description": function["description"],
-            "input_schema": function["parameters"]
+            "input_schema": function["parameters"],
         }
 
     def to_nous_hermes_pro_tool(self):
@@ -313,29 +337,32 @@ class FunctionTool:
                 "parameters": {
                     "type": "object",
                     "properties": {},
-                    "required": function["parameters"].get("required", [])
-                }
-            }
+                    "required": function["parameters"].get("required", []),
+                },
+            },
         }
 
         for prop_name, prop_info in function["parameters"]["properties"].items():
             nous_hermes_pro_tool["function"]["parameters"]["properties"][prop_name] = {
                 "type": prop_info.get("type", "string"),
-                "description": prop_info.get("description", "")
+                "description": prop_info.get("description", ""),
             }
 
             # Handle enum types
             if "enum" in prop_info:
-                nous_hermes_pro_tool["function"]["parameters"]["properties"][prop_name]["enum"] = prop_info["enum"]
+                nous_hermes_pro_tool["function"]["parameters"]["properties"][prop_name][
+                    "enum"
+                ] = prop_info["enum"]
 
             # Handle array types
             if prop_info.get("type") == "array" and "items" in prop_info:
-                nous_hermes_pro_tool["function"]["parameters"]["properties"][prop_name]["items"] = {
-                    "type": prop_info["items"].get("type", "string")
-                }
+                nous_hermes_pro_tool["function"]["parameters"]["properties"][prop_name][
+                    "items"
+                ] = {"type": prop_info["items"].get("type", "string")}
                 if "enum" in prop_info["items"]:
-                    nous_hermes_pro_tool["function"]["parameters"]["properties"][prop_name]["items"]["enum"] = \
-                        prop_info["items"]["enum"]
+                    nous_hermes_pro_tool["function"]["parameters"]["properties"][
+                        prop_name
+                    ]["items"]["enum"] = prop_info["items"]["enum"]
 
         return nous_hermes_pro_tool
 
@@ -369,13 +396,15 @@ class FunctionTool:
         """
         if self.require_confirmation:
             if not self.confirmation_handler:
-                raise ValueError("Confirmation handler must be set when require_confirmation is True")
+                raise ValueError(
+                    "Confirmation handler must be set when require_confirmation is True"
+                )
 
             # Create a confirmation request
             request = ConfirmationRequest(
                 function_name=self.model.__name__,
                 parameters=parameters,
-                description=self.confirmation_description
+                description=self.confirmation_description,
             )
 
             # Call the handler and wait for decision
@@ -445,13 +474,15 @@ class FunctionTool:
         """
         if self.require_confirmation:
             if not self.confirmation_handler:
-                raise ValueError("Confirmation handler must be set when require_confirmation is True")
+                raise ValueError(
+                    "Confirmation handler must be set when require_confirmation is True"
+                )
 
             # Create a confirmation request
             request = ConfirmationRequest(
                 function_name=self.model.__name__,
                 parameters=parameters,
-                description=self.confirmation_description
+                description=self.confirmation_description,
             )
 
             # Call the handler and await decision
@@ -495,9 +526,7 @@ class FunctionTool:
         return processed_result
 
     def add_pre_processor(
-            self,
-            processor: Union[PreProcessor, Callable],
-            position: int = None
+        self, processor: Union[PreProcessor, Callable], position: int = None
     ) -> None:
         """
         Add a new preprocessor to the function tool.
@@ -513,9 +542,7 @@ class FunctionTool:
             self.pre_processors.insert(position, normalized)
 
     def add_post_processor(
-            self,
-            processor: Union[PostProcessor, Callable],
-            position: int = None
+        self, processor: Union[PostProcessor, Callable], position: int = None
     ) -> None:
         """
         Add a new postprocessor to the function tool.
@@ -530,16 +557,32 @@ class FunctionTool:
         else:
             self.post_processors.insert(position, normalized)
 
+
 class AsyncFunctionTool(FunctionTool):
 
-    def __init__(self, function_tool: Union[BaseModel, Callable, Tuple[Dict[str, Any], Callable]], pre_processors=None,
-                 post_processors=None, debug_mode: bool = False, require_confirmation: bool = False,
-                 confirmation_description: typing.Optional[str] = None,
-                 confirmation_handler: typing.Optional[Callable[[ConfirmationRequest], None]] = None,
-                 **additional_parameters) -> None:
-        super().__init__(function_tool, pre_processors, post_processors, debug_mode, require_confirmation,
-                         confirmation_description, confirmation_handler, **additional_parameters)
-
+    def __init__(
+        self,
+        function_tool: Union[BaseModel, Callable, Tuple[Dict[str, Any], Callable]],
+        pre_processors=None,
+        post_processors=None,
+        debug_mode: bool = False,
+        require_confirmation: bool = False,
+        confirmation_description: typing.Optional[str] = None,
+        confirmation_handler: typing.Optional[
+            Callable[[ConfirmationRequest], None]
+        ] = None,
+        **additional_parameters,
+    ) -> None:
+        super().__init__(
+            function_tool,
+            pre_processors,
+            post_processors,
+            debug_mode,
+            require_confirmation,
+            confirmation_description,
+            confirmation_handler,
+            **additional_parameters,
+        )
 
     async def execute_async(self, parameters: Dict[str, Any]) -> Any:
         """
@@ -554,13 +597,15 @@ class AsyncFunctionTool(FunctionTool):
         """
         if self.require_confirmation:
             if not self.confirmation_handler:
-                raise ValueError("Confirmation handler must be set when require_confirmation is True")
+                raise ValueError(
+                    "Confirmation handler must be set when require_confirmation is True"
+                )
 
             # Create a confirmation request
             request = ConfirmationRequest(
                 function_name=self.model.__name__,
                 parameters=parameters,
-                description=self.confirmation_description
+                description=self.confirmation_description,
             )
 
             # Call the handler and await decision
@@ -603,6 +648,7 @@ class AsyncFunctionTool(FunctionTool):
 
         return processed_result
 
+
 class ToolRegistry:
     def __init__(self, guided_sampling_enabled: bool = False):
         self.tools: Dict[str, FunctionTool] = {}
@@ -619,7 +665,6 @@ class ToolRegistry:
     def add_tool(self, tool: FunctionTool):
         if tool.model.__name__ not in self.tools:
             self.tools[tool.model.__name__] = tool
-
 
     def remove(self, tool_name: str):
         del self.tools[tool_name]
@@ -643,19 +688,27 @@ class ToolRegistry:
         return [tool.to_nous_hermes_pro_tool() for tool in self.tools.values()]
 
     def get_guided_sampling_grammar(self):
-        return generate_gbnf_grammar_from_pydantic_models(models=[tool.model for tool in self.tools.values()],
-                                                          outer_object_name="name", outer_object_content="arguments",
-                                                          list_of_outputs=True, add_inner_thoughts=False,
-                                                          allow_only_inner_thoughts=False, add_request_heartbeat=False)
+        return generate_gbnf_grammar_from_pydantic_models(
+            models=[tool.model for tool in self.tools.values()],
+            outer_object_name="name",
+            outer_object_content="arguments",
+            list_of_outputs=True,
+            add_inner_thoughts=False,
+            allow_only_inner_thoughts=False,
+            add_request_heartbeat=False,
+        )
 
     def get_guided_sampling_json_schema(self):
         pass
-        #return generate_json_schemas(models=[tool.model for tool in self.tools.values()], outer_object_name="name",
+        # return generate_json_schemas(models=[tool.model for tool in self.tools.values()], outer_object_name="name",
         #                             allow_list=True, outer_object_properties_name="arguments")
 
     def get_tools_documentation(self):
-        return generate_text_documentation([tool.model for tool in self.tools.values()], model_prefix="Tool",
-                                           fields_prefix="Arguments")
+        return generate_text_documentation(
+            [tool.model for tool in self.tools.values()],
+            model_prefix="Tool",
+            fields_prefix="Arguments",
+        )
 
     def get_tools_information(self) -> Dict[str, Any]:
         result = {}
@@ -663,6 +716,8 @@ class ToolRegistry:
             result[tool.model.__name__] = tool.model.model_dump()
 
         return result
+
+
 def cli_confirmation_handler(request: ConfirmationRequest):
     """Simple CLI-based confirmation handler."""
     print(f"\n=== Confirmation Required for Tool Use: {request.function_name} ===")
@@ -674,7 +729,7 @@ def cli_confirmation_handler(request: ConfirmationRequest):
 
     response = input("\nApprove this execution? (y/n): ").strip().lower()
 
-    if response == 'y':
+    if response == "y":
         request.approve()
     else:
         request.reject()

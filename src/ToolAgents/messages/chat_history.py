@@ -5,7 +5,14 @@ from datetime import datetime
 from pydantic import BaseModel, Field
 
 from ToolAgents.messages import ChatMessageRole
-from ToolAgents.messages import ChatMessage, TextContent, BinaryContent, ToolCallContent, ToolCallResultContent
+from ToolAgents.messages import (
+    ChatMessage,
+    TextContent,
+    BinaryContent,
+    ToolCallContent,
+    ToolCallResultContent,
+)
+
 
 class ChatHistory(BaseModel):
     """
@@ -17,18 +24,22 @@ class ChatHistory(BaseModel):
         messages: List of chat messages in the history
         metadata: Optional metadata about the chat history
     """
-    id: str = Field(default_factory=lambda : str(uuid.uuid4()), description='Unique ID')
-    title: str = Field(default_factory=lambda : "New Chat", description='Chat title')
-    messages: List[ChatMessage] = Field(default_factory=list, description="List of chat messages")
-    metadata: Dict[str, Any] = Field(
-        default_factory=dict,
-        description="Additional metadata about the chat history"
+
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()), description="Unique ID")
+    title: str = Field(default_factory=lambda: "New Chat", description="Chat title")
+    messages: List[ChatMessage] = Field(
+        default_factory=list, description="List of chat messages"
     )
+    metadata: Dict[str, Any] = Field(
+        default_factory=dict, description="Additional metadata about the chat history"
+    )
+
     def clear(self):
         """
         Clears the chat history.
         """
         self.messages = []
+
     def add_message(self, message: ChatMessage) -> None:
         """
         Add a new message to the chat history.
@@ -46,7 +57,15 @@ class ChatHistory(BaseModel):
             message: ChatMessage object to add
         """
         date = datetime.now()
-        self.messages.append(ChatMessage(id=str(uuid.uuid4()), role=ChatMessageRole.System, content=[TextContent(content=message)], created_at=date, updated_at=date))
+        self.messages.append(
+            ChatMessage(
+                id=str(uuid.uuid4()),
+                role=ChatMessageRole.System,
+                content=[TextContent(content=message)],
+                created_at=date,
+                updated_at=date,
+            )
+        )
 
     def add_user_message(self, message: str) -> None:
         """
@@ -56,7 +75,15 @@ class ChatHistory(BaseModel):
             message: ChatMessage object to add
         """
         date = datetime.now()
-        self.messages.append(ChatMessage(id=str(uuid.uuid4()), role=ChatMessageRole.User, content=[TextContent(content=message)], created_at=date, updated_at=date))
+        self.messages.append(
+            ChatMessage(
+                id=str(uuid.uuid4()),
+                role=ChatMessageRole.User,
+                content=[TextContent(content=message)],
+                created_at=date,
+                updated_at=date,
+            )
+        )
 
     def add_assistant_message(self, message: str) -> None:
         """
@@ -66,7 +93,15 @@ class ChatHistory(BaseModel):
             message: ChatMessage object to add
         """
         date = datetime.now()
-        self.messages.append(ChatMessage(id=str(uuid.uuid4()), role=ChatMessageRole.Assistant, content=[TextContent(content=message)], created_at=date, updated_at=date))
+        self.messages.append(
+            ChatMessage(
+                id=str(uuid.uuid4()),
+                role=ChatMessageRole.Assistant,
+                content=[TextContent(content=message)],
+                created_at=date,
+                updated_at=date,
+            )
+        )
 
     def add_messages(self, messages: List[ChatMessage]) -> None:
         """
@@ -136,11 +171,11 @@ class ChatHistory(BaseModel):
                 return super().default(obj)
 
         # Write to file with pretty printing
-        with open(filepath, 'w', encoding='utf-8') as f:
+        with open(filepath, "w", encoding="utf-8") as f:
             json.dump(data, f, cls=DateTimeEncoder, indent=2)
 
     @classmethod
-    def load_from_json(cls, filepath: str) -> 'ChatHistory':
+    def load_from_json(cls, filepath: str) -> "ChatHistory":
         """
         Load chat history from a JSON file.
 
@@ -150,13 +185,13 @@ class ChatHistory(BaseModel):
         Returns:
             ChatHistory object with loaded messages
         """
-        with open(filepath, 'r', encoding='utf-8') as f:
+        with open(filepath, "r", encoding="utf-8") as f:
             data = json.load(f)
 
         # Convert ISO format strings back to datetime objects
-        for message in data['messages']:
-            message['created_at'] = datetime.fromisoformat(message['created_at'])
-            message['updated_at'] = datetime.fromisoformat(message['updated_at'])
+        for message in data["messages"]:
+            message["created_at"] = datetime.fromisoformat(message["created_at"])
+            message["updated_at"] = datetime.fromisoformat(message["updated_at"])
 
         return cls(**data)
 
@@ -188,8 +223,12 @@ class Chats(BaseModel):
         chats: List of chat histories in the history
     """
 
-    chats: Dict[str, ChatHistory] = Field(default_factory=dict, description="List of chats")
-    chats_metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional metadata about the chats")
+    chats: Dict[str, ChatHistory] = Field(
+        default_factory=dict, description="List of chats"
+    )
+    chats_metadata: Dict[str, Any] = Field(
+        default_factory=dict, description="Additional metadata about the chats"
+    )
 
     def create_chat(self, title: str):
         chat_id = str(uuid.uuid4())
@@ -230,12 +269,11 @@ class Chats(BaseModel):
                     return obj.isoformat()
                 return super().default(obj)
 
-        with open(filepath, 'w', encoding='utf-8') as f:
+        with open(filepath, "w", encoding="utf-8") as f:
             json.dump(data, f, cls=DateTimeEncoder, indent=2)
 
-
     @classmethod
-    def load_from_json(cls, filepath: str) -> 'Chats':
+    def load_from_json(cls, filepath: str) -> "Chats":
         """
         Load chats from a JSON file.
 
@@ -245,17 +283,16 @@ class Chats(BaseModel):
         Returns:
             Chats object with loaded chat histories
         """
-        with open(filepath, 'r', encoding='utf-8') as f:
+        with open(filepath, "r", encoding="utf-8") as f:
             data = json.load(f)
 
         # Convert ISO format strings back to datetime objects for all chats
-        for key, chat in data['chats'].items():
-            for message in chat['messages']:
-                message['created_at'] = datetime.fromisoformat(message['created_at'])
-                message['updated_at'] = datetime.fromisoformat(message['updated_at'])
+        for key, chat in data["chats"].items():
+            for message in chat["messages"]:
+                message["created_at"] = datetime.fromisoformat(message["created_at"])
+                message["updated_at"] = datetime.fromisoformat(message["updated_at"])
 
         return cls(**data)
-
 
 
 # Example usage
@@ -268,11 +305,9 @@ if __name__ == "__main__":
     test_message = ChatMessage(
         id="1",
         role=ChatMessageRole.User,
-        content=[
-            TextContent(content="Hello, how can I help you today?")
-        ],
+        content=[TextContent(content="Hello, how can I help you today?")],
         created_at=test_date,
-        updated_at=test_date
+        updated_at=test_date,
     )
 
     # Add message to history
@@ -285,4 +320,8 @@ if __name__ == "__main__":
     test_loaded_history = Chats.load_from_json("chat_history.json")
 
     # Print the loaded message
-    print(test_loaded_history.get_last_k_messages(test_chat_id, 1)[0].model_dump_json(indent=2))
+    print(
+        test_loaded_history.get_last_k_messages(test_chat_id, 1)[0].model_dump_json(
+            indent=2
+        )
+    )

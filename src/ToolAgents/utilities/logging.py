@@ -23,16 +23,18 @@ class EasyLogger:
     # Log format presets
     FORMAT_SIMPLE = "%(message)s"
     FORMAT_STANDARD = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-    FORMAT_DETAILED = "%(asctime)s - %(name)s - %(levelname)s - %(pathname)s:%(lineno)d - %(message)s"
+    FORMAT_DETAILED = (
+        "%(asctime)s - %(name)s - %(levelname)s - %(pathname)s:%(lineno)d - %(message)s"
+    )
 
     def __init__(
-            self,
-            name: str = None,
-            level: int = INFO,
-            format_string: str = None,
-            log_to_console: bool = True,
-            log_to_file: Union[bool, str] = False,
-            file_mode: str = 'a'
+        self,
+        name: str = None,
+        level: int = INFO,
+        format_string: str = None,
+        log_to_console: bool = True,
+        log_to_file: Union[bool, str] = False,
+        file_mode: str = "a",
     ):
         """
         Initialize a new EasyLogger instance.
@@ -65,7 +67,9 @@ class EasyLogger:
 
         # Add file handler if requested
         if log_to_file:
-            filename = log_to_file if isinstance(log_to_file, str) else f"{self.name}.log"
+            filename = (
+                log_to_file if isinstance(log_to_file, str) else f"{self.name}.log"
+            )
             self._add_file_handler(filename, file_mode)
 
     def _add_console_handler(self):
@@ -74,7 +78,7 @@ class EasyLogger:
         console_handler.setFormatter(self.formatter)
         self.logger.addHandler(console_handler)
 
-    def _add_file_handler(self, filename: str, file_mode: str = 'a'):
+    def _add_file_handler(self, filename: str, file_mode: str = "a"):
         """Add a handler that logs to a file."""
         # Create directory if it doesn't exist
         directory = os.path.dirname(filename)
@@ -85,7 +89,9 @@ class EasyLogger:
         file_handler.setFormatter(self.formatter)
         self.logger.addHandler(file_handler)
 
-    def add_rotating_file_handler(self, filename: str, max_bytes: int = 10 * 1024 * 1024, backup_count: int = 5):
+    def add_rotating_file_handler(
+        self, filename: str, max_bytes: int = 10 * 1024 * 1024, backup_count: int = 5
+    ):
         """
         Add a size-based rotating file handler.
 
@@ -99,14 +105,14 @@ class EasyLogger:
             os.makedirs(directory, exist_ok=True)
 
         handler = RotatingFileHandler(
-            filename,
-            maxBytes=max_bytes,
-            backupCount=backup_count
+            filename, maxBytes=max_bytes, backupCount=backup_count
         )
         handler.setFormatter(self.formatter)
         self.logger.addHandler(handler)
 
-    def add_timed_rotating_file_handler(self, filename: str, when: str = 'midnight', backup_count: int = 7):
+    def add_timed_rotating_file_handler(
+        self, filename: str, when: str = "midnight", backup_count: int = 7
+    ):
         """
         Add a time-based rotating file handler.
 
@@ -121,9 +127,7 @@ class EasyLogger:
             os.makedirs(directory, exist_ok=True)
 
         handler = TimedRotatingFileHandler(
-            filename,
-            when=when,
-            backupCount=backup_count
+            filename, when=when, backupCount=backup_count
         )
         handler.setFormatter(self.formatter)
         self.logger.addHandler(handler)
@@ -172,11 +176,11 @@ class EasyLogger:
 
     @classmethod
     def configure_root_logger(
-            cls,
-            level: int = INFO,
-            format_string: str = None,
-            log_to_console: bool = True,
-            log_to_file: Union[bool, str] = False
+        cls,
+        level: int = INFO,
+        format_string: str = None,
+        log_to_console: bool = True,
+        log_to_file: Union[bool, str] = False,
     ):
         """
         Configure the root logger with the given settings.
@@ -188,7 +192,7 @@ class EasyLogger:
             level=level,
             format_string=format_string,
             log_to_console=log_to_console,
-            log_to_file=log_to_file
+            log_to_file=log_to_file,
         )
 
 
@@ -204,7 +208,7 @@ if __name__ == "__main__":
         name="debug_logger",
         level=EasyLogger.DEBUG,
         format_string=EasyLogger.FORMAT_DETAILED,
-        log_to_file="logs/debug.log"
+        log_to_file="logs/debug.log",
     )
     debug_logger.debug("This debug message goes to both console and file")
     debug_logger.add_rotating_file_handler("logs/rotating_debug.log")
@@ -215,7 +219,7 @@ if __name__ == "__main__":
         level=EasyLogger.INFO,
         format_string="%(asctime)s [%(name)s] %(levelname)s: %(message)s",
         log_to_console=True,
-        log_to_file="logs/api.log"
+        log_to_file="logs/api.log",
     )
     api_logger.info("API initialized")
 
@@ -226,8 +230,7 @@ if __name__ == "__main__":
 
     # Configure the root logger
     root_logger = EasyLogger.configure_root_logger(
-        level=EasyLogger.WARNING,
-        log_to_file="logs/root.log"
+        level=EasyLogger.WARNING, log_to_file="logs/root.log"
     )
     root_logger.warning("This is a warning from the root logger")
 

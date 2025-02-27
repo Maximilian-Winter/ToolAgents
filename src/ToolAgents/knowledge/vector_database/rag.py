@@ -1,4 +1,6 @@
-from ToolAgents.knowledge.vector_database.vector_database_provider import VectorDatabaseProvider
+from ToolAgents.knowledge.vector_database.vector_database_provider import (
+    VectorDatabaseProvider,
+)
 
 
 class RAG:
@@ -6,10 +8,7 @@ class RAG:
     Represents a chromadb vector database with a Colbert reranker.
     """
 
-    def __init__(
-        self,
-        vector_database_provider: VectorDatabaseProvider
-    ):
+    def __init__(self, vector_database_provider: VectorDatabaseProvider):
         self.vector_database_provider = vector_database_provider
 
     def add_document(self, document: str, metadata: dict = None):

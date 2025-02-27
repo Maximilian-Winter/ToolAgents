@@ -1,11 +1,13 @@
 import abc
 import re
 
+
 class TextSplitter(abc.ABC):
 
     @abc.abstractmethod
     def get_chunks(self, text):
         pass
+
 
 class SimpleTextSplitter(TextSplitter):
     """
@@ -83,7 +85,14 @@ class RecursiveCharacterTextSplitter(TextSplitter):
         If chunk_size <= 0, if chunk_overlap < 0, or if chunk_overlap >= chunk_size.
     """
 
-    def __init__(self, separators, chunk_size, chunk_overlap, length_function=len, keep_separator=False):
+    def __init__(
+        self,
+        separators,
+        chunk_size,
+        chunk_overlap,
+        length_function=len,
+        keep_separator=False,
+    ):
         if chunk_size <= 0:
             raise ValueError("chunk_size must be a positive integer.")
         if chunk_overlap < 0:
@@ -173,7 +182,7 @@ class RecursiveCharacterTextSplitter(TextSplitter):
         step = self.chunk_size - self.chunk_overlap  # guaranteed > 0
         if not text:
             return []
-        chunks = [text[i: i + self.chunk_size] for i in range(0, len(text), step)]
+        chunks = [text[i : i + self.chunk_size] for i in range(0, len(text), step)]
         if len(chunks) > 1 and len(chunks[-1]) < self.chunk_overlap:
             chunks[-2] += chunks[-1]
             chunks.pop()
@@ -205,7 +214,7 @@ class RecursiveCharacterTextSplitter(TextSplitter):
                 merged.append(current_chunk)
                 if len(current_chunk) == self.chunk_size:
                     # Maintain overlap if the current chunk is exactly full.
-                    current_chunk = current_chunk[-self.chunk_overlap:] + piece
+                    current_chunk = current_chunk[-self.chunk_overlap :] + piece
                 else:
                     current_chunk = piece
         merged.append(current_chunk)

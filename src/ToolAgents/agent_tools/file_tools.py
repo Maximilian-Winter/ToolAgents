@@ -44,8 +44,8 @@ class FilesystemTools:
         Returns:
             str: Formatted file size string (e.g., "4.2 KB").
         """
-        for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
-            if size_in_bytes < 1024.0 or unit == 'TB':
+        for unit in ["B", "KB", "MB", "GB", "TB"]:
+            if size_in_bytes < 1024.0 or unit == "TB":
                 break
             size_in_bytes /= 1024.0
         return f"{size_in_bytes:.1f} {unit}"
@@ -80,7 +80,6 @@ class FilesystemTools:
 
         return "\n".join(result)
 
-
     def create_file(self, file_path: str, content: str = "") -> str:
         """
         Create a new file with the specified content.
@@ -98,7 +97,7 @@ class FilesystemTools:
         os.makedirs(os.path.dirname(full_path), exist_ok=True)
 
         try:
-            with open(full_path, 'w', encoding='utf-8') as f:
+            with open(full_path, "w", encoding="utf-8") as f:
                 f.write(content)
             return f"File '{file_path}' created successfully."
         except Exception as e:
@@ -120,14 +119,16 @@ class FilesystemTools:
             if not os.path.exists(full_path):
                 return f"Error: File '{file_path}' does not exist."
 
-            with open(full_path, 'r', encoding='utf-8') as f:
+            with open(full_path, "r", encoding="utf-8") as f:
                 content = f.read()
 
             return f"Content of file '{file_path}':\n\n{content}"
         except Exception as e:
             return f"Failed to read file '{file_path}': {str(e)}"
 
-    def edit_file(self, file_path: str, old_text: str, new_text: str, append: bool) -> str:
+    def edit_file(
+        self, file_path: str, old_text: str, new_text: str, append: bool
+    ) -> str:
         """
         Edit a file by replacing text or setting its entire content.
 
@@ -147,11 +148,11 @@ class FilesystemTools:
 
         try:
             if append:
-                with open(full_path, 'a', encoding='utf-8') as f:
+                with open(full_path, "a", encoding="utf-8") as f:
                     f.write(new_text)
                 return f"Text appended successfully in '{file_path}'."
             else:
-                with open(full_path, 'r', encoding='utf-8') as f:
+                with open(full_path, "r", encoding="utf-8") as f:
                     file_content = f.read()
 
                 if old_text not in file_content:
@@ -159,7 +160,7 @@ class FilesystemTools:
 
                 new_content = file_content.replace(old_text, new_text)
 
-                with open(full_path, 'w', encoding='utf-8') as f:
+                with open(full_path, "w", encoding="utf-8") as f:
                     f.write(new_content)
 
                 return f"Text replaced successfully in '{file_path}'."
@@ -210,7 +211,7 @@ class FilesystemTools:
                 results.append(f"Directory '{dir_path}' created successfully.")
             except Exception as e:
                 results.append(f"Failed to create directory '{dir_path}': {str(e)}")
-        return '\n'.join(results)
+        return "\n".join(results)
 
     def move_file(self, source_path: str, dest_path: str) -> str:
         """
@@ -235,7 +236,9 @@ class FilesystemTools:
 
             shutil.move(full_source, full_dest)
             item_type = "Directory" if os.path.isdir(full_dest) else "File"
-            return f"{item_type} moved from '{source_path}' to '{dest_path}' successfully."
+            return (
+                f"{item_type} moved from '{source_path}' to '{dest_path}' successfully."
+            )
         except Exception as e:
             return f"Failed to move from '{source_path}' to '{dest_path}': {str(e)}"
 
@@ -265,7 +268,9 @@ class FilesystemTools:
                 return f"Directory copied from '{source_path}' to '{dest_path}' successfully."
             else:
                 shutil.copy2(full_source, full_dest)
-                return f"File copied from '{source_path}' to '{dest_path}' successfully."
+                return (
+                    f"File copied from '{source_path}' to '{dest_path}' successfully."
+                )
         except Exception as e:
             return f"Failed to copy from '{source_path}' to '{dest_path}': {str(e)}"
 
@@ -298,7 +303,7 @@ class FilesystemTools:
                 f"Last accessed: {self._format_timestamp(stats.st_atime)}",
                 f"Owner: {path_obj.owner()}",
                 f"Group: {path_obj.group()}",
-                f"Permissions: {oct(stats.st_mode)[-3:]}"
+                f"Permissions: {oct(stats.st_mode)[-3:]}",
             ]
 
             if os.path.isdir(full_path):
@@ -320,8 +325,8 @@ class FilesystemTools:
             str: Formatted date string.
         """
         from datetime import datetime
-        return datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S')
 
+        return datetime.fromtimestamp(timestamp).strftime("%Y-%m-%d %H:%M:%S")
 
     def get_working_directory(self) -> str:
         """
@@ -373,5 +378,5 @@ class FilesystemTools:
             FunctionTool(self.edit_file),
             FunctionTool(self.create_directories),
             FunctionTool(self.get_working_directory),
-            FunctionTool(self.set_working_directory)
+            FunctionTool(self.set_working_directory),
         ]

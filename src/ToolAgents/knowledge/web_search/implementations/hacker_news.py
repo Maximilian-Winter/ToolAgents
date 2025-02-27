@@ -22,7 +22,9 @@ class HackernewsWebSearchProvider(WebSearchProvider):
         # Fetch story details
         stories = []
         for story_id in story_ids[:num_results]:
-            story_response = httpx.get(f"https://hacker-news.firebaseio.com/v0/item/{story_id}.json")
+            story_response = httpx.get(
+                f"https://hacker-news.firebaseio.com/v0/item/{story_id}.json"
+            )
             story_response.raise_for_status()
             story = story_response.json()
             story["username"] = story["by"]

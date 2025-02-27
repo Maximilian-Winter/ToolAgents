@@ -1,14 +1,21 @@
 # This show an advanced agent that will handle all the things like chat history by itself, also contains optional memory and app state functionality.
-from ToolAgents.agent_memory.semantic_memory.memory import semantic_memory_nomic_text_gpu_config, SummarizationExtractPatternStrategy
+from ToolAgents.agent_memory.semantic_memory.memory import (
+    semantic_memory_nomic_text_gpu_config,
+    SummarizationExtractPatternStrategy,
+)
 from ToolAgents.agents.advanced_agent import AdvancedAgent
 from ToolAgents.agents.advanced_agent import AgentConfig
 from ToolAgents.agents import ChatToolAgent
 
 
 from ToolAgents.provider import CompletionProvider
-from ToolAgents.provider.completion_provider.default_implementations import LlamaCppServer
+from ToolAgents.provider.completion_provider.default_implementations import (
+    LlamaCppServer,
+)
 
-provider = CompletionProvider(completion_endpoint=LlamaCppServer("http://127.0.0.1:8080"))
+provider = CompletionProvider(
+    completion_endpoint=LlamaCppServer("http://127.0.0.1:8080")
+)
 
 agent = ChatToolAgent(chat_api=provider, debug_output=True)
 
@@ -75,11 +82,19 @@ You can modify the app state using the following tools:
 agent_config.save_dir = "./example_agent"
 agent_config.max_chat_history_length = 25
 agent_config.use_semantic_chat_history_memory = True
-#agent_config.give_agent_edit_tool = True
+# agent_config.give_agent_edit_tool = True
 agent_config.initial_app_state_file = "example_app_state.yaml"
 agent_config.semantic_chat_history_config = semantic_memory_nomic_text_gpu_config
 agent_config.semantic_chat_history_config.debug_mode = True
-agent_config.semantic_chat_history_config.extract_pattern_strategy = SummarizationExtractPatternStrategy(agent=agent,summarizer_settings=summarizer_settings, debug_mode=True, user_name="User", assistant_name="Assistant")
+agent_config.semantic_chat_history_config.extract_pattern_strategy = (
+    SummarizationExtractPatternStrategy(
+        agent=agent,
+        summarizer_settings=summarizer_settings,
+        debug_mode=True,
+        user_name="User",
+        assistant_name="Assistant",
+    )
+)
 
 configurable_agent = AdvancedAgent(agent=agent, agent_config=agent_config)
 # configurable_agent.add_to_chat_history_from_json("./test_chat_history.json")

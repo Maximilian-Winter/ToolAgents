@@ -6,6 +6,7 @@ from ToolAgents.utilities import SimpleTextSplitter, RecursiveCharacterTextSplit
 
 # Now, let's write our tests.
 
+
 class TestSimpleTextSplitter(unittest.TestCase):
     def test_non_overlapping(self):
         # Test splitting without overlap.
@@ -54,14 +55,18 @@ class TestRecursiveCharacterTextSplitter(unittest.TestCase):
     def test_no_split_needed(self):
         # If the text is short, no splitting should occur.
         text = "Hello world"
-        splitter = RecursiveCharacterTextSplitter(separators=[" "], chunk_size=20, chunk_overlap=5)
+        splitter = RecursiveCharacterTextSplitter(
+            separators=[" "], chunk_size=20, chunk_overlap=5
+        )
         chunks = splitter.split_text(text)
         self.assertEqual(chunks, [text])
 
     def test_split_on_separator(self):
         # Test splitting on a space.
         text = "a bb ccc dddd"
-        splitter = RecursiveCharacterTextSplitter(separators=[" "], chunk_size=10, chunk_overlap=2)
+        splitter = RecursiveCharacterTextSplitter(
+            separators=[" "], chunk_size=10, chunk_overlap=2
+        )
         # The text.split(" ") gives ["a", "bb", "ccc", "dddd"]
         # Merging these pieces:
         #   current_chunk = "a"
@@ -74,7 +79,9 @@ class TestRecursiveCharacterTextSplitter(unittest.TestCase):
         # If the separator isn't found, it should fall back to fixed-size splitting.
         text = "abcdefghij"
         # Using a separator that doesn't exist (",") forces the fallback.
-        splitter = RecursiveCharacterTextSplitter(separators=[","], chunk_size=3, chunk_overlap=1)
+        splitter = RecursiveCharacterTextSplitter(
+            separators=[","], chunk_size=3, chunk_overlap=1
+        )
         # _split_into_fixed_size: step = 3 - 1 = 2, so:
         #   text[0:3] -> "abc"
         #   text[2:5] -> "cde"
@@ -101,18 +108,24 @@ class TestRecursiveCharacterTextSplitter(unittest.TestCase):
     def test_invalid_chunk_size(self):
         # A non-positive chunk_size should raise a ValueError.
         with self.assertRaises(ValueError):
-            RecursiveCharacterTextSplitter(separators=[" "], chunk_size=0, chunk_overlap=0)
+            RecursiveCharacterTextSplitter(
+                separators=[" "], chunk_size=0, chunk_overlap=0
+            )
 
     def test_invalid_chunk_overlap_negative(self):
         # Negative chunk_overlap should raise a ValueError.
         with self.assertRaises(ValueError):
-            RecursiveCharacterTextSplitter(separators=[" "], chunk_size=5, chunk_overlap=-1)
+            RecursiveCharacterTextSplitter(
+                separators=[" "], chunk_size=5, chunk_overlap=-1
+            )
 
     def test_invalid_chunk_overlap_too_large(self):
         # chunk_overlap equal to (or greater than) chunk_size should raise a ValueError.
         with self.assertRaises(ValueError):
-            RecursiveCharacterTextSplitter(separators=[" "], chunk_size=5, chunk_overlap=5)
+            RecursiveCharacterTextSplitter(
+                separators=[" "], chunk_size=5, chunk_overlap=5
+            )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

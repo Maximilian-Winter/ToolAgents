@@ -14,11 +14,15 @@ class DocumentChunk:
     chunk_index: int
     size_in_characters: int
 
+
 @dataclasses.dataclass
 class Document:
     id: str
-    document_chunks: list[DocumentChunk] = dataclasses.field(default_factory=list[DocumentChunk])
+    document_chunks: list[DocumentChunk] = dataclasses.field(
+        default_factory=list[DocumentChunk]
+    )
     metadata: Optional[typing.Dict[str, typing.Any]] = None
+
 
 class DocumentGenerator:
     def __init__(self, text_splitter: TextSplitter = None):
@@ -33,7 +37,13 @@ class DocumentGenerator:
 
         document = Document(id=str(uuid.uuid4()), metadata=metadata)
         for chunk in chunks:
-            document_chunk = DocumentChunk(id=str(uuid.uuid4()), parent_doc_id=document.id, content=chunk, chunk_index=chunk_index, size_in_characters=len(chunk))
+            document_chunk = DocumentChunk(
+                id=str(uuid.uuid4()),
+                parent_doc_id=document.id,
+                content=chunk,
+                chunk_index=chunk_index,
+                size_in_characters=len(chunk),
+            )
             document.document_chunks.append(document_chunk)
             chunk_index = chunk_index + 1
         return document

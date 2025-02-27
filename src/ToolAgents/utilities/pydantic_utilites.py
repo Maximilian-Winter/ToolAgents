@@ -2,7 +2,7 @@ import inspect
 import re
 import typing
 
-from typing import Type,  Dict
+from typing import Type, Dict
 
 from typing import Any, List, Union, Callable
 
@@ -20,9 +20,9 @@ def format_model_and_field_name(model_name: str) -> str:
 
 
 def create_dynamic_model_from_function(
-        func: Callable[..., Any],
-        add_inner_thoughts: bool = False,
-        inner_thoughts_field_name: str = "inner_thoughts",
+    func: Callable[..., Any],
+    add_inner_thoughts: bool = False,
+    inner_thoughts_field_name: str = "inner_thoughts",
 ):
     """
     Creates a dynamic Pydantic model from a given function's type hints and adds the function as a 'run' method.
@@ -83,16 +83,16 @@ def create_dynamic_model_from_function(
     # Creating the dynamic model
     dynamic_model = create_model(f"{func.__name__}", **dynamic_fields)  # type: ignore[call-overload]
     if add_inner_thoughts:
-        dynamic_model.model_fields[
-            inner_thoughts_field_name
-        ].description = "Deep inner monologue private to you only."
+        dynamic_model.model_fields[inner_thoughts_field_name].description = (
+            "Deep inner monologue private to you only."
+        )
     for name, param_doc in param_docs:
         dynamic_model.model_fields[name].description = param_doc.description
 
     dynamic_model.__doc__ = (
-            (docstring.short_description if docstring.short_description is not None else "")
-            + "\n"
-            + (docstring.long_description if docstring.long_description is not None else "")
+        (docstring.short_description if docstring.short_description is not None else "")
+        + "\n"
+        + (docstring.long_description if docstring.long_description is not None else "")
     )
 
     def run_method_wrapper(self):
@@ -172,10 +172,10 @@ def list_to_enum(enum_name, values):
 
 
 def convert_dictionary_to_pydantic_model(
-        dictionary: dict[str, Any],
-        model_name: str = "CustomModel",
-        docs: dict[str, str] = None,
-        docs_function: dict[str, str] = None,
+    dictionary: dict[str, Any],
+    model_name: str = "CustomModel",
+    docs: dict[str, str] = None,
+    docs_function: dict[str, str] = None,
 ) -> type[Any]:
     """
     Convert a dictionary to a Pydantic model class.
@@ -306,7 +306,9 @@ def get_openai_type(py_type):
     elif hasattr(py_type, "__origin__"):
         if py_type.__origin__ is Union:
             # Filter out NoneType to handle optional fields
-            non_none_types = [get_openai_type(t) for t in py_type.__args__ if t is not type(None)]
+            non_none_types = [
+                get_openai_type(t) for t in py_type.__args__ if t is not type(None)
+            ]
             return non_none_types
         elif py_type.__origin__ is Dict or py_type.__origin__ is dict:
             # Handle lists by identifying the type of list items
@@ -349,37 +351,46 @@ def pydantic_model_to_openai_function_definition(pydantic_model: Type[BaseModel]
         field_description = (
             field_info.description if field_info and field_info.description else ""
         )
-        if isinstance(openai_type,
-                      dict) and field_info.default is not PydanticUndefined and field_info.default is not None:
+        if (
+            isinstance(openai_type, dict)
+            and field_info.default is not PydanticUndefined
+            and field_info.default is not None
+        ):
             continue
         if isinstance(openai_type, list) and len(openai_type) > 1:
             # Handling Union types specifically
             function_definition["function"]["parameters"]["properties"][prop_name] = {
                 "type": "union",
-                "options": openai_type
+                "options": openai_type,
             }
             if len(field_description) > 0:
-                function_definition["function"]["parameters"]["properties"][prop_name]["description"] = field_description
+                function_definition["function"]["parameters"]["properties"][prop_name][
+                    "description"
+                ] = field_description
         elif isinstance(openai_type, list):
             if len(field_description) > 0:
                 openai_type[0]["description"] = field_description
-            function_definition["function"]["parameters"]["properties"][prop_name] = openai_type[0]
+            function_definition["function"]["parameters"]["properties"][prop_name] = (
+                openai_type[0]
+            )
         else:
             function_definition["function"]["parameters"]["properties"][prop_name] = {
                 **openai_type
             }
             if len(field_description) > 0:
-                function_definition["function"]["parameters"]["properties"][prop_name]["description"] = field_description
+                function_definition["function"]["parameters"]["properties"][prop_name][
+                    "description"
+                ] = field_description
 
     return function_definition
 
 
 def add_field_to_model(
-        model_class: Type[BaseModel],
-        field_name: str,
-        field_type: Type[Any],
-        default: Any = None,
-        required: bool = True
+    model_class: Type[BaseModel],
+    field_name: str,
+    field_type: Type[Any],
+    default: Any = None,
+    required: bool = True,
 ) -> Type[BaseModel]:
     """
     Adds a new field to an existing Pydantic model class.
@@ -424,24 +435,22 @@ def add_field_to_model(
     new_field = Field(**field_config)
 
     # Create new annotations dictionary with the added field
-    new_annotations = {
-        **existing_fields,
-        field_name: field_type
-    }
+    new_annotations = {**existing_fields, field_name: field_type}
 
     # Create new namespace for the model
     namespace = {
         "__annotations__": new_annotations,
         field_name: new_field,
-        **{k: v for k, v in model_class.__dict__.items()
-           if not k.startswith("_") and k != "model_fields"}
+        **{
+            k: v
+            for k, v in model_class.__dict__.items()
+            if not k.startswith("_") and k != "model_fields"
+        },
     }
 
     # Create new model class
     new_model = type(
-        f"{model_class.__name__}With{field_name.title()}",
-        (BaseModel,),
-        namespace
+        f"{model_class.__name__}With{field_name.title()}", (BaseModel,), namespace
     )
 
     return new_model

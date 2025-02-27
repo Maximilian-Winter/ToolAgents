@@ -11,7 +11,6 @@ class PDFOCRProvider(DocumentProvider):
         self.folder = folder
         self.document_generator = DocumentGenerator(text_splitter=text_splitter)
 
-
     def get_documents(self, **kwargs) -> list[Document]:
         documents = []
         for text in self.process_pdf(self.folder):
@@ -22,17 +21,17 @@ class PDFOCRProvider(DocumentProvider):
     @staticmethod
     def process_page(page):
         # Convert the page to grayscale
-        page = page.convert('L')
+        page = page.convert("L")
 
         # Apply OCR using the preloaded pytesseract
         page_text = pytesseract.image_to_string(page)
 
         return page_text
 
-
     @staticmethod
     def find_files_by_extension(folder_path, extension):
         import os
+
         """
         Find all files with a specific extension in a given folder.
 
@@ -44,8 +43,8 @@ class PDFOCRProvider(DocumentProvider):
             list: List of full file paths for files with the specified extension
         """
         # Make sure extension starts with a dot
-        if not extension.startswith('.'):
-            extension = '.' + extension
+        if not extension.startswith("."):
+            extension = "." + extension
 
         matching_files = []
 
@@ -68,9 +67,9 @@ class PDFOCRProvider(DocumentProvider):
     def process_pdf(path):
         results = []
         for file in PDFOCRProvider.find_files_by_extension(path, "pdf"):
-            pages = convert_from_path(str(file), dpi=300, fmt='PNG')
-            page_texts = Parallel(n_jobs=-1)(delayed(PDFOCRProvider.process_page)(page) for page in pages)
-            results.append('\n'.join(page_texts))
+            pages = convert_from_path(str(file), dpi=300, fmt="PNG")
+            page_texts = Parallel(n_jobs=-1)(
+                delayed(PDFOCRProvider.process_page)(page) for page in pages
+            )
+            results.append("\n".join(page_texts))
         return results
-
-
