@@ -6,7 +6,6 @@ from typing import Union, get_origin, get_args, List, Any, Type
 from types import NoneType
 
 
-
 # New models for customization
 
 
@@ -271,9 +270,12 @@ def generate_outer_json_schema(outer_obj: OuterSchemaObject, allow_list=False) -
         combined_schema = inner_schemas[0]
     else:
         if allow_list:
-            combined_schema =  {"type": "array", "items": {"type": "object", "anyOf": inner_schemas}}
+            combined_schema = {
+                "type": "array",
+                "items": {"type": "object", "anyOf": inner_schemas},
+            }
         else:
-            combined_schema =  {"type": "object", "anyOf": inner_schemas}
+            combined_schema = {"type": "object", "anyOf": inner_schemas}
     # Insert additional outer fields.
     combined_schema = insert_additional_fields(
         combined_schema, outer_obj.additional_fields
@@ -291,5 +293,7 @@ def get_tools_schema(tool_registry):
     for tool_name, tool in tool_registry.tools.items():
         tool_schema_objects.append(SchemaObject(model=tool.model))
 
-    tools_schema = OuterSchemaObject(name="tool_calls", description="Tool calls", schemas=tool_schema_objects)
+    tools_schema = OuterSchemaObject(
+        name="tool_calls", description="Tool calls", schemas=tool_schema_objects
+    )
     return generate_outer_json_schema(tools_schema)

@@ -3,7 +3,7 @@ from ToolAgents.provider.chat_api_provider import (
     AnthropicChatAPI,
     GroqChatAPI,
     MistralChatAPI,
-    GoogleGenAIChatAPI
+    GoogleGenAIChatAPI,
 )
 from ToolAgents.provider.llm_provider import (
     StreamingChatMessage,

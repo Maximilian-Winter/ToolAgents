@@ -26,11 +26,11 @@ class GoogleGenAIMessageConverter(BaseMessageConverter):
     """
 
     def prepare_request(
-            self,
-            model: str,
-            messages: List[ChatMessage],
-            settings: ProviderSettings = None,
-            tools: Optional[List[FunctionTool]] = None,
+        self,
+        model: str,
+        messages: List[ChatMessage],
+        settings: ProviderSettings = None,
+        tools: Optional[List[FunctionTool]] = None,
     ) -> Dict[str, Any]:
         """
         Prepare the request for the Google GenAI API
@@ -54,7 +54,7 @@ class GoogleGenAIMessageConverter(BaseMessageConverter):
         request_kwargs = {
             "contents": converted_messages,
             "generation_config": generation_config,
-            "system_instruction": system_msg
+            "system_instruction": system_msg,
         }
 
         # Add tools if provided
@@ -81,43 +81,54 @@ class GoogleGenAIMessageConverter(BaseMessageConverter):
                 elif isinstance(content, BinaryContent):
                     if "image" in content.mime_type:
                         if content.storage_type == BinaryStorageType.Base64:
-                            parts.append({
-                                "inline_data": {
-                                    "mime_type": content.mime_type,
-                                    "data": content.content
+                            parts.append(
+                                {
+                                    "inline_data": {
+                                        "mime_type": content.mime_type,
+                                        "data": content.content,
+                                    }
                                 }
-                            })
+                            )
                         elif content.storage_type == BinaryStorageType.Url:
                             # Fetch image from URL and convert to base64
                             response = httpx.get(content.content)
-                            base64_data = base64.b64encode(response.content).decode("utf-8")
-                            parts.append({
-                                "inline_data": {
-                                    "mime_type": content.mime_type,
-                                    "data": base64_data
+                            base64_data = base64.b64encode(response.content).decode(
+                                "utf-8"
+                            )
+                            parts.append(
+                                {
+                                    "inline_data": {
+                                        "mime_type": content.mime_type,
+                                        "data": base64_data,
+                                    }
                                 }
-                            })
+                            )
 
                 elif isinstance(content, ToolCallContent):
-                    parts.append({"function_call": {
-                            "id": content.tool_call_id,
-                            "name": content.tool_call_name,
-                            "args": {"content": content.tool_call_arguments}
-                        }})
+                    parts.append(
+                        {
+                            "function_call": {
+                                "id": content.tool_call_id,
+                                "name": content.tool_call_name,
+                                "args": {"content": content.tool_call_arguments},
+                            }
+                        }
+                    )
 
                 elif isinstance(content, ToolCallResultContent):
                     # Add tool response as a system message
-                    parts.append({"function_response": {
-                            "id": content.tool_call_id,
-                            "name": content.tool_call_name,
-                            "response": {"result": content.tool_call_result}
-                        }})
+                    parts.append(
+                        {
+                            "function_response": {
+                                "id": content.tool_call_id,
+                                "name": content.tool_call_name,
+                                "response": {"result": content.tool_call_result},
+                            }
+                        }
+                    )
             # Only add message if it has parts
             if parts:
-                converted_messages.append({
-                    "role": role,
-                    "parts": parts
-                })
+                converted_messages.append({"role": role, "parts": parts})
 
         return converted_messages
 
@@ -127,7 +138,7 @@ class GoogleGenAIMessageConverter(BaseMessageConverter):
             "user": "user",
             "assistant": "model",
             "system": "system",
-            "tool": "function"
+            "tool": "function",
         }
         return role_map.get(role, "user")
 
@@ -139,11 +150,13 @@ class GoogleGenAIMessageConverter(BaseMessageConverter):
             function_info = tool.to_openai_tool()
 
             google_tool = {
-                "function_declarations": [{
-                    "name": function_info["function"]["name"],
-                    "description": function_info["function"]["description"],
-                    "parameters": function_info["function"]["parameters"]
-                }]
+                "function_declarations": [
+                    {
+                        "name": function_info["function"]["name"],
+                        "description": function_info["function"]["description"],
+                        "parameters": function_info["function"]["parameters"],
+                    }
+                ]
             }
 
             google_tools.append(google_tool)
@@ -182,7 +195,7 @@ class GoogleGenAIResponseConverter(BaseResponseConverter):
                             ToolCallContent(
                                 tool_call_id=str(uuid.uuid4()),
                                 tool_call_name=function_call.name,
-                                tool_call_arguments=function_call.args
+                                tool_call_arguments=function_call.args,
                             )
                         )
 
@@ -196,7 +209,7 @@ class GoogleGenAIResponseConverter(BaseResponseConverter):
         )
 
     def yield_from_provider(
-            self, stream_generator: Any
+        self, stream_generator: Any
     ) -> Generator[StreamingChatMessage, None, None]:
         """
         Yield streaming chunks from a Google GenAI response
@@ -212,15 +225,16 @@ class GoogleGenAIResponseConverter(BaseResponseConverter):
                 delta_text = chunk.text
                 current_text += delta_text
                 yield StreamingChatMessage(
-                    chunk=delta_text,
-                    is_tool_call=False,
-                    finished=False
+                    chunk=delta_text, is_tool_call=False, finished=False
                 )
 
             # Process function calls
-            if (hasattr(chunk, "candidates") and chunk.candidates and
-                    hasattr(chunk.candidates[0], "content") and
-                    hasattr(chunk.candidates[0].content, "parts")):
+            if (
+                hasattr(chunk, "candidates")
+                and chunk.candidates
+                and hasattr(chunk.candidates[0], "content")
+                and hasattr(chunk.candidates[0].content, "parts")
+            ):
 
                 for part in chunk.candidates[0].content.parts:
                     if hasattr(part, "function_call"):
@@ -244,7 +258,7 @@ class GoogleGenAIResponseConverter(BaseResponseConverter):
             tool_content = ToolCallContent(
                 tool_call_id=str(uuid.uuid4()),
                 tool_call_name=function_name,
-                tool_call_arguments=args
+                tool_call_arguments=args,
             )
 
             tool_call = tool_content.model_dump(exclude_none=True)
@@ -259,7 +273,7 @@ class GoogleGenAIResponseConverter(BaseResponseConverter):
                 ToolCallContent(
                     tool_call_id=tool_call["tool_call_id"],
                     tool_call_name=tool_call["tool_call_name"],
-                    tool_call_arguments=tool_call["tool_call_arguments"]
+                    tool_call_arguments=tool_call["tool_call_arguments"],
                 )
             )
 
@@ -278,11 +292,11 @@ class GoogleGenAIResponseConverter(BaseResponseConverter):
             is_tool_call=has_tool_call,
             tool_call=tool_call,
             finished=True,
-            finished_chat_message=final_message
+            finished_chat_message=final_message,
         )
 
     async def async_yield_from_provider(
-            self, stream_generator: Any
+        self, stream_generator: Any
     ) -> AsyncGenerator[StreamingChatMessage, None]:
         """
         Yield streaming chunks from a Google GenAI response asynchronously
@@ -298,15 +312,16 @@ class GoogleGenAIResponseConverter(BaseResponseConverter):
                 delta_text = chunk.text
                 current_text += delta_text
                 yield StreamingChatMessage(
-                    chunk=delta_text,
-                    is_tool_call=False,
-                    finished=False
+                    chunk=delta_text, is_tool_call=False, finished=False
                 )
 
             # Process function calls
-            if (hasattr(chunk, "candidates") and chunk.candidates and
-                    hasattr(chunk.candidates[0], "content") and
-                    hasattr(chunk.candidates[0].content, "parts")):
+            if (
+                hasattr(chunk, "candidates")
+                and chunk.candidates
+                and hasattr(chunk.candidates[0], "content")
+                and hasattr(chunk.candidates[0].content, "parts")
+            ):
 
                 for part in chunk.candidates[0].content.parts:
                     if hasattr(part, "function_call"):
@@ -330,7 +345,7 @@ class GoogleGenAIResponseConverter(BaseResponseConverter):
             tool_content = ToolCallContent(
                 tool_call_id=str(uuid.uuid4()),
                 tool_call_name=function_name,
-                tool_call_arguments=args
+                tool_call_arguments=args,
             )
 
             tool_call = tool_content.model_dump(exclude_none=True)
@@ -345,7 +360,7 @@ class GoogleGenAIResponseConverter(BaseResponseConverter):
                 ToolCallContent(
                     tool_call_id=tool_call["tool_call_id"],
                     tool_call_name=tool_call["tool_call_name"],
-                    tool_call_arguments=tool_call["tool_call_arguments"]
+                    tool_call_arguments=tool_call["tool_call_arguments"],
                 )
             )
 
@@ -364,5 +379,5 @@ class GoogleGenAIResponseConverter(BaseResponseConverter):
             is_tool_call=has_tool_call,
             tool_call=tool_call,
             finished=True,
-            finished_chat_message=final_message
+            finished_chat_message=final_message,
         )

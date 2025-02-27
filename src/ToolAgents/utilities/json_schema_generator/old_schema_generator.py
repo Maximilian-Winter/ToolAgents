@@ -172,7 +172,11 @@ def generate_list(
             ):
                 function_name_object = {"enum": [model.__name__], "type": "string"}
                 model_schema_object = schema
-                if (add_inner_thoughts and not add_heartbeat) or (add_inner_thoughts and add_heartbeat and model.__name__ not in heartbeat_list):
+                if (add_inner_thoughts and not add_heartbeat) or (
+                    add_inner_thoughts
+                    and add_heartbeat
+                    and model.__name__ not in heartbeat_list
+                ):
                     # Create a wrapper object that contains the function name and the model schema
                     wrapper_object = {
                         "type": "object",
@@ -187,7 +191,11 @@ def generate_list(
                             outer_object_properties_name,
                         ],
                     }
-                elif add_inner_thoughts and add_heartbeat and model.__name__ in heartbeat_list:
+                elif (
+                    add_inner_thoughts
+                    and add_heartbeat
+                    and model.__name__ in heartbeat_list
+                ):
                     # Create a wrapper object that contains the function name and the model schema
                     wrapper_object = {
                         "type": "object",
@@ -201,10 +209,14 @@ def generate_list(
                             inner_thoughts_name,
                             outer_object_name,
                             outer_object_properties_name,
-                            heartbeat_name
+                            heartbeat_name,
                         ],
                     }
-                elif not add_inner_thoughts and add_heartbeat and model.__name__ in heartbeat_list:
+                elif (
+                    not add_inner_thoughts
+                    and add_heartbeat
+                    and model.__name__ in heartbeat_list
+                ):
                     # Create a wrapper object that contains the function name and the model schema
                     wrapper_object = {
                         "type": "object",
@@ -216,7 +228,7 @@ def generate_list(
                         "required": [
                             outer_object_name,
                             outer_object_properties_name,
-                            heartbeat_name
+                            heartbeat_name,
                         ],
                     }
                 else:
@@ -244,7 +256,11 @@ def generate_list(
             function_name_object = {"enum": [model.__name__], "type": "string"}
             model_schema_object = schema
 
-            if (add_inner_thoughts and not add_heartbeat) or (add_inner_thoughts and add_heartbeat and model.__name__ not in heartbeat_list):
+            if (add_inner_thoughts and not add_heartbeat) or (
+                add_inner_thoughts
+                and add_heartbeat
+                and model.__name__ not in heartbeat_list
+            ):
                 # Create a wrapper object that contains the function name and the model schema
                 wrapper_object = {
                     "type": "object",
@@ -260,7 +276,11 @@ def generate_list(
                     ],
                 }
 
-            elif add_inner_thoughts and add_heartbeat and model.__name__ in heartbeat_list:
+            elif (
+                add_inner_thoughts
+                and add_heartbeat
+                and model.__name__ in heartbeat_list
+            ):
                 # Create a wrapper object that contains the function name and the model schema
                 wrapper_object = {
                     "type": "object",
@@ -274,11 +294,15 @@ def generate_list(
                         inner_thoughts_name,
                         outer_object_name,
                         outer_object_properties_name,
-                        heartbeat_name
+                        heartbeat_name,
                     ],
                 }
 
-            elif not add_inner_thoughts and add_heartbeat and model.__name__ in heartbeat_list:
+            elif (
+                not add_inner_thoughts
+                and add_heartbeat
+                and model.__name__ in heartbeat_list
+            ):
                 # Create a wrapper object that contains the function name and the model schema
                 wrapper_object = {
                     "type": "object",
@@ -290,7 +314,7 @@ def generate_list(
                     "required": [
                         outer_object_name,
                         outer_object_properties_name,
-                        heartbeat_name
+                        heartbeat_name,
                     ],
                 }
             else:
@@ -338,7 +362,7 @@ def generate_json_schemas(
             inner_thoughts_name,
             add_heartbeat=add_heartbeat,
             heartbeat_name=heartbeat_name,
-            heartbeat_list=heartbeat_list
+            heartbeat_list=heartbeat_list,
         )
     else:
         model_schema_list = generate_list(

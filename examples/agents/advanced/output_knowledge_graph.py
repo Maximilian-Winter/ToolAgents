@@ -5,7 +5,7 @@ from typing import List
 
 from dotenv import load_dotenv
 from graphviz import Digraph
-from pydantic import BaseModel, Field, TypeAdapter
+from pydantic import BaseModel, Field
 
 from ToolAgents.agents import ChatToolAgent
 from ToolAgents.messages import ChatMessage
@@ -16,7 +16,9 @@ from ToolAgents.utilities.json_schema_generator.schema_generator import (
 
 load_dotenv()
 api = OpenAIChatAPI(
-    api_key=os.getenv("OPENROUTER_API_KEY"), base_url="https://openrouter.ai/api/v1", model="openai/o3-mini-high"
+    api_key=os.getenv("OPENROUTER_API_KEY"),
+    base_url="https://openrouter.ai/api/v1",
+    model="openai/o3-mini-high",
 )
 
 # Create the ChatAPIAgent

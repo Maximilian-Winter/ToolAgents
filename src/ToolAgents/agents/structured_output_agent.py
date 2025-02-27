@@ -21,13 +21,12 @@ class StructuredOutputAgent(ChatToolAgent):
         """
         self.last_received_response = response
 
-
     def step(
-            self,
-            messages: List[ChatMessage],
-            tool_registry: ToolRegistry = None,
-            settings: Optional[Any] = None,
-            reset_last_messages_buffer: bool = True,
+        self,
+        messages: List[ChatMessage],
+        tool_registry: ToolRegistry = None,
+        settings: Optional[Any] = None,
+        reset_last_messages_buffer: bool = True,
     ) -> ChatMessage:
         """
         Performs a single step of interaction with the chat API, returning the result
@@ -43,7 +42,12 @@ class StructuredOutputAgent(ChatToolAgent):
             Tuple of (result, contains_tool_calls)
         """
         if tool_registry is None:
-            return super().step(messages=messages, settings=settings, tool_registry=tool_registry, reset_last_messages_buffer=reset_last_messages_buffer)
+            return super().step(
+                messages=messages,
+                settings=settings,
+                tool_registry=tool_registry,
+                reset_last_messages_buffer=reset_last_messages_buffer,
+            )
         if settings is None:
             settings = self.chat_api.get_default_settings()
 
@@ -52,16 +56,21 @@ class StructuredOutputAgent(ChatToolAgent):
         settings.set_response_format({"type": "json_object", "schema": schema})
         tool_registry.remove("send_response")
 
-        result = super().step(messages=messages, settings=settings, tool_registry=None, reset_last_messages_buffer=reset_last_messages_buffer)
+        result = super().step(
+            messages=messages,
+            settings=settings,
+            tool_registry=None,
+            reset_last_messages_buffer=reset_last_messages_buffer,
+        )
 
         return result
 
     def stream_step(
-            self,
-            messages: List[ChatMessage],
-            tool_registry: ToolRegistry = None,
-            settings: Optional[Any] = None,
-            reset_last_messages_buffer: bool = True,
+        self,
+        messages: List[ChatMessage],
+        tool_registry: ToolRegistry = None,
+        settings: Optional[Any] = None,
+        reset_last_messages_buffer: bool = True,
     ) -> Generator[StreamingChatMessage, None, None]:
         """
         Performs a single streaming step of interaction with the chat API,
@@ -77,8 +86,12 @@ class StructuredOutputAgent(ChatToolAgent):
             Tuples of (chunk, contains_tool_calls)
         """
         if tool_registry is None:
-            return super().stream_step(messages=messages, settings=settings, tool_registry=tool_registry,
-                                reset_last_messages_buffer=reset_last_messages_buffer)
+            return super().stream_step(
+                messages=messages,
+                settings=settings,
+                tool_registry=tool_registry,
+                reset_last_messages_buffer=reset_last_messages_buffer,
+            )
         if settings is None:
             settings = self.chat_api.get_default_settings()
 
@@ -87,17 +100,21 @@ class StructuredOutputAgent(ChatToolAgent):
         settings.set_response_format({"type": "json_object", "schema": schema})
         tool_registry.remove("send_response")
 
-        result = super().stream_step(messages=messages, settings=settings, tool_registry=None,
-                              reset_last_messages_buffer=reset_last_messages_buffer)
+        result = super().stream_step(
+            messages=messages,
+            settings=settings,
+            tool_registry=None,
+            reset_last_messages_buffer=reset_last_messages_buffer,
+        )
 
         return result
 
     def get_response(
-            self,
-            messages: List[ChatMessage],
-            tool_registry: ToolRegistry = None,
-            settings: Optional[Any] = None,
-            reset_last_messages_buffer: bool = True,
+        self,
+        messages: List[ChatMessage],
+        tool_registry: ToolRegistry = None,
+        settings: Optional[Any] = None,
+        reset_last_messages_buffer: bool = True,
     ) -> ChatResponse:
         """
         Gets a complete response from the chat API, handling any tool calls.
@@ -112,20 +129,30 @@ class StructuredOutputAgent(ChatToolAgent):
             The final response string
         """
         if tool_registry is None:
-            return super().get_response(messages=messages, settings=settings, tool_registry=tool_registry,
-                                       reset_last_messages_buffer=reset_last_messages_buffer)
+            return super().get_response(
+                messages=messages,
+                settings=settings,
+                tool_registry=tool_registry,
+                reset_last_messages_buffer=reset_last_messages_buffer,
+            )
         if settings is None:
             settings = self.chat_api.get_default_settings()
 
-        result = self.step(messages=messages, settings=settings, tool_registry=None,
-                                     reset_last_messages_buffer=reset_last_messages_buffer)
+        result = self.step(
+            messages=messages,
+            settings=settings,
+            tool_registry=None,
+            reset_last_messages_buffer=reset_last_messages_buffer,
+        )
 
         json_string = result.get_as_text()
         json_object = json.loads(json_string)
 
         tool_name = json_object["tool"]
         if tool_name == "send_response":
-            return ChatResponse(messages=self.last_messages_buffer, response=self.last_received_response)
+            return ChatResponse(
+                messages=self.last_messages_buffer, response=self.last_received_response
+            )
         tool = self.tool_registry.get_tool(tool_name)
         if tool is not None:
             result = tool.execute(json_object["parameters"])
@@ -133,11 +160,11 @@ class StructuredOutputAgent(ChatToolAgent):
         return result
 
     def get_streaming_response(
-            self,
-            messages: List[ChatMessage],
-            tool_registry: ToolRegistry = None,
-            settings: Optional[Any] = None,
-            reset_last_messages_buffer: bool = True,
+        self,
+        messages: List[ChatMessage],
+        tool_registry: ToolRegistry = None,
+        settings: Optional[Any] = None,
+        reset_last_messages_buffer: bool = True,
     ) -> Generator[ChatResponseChunk, None, None]:
         """
         Gets a streaming response from the chat API, handling any tool calls.
@@ -152,14 +179,22 @@ class StructuredOutputAgent(ChatToolAgent):
             Response chunks
         """
         if tool_registry is None:
-            return super().get_streaming_response(messages=messages, settings=settings, tool_registry=tool_registry,
-                                        reset_last_messages_buffer=reset_last_messages_buffer)
+            return super().get_streaming_response(
+                messages=messages,
+                settings=settings,
+                tool_registry=tool_registry,
+                reset_last_messages_buffer=reset_last_messages_buffer,
+            )
         if settings is None:
             settings = self.chat_api.get_default_settings()
 
         schema = tool_registry.get_guided_sampling_json_schema()
         settings.set_response_format({"type": "json_object", "schema": schema})
 
-        result = super().get_streaming_response(messages=messages, settings=settings, tool_registry=None,
-                                      reset_last_messages_buffer=reset_last_messages_buffer)
+        result = super().get_streaming_response(
+            messages=messages,
+            settings=settings,
+            tool_registry=None,
+            reset_last_messages_buffer=reset_last_messages_buffer,
+        )
         return result

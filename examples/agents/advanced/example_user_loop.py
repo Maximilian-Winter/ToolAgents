@@ -42,8 +42,7 @@ while True:
         chat_history.add_user_message(user_input)
 
         chat_response = agent.get_response(
-            messages=chat_history.get_messages(),
-            settings=settings
+            messages=chat_history.get_messages(), settings=settings
         )
 
         print(chat_response.response.strip())

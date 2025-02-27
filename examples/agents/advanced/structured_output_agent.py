@@ -13,9 +13,12 @@ from ToolAgents.provider import OpenAIChatAPI
 from ToolAgents.utilities.json_schema_generator.schema_generator import (
     custom_json_schema,
 )
+
 load_dotenv()
 api = OpenAIChatAPI(
-    api_key=os.getenv("OPENROUTER_API_KEY"), base_url="https://openrouter.ai/api/v1", model="openai/o3-mini"
+    api_key=os.getenv("OPENROUTER_API_KEY"),
+    base_url="https://openrouter.ai/api/v1",
+    model="openai/o3-mini",
 )
 
 # Create the ChatAPIAgent
@@ -28,6 +31,7 @@ settings = api.get_default_settings()
 settings.temperature = 0.4
 settings.top_p = 1.0
 settings.set_max_new_tokens(8192)
+
 
 # Example output model
 class ToolCalls(BaseModel):

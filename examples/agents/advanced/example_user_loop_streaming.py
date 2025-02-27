@@ -1,16 +1,9 @@
 import os
 
-from ToolAgents import ToolRegistry
 from ToolAgents.agents import ChatToolAgent
 from ToolAgents.messages import ChatHistory
 
 from ToolAgents.provider import OpenAIChatAPI
-
-from example_tools import (
-    calculator_function_tool,
-    current_datetime_function_tool,
-    get_weather_function_tool,
-)
 
 from dotenv import load_dotenv
 

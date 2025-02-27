@@ -6,7 +6,10 @@ import datetime
 import json
 
 import google.generativeai as genai
-from google.generativeai.types import AsyncGenerateContentResponse, GenerateContentResponse
+from google.generativeai.types import (
+    AsyncGenerateContentResponse,
+    GenerateContentResponse,
+)
 
 from ToolAgents import FunctionTool
 from ToolAgents.messages import ChatMessageRole
@@ -48,29 +51,33 @@ class GoogleGenAIChatAPI(ChatAPIProvider):
         self.response_converter = GoogleGenAIResponseConverter()
 
     def get_response(
-            self,
-            messages: List[ChatMessage],
-            settings: ProviderSettings = None,
-            tools: Optional[List[FunctionTool]] = None,
+        self,
+        messages: List[ChatMessage],
+        settings: ProviderSettings = None,
+        tools: Optional[List[FunctionTool]] = None,
     ) -> ChatMessage:
         """Get a response from the Google GenAI model"""
         request_kwargs = self._prepare_request(messages, settings, tools)
         request_kwargs["stream"] = False
-        model = genai.GenerativeModel(self.model, system_instruction=request_kwargs.pop("system_instruction"))
+        model = genai.GenerativeModel(
+            self.model, system_instruction=request_kwargs.pop("system_instruction")
+        )
         response = model.generate_content(**request_kwargs)
         return self.response_converter.from_provider_response(response)
 
     def get_streaming_response(
-            self,
-            messages: List[ChatMessage],
-            settings: ProviderSettings = None,
-            tools: Optional[List[FunctionTool]] = None,
+        self,
+        messages: List[ChatMessage],
+        settings: ProviderSettings = None,
+        tools: Optional[List[FunctionTool]] = None,
     ) -> Generator[StreamingChatMessage, None, None]:
         """Get a streaming response from the Google GenAI model"""
 
         request_kwargs = self._prepare_request(messages, settings, tools)
         request_kwargs["stream"] = True
-        model = genai.GenerativeModel(self.model, system_instruction=request_kwargs.pop("system_instruction"))
+        model = genai.GenerativeModel(
+            self.model, system_instruction=request_kwargs.pop("system_instruction")
+        )
         response = model.generate_content(**request_kwargs)
         yield from self.response_converter.yield_from_provider(response)
 
@@ -87,10 +94,10 @@ class GoogleGenAIChatAPI(ChatAPIProvider):
         return "google_genai"
 
     def _prepare_request(
-            self,
-            messages: List[ChatMessage],
-            settings: ProviderSettings = None,
-            tools: Optional[List[FunctionTool]] = None,
+        self,
+        messages: List[ChatMessage],
+        settings: ProviderSettings = None,
+        tools: Optional[List[FunctionTool]] = None,
     ) -> Dict[str, Any]:
         """Prepare the request for the Google GenAI API"""
         if settings is None:
@@ -126,10 +133,10 @@ class AsyncGoogleGenAIChatAPI(AsyncChatAPIProvider):
         self.response_converter = GoogleGenAIResponseConverter()
 
     async def get_response(
-            self,
-            messages: List[ChatMessage],
-            settings: ProviderSettings = None,
-            tools: Optional[List[FunctionTool]] = None,
+        self,
+        messages: List[ChatMessage],
+        settings: ProviderSettings = None,
+        tools: Optional[List[FunctionTool]] = None,
     ) -> ChatMessage:
         """Get an async response from the Google GenAI model"""
         request_kwargs = self._prepare_request(messages, settings, tools)
@@ -139,10 +146,10 @@ class AsyncGoogleGenAIChatAPI(AsyncChatAPIProvider):
         return self.response_converter.from_provider_response(response)
 
     async def get_streaming_response(
-            self,
-            messages: List[ChatMessage],
-            settings: ProviderSettings = None,
-            tools: Optional[List[FunctionTool]] = None,
+        self,
+        messages: List[ChatMessage],
+        settings: ProviderSettings = None,
+        tools: Optional[List[FunctionTool]] = None,
     ) -> AsyncGenerator[StreamingChatMessage, None]:
         """Get an async streaming response from the Google GenAI model"""
         request_kwargs = self._prepare_request(messages, settings, tools)
@@ -167,10 +174,10 @@ class AsyncGoogleGenAIChatAPI(AsyncChatAPIProvider):
         return "google_genai"
 
     def _prepare_request(
-            self,
-            messages: List[ChatMessage],
-            settings: ProviderSettings = None,
-            tools: Optional[List[FunctionTool]] = None,
+        self,
+        messages: List[ChatMessage],
+        settings: ProviderSettings = None,
+        tools: Optional[List[FunctionTool]] = None,
     ) -> Dict[str, Any]:
         """Prepare the request for the Google GenAI API"""
         if settings is None:
