@@ -1,5 +1,8 @@
+import datetime
 import json
 import os
+import platform
+
 from ToolAgents import ToolRegistry
 from ToolAgents.agent_tools.file_tools import FilesystemTools
 from ToolAgents.agent_tools.git_tools import GitTools
@@ -16,7 +19,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Mistral API
-api = MistralChatAPI(api_key=os.getenv("MISTRAL_API_KEY"), model="mistral-large-latest")
+api = OpenAIChatAPI(api_key=os.getenv("OPENROUTER_API_KEY"), model="meta-llama/llama-3.1-405b-instruct", base_url="https://openrouter.ai/api/v1")
 
 # Create the ChatAPIAgent
 agent = ChatToolAgent(chat_api=api)
@@ -35,7 +38,7 @@ file_tools = FilesystemTools("H:\\MaxDev42\\ToolAgentsUseCases")
 git_tools = GitTools(file_tools.get_working_directory)
 
 # Initialize the GitHubTools with the initial owner and repo.
-git_hub_tools = GitHubTools("Maximilian-Winter", "dolphin-bot")
+git_hub_tools = GitHubTools("pabl-o-ce", "poscye-discord-ai-bot")
 
 # Define the tools
 tools = file_tools.get_tools()
@@ -64,9 +67,10 @@ Current Date and Time (Format: %Y-%m-%d %H:%M:%S): {current_date_time}
 """
 
 system_prompt_template = MessageTemplate.from_string(system_prompt)
+system_message = system_prompt_template.generate_message_content(available_tools=tool_registry.get_tools_documentation(), operating_system=platform.system(), working_directory=file_tools.get_working_directory(), github_username=git_hub_tools.owner, github_repo=git_hub_tools.repo, current_date_time=datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 available_tools_docs = tool_registry.get_tools_documentation()
 chat_history = ChatHistory()
-chat_history.add_message(ChatMessage.create_system_message())
+chat_history.add_message(ChatMessage.create_system_message(system_message))
 
 
 while True:
@@ -78,9 +82,16 @@ while True:
         chat_history.clear()
 
     chat_history.add_message(ChatMessage.create_user_message(user_input))
+    messages = chat_history.get_messages()
+    system_message = system_prompt_template.generate_message_content(
+        available_tools=tool_registry.get_tools_documentation(), operating_system=platform.system(),
+        working_directory=file_tools.get_working_directory(), github_username=git_hub_tools.owner,
+        github_repository=git_hub_tools.repo, current_date_time=datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    print(system_message)
+    messages[0] = ChatMessage.create_system_message(system_message)
     chat_response = None
     result = agent.get_streaming_response(
-        messages=chat_history.get_messages(),
+        messages=messages,
         settings=settings, tool_registry=tool_registry)
     for res in result:
         if res.get_tool_results():
