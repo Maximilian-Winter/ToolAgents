@@ -52,7 +52,7 @@ tools.extend(gitea_tools.get_tools())
 tool_registry = ToolRegistry()
 tool_registry.add_tools(tools)
 
-system_prompt = """You are an expert coding AI agent with access to various tools for working with the filesystem, git, GitHub, and Gitea. 
+system_prompt = """You are an expert coding AI agent with access to various tools for working with the filesystem, git and Gitea. 
 
 Your task is to assist users with their coding-related queries and perform actions using the provided tools. 
 
