@@ -1,9 +1,11 @@
+import json
 import os
 from ToolAgents import ToolRegistry
 from ToolAgents.agents import ChatToolAgent
 from ToolAgents.messages.chat_message import ChatMessage
 from ToolAgents.provider import (
     AnthropicChatAPI,
+    GoogleGenAIChatAPI,
     OpenAIChatAPI,
     GroqChatAPI,
     MistralChatAPI,
@@ -30,12 +32,15 @@ load_dotenv()
 # api = OpenAIChatAPI(api_key=os.getenv("OPENAI_API_KEY"), model="gpt-4o-mini")
 
 # Openrouter API
-# api = OpenAIChatAPI(api_key=os.getenv("OPENROUTER_API_KEY"), model="meta-llama/llama-3.3-70b-instruct", base_url="https://openrouter.ai/api/v1")
+api = OpenAIChatAPI(
+    api_key=os.getenv("OPENROUTER_API_KEY"),
+    model="meta-llama/llama-3.3-70b-instruct",
+    base_url="https://openrouter.ai/api/v1",
+)
 
 # Anthropic API
-api = AnthropicChatAPI(
-    api_key=os.getenv("ANTHROPIC_API_KEY"), model="claude-3-5-sonnet-20241022"
-)
+# api = OpenAIChatAPI(api_key=os.getenv("GOOGLE_API_KEY"), base_url="https://generativelanguage.googleapis.com/v1beta/openai/", model="gemini-2.0-flash-lite-preview-02-05")
+
 
 # Groq API
 # api = GroqChatAPI(api_key=os.getenv("GROQ_API_KEY"), model="llama-3.3-70b-versatile")

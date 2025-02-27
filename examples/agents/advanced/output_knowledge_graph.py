@@ -1,9 +1,11 @@
 # Example that uses the StructuredOutputAgent class to create a dataset entry of a book, out of unstructured data.
 import json
+import os
 from typing import List
 
+from dotenv import load_dotenv
 from graphviz import Digraph
-from pydantic import BaseModel, Field, TypeAdapter
+from pydantic import BaseModel, Field
 
 from ToolAgents.agents import ChatToolAgent
 from ToolAgents.messages import ChatMessage
@@ -12,8 +14,11 @@ from ToolAgents.utilities.json_schema_generator.schema_generator import (
     custom_json_schema,
 )
 
+load_dotenv()
 api = OpenAIChatAPI(
-    api_key="unknown", base_url="http://127.0.0.1:8080/v1", model="unknown"
+    api_key=os.getenv("OPENROUTER_API_KEY"),
+    base_url="https://openrouter.ai/api/v1",
+    model="openai/o3-mini-high",
 )
 
 # Create the ChatAPIAgent
@@ -79,5 +84,5 @@ def generate_graph(user_input: str):
     return KnowledgeGraph(**json.loads(chat_response.response))
 
 
-graph = generate_graph("Industrial Military Complex")
+graph = generate_graph("The Coup d'état of Donald Trump and Elon Musk")
 visualize_knowledge_graph(graph)

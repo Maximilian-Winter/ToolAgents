@@ -6,7 +6,11 @@ from typing import List, Dict, Any, Optional
 import requests
 
 from ToolAgents import ToolRegistry, FunctionTool
-from ToolAgents.mcp_server import MCPServer, MCPServerConfig, create_and_run_mcp_server
+from ToolAgents.utilities.mcp_server import (
+    MCPServer,
+    MCPServerConfig,
+    create_and_run_mcp_server,
+)
 from ToolAgents.mcp_tool import MCPToolRegistry, MCPTool, MCPToolDefinition
 from pydantic import BaseModel, Field
 

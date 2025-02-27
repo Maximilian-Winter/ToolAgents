@@ -48,7 +48,6 @@ class OuterSchemaObject(BaseModel):
     description: str = Field(..., description="The description of the outer object.")
     schemas: List[SchemaObject] = Field(..., description="The list of schema objects.")
     additional_fields: List[AdditionalSchemaField] = Field(default_factory=list)
-    type: str = Field(..., description="The type of the outer object.")
 
 
 # Original custom JSON schema generator (refined for clarity)
@@ -257,7 +256,7 @@ def generate_schema_object(schema_obj: SchemaObject) -> dict:
 # New function to generate the outer JSON schema from an OuterSchemaObject
 
 
-def generate_outer_json_schema(outer_obj: OuterSchemaObject) -> dict:
+def generate_outer_json_schema(outer_obj: OuterSchemaObject, allow_list=False) -> dict:
     """
     Generate the outer JSON schema based on an OuterSchemaObject.
     Combines inner schemas (from each SchemaObject) using "anyOf" if needed,
@@ -270,8 +269,13 @@ def generate_outer_json_schema(outer_obj: OuterSchemaObject) -> dict:
     if len(inner_schemas) == 1:
         combined_schema = inner_schemas[0]
     else:
-        combined_schema = {"anyOf": inner_schemas}
-
+        if allow_list:
+            combined_schema = {
+                "type": "array",
+                "items": {"type": "object", "anyOf": inner_schemas},
+            }
+        else:
+            combined_schema = {"type": "object", "anyOf": inner_schemas}
     # Insert additional outer fields.
     combined_schema = insert_additional_fields(
         combined_schema, outer_obj.additional_fields
@@ -280,6 +284,16 @@ def generate_outer_json_schema(outer_obj: OuterSchemaObject) -> dict:
     # Set the outer schema details.
     combined_schema["title"] = outer_obj.name
     combined_schema["description"] = outer_obj.description
-    combined_schema["type"] = outer_obj.type
 
     return combined_schema
+
+
+def get_tools_schema(tool_registry):
+    tool_schema_objects = []
+    for tool_name, tool in tool_registry.tools.items():
+        tool_schema_objects.append(SchemaObject(model=tool.model))
+
+    tools_schema = OuterSchemaObject(
+        name="tool_calls", description="Tool calls", schemas=tool_schema_objects
+    )
+    return generate_outer_json_schema(tools_schema)

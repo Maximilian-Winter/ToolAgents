@@ -1,8 +1,10 @@
 import json
+import os
 
 from enum import Enum
 from typing import List
 
+from dotenv import load_dotenv
 from pydantic import BaseModel, Field
 
 from ToolAgents.agents import ChatToolAgent
@@ -12,8 +14,11 @@ from ToolAgents.utilities.json_schema_generator.schema_generator import (
     custom_json_schema,
 )
 
+load_dotenv()
 api = OpenAIChatAPI(
-    api_key="unknown", base_url="http://127.0.0.1:8080/v1", model="unknown"
+    api_key=os.getenv("OPENROUTER_API_KEY"),
+    base_url="https://openrouter.ai/api/v1",
+    model="openai/o3-mini",
 )
 
 # Create the ChatAPIAgent
@@ -28,23 +33,13 @@ settings.top_p = 1.0
 settings.set_max_new_tokens(8192)
 
 
-# Example enum for our output model
-class Category(Enum):
-    Fiction = "Fiction"
-    NonFiction = "Non-Fiction"
-
-
 # Example output model
-class Book(BaseModel):
+class ToolCalls(BaseModel):
     """
     Represents an entry about a book.
     """
 
-    book_title: str = Field(..., description="Title of the book.")
-    author: str = Field(..., description="Author of the book.")
-    published_year: int = Field(..., description="Publishing year of the book.")
-    keywords: List[str] = Field(..., description="A list of keywords.")
-    category: Category = Field(..., description="Category of the book.")
+    category: Function = Field(..., description="Category of the book.")
     summary: str = Field(..., description="Summary of the book.")
 
 
