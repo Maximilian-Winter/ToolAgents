@@ -14,6 +14,8 @@ from ToolAgents.agent_tools.discord_tool import (
 
 from dotenv import load_dotenv
 
+from ToolAgents.provider.message_converter.open_ai_message_converter import OpenAIMessageConverter
+
 load_dotenv()
 
 # Make sure you have set DISCORD_BOT_TOKEN environment variable
@@ -39,7 +41,7 @@ if not os.getenv("DISCORD_BOT_TOKEN"):
 #    - If your bot is in 100+ servers, you'll need to get verified by Discord
 
 # Set up API client
-api = GoogleGenAIChatAPI(api_key=os.getenv("GOOGLE_API_KEY"), model="gemini-2.0-flash-lite")
+api = OpenAIChatAPI(api_key="token-abc123", base_url="http://127.0.0.1:8080/v1", model="unsloth/Meta-Llama-3.1-8B-Instruct-bnb-4bit", message_converter=OpenAIMessageConverter(without_tool_call_content=False))
 
 settings = api.get_default_settings()
 settings.temperature = 0.2
