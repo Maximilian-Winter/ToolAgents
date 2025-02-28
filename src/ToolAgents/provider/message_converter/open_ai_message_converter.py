@@ -19,6 +19,10 @@ from ToolAgents import FunctionTool
 
 
 class OpenAIMessageConverter(BaseMessageConverter):
+
+    def __init__(self, without_tool_call_content: bool = True):
+        super().__init__()
+        self.without_tool_call_content = without_tool_call_content
     def prepare_request(
         self,
         model: str,
@@ -107,7 +111,10 @@ class OpenAIMessageConverter(BaseMessageConverter):
                             {"role": role, "content": new_content}
                         )
             elif len(tool_calls) > 0:
-                converted_messages.append({"role": role, "tool_calls": tool_calls})
+                if self.without_tool_call_content:
+                    converted_messages.append({"role": role, "tool_calls": tool_calls})
+                else:
+                    converted_messages.append({"role": role, "content": "", "tool_calls": tool_calls})
         return converted_messages
 
 
