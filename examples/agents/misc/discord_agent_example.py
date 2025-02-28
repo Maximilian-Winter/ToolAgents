@@ -63,9 +63,7 @@ tool_registry.add_tools(discord_tools)
 # Initialize chat history
 chat_history = ChatHistory()
 chat_history.add_system_message(
-    """
-You are a Discord management agent with the ability to interact with Discord servers.
-"""
+    """You are an helpful assistant with the ability to interact with Discord servers."""
 )
 
 

@@ -24,8 +24,9 @@ class DiscordPermissionLevel(Enum):
 
 class DiscordEmbedField(BaseModel):
     """Data for a Discord embed message field"""
-    field: str = Field(..., description="Discord embed field name")
+    name: str = Field(..., description="Discord embed field name")
     value: str = Field(..., description="Discord embed field value")
+    inline: bool = Field(..., description="Discord embed field inline value")
 
 class DiscordEmbedData(BaseModel):
     """Data for creating a Discord embed message"""
@@ -149,7 +150,8 @@ class DiscordClient:
                 )
 
             if embed_data.fields:
-                for field in embed_data.fields:
+                embed_fields = [field.model_dump() for field in embed_data.fields]
+                for field in embed_fields:
                     embed.add_field(
                         name=field["name"],
                         value=field["value"],
