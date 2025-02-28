@@ -4,7 +4,9 @@ import datetime
 import json
 import base64
 import httpx
-from typing import List, Dict, Any, Generator, Optional, AsyncGenerator
+from typing import List, Dict, Any, Generator, Optional, AsyncGenerator, get_type_hints
+
+from google.ai.generativelanguage_v1beta import Part
 
 from .message_converter import BaseMessageConverter, BaseResponseConverter
 from ToolAgents.messages.chat_message import (
@@ -190,12 +192,13 @@ class GoogleGenAIResponseConverter(BaseResponseConverter):
             if hasattr(candidate, "content") and hasattr(candidate.content, "parts"):
                 for part in candidate.content.parts:
                     if hasattr(part, "function_call") and part.function_call:
-                        function_call = part.function_call
+                        function_call = Part.to_dict(part)["function_call"]
+                        print(function_call)
                         contents.append(
                             ToolCallContent(
                                 tool_call_id=str(uuid.uuid4()),
-                                tool_call_name=function_call.name,
-                                tool_call_arguments=function_call.args,
+                                tool_call_name=function_call["name"],
+                                tool_call_arguments=function_call["args"],
                             )
                         )
 
@@ -239,13 +242,13 @@ class GoogleGenAIResponseConverter(BaseResponseConverter):
                 for part in chunk.candidates[0].content.parts:
                     if hasattr(part, "function_call"):
                         has_tool_call = True
-                        function_call = part.function_call
+                        function_call = Part.to_dict(part)["function_call"]
 
                         if not function_name:
-                            function_name = function_call.name
+                            function_name = function_call["name"]
 
                         if hasattr(function_call, "args"):
-                            function_args += function_call.args
+                            function_args += function_call["args"]
 
         # Final chunk with full message
         tool_call = None

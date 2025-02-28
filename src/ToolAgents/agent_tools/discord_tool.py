@@ -335,12 +335,12 @@ class DiscordClient:
         await channel.delete()
         return {"success": True, "message": f"Channel {channel_id} deleted"}
 
-    async def get_messages(self, channel_id: int, limit: int = 100):
+    async def get_messages(self, channel_name: str, limit: int = 100):
         """Get recent messages from a channel"""
-        channel = self.bot.get_channel(channel_id)
+        channel = self.channel_map[channel_name]
 
         if not channel:
-            raise ValueError(f"Channel with ID {channel_id} not found")
+            raise ValueError(f"Channel with name {channel_name} not found")
 
         messages = []
         async for message in channel.history(limit=limit):
@@ -557,8 +557,7 @@ class GetDiscordMessages(BaseModel):
     Get recent messages from a Discord channel
     """
 
-    guild_id: int = Field(..., description="ID of the Discord server/guild")
-    channel_id: int = Field(..., description="ID of the channel to get messages from")
+    channel_name: str = Field(..., description="ID of the channel to get messages from")
     limit: int = Field(
         50, description="Maximum number of messages to retrieve (max 100)"
     )
@@ -574,14 +573,13 @@ class GetDiscordMessages(BaseModel):
 
         messages = loop.run_until_complete(
             discord_client.get_messages(
-                channel_id=self.channel_id,
+                channel_name=self.channel_name,
                 limit=min(self.limit, 100),  # Cap at 100 messages
             )
         )
 
         return {
-            "guild_id": self.guild_id,
-            "channel_id": self.channel_id,
+            "channel_name": self.channel_name,
             "message_count": len(messages),
             "messages": messages,
         }
@@ -766,5 +764,5 @@ def init_discord_tools(enable_privileged_intents: bool = False):
 
     return [
         send_message_tool,
-
+        get_messages_tool
     ]

@@ -63,7 +63,7 @@ tool_registry.add_tools(discord_tools)
 # Initialize chat history
 chat_history = ChatHistory()
 chat_history.add_system_message(
-    """You are an helpful assistant with the ability to interact with Discord servers."""
+    """You are a helpful pirate from the year 1676 with the ability to interact with Discord servers."""
 )
 
 
