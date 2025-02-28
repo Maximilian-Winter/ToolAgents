@@ -22,6 +22,11 @@ class DiscordPermissionLevel(Enum):
     MODERATOR = "moderator"
     MEMBER = "member"
 
+class DiscordEmbedField(BaseModel):
+    """Data for a Discord embed message field"""
+    name: str = Field(..., description="Discord embed field name")
+    value: str = Field(..., description="Discord embed field value")
+    inline: bool = Field(..., description="Discord embed field inline value")
 
 class DiscordEmbedData(BaseModel):
     """Data for creating a Discord embed message"""
@@ -42,8 +47,8 @@ class DiscordEmbedData(BaseModel):
     author_name: Optional[str] = Field(None, description="Author name for the embed")
     author_url: Optional[str] = Field(None, description="URL for the author")
     author_icon_url: Optional[str] = Field(None, description="URL of the author's icon")
-    fields: Optional[List[Dict[str, Any]]] = Field(
-        None,
+    fields: Optional[List[DiscordEmbedField]] = Field(
+        default_factory=list,
         description="List of field objects with name, value, and inline properties",
     )
 
@@ -51,7 +56,7 @@ class DiscordEmbedData(BaseModel):
 class DiscordClient:
     """A client for interacting with Discord"""
 
-    def __init__(self, token: str, enable_privileged_intents: bool = False):
+    def __init__(self, guid: int, token: str, enable_privileged_intents: bool = False):
         self.token = token
 
         # Basic intents that don't require privileged access
@@ -67,11 +72,30 @@ class DiscordClient:
 
         self.bot = commands.Bot(command_prefix="!", intents=self.intents)
         self.is_ready = False
+        self.guid = guid
+
 
         @self.bot.event
         async def on_ready():
             self.is_ready = True
+            self.channel_map = {}
+
+            guild = self.bot.get_guild(self.guid)
+            for channel in guild.channels:
+                self.channel_map[channel.name] = channel
+
             print(f"Discord bot logged in as {self.bot.user}")
+
+    def set_guid(self, guid: int):
+        if not self.is_ready:
+            raise RuntimeError("Discord client is not ready.")
+        self.guid = guid
+
+        self.channel_map = {}
+
+        guild = self.bot.get_guild(self.guid)
+        for channel in guild.channels:
+            self.channel_map[channel.name] = channel
 
     async def connect(self):
         """Connect the Discord bot"""
@@ -92,13 +116,13 @@ class DiscordClient:
         return self.bot.get_channel(channel_id)
 
     async def send_message(
-        self, channel_id: int, content: str = None, embed_data: DiscordEmbedData = None
+        self, channel_name: str, content: Optional[str] = None, embed_data: Optional[DiscordEmbedData] = None
     ):
         """Send a message to a channel"""
-        channel = self.bot.get_channel(channel_id)
+        channel = self.channel_map[channel_name]
 
         if not channel:
-            raise ValueError(f"Channel with ID {channel_id} not found")
+            raise ValueError(f"Channel with name {channel_name} not found")
 
         embed = None
         if embed_data:
@@ -126,7 +150,8 @@ class DiscordClient:
                 )
 
             if embed_data.fields:
-                for field in embed_data.fields:
+                embed_fields = [field.model_dump() for field in embed_data.fields]
+                for field in embed_fields:
                     embed.add_field(
                         name=field["name"],
                         value=field["value"],
@@ -140,7 +165,7 @@ class DiscordClient:
         channel_id: int,
         message_id: int,
         content: str = None,
-        embed_data: DiscordEmbedData = None,
+        embed_data:  Optional[DiscordEmbedData] = None,
     ):
         """Edit a message"""
         channel = self.bot.get_channel(channel_id)
@@ -310,12 +335,12 @@ class DiscordClient:
         await channel.delete()
         return {"success": True, "message": f"Channel {channel_id} deleted"}
 
-    async def get_messages(self, channel_id: int, limit: int = 100):
+    async def get_messages(self, channel_name: str, limit: int = 100):
         """Get recent messages from a channel"""
-        channel = self.bot.get_channel(channel_id)
+        channel = self.channel_map[channel_name]
 
         if not channel:
-            raise ValueError(f"Channel with ID {channel_id} not found")
+            raise ValueError(f"Channel with name {channel_name} not found")
 
         messages = []
         async for message in channel.history(limit=limit):
@@ -454,8 +479,7 @@ class SendDiscordMessage(BaseModel):
     Send a message to a Discord channel
     """
 
-    guild_id: int = Field(..., description="ID of the Discord server/guild")
-    channel_id: int = Field(..., description="ID of the channel to send the message to")
+    channel_name: str = Field(..., description="Name of the channel to send the message to")
     message_type: MessageType = Field(
         MessageType.TEXT, description="Type of message to send (text or embed)"
     )
@@ -481,7 +505,7 @@ class SendDiscordMessage(BaseModel):
 
             message = loop.run_until_complete(
                 discord_client.send_message(
-                    channel_id=self.channel_id, content=self.content
+                    channel_name=self.channel_name, content=self.content
                 )
             )
         else:  # MessageType.EMBED
@@ -490,7 +514,7 @@ class SendDiscordMessage(BaseModel):
 
             message = loop.run_until_complete(
                 discord_client.send_message(
-                    channel_id=self.channel_id,
+                    channel_name=self.channel_name,
                     content=self.content,
                     embed_data=self.embed_data,
                 )
@@ -533,8 +557,7 @@ class GetDiscordMessages(BaseModel):
     Get recent messages from a Discord channel
     """
 
-    guild_id: int = Field(..., description="ID of the Discord server/guild")
-    channel_id: int = Field(..., description="ID of the channel to get messages from")
+    channel_name: str = Field(..., description="ID of the channel to get messages from")
     limit: int = Field(
         50, description="Maximum number of messages to retrieve (max 100)"
     )
@@ -550,14 +573,13 @@ class GetDiscordMessages(BaseModel):
 
         messages = loop.run_until_complete(
             discord_client.get_messages(
-                channel_id=self.channel_id,
+                channel_name=self.channel_name,
                 limit=min(self.limit, 100),  # Cap at 100 messages
             )
         )
 
         return {
-            "guild_id": self.guild_id,
-            "channel_id": self.channel_id,
+            "channel_name": self.channel_name,
             "message_count": len(messages),
             "messages": messages,
         }
@@ -699,11 +721,12 @@ def get_discord_client(enable_privileged_intents: bool = False):
 
     if _discord_client is None:
         token = os.getenv("DISCORD_BOT_TOKEN")
+        guid = int(os.getenv("DISCORD_GUID"))
         if not token:
             raise ValueError("DISCORD_BOT_TOKEN environment variable not set")
 
         _discord_client = DiscordClient(
-            token=token, enable_privileged_intents=enable_privileged_intents
+            guid=guid, token=token, enable_privileged_intents=enable_privileged_intents
         )
 
     return _discord_client
@@ -741,10 +764,5 @@ def init_discord_tools(enable_privileged_intents: bool = False):
 
     return [
         send_message_tool,
-        get_channels_tool,
-        get_messages_tool,
-        get_members_tool,
-        create_channel_tool,
-        get_guild_info_tool,
-        add_reaction_tool,
+        get_messages_tool
     ]

@@ -1,4 +1,6 @@
 .env
+.venv
+build
 /src/ToolAgents/__pycache__
 /src/ToolAgents/agents/__pycache__
 /src/ToolAgents/utilities/__pycache__
