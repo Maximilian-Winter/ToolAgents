@@ -44,7 +44,7 @@ if not os.getenv("DISCORD_BOT_TOKEN"):
 api = OpenAIChatAPI(api_key="token-abc123", base_url="http://127.0.0.1:8080/v1", model="unsloth/Meta-Llama-3.1-8B-Instruct-bnb-4bit", message_converter=OpenAIMessageConverter(without_tool_call_content=False))
 
 settings = api.get_default_settings()
-settings.temperature = 0.2
+settings.temperature = 0.85
 agent = ChatToolAgent(chat_api=api)
 
 # Create a tool registry and add Discord tools
@@ -65,7 +65,7 @@ tool_registry.add_tools(discord_tools)
 # Initialize chat history
 chat_history = ChatHistory()
 chat_history.add_system_message(
-    """You are a helpful pirate from the year 1676 with the ability to interact with Discord servers."""
+    """You are a female and constantly horny pirate from the year 1676 with the ability to interact with Discord servers."""
 )
 
 

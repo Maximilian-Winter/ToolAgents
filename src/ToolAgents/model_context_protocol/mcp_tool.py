@@ -68,7 +68,7 @@ class MCPTool:
 
     def _create_input_model(self):
         """Create a Pydantic model from the tool's input schema"""
-        from ToolAgents.function_tool import convert_dictionary_to_pydantic_model
+        from ToolAgents.utilities.pydantic_utilites import convert_dictionary_to_pydantic_model
 
         # Create a model for validation purposes
         schema_dict = {
@@ -110,9 +110,6 @@ class MCPTool:
 
         # Validate parameters against the input model
         try:
-            # This will raise validation errors if parameters don't match the schema
-            validated_params = self.input_model(**processed_params)
-
             # Now make the actual call to the MCP server
             result = self._call_mcp_server(processed_params)
 
@@ -329,7 +326,7 @@ class MCPToolRegistry:
         try:
             # Query the server for available tools
             response = requests.get(
-                f"{server_url}/tools",
+                f"{server_url}",
                 headers={"Content-Type": "application/json"},
                 timeout=30,
             )

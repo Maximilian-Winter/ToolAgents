@@ -4,13 +4,11 @@ from typing import List, Dict, Any
 from datetime import datetime
 from pydantic import BaseModel, Field
 
-from ToolAgents.messages import ChatMessageRole
-from ToolAgents.messages import (
+from ToolAgents.data_models.messages import ChatMessageRole
+from ToolAgents.data_models.messages import (
     ChatMessage,
     TextContent,
-    BinaryContent,
-    ToolCallContent,
-    ToolCallResultContent,
+
 )
 
 

@@ -1,8 +1,6 @@
 import base64
 import datetime
 import json
-import pathlib
-import sys
 import uuid
 from enum import Enum
 from os import PathLike
@@ -397,30 +395,3 @@ class ChatMessage(BaseModel):
                 content=base64_string,
             )
         )
-
-
-if __name__ == "__main__":
-    example = {
-        "id": "1",
-        "role": "assistant",
-        "content": [
-            {
-                "type": "text",
-                "content": "I'll help you perform all these tasks. Let me break this down into multiple function calls:",
-            },
-            {
-                "type": "tool_call",
-                "tool_call_id": "toolu_01WCpS9wxURWdbtUwU3UPvqR",
-                "tool_call_name": "get_current_weather",
-                "tool_call_arguments": {
-                    "location": {"lat": 50, "long": 120},
-                    "unit": "celsius",
-                },
-            },
-        ],
-        "created_at": datetime.datetime.now(),
-        "updated_at": datetime.datetime.now(),
-    }
-
-    chat_message = ChatMessage(**example)
-    print(chat_message.model_dump_json(indent=4))

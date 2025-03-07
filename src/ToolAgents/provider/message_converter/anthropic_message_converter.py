@@ -257,7 +257,7 @@ class AnthropicResponseConverter(BaseResponseConverter):
                             current_tool_call["function"]["arguments"]
                         )
                     except JSONDecodeError as e:
-                        arguments = f"Exception during JSON decoding of arguments: {e}"
+                        arguments = {"parsing_error": f"Exception during JSON decoding of arguments: {e}"}
                     contents.append(
                         ToolCallContent(
                             tool_call_id=current_tool_call["function"]["id"],

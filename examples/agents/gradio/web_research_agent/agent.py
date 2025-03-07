@@ -28,7 +28,7 @@ api = AnthropicChatAPI(
 
 # Create the ChatAPIAgent
 # agent = ChatAPIAgent(chat_api=provider, debug_output=True)
-agent = ChatToolAgent(chat_api=api, debug_output=True)
+agent = ChatToolAgent(chat_api=api, log_output=True)
 
 settings = api.get_default_settings()
 settings.neutralize_all_samplers()

@@ -74,3 +74,5 @@ examples/agents/knowledge_graph44446.gv.pdf
 /examples/agents/memory/memory
 /examples/agents/misc/code_interpreter/.venv
 /examples/agents/basics/__pycache__
+/examples/__pycache__
+/src/ToolAgents/model_context_protocol/__pycache__

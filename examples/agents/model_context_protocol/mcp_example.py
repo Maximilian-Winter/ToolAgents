@@ -81,7 +81,7 @@ def setup_manual_mcp_tools():
 
 
 # Example 2: Automatically discover tools from an MCP server
-def discover_mcp_tools(server_url: str = "http://localhost:8000/mcp"):
+def discover_mcp_tools(server_url: str = "http://localhost:3000/sse"):
     """
     Example of automatically discovering tools from an MCP server
     """
