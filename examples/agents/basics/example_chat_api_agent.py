@@ -1,5 +1,7 @@
 import json
 import os
+from copy import copy
+
 from ToolAgents import ToolRegistry
 from ToolAgents.agents import ChatToolAgent
 from ToolAgents.data_models.messages import ChatMessage
@@ -82,7 +84,14 @@ messages = [
 
 
 chat_response = agent.get_response(
-    messages=messages, settings=settings, tool_registry=tool_registry
+    messages=copy(messages), settings=settings, tool_registry=tool_registry
 )
 
 print(chat_response.response)
+
+
+chat_message = agent.get_streaming_response(
+    messages=copy(messages), settings=settings, tool_registry=tool_registry
+)
+for tok in chat_message:
+    print(tok.chunk)

@@ -2,11 +2,10 @@ import datetime
 import uuid
 from typing import Optional, List, Any, Generator, AsyncGenerator
 from ToolAgents import ToolRegistry
-from ToolAgents.agents.base_llm_agent import (
-    BaseToolAgent,
+from ToolAgents.agents.base_llm_agent import BaseToolAgent, AsyncBaseToolAgent
+from ToolAgents.data_models.responses import (
     ChatResponse,
     ChatResponseChunk,
-    AsyncBaseToolAgent,
 )
 
 from ToolAgents.provider.llm_provider import (
