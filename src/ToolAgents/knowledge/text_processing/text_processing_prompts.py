@@ -1,4 +1,4 @@
-from ToolAgents.messages import MessageTemplate
+from ToolAgents.data_models.messages import MessageTemplate
 
 summarize_documents_based_on_document_type_and_user_query_prompt = """You are an expert summarizer with the task of providing detailed summaries of various types of documents. Your summaries should be tailored to the specific document type and focused on addressing a given query. Follow these instructions carefully to produce an accurate and comprehensive summary.
 

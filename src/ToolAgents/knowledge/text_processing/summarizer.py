@@ -2,7 +2,7 @@ from typing import Any
 
 from ToolAgents.agents import ChatToolAgent
 from ToolAgents.function_tool import PostProcessor
-from ToolAgents.messages import ChatMessage, MessageTemplate
+from ToolAgents.data_models.messages import ChatMessage, MessageTemplate
 from ToolAgents.provider import ProviderSettings
 
 

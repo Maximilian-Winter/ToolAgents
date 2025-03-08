@@ -4,7 +4,7 @@ import datetime
 import json
 from typing import List, Dict, Any, Generator, Optional, AsyncGenerator
 from .message_converter import BaseMessageConverter, BaseResponseConverter
-from ToolAgents.messages.chat_message import (
+from ToolAgents.data_models.messages import (
     ChatMessage,
     ChatMessageRole,
     TextContent,

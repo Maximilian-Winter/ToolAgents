@@ -12,8 +12,8 @@ from mistral_common.tokens.tokenizers.mistral import (
 )
 
 
-from ToolAgents.messages import ToolCallContent, TextContent, ChatMessage, BinaryContent
-from ToolAgents.messages.chat_message import (
+from ToolAgents.data_models.messages import ToolCallContent, TextContent, ChatMessage, BinaryContent
+from ToolAgents.data_models.messages import (
     BinaryStorageType,
     ToolCallResultContent,
     ChatMessageRole,

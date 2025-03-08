@@ -17,7 +17,7 @@ from ToolAgents.provider.llm_provider import (
     AsyncChatAPIProvider,
 )
 from ToolAgents.provider.llm_provider import ChatAPIProvider, StreamingChatMessage
-from ToolAgents.messages.chat_message import ChatMessage
+from ToolAgents.data_models.messages import ChatMessage
 
 
 class OpenAIChatAPI(ChatAPIProvider):

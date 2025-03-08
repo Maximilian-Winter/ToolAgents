@@ -7,13 +7,11 @@ from typing import Optional, List, Any, Generator, AsyncGenerator, Union
 from pydantic import BaseModel, Field
 
 from ToolAgents import ToolRegistry
-from ToolAgents.messages import ToolCallContent, ToolCallResultContent
+from ToolAgents.data_models.messages import ToolCallContent, ToolCallResultContent
 from ToolAgents.provider.llm_provider import ProviderSettings
 from ToolAgents.provider.llm_provider import StreamingChatMessage
-from ToolAgents.messages.chat_message import ChatMessage
-
-
-
+from ToolAgents.data_models.messages import ChatMessage
+from data_models.responses import ChatResponse, ChatResponseChunk
 
 
 class BaseToolAgent(ABC):

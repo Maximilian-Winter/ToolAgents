@@ -14,7 +14,7 @@ from ToolAgents.provider.llm_provider import (
     StreamingChatMessage,
     AsyncChatAPIProvider,
 )
-from ToolAgents.messages.chat_message import (
+from ToolAgents.data_models.messages import (
     ChatMessage,
     ChatMessageRole,
     ToolCallResultContent,

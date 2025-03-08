@@ -12,7 +12,7 @@ from google.generativeai.types import (
 )
 
 from ToolAgents import FunctionTool
-from ToolAgents.messages import ChatMessageRole
+from ToolAgents.data_models.messages import ChatMessageRole
 from ToolAgents.provider.message_converter.google_genai_message_converter import (
     GoogleGenAIMessageConverter,
     GoogleGenAIResponseConverter,
@@ -24,7 +24,7 @@ from ToolAgents.provider.llm_provider import (
     SamplerSetting,
     AsyncChatAPIProvider,
 )
-from ToolAgents.messages.chat_message import ChatMessage
+from ToolAgents.data_models.messages import ChatMessage
 
 
 class GoogleGenAIChatAPI(ChatAPIProvider):

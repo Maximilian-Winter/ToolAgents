@@ -15,7 +15,7 @@ from ToolAgents.provider.llm_provider import (
     SamplerSetting,
     AsyncChatAPIProvider,
 )
-from ToolAgents.messages.chat_message import ChatMessage
+from ToolAgents.data_models.messages import ChatMessage
 
 
 class AnthropicChatAPI(ChatAPIProvider):

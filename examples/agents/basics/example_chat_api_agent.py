@@ -2,7 +2,7 @@ import json
 import os
 from ToolAgents import ToolRegistry
 from ToolAgents.agents import ChatToolAgent
-from ToolAgents.messages.chat_message import ChatMessage
+from ToolAgents.data_models.messages import ChatMessage
 from ToolAgents.provider import (
     AnthropicChatAPI,
     GoogleGenAIChatAPI,

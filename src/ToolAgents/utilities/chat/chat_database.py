@@ -13,7 +13,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import DeclarativeBase, sessionmaker, relationship
 from sqlalchemy.exc import IntegrityError
 
-from ToolAgents.messages.chat_message import ChatMessage, ChatMessageRole, TextContent
+from ToolAgents.data_models.messages import ChatMessage, ChatMessageRole, TextContent
 
 
 class Base(DeclarativeBase):

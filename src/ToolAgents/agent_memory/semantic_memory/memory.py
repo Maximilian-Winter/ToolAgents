@@ -13,7 +13,7 @@ from chromadb.api.types import IncludeEnum
 import numpy as np
 from torch import Tensor
 
-from ToolAgents.messages import ChatMessage, MessageTemplate
+from ToolAgents.data_models.messages import ChatMessage, MessageTemplate
 from ToolAgents.provider.llm_provider import ProviderSettings
 from ToolAgents.agents.base_llm_agent import BaseToolAgent
 

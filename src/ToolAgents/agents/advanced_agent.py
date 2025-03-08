@@ -9,7 +9,7 @@ from ToolAgents.agent_memory.context_app_state import ContextAppState
 
 from ToolAgents.provider.llm_provider import ProviderSettings
 from ToolAgents.agents.base_llm_agent import BaseToolAgent, ChatResponse
-from ToolAgents.messages import (
+from ToolAgents.data_models.messages import (
     ChatHistory,
     ChatMessage,
     MessageTemplate,

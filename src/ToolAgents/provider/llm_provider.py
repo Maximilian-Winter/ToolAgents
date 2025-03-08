@@ -8,7 +8,7 @@ from ToolAgents import FunctionTool, ToolRegistry
 from pydantic import BaseModel, Field
 from typing import Dict, Optional, Any, Union
 
-from ToolAgents.messages.chat_message import ChatMessage
+from ToolAgents.data_models.messages import ChatMessage
 from ToolAgents.utilities.logging import EasyLogger
 
 

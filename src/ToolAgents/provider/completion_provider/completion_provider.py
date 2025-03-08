@@ -4,7 +4,7 @@ import uuid
 from typing import Any, List, Optional, Dict, Generator
 
 from ToolAgents import FunctionTool
-from ToolAgents.messages import ChatMessage, ChatMessageRole, TextContent
+from ToolAgents.data_models.messages import ChatMessage, ChatMessageRole, TextContent
 from ToolAgents.provider.llm_provider import (
     ProviderSettings,
     ChatAPIProvider,

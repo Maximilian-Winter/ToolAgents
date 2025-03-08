@@ -4,7 +4,7 @@ from typing import List, Optional, Any, Generator
 from ToolAgents import FunctionTool, ToolRegistry
 from ToolAgents.agents import ChatToolAgent
 from ToolAgents.agents.base_llm_agent import ChatResponse, ChatResponseChunk
-from ToolAgents.messages import ChatMessage
+from ToolAgents.data_models.messages import ChatMessage
 from ToolAgents.provider import ChatAPIProvider, StreamingChatMessage
 
 

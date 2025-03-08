@@ -3,7 +3,7 @@ import random
 import string
 from typing import List, Dict, Union, Generator, AsyncGenerator
 
-from ToolAgents.messages import ToolCallContent, TextContent
+from ToolAgents.data_models.messages import ToolCallContent, TextContent
 from ToolAgents.provider import ProviderSettings
 
 
