@@ -85,7 +85,7 @@ class CompletionProvider(ChatAPIProvider):
         tools: Optional[List[FunctionTool]] = None,
     ) -> Generator[StreamingChatMessage, None, None]:
         messages = self.message_converter.prepare_request(
-            "llama.cpp", messages, settings, tools
+            "llama.cpp", messages, settings if settings else self.get_default_settings(), tools
         )
         prompt = self.tokenizer.apply_template(
             messages=messages["messages"],

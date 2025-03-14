@@ -14,9 +14,7 @@ from pydantic import BaseModel
 from ToolAgents.utilities.gbnf_grammar_generator.gbnf_grammar_from_pydantic_models import (
     generate_gbnf_grammar_from_pydantic_models,
 )
-from ToolAgents.utilities.json_schema_generator.old_schema_generator import (
-    generate_json_schemas,
-)
+
 from ToolAgents.utilities.json_schema_generator.schema_generator import get_tools_schema
 
 from ToolAgents.utilities.llm_documentation.documentation_generation import (

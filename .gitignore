@@ -77,3 +77,5 @@ examples/agents/knowledge_graph44446.gv.pdf
 /examples/__pycache__
 /src/ToolAgents/model_context_protocol/__pycache__
 /src/ToolAgents/data_models/__pycache__
+/src/ToolAgents/utilities/chat/__pycache__
+/src/ToolAgents/utilities/messages/__pycache__

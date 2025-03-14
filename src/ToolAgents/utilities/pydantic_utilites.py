@@ -139,7 +139,7 @@ def create_dynamic_models_from_dictionaries(dictionaries: list[dict[str, Any]]):
     dynamic_models = []
     for func in dictionaries:
         model_name = format_model_and_field_name(func.get("name", ""))
-        dyn_model = convert_dictionary_to_pydantic_model(func, model_name)
+        dyn_model = convert_schema_to_pydantic_model(func, model_name)
         dynamic_models.append(dyn_model)
     return dynamic_models
 
@@ -171,22 +171,13 @@ def list_to_enum(enum_name, values):
     return Enum(enum_name, {value: value for value in values})
 
 
-def convert_dictionary_to_pydantic_model(
+def convert_schema_to_pydantic_model(
     dictionary: dict[str, Any],
     model_name: str = "CustomModel",
     docs: dict[str, str] = None,
     docs_function: dict[str, str] = None,
 ) -> type[Any]:
-    """
-    Convert a dictionary to a Pydantic model class.
 
-    Args:
-        dictionary (dict): Dictionary representing the model structure.
-        model_name (str): Name of the generated Pydantic model.
-
-    Returns:
-        type[BaseModel]: Generated Pydantic model class.
-    """
     fields: dict[str, Any] = {}
     if docs is None:
         docs = {}
@@ -195,7 +186,7 @@ def convert_dictionary_to_pydantic_model(
     if "properties" in dictionary:
         for field_name, field_data in dictionary.get("properties", {}).items():
             if field_data == "object":
-                submodel = convert_dictionary_to_pydantic_model(
+                submodel = convert_schema_to_pydantic_model(
                     dictionary, f"{model_name}_{field_name}", docs, docs_function
                 )
                 fields[field_name] = (submodel, ...)
@@ -213,7 +204,7 @@ def convert_dictionary_to_pydantic_model(
                     items = field_data.get("items", {})
                     if items != {}:
                         array = {"properties": items}
-                        array_type = convert_dictionary_to_pydantic_model(
+                        array_type = convert_schema_to_pydantic_model(
                             array,
                             f"{model_name}_{field_name}_items",
                             docs,
@@ -223,7 +214,7 @@ def convert_dictionary_to_pydantic_model(
                     else:
                         fields[field_name] = (list, ...)
                 elif field_type == "object":
-                    submodel = convert_dictionary_to_pydantic_model(
+                    submodel = convert_schema_to_pydantic_model(
                         field_data, f"{model_name}_{field_name}", docs, docs_function
                     )
                     fields[field_name] = (submodel, ...)
@@ -242,13 +233,13 @@ def convert_dictionary_to_pydantic_model(
             elif field_name == "description":
                 docs_function["__doc__"] = field_data
             elif field_name == "parameters":
-                return convert_dictionary_to_pydantic_model(
+                return convert_schema_to_pydantic_model(
                     field_data, f"{model_name}", docs, docs_function
                 )
 
     if "parameters" in dictionary:
         field_data = {"function": dictionary}
-        return convert_dictionary_to_pydantic_model(
+        return convert_schema_to_pydantic_model(
             field_data, f"{model_name}", docs, docs_function
         )
     if "required" in dictionary:
