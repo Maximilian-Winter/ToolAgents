@@ -2,9 +2,11 @@ import asyncio
 import json
 from typing import Any, Callable, Dict, Optional, Tuple, TypeVar, Union
 
-# Assuming these are imported in your original code
 from mcp import ClientSession, StdioServerParameters, types
 from mcp.client.stdio import stdio_client
+
+from ToolAgents.utilities.mcp_conversion import convert_mcp_input_json_schema
+from ToolAgents import FunctionTool
 
 
 class SessionManager:
@@ -103,29 +105,30 @@ class SessionManager:
             raise RuntimeError("Session is not connected. Call connect() first or use as context manager.")
 
 
-# Example usage:
-async def example_usage():
-    # Create server parameters for stdio connection
-    server_params = StdioServerParameters(
-        command="uv",  # Executable
-        args=[
-        "run",
-        "--with",
-        "mcp[cli]",
-        "mcp",
-        "run",
-        "H:\\MaxDev42\\ToolAgentsDev\\examples\\personal_mcp_tools.py"
-      ],  # Optional command line arguments
-        env=None,  # Optional environment variables
-    )
-    # Option 1: Using as a context manager (recommended)
-    async with SessionManager(server_params) as session_mgr:
-        prompts = await session_mgr.list_prompts()
-        tools = await session_mgr.list_tools()
-        print(tools)
-        print(json.dumps(tools.tools[0].inputSchema, indent=2))
+class MCPTool:
+    def __init__(self, name: str, description: str, input_schema: Dict[str, Any]):
+        self.name = name
+        self.description = description
+        self.inputSchema = input_schema
 
-if __name__ == "__main__":
-    import asyncio
+    def get_pydantic_input_model(self):
+        return convert_mcp_input_json_schema(self.inputSchema)
 
-    asyncio.run(example_usage())
+    def __repr__(self):
+        return f"MCPTool(name={self.name!r}, description={self.description!r}, inputSchema={self.inputSchema!r})"
+
+class MCPServerTools:
+    def __init__(self):
+        self.tools = None
+
+    def load_from_stdio_server(self, server_params: StdioServerParameters):
+        async def load_tools():
+            async with SessionManager(server_params) as session_mgr:
+                tools = await session_mgr.list_tools()
+                self.tools = []
+                for tool in tools:
+                    mcp_tool = MCPTool(tool["name"], tool["description"], tool["inputSchema"])
+                    # Generate execution method for the tool which takes **mcp.get_pydantic_input_model().model_dump() as input
+                    function_tool = FunctionTool.from_pydantic_model_and_callable(mcp_tool.get_pydantic_input_model(), )
+                    self.tools.append(function_tool)
+        asyncio.run(load_tools())
