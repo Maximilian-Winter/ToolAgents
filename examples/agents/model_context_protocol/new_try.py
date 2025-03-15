@@ -31,14 +31,14 @@ load_dotenv()
 
 #api = CompletionProvider(completion_endpoint=LlamaCppServer("http://127.0.0.1:8080"))
 # Official OpenAI API
-# api = OpenAIChatAPI(api_key=os.getenv("OPENAI_API_KEY"), model="gpt-4o-mini")
+#api = OpenAIChatAPI(api_key=os.getenv("OPENAI_API_KEY"), model="gpt-4o-mini")
 
 # Openrouter API
-api = OpenAIChatAPI(
-    api_key=os.getenv("OPENROUTER_API_KEY"),
-    model="anthropic/claude-3.7-sonnet:beta",
-    base_url="https://openrouter.ai/api/v1",
-)
+#api = OpenAIChatAPI(
+#    api_key=os.getenv("OPENROUTER_API_KEY"),
+#    model="anthropic/claude-3.7-sonnet:beta",
+#    base_url="https://openrouter.ai/api/v1",
+#)
 
 # Anthropic API
 # api = OpenAIChatAPI(api_key=os.getenv("GOOGLE_API_KEY"), base_url="https://generativelanguage.googleapis.com/v1beta/openai/", model="gemini-2.0-flash-lite-preview-02-05")
@@ -51,7 +51,7 @@ api = OpenAIChatAPI(
 # api = CompletionProvider(completion_endpoint=LlamaCppServer("http://127.0.0.1:8080"))
 
 # Mistral API
-# api = MistralChatAPI(api_key=os.getenv("MISTRAL_API_KEY"), model="mistral-small-latest")
+api = MistralChatAPI(api_key=os.getenv("MISTRAL_API_KEY"), model="mistral-small-latest")
 
 # Create the ChatAPIAgent
 agent = ChatToolAgent(chat_api=api)
@@ -86,7 +86,7 @@ messages = [
         "You are a helpful assistant with tool calling capabilities. Only reply with a tool call if the function exists in the library provided by the user. Use JSON format to output your function calls. If it doesn't exist, just reply directly in natural language. When you receive a tool call response, use the output to format an answer to the original user question."
     ),
     ChatMessage.create_user_message(
-        "Write a poem about Donald Trump and Joe Biden into a txt file called 'fuck-donald.txt' in the 'H:\\MaxDev42\\jalus_brackus' directory",
+        "Write a poem about Donald Trump and Joe Biden into a txt file called 'hope.txt' in the 'H:\\MaxDev42\\jalus_brackus' directory",
     ),
 ]
 
