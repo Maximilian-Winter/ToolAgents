@@ -1,11 +1,12 @@
 import asyncio
 import json
+from contextlib import AsyncExitStack
 from typing import Any, Callable, Dict, Optional, Tuple, TypeVar, Union
 
 from mcp import ClientSession, StdioServerParameters, types
 from mcp.client.stdio import stdio_client
 
-from ToolAgents.utilities.mcp_conversion import convert_mcp_input_json_schema
+from ToolAgents.utilities.mcp_conversion import convert_json_schema
 from ToolAgents import FunctionTool
 
 
@@ -21,9 +22,7 @@ class SessionManager:
         self.read = None
         self.write = None
         self.session = None
-        self._client_context = None
-        self._session_context = None
-
+        self.exit_stack = AsyncExitStack()
     async def __aenter__(self):
         """Support using as an async context manager."""
         await self.connect()
@@ -39,14 +38,10 @@ class SessionManager:
             return self
 
         # Create and store the client context
-        self._client_context = stdio_client(self.server_params)
-        self.read, self.write = await self._client_context.__aenter__()
-
+        stdio_transport  = await self.exit_stack.enter_async_context(stdio_client(self.server_params))
+        self.read, self.write = stdio_transport
         # Create and store the session context
-        self._session_context = ClientSession(
-            self.read, self.write, sampling_callback=self.sampling_callback
-        )
-        self.session = await self._session_context.__aenter__()
+        self.session = await self.exit_stack.enter_async_context(ClientSession(self.read, self.write))
 
         # Initialize the connection
         await self.session.initialize()
@@ -57,17 +52,15 @@ class SessionManager:
         if self.session is None:
             return
 
-        # Close session
-        await self._session_context.__aexit__(None, None, None)
-
-        # Close client
-        await self._client_context.__aexit__(None, None, None)
-
+        # First clear references to these objects
         self.session = None
         self.read = None
         self.write = None
-        self._client_context = None
-        self._session_context = None
+
+        # Then properly close the exit stack which will close all context managers
+        await self.exit_stack.aclose()
+        # Create a new exit stack for potential reconnection
+        self.exit_stack = AsyncExitStack()
 
     async def list_prompts(self):
         """List available prompts."""
@@ -112,7 +105,7 @@ class MCPTool:
         self.inputSchema = input_schema
 
     def get_pydantic_input_model(self):
-        return convert_mcp_input_json_schema(self.inputSchema)
+        return convert_json_schema(self.inputSchema)
 
     def __repr__(self):
         return f"MCPTool(name={self.name!r}, description={self.description!r}, inputSchema={self.inputSchema!r})"
@@ -147,7 +140,7 @@ class MCPServerTools:
                     mcp_tool = MCPTool(tool.name, tool.description, tool.inputSchema)
 
                     # Generate execution method for this specific tool using the factory
-                    tool_executor = create_tool_executor("run_" + tool.name)
+                    tool_executor = create_tool_executor(tool.name)
 
                     # Generate FunctionTool from pydantic model and the executor
                     function_tool = FunctionTool.from_pydantic_model_and_callable(

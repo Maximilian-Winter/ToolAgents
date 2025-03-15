@@ -2,7 +2,10 @@
 
 import json
 import os
+import shutil
 from copy import copy
+
+from mcp import StdioServerParameters
 
 from ToolAgents import ToolRegistry
 from ToolAgents.agents import ChatToolAgent
@@ -33,7 +36,7 @@ load_dotenv()
 # Openrouter API
 api = OpenAIChatAPI(
     api_key=os.getenv("OPENROUTER_API_KEY"),
-    model="meta-llama/llama-3.3-70b-instruct",
+    model="anthropic/claude-3.7-sonnet:beta",
     base_url="https://openrouter.ai/api/v1",
 )
 
@@ -59,19 +62,15 @@ settings = api.get_default_settings()
 # Set sampling settings
 settings.temperature = 0.45
 settings.top_p = 1.0
-from mcp import StdioServerParameters
 
+npx_path = shutil.which("npx")
 server_params = StdioServerParameters(
-    command="uv",  # Executable
+    command=npx_path,
     args=[
-    "run",
-    "--with",
-    "mcp[cli]",
-    "mcp",
-    "run",
-    "H:\\MaxDev42\\ToolAgentsDev\\examples\\personal_mcp_tools.py"
-  ],  # Optional command line arguments
-    env=None,  # Optional environment variables
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        r"H:\MaxDev42\jalus_brackus"
+    ]
 )
 mcp_server_tools = MCPServerTools()
 
@@ -87,7 +86,7 @@ messages = [
         "You are a helpful assistant with tool calling capabilities. Only reply with a tool call if the function exists in the library provided by the user. Use JSON format to output your function calls. If it doesn't exist, just reply directly in natural language. When you receive a tool call response, use the output to format an answer to the original user question."
     ),
     ChatMessage.create_user_message(
-        "Calculate 420 x 420 using your calculator tool."
+        "Write a poem about Donald Trump and Joe Biden into a txt file called 'fuck-donald.txt' in the 'H:\\MaxDev42\\jalus_brackus' directory",
     ),
 ]
 
