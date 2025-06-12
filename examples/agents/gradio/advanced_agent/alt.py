@@ -42,10 +42,10 @@ def stream_chat_response(history: List[ChatMessage]) -> Iterator[Tuple[List[Chat
     Handles streaming chat responses by updating the history and the HTML display.
     """
     user_message = history[-1]
-    history.append((ChatMessageRole.Assistant, ""))
+    history.append(None)
 
     partial_message = ""
-    for chunk in configurable_agent.stream_chat_with_agent(user_message.get_text_content()):
+    for chunk in configurable_agent.stream_chat_with_agent(user_message.get_as_text()):
         partial_message += chunk.chunk
         history[-1] = ChatMessage.create_assistant_message(partial_message)
         yield history, format_chat_history_as_markdown(history)
@@ -53,7 +53,6 @@ def stream_chat_response(history: List[ChatMessage]) -> Iterator[Tuple[List[Chat
     configurable_agent.save_agent()
     yield history, format_chat_history_as_markdown(history)
 
-# --- Enhanced CSS for a Modern Chat Look ---
 
 css = """
 body { background-color: #121212; color: #E0E0E0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
