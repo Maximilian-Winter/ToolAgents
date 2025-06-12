@@ -37,7 +37,7 @@ def add_user_message(user_message: str, history: List[Tuple[str, str]]):
     return "", history, format_chat_history_as_markdown(history)
 
 
-def stream_chat_response(history: List[Tuple[str, str]]) -> Iterator[Tuple[List[Tuple[str, str]], str]]:
+def stream_chat_response(history: List[ChatMessage]) -> Iterator[Tuple[List[ChatMessage], str]]:
     """
     Handles streaming chat responses by updating the history and the HTML display.
     """
@@ -45,7 +45,7 @@ def stream_chat_response(history: List[Tuple[str, str]]) -> Iterator[Tuple[List[
     history.append((ChatMessageRole.Assistant, ""))
 
     partial_message = ""
-    for chunk in configurable_agent.stream_chat_with_agent(user_message):
+    for chunk in configurable_agent.stream_chat_with_agent(user_message.get_text_content()):
         partial_message += chunk.chunk
         history[-1] = ChatMessage.create_assistant_message(partial_message)
         yield history, format_chat_history_as_markdown(history)
