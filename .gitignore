@@ -79,3 +79,4 @@ examples/agents/knowledge_graph44446.gv.pdf
 /src/ToolAgents/data_models/__pycache__
 /src/ToolAgents/utilities/chat/__pycache__
 /src/ToolAgents/utilities/messages/__pycache__
+/examples/agents/gradio/advanced_agent/agent_data

@@ -41,13 +41,13 @@ def stream_chat_response(history: List[Tuple[str, str]]) -> Iterator[Tuple[List[
     """
     Handles streaming chat responses by updating the history and the HTML display.
     """
-    user_message = history[-1][1]
+    user_message = history[-1]
     history.append((ChatMessageRole.Assistant, ""))
 
     partial_message = ""
     for chunk in configurable_agent.stream_chat_with_agent(user_message):
         partial_message += chunk.chunk
-        history[-1] = (ChatMessageRole.Assistant, partial_message)
+        history[-1] = ChatMessage.create_assistant_message(partial_message)
         yield history, format_chat_history_as_markdown(history)
 
     configurable_agent.save_agent()
@@ -72,7 +72,7 @@ with gr.Blocks(css=css) as demo:
     chat_history_state = gr.State(value=initial_history)
 
     chat_display = gr.Markdown(
-        value=format_chat_history_as_markdown(initial_history)
+        value=format_chat_history_as_markdown(initial_history), padding="20px"
     )
 
     with gr.Row():
