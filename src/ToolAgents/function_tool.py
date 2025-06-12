@@ -11,6 +11,8 @@ from typing import Any, List, Union, Callable, Tuple
 
 from pydantic import BaseModel
 
+BaseToolAgent = type
+from ToolAgents.data_models.messages import ChatMessage
 from ToolAgents.utilities.gbnf_grammar_generator.gbnf_grammar_from_pydantic_models import (
     generate_gbnf_grammar_from_pydantic_models,
 )
@@ -149,6 +151,7 @@ class FunctionTool:
         require_confirmation: Whether to require user confirmation before executing the tool
         confirmation_description: Optional description for the confirmation request
         confirmation_handler: Optional callable that handles confirmation requests
+        with_execution_context: Only applicable for pydantic tools. If True, the run method will be called with an additional parameter containing the execution context.
         **additional_parameters: Additional parameters to pass to the call if function is called.
     """
 
@@ -163,6 +166,7 @@ class FunctionTool:
         confirmation_handler: typing.Optional[
             Callable[[ConfirmationRequest], None]
         ] = None,
+        with_execution_context: bool = False,
         **additional_parameters,
     ):
         # Initialize function tool as before...
@@ -711,6 +715,9 @@ class ToolRegistry:
 
         return result
 
+class ToolExecutionContext:
+    agent: BaseToolAgent
+    messages: List[ChatMessage]
 
 def cli_confirmation_handler(request: ConfirmationRequest):
     """Simple CLI-based confirmation handler."""

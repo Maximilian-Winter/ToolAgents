@@ -1,7 +1,7 @@
 import os
 
 from ToolAgents.agents import ChatToolAgent
-from ToolAgents.messages import ChatHistory
+from ToolAgents.utilities.chat.chat_history import ChatHistory
 
 from ToolAgents.provider import OpenAIChatAPI
 

@@ -30,11 +30,11 @@ class CompletionProvider(ChatAPIProvider):
     def __init__(
         self,
         completion_endpoint: CompletionEndpoint,
-        tokenizer: LLMTokenizer = MistralTokenizer(),
+        tokenizer: LLMTokenizer = None,
         message_converter: BaseMessageConverter = MistralMessageConverterLlamaCpp(),
         tool_call_handler: LLMToolCallHandler = TemplateToolCallHandler(),
     ):
-        self.tokenizer = tokenizer
+        self.tokenizer = tokenizer or MistralTokenizer()
         self.message_converter = message_converter
         self.completion_endpoint = completion_endpoint
         self.tool_call_handler = tool_call_handler
@@ -190,11 +190,11 @@ class AsyncCompletionProvider(AsyncChatAPIProvider):
     def __init__(
         self,
         completion_endpoint: AsyncCompletionEndpoint,
-        tokenizer: LLMTokenizer = MistralTokenizer(),
+        tokenizer: LLMTokenizer = None,
         message_converter: BaseMessageConverter = MistralMessageConverterLlamaCpp(),
         tool_call_handler: LLMToolCallHandler = TemplateToolCallHandler(),
     ):
-        self.tokenizer = tokenizer
+        self.tokenizer = tokenizer or MistralTokenizer()
         self.message_converter = message_converter
         self.completion_endpoint = completion_endpoint
         self.tool_call_handler = tool_call_handler

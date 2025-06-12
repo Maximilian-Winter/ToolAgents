@@ -1,7 +1,8 @@
 import datetime
 import uuid
 from typing import Optional, List, Any, Generator, AsyncGenerator
-from ToolAgents import ToolRegistry
+
+ToolRegistry = type
 from ToolAgents.agents.base_llm_agent import BaseToolAgent, AsyncBaseToolAgent
 from ToolAgents.data_models.responses import (
     ChatResponse,
@@ -30,6 +31,7 @@ class ChatToolAgent(BaseToolAgent):
         log_to_file: bool = False,
     ):
         super().__init__()
+        from ToolAgents import ToolRegistry
         self.chat_api = chat_api
         self.log_output = log_output
         if log_output:
@@ -73,6 +75,7 @@ class ChatToolAgent(BaseToolAgent):
             Tuple of (result, contains_tool_calls)
         """
         if tool_registry is None:
+            from ToolAgents import ToolRegistry
             tool_registry = ToolRegistry()
 
         if reset_last_messages_buffer:
@@ -198,6 +201,7 @@ class ChatToolAgent(BaseToolAgent):
         Yields:
             Response chunks
         """
+        from ToolAgents.function_tool import ToolRegistry
         if reset_last_messages_buffer:
             self.last_response_has_tool_calls = False
 

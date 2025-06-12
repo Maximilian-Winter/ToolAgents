@@ -1,6 +1,3 @@
-
-
-import json
 import os
 import shutil
 from copy import copy
@@ -34,11 +31,11 @@ load_dotenv()
 #api = OpenAIChatAPI(api_key=os.getenv("OPENAI_API_KEY"), model="gpt-4o-mini")
 
 # Openrouter API
-#api = OpenAIChatAPI(
-#    api_key=os.getenv("OPENROUTER_API_KEY"),
-#    model="anthropic/claude-3.7-sonnet:beta",
-#    base_url="https://openrouter.ai/api/v1",
-#)
+api = OpenAIChatAPI(
+    api_key=os.getenv("OPENROUTER_API_KEY"),
+    model="anthropic/claude-3.7-sonnet:beta",
+    base_url="https://openrouter.ai/api/v1",
+)
 
 # Anthropic API
 # api = OpenAIChatAPI(api_key=os.getenv("GOOGLE_API_KEY"), base_url="https://generativelanguage.googleapis.com/v1beta/openai/", model="gemini-2.0-flash-lite-preview-02-05")
@@ -51,7 +48,7 @@ load_dotenv()
 # api = CompletionProvider(completion_endpoint=LlamaCppServer("http://127.0.0.1:8080"))
 
 # Mistral API
-api = MistralChatAPI(api_key=os.getenv("MISTRAL_API_KEY"), model="mistral-small-latest")
+#api = MistralChatAPI(api_key=os.getenv("MISTRAL_API_KEY"), model="mistral-small-latest")
 
 # Create the ChatAPIAgent
 agent = ChatToolAgent(chat_api=api)

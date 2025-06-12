@@ -2,7 +2,7 @@ import json
 import os
 from copy import copy
 
-from ToolAgents import ToolRegistry
+from ToolAgents.function_tool import ToolRegistry
 from ToolAgents.agents import ChatToolAgent
 from ToolAgents.data_models.messages import ChatMessage
 from ToolAgents.provider import (

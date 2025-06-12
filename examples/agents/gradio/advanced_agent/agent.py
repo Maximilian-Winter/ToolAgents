@@ -5,10 +5,8 @@ from ToolAgents.agent_memory import (
 )
 from ToolAgents.agents.advanced_agent import AdvancedAgent
 from ToolAgents.agents.advanced_agent import AgentConfig
-from ToolAgents.provider import CompletionProvider
-from ToolAgents.provider.completion_provider.default_implementations import (
-    LlamaCppServer,
-)
+from ToolAgents.provider import OpenAIChatAPI
+
 
 from dotenv import load_dotenv
 
@@ -21,13 +19,13 @@ from prompts import (
 load_dotenv()
 
 
-api = CompletionProvider(completion_endpoint=LlamaCppServer("http://127.0.0.1:8080"))
+api = OpenAIChatAPI(api_key="token-abc123", base_url="http://127.0.0.1:8080/v1", model="unsloth/Meta-Llama-3.1-8B-Instruct-bnb-4bit")
 
 # provider = AnthropicChatAPI(api_key=os.getenv("ANTHROPIC_API_KEY"), model="claude-3-5-sonnet-20241022")
 
 # Create the ChatAPIAgent
 # agent = ChatAPIAgent(chat_api=provider, debug_output=True)
-agent = ChatToolAgent(chat_api=api, debug_output=True)
+agent = ChatToolAgent(chat_api=api)
 
 settings = api.get_default_settings()
 settings.neutralize_all_samplers()
@@ -55,10 +53,11 @@ agent_config.semantic_chat_history_config.debug_mode = True
 agent_config.summarize_chat_pairs_before_storing = True
 agent_config.semantic_chat_history_config.extract_pattern_strategy = (
     SummarizationExtractPatternStrategy(
+        user_name="Maximilian Winter",
+        assistant_name="Jiutian Xuannü, the mysterious lady of the nine heavens",
         agent=agent,
         summarizer_settings=summarizer_settings,
-        debug_mode=True,
-        system_prompt_and_prefix=summarization_prompt_summaries,
+        debug_mode=True
     )
 )
 

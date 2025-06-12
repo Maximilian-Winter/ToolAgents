@@ -4,7 +4,7 @@ import os
 from ToolAgents import FunctionTool
 from ToolAgents.agents import ChatToolAgent
 from ToolAgents.function_tool import ConfirmationRequest, ToolRegistry
-from ToolAgents.messages import ChatMessage
+from ToolAgents.data_models.messages import ChatMessage
 from ToolAgents.provider import MistralChatAPI
 
 from dotenv import load_dotenv

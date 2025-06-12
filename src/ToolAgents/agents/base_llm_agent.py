@@ -4,12 +4,13 @@ from types import NoneType
 
 from typing import Optional, List, Any, Generator, AsyncGenerator, Union
 
-from ToolAgents import ToolRegistry
+from ToolAgents.data_models.responses import ChatResponse, ChatResponseChunk
+from ToolAgents.function_tool import ToolRegistry
 from ToolAgents.data_models.messages import ToolCallContent, ToolCallResultContent
 from ToolAgents.provider.llm_provider import ProviderSettings
 from ToolAgents.provider.llm_provider import StreamingChatMessage
 from ToolAgents.data_models.messages import ChatMessage
-from data_models.responses import ChatResponse, ChatResponseChunk
+
 
 
 class BaseToolAgent(ABC):

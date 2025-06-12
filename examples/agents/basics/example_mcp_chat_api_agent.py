@@ -5,7 +5,7 @@ from mcp import StdioServerParameters
 
 from ToolAgents import ToolRegistry
 from ToolAgents.agents import ChatToolAgent
-from ToolAgents.messages.chat_message import ChatMessage
+from ToolAgents.data_models.messages import ChatMessage
 from ToolAgents.model_context_protocol.mcp_tools import MCPAdapter
 from ToolAgents.provider import (
     AnthropicChatAPI,

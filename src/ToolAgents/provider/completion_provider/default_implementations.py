@@ -64,7 +64,7 @@ class MistralTokenizer(LLMTokenizer):
     def __init__(
         self,
         tokenizer_file: str = None,
-        tokenizer_version: MistralTokenizerVersion = MistralTokenizerVersion.v7,
+        tokenizer_version: MistralTokenizerVersion = MistralTokenizerVersion.v3,
     ):
         if tokenizer_file is not None:
             self.tokenizer = MistralTokenizerOfficial.from_file(

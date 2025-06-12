@@ -8,8 +8,8 @@ from ToolAgents.agent_tools.file_tools import FilesystemTools
 from ToolAgents.agent_tools.git_tools import GitTools
 from ToolAgents.agent_tools.github_tools import GitHubTools
 from ToolAgents.agents import ChatToolAgent
-from ToolAgents.messages import ChatHistory, MessageTemplate
-from ToolAgents.messages.chat_message import ChatMessage
+from ToolAgents.utilities.chat.chat_history import ChatHistory
+from ToolAgents.data_models.messages import ChatMessage
 from ToolAgents.provider import (
     AnthropicChatAPI,
     OpenAIChatAPI,
@@ -17,6 +17,7 @@ from ToolAgents.provider import (
     MistralChatAPI,
     CompletionProvider,
 )
+from ToolAgents.utilities.messages.message_template import MessageTemplate
 
 from dotenv import load_dotenv
 
