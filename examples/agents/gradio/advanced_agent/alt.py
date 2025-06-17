@@ -20,11 +20,11 @@ def format_chat_history_as_markdown(history: List[ChatMessage]) -> str:
         content = entry.get_as_text()
 
         if role == ChatMessageRole.User:
-            md_string += f"👤 You:\n{content}\n\n"
+            md_string += f"👤 You:\n{content}\n\n\n\n"
         elif role == ChatMessageRole.Assistant:
-            md_string += f"🤖 Assistant:\n{content}\n\n"
-        elif role == ChatMessageRole.System:
-            md_string += f"⚙️ System:\n```text\n{content}```\n\n"
+            md_string += f"🤖 Assistant:\n{content}\n\n\n\n"
+        #elif role == ChatMessageRole.System:
+        #    md_string += f"⚙️ System:\n```text\n{content}```\n\n\n\n"
 
     return md_string.strip()
 
@@ -59,6 +59,8 @@ def stream_chat_response(history: List[ChatMessage]) -> Iterator[Tuple[List[Chat
 
 def clear_history():
     """Clears chat history."""
+    configurable_agent.chat_history.clear_history()
+    configurable_agent.save_agent()
     return [], ""
 
 
@@ -69,9 +71,8 @@ css = """
     border: 1px solid #333;
     border-radius: 8px;
     background: #1a1a1a;
-    height: 70vh;
-    padding: 16px;
-    margin: 16px 0;
+    padding: 20px;
+    margin: 20px 0;
 }
 
 .input-row {
@@ -98,7 +99,7 @@ with gr.Blocks(css=css, title="Chat Agent") as demo:
         value=format_chat_history_as_markdown(initial_history),
         elem_classes=["chat-container"],
         line_breaks=True,
-        show_copy_button=True,
+        show_copy_button=False,
     )
 
     # Input Section

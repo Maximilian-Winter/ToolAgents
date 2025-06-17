@@ -1,20 +1,13 @@
 from ToolAgents.agent_memory.context_app_state import ContextAppState
 from ToolAgents.agents import ChatToolAgent
-from ToolAgents.messages import ChatMessage
+from ToolAgents.data_models.messages import ChatMessage
 
 from ToolAgents.provider import CompletionProvider
 from ToolAgents.provider.completion_provider.default_implementations import (
     LlamaCppServer,
 )
 
-api = CompletionProvider(completion_endpoint=LlamaCppServer("http://127.0.0.1:8080"))
 
-agent = ChatToolAgent(chat_api=api, debug_output=True)
-
-settings = api.get_default_settings()
-settings.neutralize_all_samplers()
-settings.temperature = 0.4
-settings.set_max_new_tokens(4096)
 
 app_state = ContextAppState(initial_state_file="rpg_elysia.yaml")
 system_prompt = f"""You are tasked with acting as a Game Master (GM) for a text-based role-playing game. Your primary goal is to create an engaging, immersive, and dynamic role-playing experience for the player. You will narrate the story, describe the world, control non-player characters (NPCs), and adjudicate rules based on the provided game state.
@@ -80,8 +73,15 @@ As you approach the dilapidated warehouse, the acrid smell of industrial waste a
 The eerie quiet is occasionally broken by the distant hum of hover-cars and the faint whir of a malfunctioning neon sign. Your cybernetic implants detect faint electromagnetic signatures from within the building, suggesting it may not be as abandoned as it appears.
 
 What's your next move, Jane? How do you want to approach investigating this warehouse?"""
+print(system_prompt)
+api = CompletionProvider(completion_endpoint=LlamaCppServer("http://127.0.0.1:8080"))
 
+agent = ChatToolAgent(chat_api=api)
 
+settings = api.get_default_settings()
+settings.neutralize_all_samplers()
+settings.temperature = 0.4
+settings.set_max_new_tokens(4096)
 result = agent.get_streaming_response(
     messages=[
         ChatMessage.create_system_message(system_prompt),
