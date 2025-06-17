@@ -1,74 +1,89 @@
 import os
 import shutil
-from typing import Dict, Any
+from copy import copy
+
+import asyncio
+from time import sleep
+
+from mcp import StdioServerParameters
+
 
 from ToolAgents import ToolRegistry
-from fuck import get_mcp_function_tools
 from ToolAgents.agents import ChatToolAgent
-from ToolAgents.data_models.chat_history import ChatHistory
 from ToolAgents.data_models.messages import ChatMessage
-from ToolAgents.provider import OpenAIChatAPI
-from ToolAgents.model_context_protocol.mcp_tool import MCPToolRegistry, MCPToolDefinition, MCPTool
-
-from dotenv import load_dotenv
-
-load_dotenv()
-
-# Set up API client
-api = OpenAIChatAPI(api_key=os.getenv("OPENAI_API_KEY"), model="gpt-4o")
-settings = api.get_default_settings()
-settings.temperature = 0.2
-agent = ChatToolAgent(chat_api=api)
-
-
-npx_path = shutil.which("npx")
-# Get filesystem tools from MCP server
-filesystem_tools = get_mcp_function_tools([
-    npx_path, "-y", "@modelcontextprotocol/server-filesystem",
-    "H:\\LLM_Dev\\rap"
-])
-
-# Add to your existing registry
-registry = ToolRegistry()
-registry.add_tools(filesystem_tools)
-
-# Initialize chat history
-chat_history = ChatHistory()
-chat_history.add_system_message(
-    """
-You are an assistant with access to various tools. When a user asks for information that requires using
-a tool, use the appropriate tool to get the information and respond based on the result.
-
-Please help the user with their requests by using these tools when appropriate.
-"""
+from ToolAgents.provider import (
+    MistralChatAPI, OpenAIChatAPI
 )
 
 
-# Example usage
-if __name__ == "__main__":
-    print("Model Context Protocol (MCP) Tool Example")
-    print("----------------------------------------")
-    print("This example shows how to use Model Context Protocol tools with ToolAgents.")
-    print("Available commands:")
-    print("- Type 'exit' to quit")
-    print("- Type 'tools' to see available tools")
-    print("- Otherwise, your input will be processed by the agent\n")
+from dotenv import load_dotenv
 
-    while True:
-        user_input = input("User > ")
-        if user_input.lower() == "exit":
-            break
-        elif user_input.lower() == "tools":
-            print("\nAvailable tools:")
-            for tool in registry.get_tools():
-                print(
-                    f"- {tool.model.__name__}: {tool.model.model_json_schema()}"
-                )
-            print()
-        else:
-            chat_history.add_user_message(user_input)
-            print("Assistant > ", end="")
-            response = agent.get_response(settings=settings, messages=chat_history.get_messages(), tool_registry=registry)
-            print(response.response)
-            chat_history.add_messages(response.messages)
-            print()
+from ToolAgents.utilities.mcp_session import MCPServerTools
+
+load_dotenv()
+
+
+# Mistral API
+api = OpenAIChatAPI(api_key="token-abc123", base_url="http://127.0.0.1:8080/v1", model="unsloth/Meta-Llama-3.1-8B-Instruct-bnb-4bit")
+
+# Create the ChatAPIAgent
+agent = ChatToolAgent(chat_api=api)
+
+# Create a samplings settings object
+settings = api.get_default_settings()
+
+# Set sampling settings
+settings.temperature = 0.45
+settings.top_p = 1.0
+
+
+#npx_path = shutil.which("npx")
+#server_params = StdioServerParameters(
+#    command=npx_path,
+#    args=[
+#        "-y",
+#        "@modelcontextprotocol/server-filesystem",
+#        r"H:\LLM_Dev\rap"
+#    ]
+#)
+#mcp_server_tools = MCPServerTools()
+#loop = asyncio.new_event_loop()
+#asyncio.set_event_loop(loop)
+#tools = loop.run_until_complete(mcp_server_tools.load_from_stdio_server(server_params=server_params))
+#while loop.is_running():
+#    sleep(0.5)
+mcp_server_tools = MCPServerTools()
+loop = asyncio.new_event_loop()
+asyncio.set_event_loop(loop)
+tools = loop.run_until_complete(mcp_server_tools.load_from_http_server(server_kwargs={"url": "http://127.0.0.1:8042/mcp"}))
+while loop.is_running():
+    sleep(0.5)
+
+
+tool_registry = ToolRegistry()
+
+tool_registry.add_tools(tools)
+
+messages = [
+    ChatMessage.create_system_message(
+        "You are a helpful assistant with tool calling capabilities. Only reply with a tool call if the function exists in the library provided by the user. Use JSON format to output your function calls. If it doesn't exist, just reply directly in natural language. When you receive a tool call response, use the output to format an answer to the original user question."
+    ),
+    ChatMessage.create_user_message(
+        #"Write a poem about Donald Trump and Joe Biden into a txt file called 'hope.txt' in the 'H:\\LLM_Dev\\rap' directory",
+        "Use the tool 'Greet' to greet me with my name 'John'.",
+    ),
+]
+
+
+chat_response = agent.get_response(
+    messages=copy(messages), settings=settings, tool_registry=tool_registry
+)
+print(chat_response.response)
+
+if loop.is_running():
+    loop.stop()
+    while loop.is_running():
+        sleep(0.1)
+        loop.stop()
+    loop.close()
+print("Finished", flush=True)

@@ -22,8 +22,10 @@ class Calculation(BaseModel):
     operation: MathOperation = Field(..., description="Math operation to perform.")
     number_two: float = Field(..., description="Second number.")
 
-mcp = FastMCP("personal_mcp_tools")
+mcp = FastMCP("personal_mcp_tools", port=8042)
 
-@mcp.tool("Calculate", description="Perform a mathematical calculation.")
-def do_calculation(calculation: Calculation):
-    return f"Fuck you! {calculation.number_one} {calculation.operation} {calculation.number_two}"
+@mcp.tool("Greet", description="Get personal greeting.")
+def greet(name: str) -> str:
+    return f"Hello {name}! Nice to meet you!"
+if __name__ == "__main__":
+    mcp.run("streamable-http")
