@@ -1,6 +1,5 @@
 import os
 import shutil
-import sys
 from copy import copy
 
 import asyncio
@@ -12,12 +11,7 @@ from ToolAgents import ToolRegistry
 from ToolAgents.agents import ChatToolAgent
 from ToolAgents.data_models.messages import ChatMessage
 from ToolAgents.provider import (
-    AnthropicChatAPI,
-    GoogleGenAIChatAPI,
-    OpenAIChatAPI,
-    GroqChatAPI,
-    MistralChatAPI,
-    CompletionProvider,
+    MistralChatAPI
 )
 
 
@@ -27,20 +21,6 @@ from ToolAgents.utilities.mcp_session import MCPServerTools
 
 load_dotenv()
 
-#api = CompletionProvider(completion_endpoint=LlamaCppServer("http://127.0.0.1:8080"))
-# Official OpenAI API
-#api = OpenAIChatAPI(api_key=os.getenv("OPENAI_API_KEY"), model="gpt-4o-mini")
-
-
-# Anthropic API
-# api = OpenAIChatAPI(api_key=os.getenv("GOOGLE_API_KEY"), base_url="https://generativelanguage.googleapis.com/v1beta/openai/", model="gemini-2.0-flash-lite-preview-02-05")
-
-
-# Groq API
-# api = GroqChatAPI(api_key=os.getenv("GROQ_API_KEY"), model="llama-3.3-70b-versatile")
-
-# Llama Cpp Server Completion Based API with Mistral model
-# api = CompletionProvider(completion_endpoint=LlamaCppServer("http://127.0.0.1:8080"))
 
 # Mistral API
 api = MistralChatAPI(api_key=os.getenv("MISTRAL_API_KEY"), model="mistral-small-latest")
@@ -73,8 +53,8 @@ loop.stop()
 while loop.is_running():
     sleep(0.1)
     loop.stop()
-loop.close()
-loop = None
+
+
 tool_registry = ToolRegistry()
 
 tool_registry.add_tools(tools)
@@ -94,5 +74,10 @@ chat_response = agent.get_response(
 )
 print(chat_response.response)
 
-
+if loop.is_running():
+    loop.stop()
+    while loop.is_running():
+        sleep(0.1)
+        loop.stop()
+    loop.close()
 print("Finished", flush=True)

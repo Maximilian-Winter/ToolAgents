@@ -131,6 +131,7 @@ class MCPServerTools:
                 loop = asyncio.new_event_loop()
                 result = loop.run_until_complete(execute_tool(**kwargs))
                 loop.stop()
+
                 while loop.is_running():
                     sleep(0.1)
                     loop.stop()
