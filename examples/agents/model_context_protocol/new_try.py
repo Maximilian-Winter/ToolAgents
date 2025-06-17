@@ -4,6 +4,8 @@ import sys
 from copy import copy
 
 import asyncio
+from time import sleep
+
 from mcp import StdioServerParameters
 
 from ToolAgents import ToolRegistry
@@ -65,13 +67,18 @@ server_params = StdioServerParameters(
 )
 mcp_server_tools = MCPServerTools()
 
-tools = mcp_server_tools.load_from_stdio_server(server_params=server_params)
-
-print("WOT", flush=True)
+loop = asyncio.new_event_loop()
+tools = loop.run_until_complete(mcp_server_tools.load_from_stdio_server(server_params=server_params))
+loop.stop()
+while loop.is_running():
+    sleep(0.1)
+    loop.stop()
+loop.close()
+loop = None
 tool_registry = ToolRegistry()
 
 tool_registry.add_tools(tools)
-print("WOT2", flush=True)
+
 messages = [
     ChatMessage.create_system_message(
         "You are a helpful assistant with tool calling capabilities. Only reply with a tool call if the function exists in the library provided by the user. Use JSON format to output your function calls. If it doesn't exist, just reply directly in natural language. When you receive a tool call response, use the output to format an answer to the original user question."
@@ -85,5 +92,7 @@ messages = [
 chat_response = agent.get_response(
     messages=copy(messages), settings=settings, tool_registry=tool_registry
 )
-print("WOT3", flush=True)
 print(chat_response.response)
+
+
+print("Finished", flush=True)

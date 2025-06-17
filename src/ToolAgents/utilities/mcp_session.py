@@ -1,6 +1,7 @@
 import asyncio
 import json
 from contextlib import AsyncExitStack
+from time import sleep
 from typing import Any, Callable, Dict, Optional, Tuple, TypeVar, Union
 
 from mcp import ClientSession, StdioServerParameters, types
@@ -8,13 +9,9 @@ from mcp.client.stdio import stdio_client
 
 from ToolAgents.utilities.mcp_conversion import convert_json_schema
 from ToolAgents import FunctionTool
-def run_async(coro):
-    try:
-        loop = asyncio.get_running_loop()
-    except RuntimeError:
-        return asyncio.run(coro)
-    else:
-        return loop.create_task(coro)
+def get_l(coro):
+    loop = asyncio.get_event_loop_policy().new_event_loop()
+    return loop.run_until_complete(coro)
 
 class SessionManager:
     """
@@ -27,7 +24,7 @@ class SessionManager:
         self.sampling_callback = sampling_callback
         self.read = None
         self.write = None
-        self.session = None
+        self.session: ClientSession = None
         self.exit_stack = AsyncExitStack()
     async def __aenter__(self):
         """Support using as an async context manager."""
@@ -44,8 +41,8 @@ class SessionManager:
             return self
 
         # Create and store the client context
-        stdio_transport  = await self.exit_stack.enter_async_context(stdio_client(self.server_params))
-        self.read, self.write = stdio_transport
+        self.read, self.write = await self.exit_stack.enter_async_context(stdio_client(self.server_params))
+
         # Create and store the session context
         self.session = await self.exit_stack.enter_async_context(ClientSession(self.read, self.write))
 
@@ -57,6 +54,8 @@ class SessionManager:
         """Close the session and connection."""
         if self.session is None:
             return
+        self.read.close()
+        self.write.close()
 
         await self.exit_stack.aclose()
 
@@ -120,7 +119,7 @@ class MCPServerTools:
         self.server_params = None
         self.session = None
 
-    def load_from_stdio_server(self, server_params: StdioServerParameters):
+    async def load_from_stdio_server(self, server_params: StdioServerParameters):
         self.server_params = server_params
 
         def create_tool_executor(tool_name):
@@ -129,7 +128,14 @@ class MCPServerTools:
                     return await session_mgr.call_tool(tool_name, arguments=kwargs)
 
             def tool_executor(**kwargs):
-                return run_async(execute_tool(**kwargs))
+                loop = asyncio.new_event_loop()
+                result = loop.run_until_complete(execute_tool(**kwargs))
+                loop.stop()
+                while loop.is_running():
+                    sleep(0.1)
+                    loop.stop()
+                loop.close()
+                return result
 
             return tool_executor
 
@@ -145,9 +151,11 @@ class MCPServerTools:
                     )
                     function_tool.set_name(tool.name)
                     self.tools.append(function_tool)
-
         try:
-            run_async(load_tools())
+
+            await load_tools()
+
             return self.tools
         except RuntimeError as e:
             print(f"Error running tool loader: {e}")
+            return None
