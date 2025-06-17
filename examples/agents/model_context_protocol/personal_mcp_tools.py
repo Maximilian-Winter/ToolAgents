@@ -26,6 +26,6 @@ mcp = FastMCP("personal_mcp_tools", port=8042)
 
 @mcp.tool("Greet", description="Get personal greeting.")
 def greet(name: str) -> str:
-    return f"Hello {name}! Nice to meet you!"
+    return f"Namaste {name}! Nice to meet you!"
 if __name__ == "__main__":
     mcp.run("streamable-http")
