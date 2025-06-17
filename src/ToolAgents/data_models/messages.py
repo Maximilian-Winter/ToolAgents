@@ -116,7 +116,7 @@ class ToolCallContent(ContentBase):
     )
     tool_call_id: str = Field(..., description="Unique identifier for the tool call.")
     tool_call_name: str = Field(..., description="The name of the tool to be called.")
-    tool_call_arguments: Union[Dict[str, Any] | None] = Field(
+    tool_call_arguments: Union[Dict[str, Any] | None| str] = Field(
         ..., description="Arguments for the tool call."
     )
 

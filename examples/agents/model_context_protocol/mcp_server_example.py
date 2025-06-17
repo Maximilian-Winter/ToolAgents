@@ -2,7 +2,7 @@ import logging
 import os
 import time
 from enum import Enum
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Literal
 import requests
 
 from ToolAgents import ToolRegistry, FunctionTool
@@ -11,7 +11,7 @@ from ToolAgents.utilities.mcp_server import (
     MCPServerConfig,
     create_and_run_mcp_server,
 )
-from ToolAgents.mcp_tool import MCPToolRegistry, MCPTool, MCPToolDefinition
+from ToolAgents.model_context_protocol.mcp_tool import MCPToolRegistry, MCPTool, MCPToolDefinition
 from pydantic import BaseModel, Field
 
 
@@ -36,8 +36,8 @@ class WeatherInfo(BaseModel):
     location: str = Field(
         ..., description="City and state/country, e.g., 'San Francisco, CA'"
     )
-    unit: Optional[WeatherUnit] = Field(
-        WeatherUnit.CELSIUS, description="Temperature unit"
+    unit: Optional[str] = Field(
+        "celsius", description="Temperature unit 'celsius' or 'fahrenheit'. Default is 'celsius'",
     )
 
     def run(self):
@@ -237,85 +237,6 @@ def start_mcp_server():
     return server
 
 
-def test_mcp_client():
-    """Test client for the MCP server"""
-    base_url = "http://localhost:8000/mcp"
-
-    # List available tools
-    print("\n=== Available Tools ===")
-    response = requests.get(f"{base_url}/tools")
-    tools = response.json()
-
-    for tool in tools:
-        print(f"- {tool['name']}: {tool['description']}")
-
-    # Test weather tool
-    print("\n=== Testing Weather Tool ===")
-    response = requests.post(
-        f"{base_url}/tools/WeatherInfo",
-        json={"parameters": {"location": "New York", "unit": "fahrenheit"}},
-    )
-    print(f"Response: {response.json()}")
-
-    # Test calculator tool
-    print("\n=== Testing Calculator Tool ===")
-    response = requests.post(
-        f"{base_url}/tools/Calculator",
-        json={"parameters": {"expression": "25 * 4 + 10"}},
-    )
-    print(f"Response: {response.json()}")
-
-    # Test note tools
-    print("\n=== Testing Note Tools ===")
-
-    # Add a note
-    print("\nAdding a note...")
-    response = requests.post(
-        f"{base_url}/tools/AddNote",
-        json={"parameters": {"content": "Remember to buy milk"}},
-    )
-    add_result = response.json()
-    note_id = add_result["result"]["id"]
-    print(f"Added note with ID: {note_id}")
-
-    # Get the note
-    print("\nRetrieving the note...")
-    response = requests.post(
-        f"{base_url}/tools/GetNote", json={"parameters": {"note_id": note_id}}
-    )
-    print(f"Retrieved note: {response.json()}")
-
-    # Update the note
-    print("\nUpdating the note...")
-    response = requests.post(
-        f"{base_url}/tools/UpdateNote",
-        json={
-            "parameters": {
-                "note_id": note_id,
-                "content": "Remember to buy milk and eggs",
-            }
-        },
-    )
-    print(f"Updated note: {response.json()}")
-
-    # List all notes
-    print("\nListing all notes...")
-    response = requests.post(f"{base_url}/tools/ListNotes", json={"parameters": {}})
-    print(f"All notes: {response.json()}")
-
-    # Delete the note
-    print("\nDeleting the note...")
-    response = requests.post(
-        f"{base_url}/tools/DeleteNote", json={"parameters": {"note_id": note_id}}
-    )
-    print(f"Deleted note: {response.json()}")
-
-    # List all notes again
-    print("\nListing all notes after deletion...")
-    response = requests.post(f"{base_url}/tools/ListNotes", json={"parameters": {}})
-    print(f"All notes: {response.json()}")
-
-    print("\nMCP client test completed successfully!")
 
 
 if __name__ == "__main__":
@@ -328,7 +249,7 @@ if __name__ == "__main__":
 
     try:
         # Run the client test
-        test_mcp_client()
+        #test_mcp_client()
 
         # Keep the server running until interrupted
         print("\nServer is running. Press Ctrl+C to stop.")

@@ -140,12 +140,15 @@ class OpenAIResponseConverter(BaseResponseConverter):
 
         if tool_calls:
             for tool_call in tool_calls:
-                try:
-                    arguments = json.loads(tool_call.function.arguments)
-                except json.JSONDecodeError as e:
-                    arguments = (
-                        "Exception during JSON decoding of arguments: {}".format(e)
-                    )
+                if tool_call.function.arguments.strip() == "":
+                    arguments = {}
+                else:
+                    try:
+                        arguments = json.loads(tool_call.function.arguments)
+                    except json.JSONDecodeError as e:
+                        arguments = (
+                            "Exception during JSON decoding of arguments: {}".format(e)
+                        )
                 content.append(
                     ToolCallContent(
                         tool_call_id=tool_call.id,

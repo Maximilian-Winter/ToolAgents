@@ -447,7 +447,6 @@ def convert_schema_to_pydantic_model(
     if model_config:
         custom_model = create_model(
             model_name,
-            __config__=type("Config", (), model_config),
             **fields
         )
     else:

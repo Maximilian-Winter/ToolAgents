@@ -8,7 +8,13 @@ from mcp.client.stdio import stdio_client
 
 from ToolAgents.utilities.mcp_conversion import convert_json_schema
 from ToolAgents import FunctionTool
-
+def run_async(coro):
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        return asyncio.run(coro)
+    else:
+        return loop.create_task(coro)
 
 class SessionManager:
     """
@@ -52,14 +58,11 @@ class SessionManager:
         if self.session is None:
             return
 
-        # First clear references to these objects
+        await self.exit_stack.aclose()
+
         self.session = None
         self.read = None
         self.write = None
-
-        # Then properly close the exit stack which will close all context managers
-        await self.exit_stack.aclose()
-        # Create a new exit stack for potential reconnection
         self.exit_stack = AsyncExitStack()
 
     async def list_prompts(self):
@@ -115,20 +118,18 @@ class MCPServerTools:
     def __init__(self):
         self.tools = None
         self.server_params = None
+        self.session = None
 
     def load_from_stdio_server(self, server_params: StdioServerParameters):
         self.server_params = server_params
 
-        # Factory function to create tool executors with proper closure
         def create_tool_executor(tool_name):
             async def execute_tool(**kwargs):
                 async with SessionManager(self.server_params) as session_mgr:
-                    result = await session_mgr.call_tool(tool_name, arguments=kwargs)
-                    return result
+                    return await session_mgr.call_tool(tool_name, arguments=kwargs)
 
-            # Create a non-async wrapper function that runs the async function
             def tool_executor(**kwargs):
-                return asyncio.run(execute_tool(**kwargs))
+                return run_async(execute_tool(**kwargs))
 
             return tool_executor
 
@@ -138,16 +139,15 @@ class MCPServerTools:
                 self.tools = []
                 for tool in tools.tools:
                     mcp_tool = MCPTool(tool.name, tool.description, tool.inputSchema)
-
-                    # Generate execution method for this specific tool using the factory
                     tool_executor = create_tool_executor(tool.name)
-
-                    # Generate FunctionTool from pydantic model and the executor
                     function_tool = FunctionTool.from_pydantic_model_and_callable(
-                        mcp_tool.get_pydantic_input_model(),
-                        tool_executor
+                        mcp_tool.get_pydantic_input_model(), tool_executor
                     )
                     function_tool.set_name(tool.name)
                     self.tools.append(function_tool)
 
-        asyncio.run(load_tools())
+        try:
+            run_async(load_tools())
+            return self.tools
+        except RuntimeError as e:
+            print(f"Error running tool loader: {e}")
