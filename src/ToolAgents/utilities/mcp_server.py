@@ -188,20 +188,19 @@ class MCPServerConfig(BaseModel):
 
 def create_and_run_mcp_server(
     tools: Union[ToolRegistry, List[FunctionTool]],
-    config: Optional[MCPServerConfig] = None,
+    config: MCPServerConfig,
 ) -> MCPServer:
     """
     Create and run an MCP server with the provided tools.
 
     Args:
         tools: A ToolRegistry or list of FunctionTools to expose
-        config: Optional server configuration
+        config: Server configuration
 
     Returns:
         The running MCP server instance
     """
-    if config is None:
-        config = MCPServerConfig()
+
 
     server = MCPServer(
         tool_registry=tools,

@@ -326,7 +326,7 @@ class MCPToolRegistry:
         try:
             # Query the server for available tools
             response = requests.get(
-                f"{server_url}",
+                f"{server_url}/tools",
                 headers={"Content-Type": "application/json"},
                 timeout=30,
             )

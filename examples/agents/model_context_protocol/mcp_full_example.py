@@ -23,20 +23,14 @@ load_dotenv()
 
 # ---------- Step 1: Define tools to expose via the MCP server ----------
 
-
-class WeatherUnit(Enum):
-    CELSIUS = "celsius"
-    FAHRENHEIT = "fahrenheit"
-
-
 class WeatherInfo(BaseModel):
     """Get current weather information for a location"""
 
     location: str = Field(
         ..., description="City and state/country, e.g., 'San Francisco, CA'"
     )
-    unit: Optional[WeatherUnit] = Field(
-        WeatherUnit.CELSIUS, description="Temperature unit"
+    unit: Optional[str] = Field(
+        "celsius", description="Temperature unit 'celsius' or 'fahrenheit'. Default is 'celsius'",
     )
 
     def run(self):
@@ -65,7 +59,7 @@ class WeatherInfo(BaseModel):
         temp = mock_temps[closest_city]
 
         # Convert to Fahrenheit if requested
-        if self.unit == WeatherUnit.FAHRENHEIT:
+        if self.unit =="fahrenheit":
             temp = (temp * 9 / 5) + 32
             unit_str = "°F"
         else:
@@ -193,7 +187,7 @@ server_tool_registry.add_tools(
 def start_mcp_server():
     """Start the MCP server with our tools"""
     config = MCPServerConfig(
-        host="localhost", port=8000, prefix="/mcp", debug_mode=True
+        host="localhost", port=8005, prefix="/mcp", debug_mode=True
     )
 
     # Create and run the server in a background thread
@@ -209,7 +203,8 @@ def start_mcp_server():
 def initialize_mcp_client_agent(server_config):
     """Initialize an agent that uses tools from the MCP server"""
     # Set up API client
-    api = OpenAIChatAPI(api_key=os.getenv("OPENAI_API_KEY"), model="gpt-4o-mini")
+    api = OpenAIChatAPI(api_key="token-abc123", base_url="http://127.0.0.1:8080/v1", model="unsloth/Meta-Llama-3.1-8B-Instruct-bnb-4bit")
+
     settings = api.get_default_settings()
     settings.temperature = 0.2
     agent = ChatToolAgent(chat_api=api)
