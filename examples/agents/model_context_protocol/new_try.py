@@ -11,7 +11,7 @@ from ToolAgents import ToolRegistry
 from ToolAgents.agents import ChatToolAgent
 from ToolAgents.data_models.messages import ChatMessage
 from ToolAgents.provider import (
-    MistralChatAPI
+    MistralChatAPI, OpenAIChatAPI
 )
 
 
@@ -23,7 +23,7 @@ load_dotenv()
 
 
 # Mistral API
-api = MistralChatAPI(api_key=os.getenv("MISTRAL_API_KEY"), model="mistral-small-latest")
+api = OpenAIChatAPI(api_key="token-abc123", base_url="http://127.0.0.1:8080/v1", model="unsloth/Meta-Llama-3.1-8B-Instruct-bnb-4bit")
 
 # Create the ChatAPIAgent
 agent = ChatToolAgent(chat_api=api)
@@ -48,11 +48,10 @@ server_params = StdioServerParameters(
 mcp_server_tools = MCPServerTools()
 
 loop = asyncio.new_event_loop()
+asyncio.set_event_loop(loop)
 tools = loop.run_until_complete(mcp_server_tools.load_from_stdio_server(server_params=server_params))
-loop.stop()
 while loop.is_running():
-    sleep(0.1)
-    loop.stop()
+    sleep(0.5)
 
 
 tool_registry = ToolRegistry()

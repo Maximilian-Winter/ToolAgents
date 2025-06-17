@@ -9,9 +9,6 @@ from mcp.client.stdio import stdio_client
 
 from ToolAgents.utilities.mcp_conversion import convert_json_schema
 from ToolAgents import FunctionTool
-def get_l(coro):
-    loop = asyncio.get_event_loop_policy().new_event_loop()
-    return loop.run_until_complete(coro)
 
 class SessionManager:
     """
@@ -128,14 +125,12 @@ class MCPServerTools:
                     return await session_mgr.call_tool(tool_name, arguments=kwargs)
 
             def tool_executor(**kwargs):
-                loop = asyncio.new_event_loop()
+                loop = asyncio.get_event_loop_policy().new_event_loop()
+                asyncio.set_event_loop(loop)
                 result = loop.run_until_complete(execute_tool(**kwargs))
-                loop.stop()
-
                 while loop.is_running():
                     sleep(0.1)
-                    loop.stop()
-                loop.close()
+
                 return result
 
             return tool_executor
