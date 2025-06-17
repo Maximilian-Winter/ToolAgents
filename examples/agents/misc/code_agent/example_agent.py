@@ -8,7 +8,7 @@ from ToolAgents.provider import (
     OpenAISettings,
 )
 
-from ToolAgents.messages import ChatHistory
+from ToolAgents.data_models.chat_history import ChatHistory
 from example_tools import (
     get_weather_function_tool,
     calculator_function_tool,

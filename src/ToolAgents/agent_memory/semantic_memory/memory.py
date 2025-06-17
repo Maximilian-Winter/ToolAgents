@@ -14,7 +14,7 @@ import numpy as np
 from torch import Tensor
 
 from ToolAgents.data_models.messages import ChatMessage
-from ToolAgents.utilities.messages.message_template import MessageTemplate
+from ToolAgents.utilities.message_template import MessageTemplate
 from ToolAgents.provider.llm_provider import ProviderSettings
 from ToolAgents.agents.base_llm_agent import BaseToolAgent
 

@@ -3,7 +3,7 @@ import os
 from ToolAgents import ToolRegistry
 from ToolAgents.agents import ChatToolAgent
 from ToolAgents.agents.chat_tool_agent import AsyncChatToolAgent
-from ToolAgents.messages.chat_message import ChatMessage
+from ToolAgents.data_models.messages import ChatMessage
 from ToolAgents.provider.chat_api_provider.anthropic import AsyncAnthropicChatAPI
 from ToolAgents.provider.chat_api_provider.groq import AsyncGroqChatAPI
 from ToolAgents.provider.chat_api_provider.mistral import AsyncMistralChatAPI

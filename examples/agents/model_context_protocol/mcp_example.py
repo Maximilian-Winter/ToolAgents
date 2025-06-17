@@ -3,10 +3,10 @@ from typing import Dict, Any
 
 from ToolAgents import ToolRegistry
 from ToolAgents.agents import ChatToolAgent
-from ToolAgents.messages import ChatHistory
-from ToolAgents.messages.chat_message import ChatMessage
+from ToolAgents.data_models.chat_history import ChatHistory
+from ToolAgents.data_models.messages import ChatMessage
 from ToolAgents.provider import OpenAIChatAPI
-from ToolAgents.mcp_tool import MCPToolRegistry, MCPToolDefinition, MCPTool
+from ToolAgents.model_context_protocol.mcp_tool import MCPToolRegistry, MCPToolDefinition, MCPTool
 
 from dotenv import load_dotenv
 
@@ -102,9 +102,9 @@ def discover_mcp_tools(server_url: str = "http://localhost:3000/sse"):
 
 # For this example, we'll use the manually defined tools
 # In a real application, you might use the discovery method instead
-mcp_tools = setup_manual_mcp_tools()
+#mcp_tools = setup_manual_mcp_tools()
 # Uncomment to use discovery instead:
-# mcp_tools = discover_mcp_tools()
+mcp_tools = discover_mcp_tools()
 
 # Initialize chat history
 chat_history = ChatHistory()

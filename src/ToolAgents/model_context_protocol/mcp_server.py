@@ -7,7 +7,6 @@ from mcp.types import Tool as MCPTool
 from ToolAgents import FunctionTool, ToolRegistry
 
 
-#class MCPFunctionToolServer
 
 class MCPToolAgentServer:
     """

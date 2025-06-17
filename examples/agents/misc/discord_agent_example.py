@@ -4,8 +4,8 @@ from typing import List, Dict, Any
 
 from ToolAgents import ToolRegistry, FunctionTool
 from ToolAgents.agents import ChatToolAgent
-from ToolAgents.messages import ChatHistory
-from ToolAgents.messages.chat_message import ChatMessage
+from ToolAgents.data_models.chat_history import ChatHistory
+from ToolAgents.data_models.messages import ChatMessage
 from ToolAgents.provider import OpenAIChatAPI, GoogleGenAIChatAPI
 from ToolAgents.agent_tools.discord_tool import (
     init_discord_tools,

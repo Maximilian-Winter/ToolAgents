@@ -3,7 +3,7 @@ import os
 from ToolAgents import ToolRegistry
 from ToolAgents.agents import ChatToolAgent
 from ToolAgents.agent_tools.web_search_tool import WebSearchTool
-from ToolAgents.messages import ChatMessage
+from ToolAgents.data_models.messages import ChatMessage
 
 from ToolAgents.provider import AnthropicChatAPI, OpenAIChatAPI
 from ToolAgents.knowledge.web_search.implementations.googlesearch import (
@@ -25,7 +25,7 @@ api = AnthropicChatAPI(
 settings = api.get_default_settings()
 settings.temperature = 0.45
 # Create the ChatAPIAgent
-agent = ChatToolAgent(chat_api=api, debug_output=True)
+agent = ChatToolAgent(chat_api=api)
 web_crawler = CamoufoxWebCrawler()
 web_search_provider = GoogleWebSearchProvider()
 

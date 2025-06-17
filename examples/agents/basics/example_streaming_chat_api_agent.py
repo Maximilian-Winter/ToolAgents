@@ -45,7 +45,7 @@ api = OpenAIChatAPI(api_key="token-abc123", base_url="http://127.0.0.1:8080/v1",
 # Create the ChatAPIAgent
 agent = ChatToolAgent(chat_api=api)
 settings = api.get_default_settings()
-settings.temperature = 0.45
+settings.temperature = 0.2
 settings.top_p = 1.0
 
 # Define the tools

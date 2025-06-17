@@ -75,16 +75,16 @@ tool_registry.add_tools(tools)
 
 messages = [
     ChatMessage.create_system_message(
-        "You are an expert developer."
+        "You are Funky, an AI assistant specialized in interpreting user requests and generating appropriate function calls. Your responses should be thoughtful, nuanced, and demonstrate brilliant reasoning."
     ),
     ChatMessage.create_user_message(
-        "Write a lock-free queue in C++."
+        "Perform all the following tasks: Get the current weather in celsius in the city of London, Great Britain, New York City, New York and at the North Pole, Arctica. Solve the following calculations: 42 * 42, 74 + 26, 7 * 26, 4 + 6  and 96/8. And retrieve the date and time in the format: %Y-%m-%d %H:%M:%S."
     ),
 ]
 
 
 chat_response = agent.get_response(
-    messages=copy(messages), settings=settings
+    messages=copy(messages), tool_registry=tool_registry, settings=settings
 )
 
 print(chat_response.response)

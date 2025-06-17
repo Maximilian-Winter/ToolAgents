@@ -6,15 +6,15 @@ import requests
 
 from ToolAgents import ToolRegistry, FunctionTool
 from ToolAgents.agents import ChatToolAgent
-from ToolAgents.messages import ChatHistory
-from ToolAgents.messages.chat_message import ChatMessage
+from ToolAgents.data_models.chat_history import ChatHistory
+from ToolAgents.data_models.messages import ChatMessage
 from ToolAgents.provider import OpenAIChatAPI
 from ToolAgents.utilities.mcp_server import (
     MCPServer,
     MCPServerConfig,
     create_and_run_mcp_server,
 )
-from ToolAgents.mcp_tool import MCPToolRegistry, MCPTool, MCPToolDefinition
+from ToolAgents.model_context_protocol.mcp_tool import MCPToolRegistry, MCPTool, MCPToolDefinition
 
 from pydantic import BaseModel, Field
 from dotenv import load_dotenv

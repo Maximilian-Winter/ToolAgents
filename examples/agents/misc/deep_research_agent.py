@@ -5,8 +5,8 @@ from typing import List, Dict, Any, Optional
 
 from ToolAgents import ToolRegistry, FunctionTool
 from ToolAgents.agents import ChatToolAgent
-from ToolAgents.messages import ChatHistory
-from ToolAgents.messages.chat_message import ChatMessage
+from ToolAgents.data_models.chat_history import ChatHistory
+from ToolAgents.data_models.messages import ChatMessage
 from ToolAgents.provider import OpenAIChatAPI, AnthropicChatAPI
 from ToolAgents.agent_tools.web_search_tool import WebSearchTool
 from ToolAgents.knowledge.web_search.implementations.googlesearch import (

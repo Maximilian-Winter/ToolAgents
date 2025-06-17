@@ -11,10 +11,9 @@ from ToolAgents.provider.llm_provider import ProviderSettings
 from ToolAgents.agents.base_llm_agent import BaseToolAgent, ChatResponse
 from ToolAgents.data_models.messages import (
     ChatMessage,
-    ChatMessageRole,
 )
-from ToolAgents.utilities.chat.chat_history import ChatHistory
-from ToolAgents.utilities.messages.message_template import MessageTemplate
+from ToolAgents.data_models.chat_history import ChatHistory
+from ToolAgents.utilities.message_template import MessageTemplate
 
 sum_prompt_alt_template = MessageTemplate.from_string(
     """You will be analyzing a chat turn to extract information about {USER_NAME} and their relationship with {ASSISTANT_NAME}. Here are the chat turns:

@@ -68,7 +68,7 @@ class MCPTool:
 
     def _create_input_model(self):
         """Create a Pydantic model from the tool's input schema"""
-        from ToolAgents.utilities.pydantic_utilites import convert_dictionary_to_pydantic_model
+        from ToolAgents.utilities.pydantic_utilites import convert_schema_to_pydantic_model
 
         # Create a model for validation purposes
         schema_dict = {
@@ -77,7 +77,7 @@ class MCPTool:
             "required": self.tool_definition.input_schema.get("required", []),
         }
 
-        self.input_model = convert_dictionary_to_pydantic_model(
+        self.input_model = convert_schema_to_pydantic_model(
             schema_dict, f"{self.tool_definition.name}Input"
         )
 

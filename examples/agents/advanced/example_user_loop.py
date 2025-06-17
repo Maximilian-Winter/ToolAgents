@@ -2,7 +2,7 @@ import os
 
 from ToolAgents import ToolRegistry
 from ToolAgents.agents import ChatToolAgent
-from ToolAgents.messages import ChatHistory
+from ToolAgents.data_models.chat_history import ChatHistory
 
 from ToolAgents.provider import OpenAIChatAPI, GoogleGenAIChatAPI
 

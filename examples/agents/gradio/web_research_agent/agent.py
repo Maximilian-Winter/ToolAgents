@@ -9,7 +9,7 @@ from ToolAgents.knowledge.web_crawler.implementations.camoufox_crawler import (
 from ToolAgents.knowledge.web_search.implementations.googlesearch import (
     GoogleWebSearchProvider,
 )
-from ToolAgents.messages import ChatHistory
+from ToolAgents.data_models.chat_history import ChatHistory
 from ToolAgents.provider import CompletionProvider, OpenAIChatAPI, AnthropicChatAPI
 from ToolAgents.provider.completion_provider.default_implementations import (
     LlamaCppServer,

@@ -26,4 +26,4 @@ mcp = FastMCP("personal_mcp_tools")
 
 @mcp.tool("Calculate", description="Perform a mathematical calculation.")
 def do_calculation(calculation: Calculation):
-    return f"Fuck you! {calculation.number_one} + {calculation.operation} + {calculation.number_two}"
+    return f"Fuck you! {calculation.number_one} {calculation.operation} {calculation.number_two}"
