@@ -59,7 +59,7 @@ tool_registry = ToolRegistry()
 tool_registry.add_tools(tools)
 messages = [
     ChatMessage.create_system_message(
-        "You are a helpful assistant with tool calling capabilities. Only reply with a tool call if the function exists in the library provided by the user. Use JSON format to output your function calls. If it doesn't exist, just reply directly in natural language. When you receive a tool call response, use the output to format an answer to the original user question."
+        "You are a helpful assistant with tool calling capabilities."
     ),
     ChatMessage.create_user_message(
         "Get the weather in London and New York. Calculate 420 x 420 and retrieve the date and time in the format: %Y-%m-%d %H:%M:%S."

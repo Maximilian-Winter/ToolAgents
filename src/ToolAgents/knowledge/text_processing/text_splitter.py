@@ -8,6 +8,28 @@ class TextSplitter(abc.ABC):
     def get_chunks(self, text):
         pass
 
+class NonTextSplitter(TextSplitter):
+    """
+    A class that does not split text at all, returning the entire text as a single chunk.
+
+    Parameters:
+    -----------
+    text : str
+        The string to be chunked.
+    """
+
+    def get_chunks(self, text):
+        """
+        Returns the entire text as a single chunk.
+
+        Args:
+            text (str): The text to be chunked.
+        Returns:
+        --------
+        list of str
+           A list containing the entire text as a single element.
+        """
+        return [text]
 
 class SimpleTextSplitter(TextSplitter):
     """

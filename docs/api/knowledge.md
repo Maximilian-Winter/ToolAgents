@@ -188,7 +188,7 @@ Reranks documents based on relevance to the query.
 Implementation of RerankingProvider using MBXAI's reranking.
 
 ```python
-from ToolAgents.knowledge.vector_database.implementations.mbxai_reranking import MBXAIReranking
+from ToolAgents.knowledge.vector_database.implementations.cross_encoder_reranking import MBXAIReranking
 
 reranker = MBXAIReranking(
     api_key="your-mbxai-key",

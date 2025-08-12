@@ -115,6 +115,7 @@ class ChatToolAgent(BaseToolAgent):
         Yields:
             Tuples of (chunk, contains_tool_calls)
         """
+        from ToolAgents.function_tool import ToolRegistry
         if tool_registry is None:
             tool_registry = ToolRegistry()
 
@@ -316,6 +317,7 @@ class AsyncChatToolAgent(AsyncBaseToolAgent):
 
     def __init__(self, chat_api: AsyncChatAPIProvider, debug_output: bool = False):
         super().__init__()
+        from ToolAgents.function_tool import ToolRegistry
         self.chat_api = chat_api
         self.debug_output = debug_output
         self.last_messages_buffer: list[ChatMessage] = []
@@ -345,6 +347,7 @@ class AsyncChatToolAgent(AsyncBaseToolAgent):
         Returns:
             Tuple of (result, contains_tool_calls)
         """
+        from ToolAgents.function_tool import ToolRegistry
         if tool_registry is None:
             tool_registry = ToolRegistry()
 
@@ -386,6 +389,7 @@ class AsyncChatToolAgent(AsyncBaseToolAgent):
         Yields:
             Tuples of (chunk, contains_tool_calls)
         """
+        from ToolAgents.function_tool import ToolRegistry
         if tool_registry is None:
             tool_registry = ToolRegistry()
 
@@ -430,6 +434,7 @@ class AsyncChatToolAgent(AsyncBaseToolAgent):
         Returns:
             The final response string
         """
+        from ToolAgents.function_tool import ToolRegistry
         if reset_last_messages_buffer:
             self.last_response_has_tool_calls = False
         result = await self.step(
@@ -470,6 +475,7 @@ class AsyncChatToolAgent(AsyncBaseToolAgent):
         Yields:
             Response chunks
         """
+        from ToolAgents.function_tool import ToolRegistry
         if reset_last_messages_buffer:
             self.last_response_has_tool_calls = False
 

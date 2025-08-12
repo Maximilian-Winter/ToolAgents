@@ -6,8 +6,7 @@ from ToolAgents.agents import ChatToolAgent
 from ToolAgents.pipelines.pipeline import ProcessStep, Pipeline, SequentialProcess
 
 from ToolAgents.provider.chat_api_provider.anthropic import (
-    AnthropicChatAPI,
-    AnthropicSettings,
+    AnthropicChatAPI
 )
 
 
@@ -18,7 +17,7 @@ api = AnthropicChatAPI(
 )
 
 # Create the ChatAPIAgent
-agent = ChatToolAgent(chat_api=api, debug_output=True)
+agent = ChatToolAgent(chat_api=api)
 
 settings = api.get_default_settings()
 settings.neutralize_all_samplers()

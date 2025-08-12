@@ -2,7 +2,7 @@ from copy import copy
 from typing import Any
 
 import chromadb
-from chromadb.api.types import IncludeEnum
+
 
 from ToolAgents.knowledge import Document
 from ToolAgents.knowledge.vector_database import (
@@ -68,22 +68,27 @@ class ChromaDbVectorDatabaseProvider(VectorDatabaseProvider):
             query_embedding.embeddings[0],
             n_results=min(k * 4, self.collection.count()),
             include=[
-                IncludeEnum.metadatas,
-                IncludeEnum.documents,
-                IncludeEnum.distances,
+                "documents",
+                "metadatas",
+                "distances"
             ],
             where=query_filter,
         )
+        document_text_to_ids = {}
         documents = []
-        for doc in query_result["documents"][0]:
+        for id, doc in zip(query_result["ids"][0], query_result["documents"][0]):
             documents.append(doc)
+            document_text_to_ids[doc] = id
         if self.reranking_provider is not None:
             results = self.reranking_provider.rerank_texts(
                 query, documents, k=k, return_documents=True
             )
+            doc_ids = []
+            for r in results.reranked_documents:
+                doc_ids.append(document_text_to_ids[r.content])
             # Putting everything together in a vector search result object.
             result = VectorSearchResult(
-                query_result["ids"][0],
+                doc_ids,
                 [r.content for r in results.reranked_documents],
                 [r.additional_data["score"] for r in results.reranked_documents],
             )

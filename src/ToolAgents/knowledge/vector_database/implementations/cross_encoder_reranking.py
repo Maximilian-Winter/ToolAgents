@@ -7,7 +7,7 @@ from ToolAgents.knowledge.vector_database import (
 )
 
 
-class MXBAIRerankingProvider(RerankingProvider):
+class CrossEncoderRerankingProvider(RerankingProvider):
 
     def __init__(
         self,

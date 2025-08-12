@@ -7,20 +7,15 @@ from ToolAgents.agents.advanced_agent import AdvancedAgent
 from ToolAgents.agents.advanced_agent import AgentConfig
 from ToolAgents.agents import ChatToolAgent
 
-from ToolAgents.provider import CompletionProvider
-from ToolAgents.provider.completion_provider.default_implementations import (
-    LlamaCppServer,
-)
+from ToolAgents.provider import OpenAIChatAPI
 
-provider = CompletionProvider(
-    completion_endpoint=LlamaCppServer("http://127.0.0.1:8080")
-)
 
-agent = ChatToolAgent(chat_api=provider)
+provider = OpenAIChatAPI(api_key="token-abc123", base_url="http://127.0.0.1:8080/v1", model="XXX", debug_mode=True)
+agent = ChatToolAgent(chat_api=provider, log_output=True)
 
 settings = provider.get_default_settings()
 settings.neutralize_all_samplers()
-settings.temperature = 0.4
+settings.temperature = 0.2
 settings.set_max_new_tokens(4096)
 
 provider.set_default_settings(settings)
@@ -63,6 +58,7 @@ agent_config.semantic_chat_history_config = semantic_memory_nomic_text_gpu_confi
 agent_config.semantic_chat_history_config.debug_mode = False
 agent_config.semantic_chat_history_config.extract_pattern_strategy = (
     SummarizationExtractPatternStrategy(
+        user_name="User", assistant_name="Assistant",
         agent=agent, summarizer_settings=summarizer_settings, debug_mode=True
     )
 )

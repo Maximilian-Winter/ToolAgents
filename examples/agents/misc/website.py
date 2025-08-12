@@ -9,14 +9,14 @@ from starlette.responses import HTMLResponse, JSONResponse
 from ToolAgents.provider import AnthropicChatAPI
 from ToolAgents.agents import ChatToolAgent
 
-from ToolAgents.messages import ChatMessage
+from ToolAgents.data_models.messages import ChatMessage
 
 load_dotenv()
 
 provider = AnthropicChatAPI(
     os.getenv("ANTHROPIC_API_KEY"), "claude-3-5-sonnet-20241022"
 )
-agent = ChatToolAgent(chat_api=provider, debug_output=False)
+agent = ChatToolAgent(chat_api=provider)
 app = FastAPI()
 
 

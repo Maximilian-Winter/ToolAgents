@@ -17,7 +17,7 @@ provider = CompletionProvider(
     completion_endpoint=LlamaCppServer("http://127.0.0.1:8080")
 )
 
-agent = ChatToolAgent(chat_api=provider, debug_output=True)
+agent = ChatToolAgent(chat_api=provider)
 
 settings = provider.get_default_settings()
 settings.neutralize_all_samplers()

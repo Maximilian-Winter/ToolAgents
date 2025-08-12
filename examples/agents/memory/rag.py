@@ -5,14 +5,14 @@ from ToolAgents.knowledge.vector_database.implementations.chroma_db import (
 from ToolAgents.knowledge.vector_database.implementations.sentence_transformer_embeddings import (
     SentenceTransformerEmbeddingProvider,
 )
-from ToolAgents.knowledge.vector_database.implementations.mbxai_reranking import (
-    MXBAIRerankingProvider,
+from ToolAgents.knowledge.vector_database.implementations.cross_encoder_reranking import (
+    CrossEncoderRerankingProvider,
 )
 
 if __name__ == "__main__":
     rag = RAG(
         ChromaDbVectorDatabaseProvider(
-            SentenceTransformerEmbeddingProvider(), MXBAIRerankingProvider()
+            SentenceTransformerEmbeddingProvider(), CrossEncoderRerankingProvider()
         )
     )
 

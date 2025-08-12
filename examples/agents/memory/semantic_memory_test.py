@@ -6,16 +6,14 @@ from ToolAgents.agent_memory.semantic_memory.hdbscan_cluster_embeddings_strategy
     HDBSCANClusterEmbeddingsStrategy,
 )
 from ToolAgents.agents import ChatToolAgent
-from ToolAgents.messages import ChatMessage
+from ToolAgents.data_models.messages import ChatMessage
 
-from ToolAgents.provider import CompletionProvider
-from ToolAgents.provider.completion_provider.default_implementations import (
-    LlamaCppServer,
-)
+from ToolAgents.provider import OpenAIChatAPI
 
-api = CompletionProvider(completion_endpoint=LlamaCppServer("http://127.0.0.1:8080"))
 
-agent = ChatToolAgent(chat_api=api, debug_output=True)
+api = OpenAIChatAPI(api_key="token-abc123", base_url="http://127.0.0.1:8080/v1", model="Mistral-Small-3.2-24B-Instruct-2506")
+
+agent = ChatToolAgent(chat_api=api)
 
 settings = api.get_default_settings()
 settings.neutralize_all_samplers()

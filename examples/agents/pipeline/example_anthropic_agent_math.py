@@ -9,8 +9,7 @@ from ToolAgents.agents import ChatToolAgent
 from ToolAgents.pipelines.pipeline import ProcessStep, Pipeline, SequentialProcess
 
 from ToolAgents.provider.chat_api_provider.anthropic import (
-    AnthropicChatAPI,
-    AnthropicSettings,
+    AnthropicChatAPI
 )
 
 load_dotenv()

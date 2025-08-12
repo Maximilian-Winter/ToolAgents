@@ -8,7 +8,7 @@ from graphviz import Digraph
 from pydantic import BaseModel, Field
 
 from ToolAgents.agents import ChatToolAgent
-from ToolAgents.messages import ChatMessage
+from ToolAgents.data_models.messages import ChatMessage
 from ToolAgents.provider import OpenAIChatAPI
 from ToolAgents.utilities.json_schema_generator.schema_generator import (
     custom_json_schema,

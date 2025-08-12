@@ -1,11 +1,8 @@
-import os
 
 from ToolAgents.agents import ChatToolAgent
 from ToolAgents.provider import (
     AnthropicChatAPI,
-    AnthropicSettings,
-    OpenAIChatAPI,
-    OpenAISettings,
+    OpenAIChatAPI
 )
 
 from ToolAgents.data_models.chat_history import ChatHistory
@@ -27,7 +24,7 @@ api = OpenAIChatAPI(
     base_url="http://127.0.0.1:8080/v1",
     model="unsloth/Meta-Llama-3.1-8B-Instruct-bnb-4bit",
 )
-settings = OpenAISettings()
+settings = api.get_default_settings()
 agent = ChatToolAgent(chat_api=api, debug_output=True)
 
 settings.neutralize_all_samplers()
