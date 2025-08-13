@@ -177,10 +177,10 @@ chat_history = [
 pair = []
 for message in chat_history:
     pair.append(
-        f"{message['content']}"
+        f"<{message['role'].capitalize()}> {message['content']} </{message['role'].capitalize()}>"
     )
     if len(pair) == 2:
-        out = "\n".join(pair)
+        out = "".join(pair)
         pair = []
         stream_memory.process_input(out)
 
@@ -222,8 +222,8 @@ for question in semantic_memory_test_questions:
     print(f"User Input with Memory: ", end="", flush=True)
 
 
-    results = stream_memory.recall(f"{question}", 10)
-    additional_context = "\n--- Additional Context From Past Interactions ---\n"
+    results = stream_memory.recall(f"<User> {question} <User>", 10)
+    additional_context = "\n\n--- Additional Context From Past Interactions ---\n\n"
 
     for r in results["memories"]:
         additional_context += f"Memory: {r['content']}\n\n"
