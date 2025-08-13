@@ -1,14 +1,9 @@
-from ToolAgents.agent_memory import (
-    SemanticMemory,
-    semantic_memory_nomic_text_gpu_config,
-)
-from ToolAgents.agent_memory.semantic_memory.hdbscan_cluster_embeddings_strategy import (
-    HDBSCANClusterEmbeddingsStrategy,
-)
 from ToolAgents.agents import ChatToolAgent
 from ToolAgents.data_models.messages import ChatMessage
 
 from ToolAgents.provider import OpenAIChatAPI
+from ToolAgents.agent_memory.stream.stream_memory import StreamMemory
+from ToolAgents.knowledge.vector_database.implementations.sentence_transformer_embeddings import SentenceTransformerEmbeddingProvider
 
 
 api = OpenAIChatAPI(api_key="token-abc123", base_url="http://127.0.0.1:8080/v1", model="Mistral-Small-3.2-24B-Instruct-2506")
@@ -21,11 +16,9 @@ settings.temperature = 0.4
 
 settings.set_max_new_tokens(4096)
 
-pair = []
-pair_list = []
-memory_config = semantic_memory_nomic_text_gpu_config
-memory_config.cluster_embeddings_strategy = HDBSCANClusterEmbeddingsStrategy()
-memory = SemanticMemory(memory_config)
+embedding_provider = SentenceTransformerEmbeddingProvider()
+
+stream_memory = StreamMemory(embedding_provider=embedding_provider)
 
 system_prompt = f"""You are are personal AI assistant. Your task is to engage in interesting conversations with the user. You have access to a memory system, which will remember information not in your current context. The most recent user message will contain additional context information from past interactions that are not part of the current context."""
 
@@ -181,27 +174,29 @@ chat_history = [
     },
 ]
 
+pair = []
 for message in chat_history:
     pair.append(
         f"<{message['role'].capitalize()}> {message['content']} </{message['role'].capitalize()}>"
     )
     if len(pair) == 2:
         out = "".join(pair)
-        pair_list.append(out)
         pair = []
-        memory.store(out)
+        stream_memory.process_input(out)
 
 user_input = "Do you remember my question about aging when traveling near a black hole? Because I have forgotten what I asked and what you said!"
 
-results = memory.recall(user_input, 3)
-
+results = stream_memory.recall(user_input, 3)
 additional_context = "\n--- Additional Context From Past Interactions ---\n"
-for r in results:
+
+for r in results["memories"]:
     additional_context += f"Memories: {r['content']}\n\n---\n\n"
+
 
 
 user_input += "\n" + additional_context.strip()
 
+print(user_input)
 result = agent.get_streaming_response(
     messages=[
         ChatMessage.create_system_message(system_prompt),

@@ -82,3 +82,4 @@ examples/agents/knowledge_graph44446.gv.pdf
 /examples/agents/gradio/advanced_agent/agent_data
 /examples/advanced_agent/test_agent/semantic_memory
 /src/ToolAgents/knowledge/document/implementations/__pycache__
+/src/ToolAgents/agent_memory/stream/__pycache__
