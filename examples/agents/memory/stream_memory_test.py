@@ -1,16 +1,12 @@
-import os
-
-from dotenv import load_dotenv
-
 from ToolAgents.agents import ChatToolAgent
 from ToolAgents.data_models.messages import ChatMessage
 
 from ToolAgents.provider import OpenAIChatAPI
-from ToolAgents.agent_memory.stream.stream_memory_persistence import StreamMemory
+from ToolAgents.agent_memory.stream.stream_memory import StreamMemory
 from ToolAgents.knowledge.vector_database.implementations.sentence_transformer_embeddings import SentenceTransformerEmbeddingProvider
 
-load_dotenv()
-api = OpenAIChatAPI(api_key=os.getenv("OPENROUTER_API_KEY"), base_url="https://openrouter.ai/api/v1", model="google/gemini-2.5-flash")
+
+api = OpenAIChatAPI(api_key="token-abc123", base_url="http://127.0.0.1:8080/v1", model="Mistral-Small-3.2-24B-Instruct-2506")
 
 agent = ChatToolAgent(chat_api=api)
 
@@ -20,7 +16,7 @@ settings.temperature = 0.4
 
 settings.set_max_new_tokens(4096)
 
-embedding_provider = SentenceTransformerEmbeddingProvider("nomic-ai/nomic-embed-text-v1.5", trust_remote_code=True)
+embedding_provider = SentenceTransformerEmbeddingProvider()
 
 stream_memory = StreamMemory(embedding_provider=embedding_provider)
 
@@ -173,34 +169,6 @@ chat_history = [
   }
 ]
 
-chat_history += [
-  {"role": "user", "content": "One thing about sushi—I like it even better when I’m watching a Studio Ghibli movie."},
-  {"role": "assistant", "content": "That’s a wonderful combo! Sushi and Studio Ghibli. Do you have a favorite Ghibli film?"},
-  {"role": "user", "content": "Spirited Away is timeless, but ‘Whisper of the Heart’ hits differently when I’m feeling nostalgic."},
-  {"role": "assistant", "content": "Noted! ‘Spirited Away’ for timeless moments, and ‘Whisper of the Heart’ when you’re in a nostalgic mood."},
-  {"role": "user", "content": "By the way, I’m trying to avoid caffeine after 3PM now."},
-  {"role": "assistant", "content": "Good to know! I’ll avoid recommending caffeinated drinks in the afternoon."},
-  {"role": "user", "content": "I used to play piano, but now I mostly listen to jazz piano tracks."},
-  {"role": "assistant", "content": "Got it! Jazz piano is your vibe now. I can find playlists for that."},
-  {"role": "user", "content": "Actually, I sometimes miss playing. Do you think I should get back to it?"},
-  {"role": "assistant", "content": "If it brought you joy, maybe easing back into it could be rewarding! Want me to help plan a short daily practice?"},
-  {"role": "user", "content": "Maybe later. Right now, I'm more focused on learning Japanese."},
-  {"role": "assistant", "content": "Nice! Learning Japanese ties well with your interest in Japanese culture and authors."},
-  {"role": "user", "content": "Exactly. I’ve been watching Terrace House to help with listening skills."},
-  {"role": "assistant", "content": "Great idea! Watching native content helps with immersion."},
-  {"role": "user", "content": "Also, I tend to be a night owl, but I’m trying to shift that gradually."},
-  {"role": "assistant", "content": "Noted! A gradual shift from night owl to early riser—it’s a common challenge."},
-  {"role": "user", "content": "Sometimes I still stay up reading. That’s my weakness."},
-  {"role": "assistant", "content": "A relatable one! Maybe evening reading rituals could be part of the new schedule."},
-  {"role": "user", "content": "Also, I really dislike the sound of chewing. It distracts me a lot."},
-  {"role": "assistant", "content": "Understood! I’ll keep that in mind when suggesting environments or habits."},
-  {"role": "user", "content": "Oh, I forgot to say—I'm lactose intolerant, mildly."},
-  {"role": "assistant", "content": "Thanks for the heads-up. I’ll avoid suggesting dairy-heavy dishes."},
-  {"role": "user", "content": "But weirdly, I can tolerate some types of cheese, like aged cheddar."},
-  {"role": "assistant", "content": "Interesting! Aged cheddar is okay, but generally cautious with dairy—got it."},
-  {"role": "user", "content": "Can you remind me to take breaks during long study sessions?"}
-]
-
 
 pair = []
 for message in chat_history:
@@ -243,37 +211,11 @@ semantic_memory_test_questions = [
     "What have I told you about my morning routine?",
 ]
 
-hard_questions = [
-    # Cross-domain
-    "What kind of movies do I like to watch when eating sushi?",
-    "What’s my favorite Ghibli film when I feel nostalgic?",
-    "What kind of music do I enjoy that connects to my past?",
-    "Have I mentioned playing an instrument before?",
-    "Why am I watching Terrace House lately?",
-    "Am I more of a morning person or a night owl?",
-    "What habit am I trying to change about my daily rhythm?",
-    "What’s something that distracts me a lot?",
-    "What kind of dairy can I tolerate despite being lactose intolerant?",
-    "Have I asked you to help me with my study habits?",
-    "What contradictions exist between my ideal wake-up time and my current habits?",
-    "Can you identify a pattern between my food, music, and media preferences?",
-    "What cultural interests do I have that show up in multiple domains?",
-    "What language am I trying to learn, and how am I doing it?",
-    "Why might it be hard for me to wake up at 6:30 AM every day?",
-    "How might my preference for reading at night conflict with other goals?",
-    "Am I more introverted or extroverted based on what you’ve learned?",
-    "What subtle food-related risks should be considered when planning meals for me?",
-    "If I were planning a relaxing evening, what would be an ideal setup based on my preferences?",
-    "Based on everything you know, how would you describe my ideal day?",
-]
-semantic_memory_test_questions += hard_questions
-
-
 for question in semantic_memory_test_questions:
     print(f"Q: {question}", flush=True)
     print(f"A: ", end="", flush=True)
 
-    results = stream_memory.recall(question, 6)
+    results = stream_memory.recall(question, 3)
     additional_context = "\n--- Additional Context From Past Interactions ---\n"
 
     for r in results["memories"]:
