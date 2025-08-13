@@ -1,3 +1,7 @@
+import os
+
+from dotenv import load_dotenv
+
 from ToolAgents.agents import ChatToolAgent
 from ToolAgents.data_models.messages import ChatMessage
 
@@ -5,8 +9,8 @@ from ToolAgents.provider import OpenAIChatAPI
 from ToolAgents.agent_memory.stream.stream_memory import StreamMemory
 from ToolAgents.knowledge.vector_database.implementations.sentence_transformer_embeddings import SentenceTransformerEmbeddingProvider
 
-
-api = OpenAIChatAPI(api_key="token-abc123", base_url="http://127.0.0.1:8080/v1", model="Mistral-Small-3.2-24B-Instruct-2506")
+load_dotenv()
+api = OpenAIChatAPI(api_key=os.getenv("OPENROUTER_API_KEY"), base_url="https://openrouter.ai/api/v1", model="google/gemini-2.5-flash")
 
 agent = ChatToolAgent(chat_api=api)
 
@@ -16,7 +20,7 @@ settings.temperature = 0.4
 
 settings.set_max_new_tokens(4096)
 
-embedding_provider = SentenceTransformerEmbeddingProvider()
+embedding_provider = SentenceTransformerEmbeddingProvider("nomic-ai/nomic-embed-text-v1.5", trust_remote_code=True)
 
 stream_memory = StreamMemory(embedding_provider=embedding_provider)
 
@@ -173,15 +177,12 @@ chat_history = [
 pair = []
 for message in chat_history:
     pair.append(
-        f"<{message['role'].capitalize()}> {message['content']} </{message['role'].capitalize()}>"
+        f"{message['content']}"
     )
     if len(pair) == 2:
-        out = "".join(pair)
+        out = "\n".join(pair)
         pair = []
         stream_memory.process_input(out)
-
-user_input = "Do you remember my question about aging when traveling near a black hole? Because I have forgotten what I asked and what you said!"
-
 
 
 semantic_memory_test_questions = [
@@ -209,19 +210,28 @@ semantic_memory_test_questions = [
     "Summarize my favorite things in a few sentences.",
     "Did I ever mention anything I dislike?",
     "What have I told you about my morning routine?",
+    # Edge Cases
+    "What are all my food-related preferences?",  # Should get sushi, drinks, olives, peanuts
+    "Tell me about my creative interests",  # Should get photography and books
+    "What should you remember about my health?",  # Should prioritize peanut allergy
+    "List everything we discussed, organized by topic"  # Ultimate test
+
 ]
 
 for question in semantic_memory_test_questions:
-    print(f"Q: {question}", flush=True)
-    print(f"A: ", end="", flush=True)
+    print(f"User Input with Memory: ", end="", flush=True)
 
-    results = stream_memory.recall(question, 3)
+
+    results = stream_memory.recall(f"{question}", 10)
     additional_context = "\n--- Additional Context From Past Interactions ---\n"
 
     for r in results["memories"]:
-        additional_context += f"Memories: {r['content']}\n\n---\n\n"
+        additional_context += f"Memory: {r['content']}\n\n"
 
     question += "\n" + additional_context.strip()
+
+    print(question, flush=True)
+    print(f"Assistant Output: ", end="", flush=True)
 
     result = agent.get_streaming_response(
         messages=[
@@ -230,6 +240,7 @@ for question in semantic_memory_test_questions:
         ],
         settings=settings,
     )
+
     for tok in result:
         print(tok.chunk, end="", flush=True)
     print("\n---\n")
