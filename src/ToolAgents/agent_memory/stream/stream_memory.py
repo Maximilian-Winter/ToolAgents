@@ -5,18 +5,18 @@ A zero-LLM-intervention memory system using pure mathematical transformations
 
 import time
 import threading
-from typing import Optional, List, Dict, Tuple, Any, Deque
+from typing import Optional, List, Dict, Any, Deque, Union
 from dataclasses import dataclass, field
 from collections import deque
 import numpy as np
 import torch
 import torch.nn.functional as F
-from datetime import datetime
-import hashlib
+import pickle
 import json
-import heapq
+from pathlib import Path
+from typing import Union
+import hashlib
 
-# Import the provided embedding interface
 from ToolAgents.knowledge.vector_database import EmbeddingProvider, EmbeddingResult
 
 
@@ -379,6 +379,283 @@ class StreamMemory:
 
         return matches
 
+    def save(self, filepath: Union[str, Path]) -> None:
+        """
+        Save the complete memory state to disk
+
+        Args:
+            filepath: Path to save the memory state (will create .pt and .pkl files)
+        """
+        filepath = Path(filepath)
+        filepath.parent.mkdir(parents=True, exist_ok=True)
+
+        with self.lock:
+            # Prepare tensor state dict
+            tensor_state = {
+                'running_mean': self.running_mean.cpu(),
+                'running_covariance': self.running_covariance.cpu(),
+                'context_state': self.context_state.cpu(),
+                'attention_matrix': self.attention_matrix.cpu(),
+                'semantic_memory': self.semantic_memory.cpu(),
+                'temporal_weights': self.temporal_weights.cpu(),
+                'context_momentum': torch.tensor(self.context_momentum),
+            }
+
+            # Save tensors using PyTorch
+            torch.save(tensor_state, f"{filepath}_tensors.pt")
+
+            # Prepare non-tensor state
+            # Convert traces to serializable format
+            traces_data = []
+            for trace in self.associative_index.traces:
+                traces_data.append({
+                    'embedding': trace.embedding.cpu().numpy(),
+                    'content': trace.content,
+                    'timestamp': trace.timestamp,
+                    'activation_count': trace.activation_count,
+                    'last_activation': trace.last_activation,
+                    'associations': trace.associations
+                })
+
+            # Convert pattern bank to serializable format
+            patterns_data = []
+            for pattern_info in self.pattern_bank:
+                patterns_data.append({
+                    'pattern': pattern_info['pattern'].cpu().numpy(),
+                    'timestamp': pattern_info['timestamp'],
+                    'strength': pattern_info['strength']
+                })
+
+            # Prepare complete state
+            state = {
+                'config': {
+                    'embedding_dim': self.config.embedding_dim,
+                    'memory_rank': self.config.memory_rank,
+                    'decay_rate': self.config.decay_rate,
+                    'context_momentum': self.config.context_momentum,
+                    'semantic_weight': self.config.semantic_weight,
+                    'compression_threshold': self.config.compression_threshold,
+                    'max_sequence_length': self.config.max_sequence_length,
+                    'association_temperature': self.config.association_temperature,
+                    'enable_hierarchical': self.config.enable_hierarchical,
+                    'memory_window': self.config.memory_window,
+                    'similarity_threshold': self.config.similarity_threshold,
+                },
+                'associative_index': {
+                    'traces': traces_data,
+                    'content_hash': self.associative_index.content_hash,
+                },
+                'pattern_bank': patterns_data,
+                'stats': self.stats.copy(),
+                'max_patterns': self.max_patterns,
+            }
+
+            # Save non-tensor state using pickle
+            with open(f"{filepath}_state.pkl", 'wb') as f:
+                pickle.dump(state, f, protocol=pickle.HIGHEST_PROTOCOL)
+
+            # Save a metadata file for versioning and info
+            metadata = {
+                'version': '1.0',
+                'save_time': time.time(),
+                'total_memories': len(self.associative_index.traces),
+                'total_patterns': len(self.pattern_bank),
+                'device': str(self.device),
+                'dtype': str(self.dtype),
+            }
+
+            with open(f"{filepath}_metadata.json", 'w') as f:
+                json.dump(metadata, f, indent=2)
+
+            print(f"Memory saved to {filepath} (3 files created)")
+
+    def load(self, filepath: Union[str, Path]) -> None:
+        """
+        Load memory state from disk
+
+        Args:
+            filepath: Path to load the memory state from
+        """
+        filepath = Path(filepath)
+
+        with self.lock:
+            # Load metadata first to check compatibility
+            try:
+                with open(f"{filepath}_metadata.json", 'r') as f:
+                    metadata = json.load(f)
+                    print(f"Loading memory saved at {metadata['save_time']}")
+            except FileNotFoundError:
+                print("Warning: No metadata file found, loading anyway...")
+
+            # Load tensor state
+            tensor_state = torch.load(f"{filepath}_tensors.pt", map_location=self.device)
+
+            # Restore tensors
+            self.running_mean = tensor_state['running_mean'].to(self.device, dtype=self.dtype)
+            self.running_covariance = tensor_state['running_covariance'].to(self.device, dtype=self.dtype)
+            self.context_state = tensor_state['context_state'].to(self.device, dtype=self.dtype)
+            self.attention_matrix = tensor_state['attention_matrix'].to(self.device, dtype=self.dtype)
+            self.semantic_memory = tensor_state['semantic_memory'].to(self.device, dtype=self.dtype)
+            self.temporal_weights = tensor_state['temporal_weights'].to(self.device, dtype=self.dtype)
+            self.context_momentum = tensor_state['context_momentum'].item()
+
+            # Load non-tensor state
+            with open(f"{filepath}_state.pkl", 'rb') as f:
+                state = pickle.load(f)
+
+            # Restore configuration (update existing config)
+            for key, value in state['config'].items():
+                if hasattr(self.config, key):
+                    setattr(self.config, key, value)
+
+            # Restore associative index
+            self.associative_index = AssociativeIndex(self.config)
+            self.associative_index.content_hash = state['associative_index']['content_hash']
+
+            # Restore traces
+            for trace_data in state['associative_index']['traces']:
+                trace = MemoryTrace(
+                    embedding=torch.from_numpy(trace_data['embedding']).to(self.device, dtype=self.dtype),
+                    content=trace_data['content'],
+                    timestamp=trace_data['timestamp'],
+                    activation_count=trace_data['activation_count'],
+                    last_activation=trace_data['last_activation'],
+                    associations=trace_data['associations']
+                )
+                self.associative_index.traces.append(trace)
+
+            # Rebuild embedding matrix
+            self.associative_index._rebuild_embedding_matrix()
+
+            # Restore pattern bank
+            self.pattern_bank = []
+            for pattern_data in state['pattern_bank']:
+                self.pattern_bank.append({
+                    'pattern': torch.from_numpy(pattern_data['pattern']).to(self.device, dtype=self.dtype),
+                    'timestamp': pattern_data['timestamp'],
+                    'strength': pattern_data['strength']
+                })
+
+            # Restore stats
+            self.stats = state['stats']
+            self.max_patterns = state['max_patterns']
+
+            print(f"Memory loaded: {len(self.associative_index.traces)} traces, {len(self.pattern_bank)} patterns")
+
+    def export_to_json(self, filepath: Union[str, Path], include_embeddings: bool = False) -> None:
+        """
+        Export memory contents to human-readable JSON format
+
+        Args:
+            filepath: Path to save the JSON file
+            include_embeddings: Whether to include embedding vectors (makes file much larger)
+        """
+        filepath = Path(filepath)
+
+        with self.lock:
+            export_data = {
+                'metadata': {
+                    'export_time': time.time(),
+                    'total_memories': len(self.associative_index.traces),
+                    'total_patterns': len(self.pattern_bank),
+                    'memory_diversity': self.get_memory_summary()['memory_diversity'],
+                    'context_stability': self.context_momentum,
+                },
+                'memories': [],
+                'patterns': [],
+                'stats': self.stats.copy()
+            }
+
+            # Export memories
+            for i, trace in enumerate(self.associative_index.traces):
+                memory_entry = {
+                    'index': i,
+                    'content': trace.content,
+                    'timestamp': trace.timestamp,
+                    'activation_count': trace.activation_count,
+                    'last_activation': trace.last_activation,
+                    'associations': trace.associations,
+                }
+
+                if include_embeddings:
+                    memory_entry['embedding'] = trace.embedding.cpu().numpy().tolist()
+
+                export_data['memories'].append(memory_entry)
+
+            # Export patterns
+            for i, pattern_info in enumerate(self.pattern_bank):
+                pattern_entry = {
+                    'index': i,
+                    'timestamp': pattern_info['timestamp'],
+                    'strength': pattern_info['strength'],
+                }
+
+                if include_embeddings:
+                    pattern_entry['pattern'] = pattern_info['pattern'].cpu().numpy().tolist()
+
+                export_data['patterns'].append(pattern_entry)
+
+            # Sort memories by activation count for readability
+            export_data['memories'].sort(key=lambda x: x['activation_count'], reverse=True)
+
+            with open(filepath, 'w', encoding='utf-8') as f:
+                json.dump(export_data, f, indent=2, ensure_ascii=False)
+
+            print(f"Memory exported to {filepath} (human-readable JSON)")
+
+    def merge_with(self, other_memory_path: Union[str, Path],
+                   dedup: bool = True) -> None:
+        """
+        Merge another saved memory into this one
+
+        Args:
+            other_memory_path: Path to the other memory to merge
+            dedup: Whether to deduplicate identical content
+        """
+        # Create temporary memory instance to load the other memory
+        temp_memory = StreamMemory(self.embedding_provider, self.config)
+        temp_memory.load(other_memory_path)
+
+        with self.lock:
+            # Merge traces
+            merged_count = 0
+            duplicate_count = 0
+
+            for trace in temp_memory.associative_index.traces:
+                if dedup:
+                    # Check if content already exists
+                    content_hash = hashlib.md5(trace.content.encode()).hexdigest()[:8]
+                    if content_hash in self.associative_index.content_hash:
+                        duplicate_count += 1
+                        continue
+
+                # Add the trace
+                self.associative_index.add_trace(trace.embedding, trace.content)
+                merged_count += 1
+
+            # Merge patterns (keep unique ones based on similarity)
+            for new_pattern_info in temp_memory.pattern_bank:
+                is_duplicate = False
+
+                if dedup:
+                    for existing_pattern_info in self.pattern_bank:
+                        similarity = F.cosine_similarity(
+                            new_pattern_info['pattern'].unsqueeze(0),
+                            existing_pattern_info['pattern'].unsqueeze(0)
+                        ).item()
+
+                        if similarity > 0.95:  # Very similar patterns
+                            is_duplicate = True
+                            break
+
+                if not is_duplicate:
+                    self.pattern_bank.append(new_pattern_info)
+
+            # Update stats
+            self.stats['total_updates'] += temp_memory.stats['total_updates']
+
+            print(f"Merged {merged_count} new memories ({duplicate_count} duplicates skipped)")
+            print(f"Total memories now: {len(self.associative_index.traces)}")
     def get_memory_summary(self) -> Dict[str, Any]:
         """Get comprehensive memory summary"""
         with self.lock:
@@ -420,168 +697,3 @@ class StreamMemory:
                 'most_activated': most_activated,
                 'context_stability': self.context_momentum
             }
-
-
-class StreamPipeline:
-    """High-level pipeline for using STREAM with LLMs"""
-
-    def __init__(self,
-                 embedding_provider: EmbeddingProvider,
-                 config: Optional[MemoryConfig] = None):
-        self.memory = StreamMemory(embedding_provider, config)
-        self.conversation_history = deque(maxlen=100)
-        self.last_context = None
-
-    def process_conversation(self,
-                            user_input: str,
-                            include_context: bool = True) -> Dict[str, Any]:
-        """
-        Process conversation turn and generate context
-        """
-        # Update memory with user input
-        update_result = self.memory.process_input(user_input)
-
-        # Store in conversation history
-        self.conversation_history.append({
-            'role': 'user',
-            'content': user_input,
-            'timestamp': time.time()
-        })
-
-        # Generate context if requested
-        context = ""
-        relevance_score = 0.0
-
-        if include_context:
-            recall_result = self.memory.recall(user_input, top_k=3)
-            context = self._build_context(recall_result)
-            relevance_score = recall_result['semantic_score']
-            self.last_context = context
-
-        return {
-            'context': context,
-            'relevance_score': relevance_score,
-            'pattern_detected': update_result['pattern_detected'],
-            'context_similarity': update_result['context_similarity']
-        }
-
-    def update_with_response(self, response: str):
-        """Update memory with LLM response"""
-        update_result = self.memory.process_input(response)
-
-        self.conversation_history.append({
-            'role': 'assistant',
-            'content': response,
-            'timestamp': time.time()
-        })
-
-        return update_result
-
-    def _build_context(self, recall_result: Dict[str, Any]) -> str:
-        """Build natural language context from recall results"""
-        parts = []
-
-        # Add relevant memories
-        memories = recall_result['memories']
-        if memories:
-            # Group memories by relevance
-            high_relevance = [m for m in memories if m['context_relevance'] > 0.7]
-            moderate_relevance = [m for m in memories if 0.4 <= m['context_relevance'] <= 0.7]
-
-            if high_relevance:
-                parts.append("Highly relevant context:")
-                for mem in high_relevance[:2]:
-                    parts.append(f"- {mem['content']}")
-
-            if moderate_relevance and len(parts) < 3:
-                parts.append("Related context:")
-                for mem in moderate_relevance[:2]:
-                    parts.append(f"- {mem['content']}")
-
-        # Add pattern information if significant
-        if recall_result['pattern_matches']:
-            parts.append(f"(Pattern similarity detected: {len(recall_result['pattern_matches'])} matches)")
-
-        # Only return context if we have something meaningful
-        if parts:
-            return "\n".join(parts)
-        else:
-            return ""
-
-    def get_conversation_summary(self) -> Dict[str, Any]:
-        """Get conversation and memory summary"""
-        memory_summary = self.memory.get_memory_summary()
-
-        # Add conversation-specific stats
-        conversation_stats = {
-            'total_turns': len(self.conversation_history),
-            'last_context': self.last_context if self.last_context else "No context generated yet"
-        }
-
-        return {**memory_summary, **conversation_stats}
-
-
-def example_usage():
-    """Demonstrate STREAM usage with your embedding provider"""
-    from ToolAgents.knowledge.vector_database.implementations.sentence_transformer_embeddings import SentenceTransformerEmbeddingProvider
-
-    provider = SentenceTransformerEmbeddingProvider()
-    config = MemoryConfig(
-        embedding_dim=384,  # all-MiniLM-L6-v2 uses 384 dimensions
-        memory_rank=64,
-        decay_rate=0.995,
-        device="cpu"
-    )
-
-    # Create pipeline
-    pipeline = StreamPipeline(provider, config)
-
-    # Simulate conversation
-    conversation = [
-        "Tell me about quantum computing",
-        "What are qubits?",
-        "How do quantum gates work?",
-        "Let's switch topics - what's machine learning?",
-        "How do neural networks learn?",
-        "Going back to quantum - how does entanglement work?"
-    ]
-
-    print("STREAM Memory System Demo\n" + "="*50)
-
-    for i, user_input in enumerate(conversation, 1):
-        print(f"\n[Turn {i}] User: {user_input}")
-
-        # Process input and get context
-        result = pipeline.process_conversation(user_input)
-
-        if result['context']:
-            print(f"📊 Retrieved Context:\n{result['context']}")
-        else:
-            print(f"📊 No relevant context yet (building memory...)")
-
-        print(f"📈 Relevance Score: {result['relevance_score']:.3f}")
-        print(f"🔄 Context Similarity: {result['context_similarity']:.3f}")
-
-        if result['pattern_detected']:
-            print("✨ New pattern detected and stored!")
-
-        # Simulate LLM response
-        mock_response = f"Here's information about {user_input.lower().replace('?', '')}..."
-        pipeline.update_with_response(mock_response)
-
-    # Final summary
-    print("\n" + "="*50)
-    print("Memory Summary:")
-    summary = pipeline.get_conversation_summary()
-    for key, value in summary.items():
-        if key != 'most_activated' and key != 'last_context':
-            print(f"  {key}: {value}")
-
-    if summary['most_activated']:
-        print("\nMost Activated Memories:")
-        for mem in summary['most_activated']:
-            print(f"  - '{mem['content']}...' (activated {mem['activations']} times)")
-
-
-if __name__ == "__main__":
-    example_usage()
