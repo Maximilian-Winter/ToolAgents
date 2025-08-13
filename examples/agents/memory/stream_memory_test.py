@@ -1,12 +1,16 @@
+import os
+
+from dotenv import load_dotenv
+
 from ToolAgents.agents import ChatToolAgent
 from ToolAgents.data_models.messages import ChatMessage
 
 from ToolAgents.provider import OpenAIChatAPI
-from ToolAgents.agent_memory.stream.stream_memory import StreamMemory
+from ToolAgents.agent_memory.stream.stream_memory_persistence import StreamMemory
 from ToolAgents.knowledge.vector_database.implementations.sentence_transformer_embeddings import SentenceTransformerEmbeddingProvider
 
-
-api = OpenAIChatAPI(api_key="token-abc123", base_url="http://127.0.0.1:8080/v1", model="Mistral-Small-3.2-24B-Instruct-2506")
+load_dotenv()
+api = OpenAIChatAPI(api_key=os.getenv("OPENROUTER_API_KEY"), base_url="https://openrouter.ai/api/v1", model="google/gemini-2.5-flash")
 
 agent = ChatToolAgent(chat_api=api)
 
@@ -16,7 +20,7 @@ settings.temperature = 0.4
 
 settings.set_max_new_tokens(4096)
 
-embedding_provider = SentenceTransformerEmbeddingProvider()
+embedding_provider = SentenceTransformerEmbeddingProvider("nomic-ai/nomic-embed-text-v1.5", trust_remote_code=True)
 
 stream_memory = StreamMemory(embedding_provider=embedding_provider)
 

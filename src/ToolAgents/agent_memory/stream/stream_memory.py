@@ -23,7 +23,7 @@ from ToolAgents.knowledge.vector_database import EmbeddingProvider, EmbeddingRes
 @dataclass
 class MemoryConfig:
     """Configuration for STREAM memory system"""
-    embedding_dim: int = 384
+    embedding_dim: int = 768
     memory_rank: int = 128  # Maximum rank for SVD compression
     decay_rate: float = 0.995  # Temporal decay factor
     context_momentum: float = 0.7  # Context vector momentum
