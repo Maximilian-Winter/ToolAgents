@@ -6,7 +6,7 @@ from ToolAgents.agents import ChatToolAgent
 from ToolAgents.data_models.messages import ChatMessage
 
 from ToolAgents.provider import OpenAIChatAPI
-from ToolAgents.agent_memory.stream.enhanced_stream_memory import StreamMemory
+from ToolAgents.agent_memory.stream.stream_memory import StreamMemory
 from ToolAgents.knowledge.vector_database.implementations.sentence_transformer_embeddings import SentenceTransformerEmbeddingProvider
 
 load_dotenv()
