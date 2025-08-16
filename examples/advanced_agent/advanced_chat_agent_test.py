@@ -1,7 +1,6 @@
 # This show an advanced agent that will handle all the things like chat history by itself, also contains optional memory and app state functionality.
 from ToolAgents.agent_memory import (
-    semantic_memory_nomic_text_gpu_config,
-    SummarizationExtractPatternStrategy,
+    SummarizationExtractPatternStrategy, create_nomic_config
 )
 from ToolAgents.agents.advanced_agent import AdvancedAgent
 from ToolAgents.agents.advanced_agent import AgentConfig
@@ -10,8 +9,8 @@ from ToolAgents.agents import ChatToolAgent
 from ToolAgents.provider import OpenAIChatAPI
 
 
-provider = OpenAIChatAPI(api_key="token-abc123", base_url="http://127.0.0.1:8080/v1", model="XXX", debug_mode=True)
-agent = ChatToolAgent(chat_api=provider, log_output=True)
+provider = OpenAIChatAPI(api_key="token-abc123", base_url="http://127.0.0.1:8080/v1", model="XXX", debug_mode=False)
+agent = ChatToolAgent(chat_api=provider, log_output=False)
 
 settings = provider.get_default_settings()
 settings.neutralize_all_samplers()
@@ -54,8 +53,8 @@ agent_config.max_chat_history_length = 25
 agent_config.use_semantic_chat_history_memory = True
 # agent_config.give_agent_edit_tool = True
 agent_config.initial_app_state_file = "example_app_state.yaml"
-agent_config.semantic_chat_history_config = semantic_memory_nomic_text_gpu_config
-agent_config.semantic_chat_history_config.debug_mode = False
+agent_config.semantic_chat_history_config = create_nomic_config()
+agent_config.semantic_chat_history_config.debug_mode = True
 agent_config.semantic_chat_history_config.extract_pattern_strategy = (
     SummarizationExtractPatternStrategy(
         user_name="User", assistant_name="Assistant",
