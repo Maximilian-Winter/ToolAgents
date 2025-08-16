@@ -1,5 +1,5 @@
 from ToolAgents.knowledge.vector_database import RAG
-from ToolAgents.knowledge.vector_database.implementations.chroma_db import (
+from ToolAgents.knowledge.vector_database.implementations.chroma_db_vector_database import (
     ChromaDbVectorDatabaseProvider,
 )
 from ToolAgents.knowledge.vector_database.implementations.sentence_transformer_embeddings import (

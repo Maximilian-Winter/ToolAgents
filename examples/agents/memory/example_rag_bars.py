@@ -3,7 +3,7 @@ import requests
 from ToolAgents import ToolRegistry, FunctionTool
 from ToolAgents.agents import ChatToolAgent
 from ToolAgents.knowledge.vector_database import RAG
-from ToolAgents.knowledge.vector_database.implementations.chroma_db import (
+from ToolAgents.knowledge.vector_database.implementations.chroma_db_vector_database import (
     ChromaDbVectorDatabaseProvider,
 )
 from ToolAgents.knowledge.vector_database.implementations.cross_encoder_reranking import (

@@ -1,3 +1,4 @@
+from typing import Optional
 from sentence_transformers import SentenceTransformer
 
 from ToolAgents.knowledge.vector_database import EmbeddingProvider, EmbeddingResult
@@ -17,5 +18,8 @@ class SentenceTransformerEmbeddingProvider(EmbeddingProvider):
             device=device,
         )
 
-    def get_embedding(self, texts: list[str]) -> EmbeddingResult:
-        return EmbeddingResult(self.encoder.encode(texts))
+    def get_embedding(self, texts: list[str], prefix: Optional[str] = None) -> EmbeddingResult:
+        if prefix is not None:
+            texts = [prefix + text for text in texts]
+        embeddings = self.encoder.encode(texts)
+        return EmbeddingResult(embeddings)

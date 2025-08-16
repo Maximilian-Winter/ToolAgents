@@ -1,6 +1,6 @@
 import abc
 import dataclasses
-from typing import Union
+from typing import Optional
 
 from numpy import ndarray
 
@@ -13,5 +13,5 @@ class EmbeddingResult:
 class EmbeddingProvider(abc.ABC):
 
     @abc.abstractmethod
-    def get_embedding(self, texts: list[str]) -> EmbeddingResult:
+    def get_embedding(self, texts: list[str], prefix: Optional[str] = None) -> EmbeddingResult:
         pass

@@ -10,6 +10,7 @@ from ToolAgents.knowledge.vector_database import (
     EmbeddingProvider,
     RerankingProvider,
     VectorSearchResult,
+    VectorCollectionSnapshot,
 )
 
 
@@ -86,7 +87,6 @@ class ChromaDbVectorDatabaseProvider(VectorDatabaseProvider):
             doc_ids = []
             for r in results.reranked_documents:
                 doc_ids.append(document_text_to_ids[r.content])
-            # Putting everything together in a vector search result object.
             result = VectorSearchResult(
                 doc_ids,
                 [r.content for r in results.reranked_documents],
@@ -103,3 +103,17 @@ class ChromaDbVectorDatabaseProvider(VectorDatabaseProvider):
 
     def create_or_set_current_collection(self, collection_name: str) -> None:
         self.collection = self.client.get_or_create_collection(name=collection_name)
+
+    def remove_by_ids(self, ids: list[str]) -> None:
+        self.collection.delete(ids=ids)
+
+    def get_all_entries(self) -> VectorCollectionSnapshot:
+        all_data = self.collection.get(include=["documents", "metadatas"])
+        return VectorCollectionSnapshot(
+            ids=all_data["ids"],
+            chunks=all_data["documents"],
+            metadata=all_data["metadatas"]
+        )
+
+    def delete_collection(self, collection_name: str) -> None:
+        self.client.delete_collection(name=collection_name)

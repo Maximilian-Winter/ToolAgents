@@ -16,6 +16,13 @@ class VectorSearchResult:
     metadata: Optional[list[dict[str, Any]]] = None
 
 
+@dataclasses.dataclass
+class VectorCollectionSnapshot:
+    ids: list[str]
+    chunks: list[str]
+    metadata: Optional[list[dict[str, Any]]] = None
+
+
 class VectorDatabaseProvider(abc.ABC):
 
     def __init__(
@@ -42,6 +49,18 @@ class VectorDatabaseProvider(abc.ABC):
 
     @abc.abstractmethod
     def create_or_set_current_collection(self, collection_name: str) -> None:
+        pass
+
+    @abc.abstractmethod
+    def remove_by_ids(self, ids: list[str]) -> None:
+        pass
+
+    @abc.abstractmethod
+    def get_all_entries(self) -> VectorCollectionSnapshot:
+        pass
+
+    @abc.abstractmethod
+    def delete_collection(self, collection_name: str) -> None:
         pass
 
     @staticmethod

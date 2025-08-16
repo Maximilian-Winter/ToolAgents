@@ -120,7 +120,7 @@ Queries for similar texts.
 Implementation of VectorDatabaseProvider using Chroma.
 
 ```python
-from ToolAgents.knowledge.vector_database.implementations.chroma_db import ChromaDB
+from ToolAgents.knowledge.vector_database.implementations.chroma_db_vector_database import ChromaDB
 
 vector_db = ChromaDB(
     collection_name="your_collection",
