@@ -2,7 +2,7 @@ from ToolAgents.agent_memory.context_app_state import ContextAppState
 from ToolAgents.agents import ChatToolAgent
 from ToolAgents.data_models.messages import ChatMessage
 
-from ToolAgents.provider import CompletionProvider
+from ToolAgents.provider import CompletionProvider, OpenAIChatAPI
 from ToolAgents.provider.completion_provider.default_implementations import (
     LlamaCppServer,
 )
@@ -74,7 +74,7 @@ The eerie quiet is occasionally broken by the distant hum of hover-cars and the 
 
 What's your next move, Jane? How do you want to approach investigating this warehouse?"""
 print(system_prompt)
-api = CompletionProvider(completion_endpoint=LlamaCppServer("http://127.0.0.1:8080"))
+api = OpenAIChatAPI(api_key="token-abc123", base_url="http://127.0.0.1:8080/v1", model="unsloth/Meta-Llama-3.1-8B-Instruct-bnb-4bit")
 
 agent = ChatToolAgent(chat_api=api)
 
