@@ -2,13 +2,10 @@ import dataclasses
 import json
 import os
 import re
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from ToolAgents import ToolRegistry, FunctionTool
-from ToolAgents.agent_memory import SemanticMemory, SummarizationExtractPatternStrategy
 from ToolAgents.agent_memory.context_app_state import ContextAppState
-from ToolAgents.agent_memory.semantic_memory.memory import SemanticMemoryConfig
-from ToolAgents.knowledge.vector_database import VectorDatabaseProvider, EmbeddingProvider
 
 from ToolAgents.provider.llm_provider import ProviderSettings
 from ToolAgents.agents.base_llm_agent import BaseToolAgent, ChatResponse
@@ -17,7 +14,6 @@ from ToolAgents.data_models.messages import (
 )
 from ToolAgents.data_models.chat_history import ChatHistory
 from ToolAgents.utilities.message_template import MessageTemplate
-from ToolAgentsDev.build.lib.ToolAgents.knowledge.vector_database import RerankingProvider
 
 sum_prompt_alt_template = MessageTemplate.from_string(
     """You will be analyzing a chat turn to extract information about {USER_NAME} and their relationship with {ASSISTANT_NAME}. Here are the chat turns:
@@ -119,7 +115,7 @@ Please proceed with your conversation breakdown and summary of the chat message.
 @dataclasses.dataclass
 class AgentConfig:
     """
-    Configuration for initializing an agent with the refactored semantic memory system.
+    Configuration for initializing an agent.
 
     Attributes:
         system_message (str): The initial system prompt for the agent.
@@ -129,25 +125,19 @@ class AgentConfig:
         max_chat_history_length (int): Maximum length of chat history to retain (-1 for unlimited).
         use_semantic_chat_history_memory (bool): Whether to use semantic memory for chat history.
         save_on_creation (bool): Whether to automatically save the agent upon creation.
-        summarize_chat_pairs_before_storing (bool): Whether to summarize chat pairs before storing in semantic memory.
         semantic_chat_history_config (SemanticMemoryConfig): Configuration for semantic memory.
-
-        # New optional fields for custom providers
-        custom_vector_db_provider (VectorDatabaseProvider): Optional custom vector database provider.
-        custom_embedding_provider (EmbeddingProvider): Optional custom embedding provider.
-        custom_reranking_provider (RerankingProvider): Optional custom reranking provider.
     """
 
     system_message: str = "You are a helpful assistant."
     save_dir: str = "./default_agent"
-    initial_app_state_file: Optional[str] = None
-    give_agent_edit_tool: bool = False
+    initial_app_state_file: str = None
+    give_agent_edit_tool = False
     max_chat_history_length: int = -1
     use_semantic_chat_history_memory: bool = False
     save_on_creation: bool = False
     summarize_chat_pairs_before_storing: bool = False
+    from ToolAgents.agent_memory.semantic_memory.memory import SemanticMemoryConfig
 
-    # Semantic memory configuration
     semantic_chat_history_config: SemanticMemoryConfig = dataclasses.field(
         default_factory=SemanticMemoryConfig
     )
@@ -158,28 +148,26 @@ class AdvancedAgent:
     An advanced agent that leverages a base language model agent along with tools,
     chat history, and optional semantic memory to have more context-aware conversations.
 
-    This version is refactored to work with the new abstract semantic memory system.
+    This class provides methods to load, save, and manage agent state, as well as
+    to interact with the underlying language model.
     """
 
     def __init__(
-            self,
-            agent: BaseToolAgent,
-            tool_registry: ToolRegistry = None,
-            agent_config: AgentConfig = None,
-            user_name: str = None,
-            assistant_name: str = None,
-            debug_mode: bool = False,
+        self,
+        agent: BaseToolAgent,
+        tool_registry: ToolRegistry = None,
+        agent_config: AgentConfig = None,
+        user_name: str = None,
+        assistant_name: str = None,
+        debug_mode: bool = False,
     ):
         """
-        Initialize the AdvancedAgent with the refactored semantic memory system.
+        Initialize the AdvancedAgent.
 
         Args:
             agent (BaseToolAgent): The underlying language model agent.
             tool_registry (ToolRegistry, optional): Registry of available tools.
             agent_config (AgentConfig, optional): Configuration parameters for the agent.
-            user_name (str, optional): Name of the user (default: "User").
-            assistant_name (str, optional): Name of the assistant (default: "Assistant").
-            debug_mode (bool): Whether to enable debug output.
         """
         # Use default configuration if none provided
         if agent_config is None:
@@ -189,8 +177,7 @@ class AdvancedAgent:
         self.tool_registry = tool_registry
         self.agent = agent
         self.summarization_prompt = sum_prompt_alt_template
-
-        # Extract configuration parameters
+        # Extract configuration parameters for easier access
         save_dir = agent_config.save_dir
         initial_state_file = agent_config.initial_app_state_file
         system_message = agent_config.system_message
@@ -201,10 +188,15 @@ class AdvancedAgent:
         self.summarize_chat_pairs_before_storing = (
             agent_config.summarize_chat_pairs_before_storing
         )
+        if user_name is None:
+            self.user_name = "User"
+        else:
+            self.user_name = user_name
 
-        # Set user and assistant names
-        self.user_name = user_name if user_name is not None else "User"
-        self.assistant_name = assistant_name if assistant_name is not None else "Assistant"
+        if assistant_name is None:
+            self.assistant_name = "Assistant"
+        else:
+            self.assistant_name = assistant_name
 
         load = False  # Flag to indicate whether to load an existing agent state
 
@@ -222,11 +214,7 @@ class AdvancedAgent:
         self.agent_chat_history_path = os.path.join(
             self.save_dir, "agent_chat_history.json"
         )
-
-        # Store the agent config for later use
-        self.agent_config = agent_config
-
-        # Determine if we should load an existing agent state
+        # Determine if we should load an existing agent state based on file existence
         if os.path.exists(save_dir) and os.path.exists(self.agent_config_path):
             load = True
 
@@ -248,37 +236,26 @@ class AdvancedAgent:
             if agent_config.save_on_creation:
                 self.save_agent()
 
-        # Initialize semantic memory with the refactored system
+        # Initialize semantic memory if enabled
         if self.use_semantic_memory:
             if not os.path.isdir(self.save_dir):
                 os.makedirs(self.save_dir)
+            # Set the directory where semantic memory will persist
+            agent_config.semantic_chat_history_config.persist_directory = (
+                self.semantic_memory_path
+            )
+            from ToolAgents.agent_memory.semantic_memory.memory import SemanticMemory
 
-            # Create a copy of the semantic memory config to modify
-            semantic_config = dataclasses.replace(agent_config.semantic_chat_history_config)
-
-            # Set the persist directory
-            semantic_config.persist_directory = self.semantic_memory_path
-
-            # If summarization is enabled and not already configured, set up the strategy
-            if self.summarize_chat_pairs_before_storing:
-                if not isinstance(semantic_config.extract_pattern_strategy, SummarizationExtractPatternStrategy):
-                    semantic_config.extract_pattern_strategy = SummarizationExtractPatternStrategy(
-                        agent=self.agent,
-                        summarizer_settings=self.agent.get_default_settings(),
-                        user_name=self.user_name,
-                        assistant_name=self.assistant_name,
-                        debug_mode=self.debug_mode
-                    )
-
-            # Initialize the semantic memory with the configured settings
-            self.semantic_memory = SemanticMemory(semantic_config)
+            self.semantic_memory = SemanticMemory(
+                agent_config.semantic_chat_history_config
+            )
 
         # If a tool registry and initial app state exist, and edit tools are enabled,
         # add the edit tools to the tool registry.
         if (
-                self.tool_registry is not None
-                and initial_state_file
-                and self.give_agent_edit_tool
+            self.tool_registry is not None
+            and initial_state_file
+            and self.give_agent_edit_tool
         ):
             self.tool_registry.add_tools(self.app_state.get_edit_tools())
 
@@ -294,7 +271,7 @@ class AdvancedAgent:
         if self.tool_registry is not None and self.give_agent_edit_tool:
             self.tool_registry.add_tools(self.app_state.get_edit_tools())
 
-    def set_tools(self, tools: List[FunctionTool]):
+    def set_tools(self, tools: list[FunctionTool]):
         """
         Initialize and set a list of tools for the agent.
 
@@ -314,23 +291,21 @@ class AdvancedAgent:
         self.tool_registry = None
 
     def chat_with_agent(
-            self,
-            chat_input: str,
-            tool_registry: ToolRegistry = None,
-            settings: ProviderSettings = None,
+        self,
+        chat_input: str,
+        tool_registry: ToolRegistry = None,
+        settings: ProviderSettings = None,
     ):
         """
         Have a conversation with the agent using a given input.
 
-        API remains unchanged from the original implementation.
-
         Args:
             chat_input (str): The user's chat input.
             tool_registry (ToolRegistry, optional): A tool registry to use for this conversation.
-            settings (ProviderSettings, optional): Sampling settings for the language model.
+            settings (LLMSamplingSettings, optional): Sampling settings for the language model.
 
         Returns:
-            The agent's response as a ChatResponse object.
+            The agent's response as a string.
         """
         # Prepare chat history with context and previous interactions
         chat_history = self._before_run(chat_input)
@@ -343,9 +318,9 @@ class AdvancedAgent:
         # If no tool registry is provided but edit tools are required,
         # create a new one and add the edit tools.
         if (
-                self.tool_registry is None
-                and tool_registry is None
-                and self.give_agent_edit_tool
+            self.tool_registry is None
+            and tool_registry is None
+            and self.give_agent_edit_tool
         ):
             tool_registry = ToolRegistry()
             tool_registry.add_tools(self.app_state.get_edit_tools())
@@ -361,23 +336,21 @@ class AdvancedAgent:
         return result
 
     def stream_chat_with_agent(
-            self,
-            chat_input: str,
-            tool_registry: ToolRegistry = None,
-            settings: ProviderSettings = None,
+        self,
+        chat_input: str,
+        tool_registry: ToolRegistry = None,
+        settings: ProviderSettings = None,
     ):
         """
         Stream a conversation with the agent, yielding tokens as they become available.
 
-        API remains unchanged from the original implementation.
-
         Args:
             chat_input (str): The user's chat input.
             tool_registry (ToolRegistry, optional): A tool registry to use.
-            settings (ProviderSettings, optional): Sampling settings for the language model.
+            settings (LLMSamplingSettings, optional): Sampling settings for the language model.
 
         Yields:
-            Tokens of the agent's streaming response.
+            Tokens (str) of the agent's streaming response.
         """
         # Prepare the chat history similarly to the non-streaming method
         chat_history = self._before_run(chat_input)
@@ -386,9 +359,9 @@ class AdvancedAgent:
             tool_registry.add_tools(self.app_state.get_edit_tools())
 
         if (
-                self.tool_registry is None
-                and tool_registry is None
-                and self.give_agent_edit_tool
+            self.tool_registry is None
+            and tool_registry is None
+            and self.give_agent_edit_tool
         ):
             tool_registry = ToolRegistry()
             tool_registry.add_tools(self.app_state.get_edit_tools())
@@ -424,36 +397,14 @@ class AdvancedAgent:
         self.use_semantic_memory = loaded_data["use_semantic_memory"]
         self.tool_usage_history = loaded_data["tool_usage_history"]
         self.give_agent_edit_tool = loaded_data["give_agent_edit_tool"]
-        self.assistant_name = loaded_data.get("assistant_name", "Assistant")
-        self.user_name = loaded_data.get("user_name", "User")
-
-        # Load summarization setting if available
-        self.summarize_chat_pairs_before_storing = loaded_data.get(
-            "summarize_chat_pairs_before_storing", False
-        )
-
+        self.assistant_name = loaded_data["assistant_name"]
+        self.user_name = loaded_data["user_name"]
         # If an application state is maintained, load it from the corresponding file
         if self.has_app_state:
             self.app_state = ContextAppState()
             self.app_state.load_json(self.app_state_path)
 
         self.chat_history = ChatHistory.load_from_json(self.agent_chat_history_path)
-
-        # Re-initialize semantic memory if it was being used
-        # This ensures the semantic memory is properly loaded with persisted data
-        if self.use_semantic_memory and hasattr(self, 'agent_config'):
-            semantic_config = dataclasses.replace(self.agent_config.semantic_chat_history_config)
-            semantic_config.persist_directory = self.semantic_memory_path
-
-            # Inject custom providers if they were provided
-            if self.agent_config.custom_vector_db_provider:
-                semantic_config.vector_database_provider = self.agent_config.custom_vector_db_provider
-            if self.agent_config.custom_embedding_provider:
-                semantic_config.embedding_provider = self.agent_config.custom_embedding_provider
-            if self.agent_config.custom_reranking_provider:
-                semantic_config.reranking_provider = self.agent_config.custom_reranking_provider
-
-            self.semantic_memory = SemanticMemory(semantic_config)
 
     def save_agent(self):
         """
@@ -474,7 +425,6 @@ class AdvancedAgent:
                 "give_agent_edit_tool": self.give_agent_edit_tool,
                 "assistant_name": self.assistant_name,
                 "user_name": self.user_name,
-                "summarize_chat_pairs_before_storing": self.summarize_chat_pairs_before_storing,
             }
             json.dump(save_data, fp=f)
         # If the agent has an application state, save it separately
@@ -483,16 +433,7 @@ class AdvancedAgent:
 
         self.chat_history.save_to_json(self.agent_chat_history_path)
 
-        # The semantic memory automatically persists if configured to do so
-        # No explicit save needed due to the persistent vector database
-
     def get_current_chat_history(self):
-        """
-        Get the current chat history including system message and past messages.
-
-        Returns:
-            List of ChatMessage objects representing the conversation.
-        """
         if not self.has_app_state:
             chat_history = [ChatMessage.create_system_message(self.system_message)]
         else:
@@ -505,10 +446,10 @@ class AdvancedAgent:
                 )
             ]
         # Add any existing chat history beyond the current index
-        chat_history.extend(self.chat_history.get_messages()[self.chat_history_index:])
+        chat_history.extend(self.chat_history.get_messages()[self.chat_history_index :])
         return chat_history
 
-    def add_to_chat_history(self, messages: List[Dict[str, Any]]):
+    def add_to_chat_history(self, messages: list[dict[str, Any]]):
         """
         Append a list of messages to the chat history.
 
@@ -529,25 +470,20 @@ class AdvancedAgent:
         self.chat_history.add_messages_from_dictionaries(loaded_data)
 
     def set_summarization_prompt(self, prompt: MessageTemplate):
-        """
-        Set a custom summarization prompt template.
-
-        Args:
-            prompt (MessageTemplate): The prompt template to use for summarization.
-        """
         self.summarization_prompt = prompt
 
     def _before_run(self, chat_input: str):
         """
         Prepare the chat history before sending a new message to the agent.
 
-        Works with the refactored semantic memory system.
+        This method constructs the chat history by combining the system message,
+        previous messages, and optionally additional semantic memory context.
 
         Args:
             chat_input (str): The incoming user message.
 
         Returns:
-            list: A list of ChatMessage objects representing the current conversation context.
+            list: A list of message dictionaries representing the current conversation context.
         """
         user = chat_input
         # Start with a system message; include app state if available
@@ -563,11 +499,10 @@ class AdvancedAgent:
                 )
             ]
         # Add any existing chat history beyond the current index
-        chat_history.extend(self.chat_history.get_messages()[self.chat_history_index:])
+        chat_history.extend(self.chat_history.get_messages()[self.chat_history_index :])
 
-        # If semantic memory is enabled, retrieve additional context
+        # If semantic memory is enabled, retrieve additional context and append it to the user input
         if self.use_semantic_memory:
-            # The refactored semantic memory works the same way
             results = self.semantic_memory.recall(f"{self.user_name}: {user}", 3)
             if len(results) > 0:
                 additional_context = f"{user}\n\n---\n\n<additional_context>\n"
@@ -586,9 +521,11 @@ class AdvancedAgent:
         """
         Update the chat history and usage tracking after an agent run.
 
+        This method updates the history with the new user message and the agent's response,
+        then triggers chat history processing (e.g., for memory consolidation).
+
         Args:
             chat_input (str): The original user input that was sent to the agent.
-            response (ChatResponse): The agent's response.
         """
         # Record tool usage for the current position in chat history
         self.tool_usage_history[self.chat_history.get_message_count()] = 1
@@ -608,21 +545,23 @@ class AdvancedAgent:
         """
         Process the chat history to ensure it doesn't exceed the maximum allowed length.
 
-        Works with the refactored semantic memory system.
+        If the history exceeds the maximum length, older messages may be consolidated
+        and stored in semantic memory.
 
         Args:
             max_chat_history_length (int, optional): The maximum number of chat messages to retain.
+                Defaults to the instance's max_chat_history_length.
         """
         if max_chat_history_length is None:
             max_chat_history_length = self.max_chat_history_length
-        # Only process if the chat history length exceeds the allowed limit
+        # Only process if the chat history length exceeds the allowed limit and the limit is set (not -1)
         if (
-                (self.chat_history.get_message_count() - self.chat_history_index)
-                > max_chat_history_length
-                > -1
+            (self.chat_history.get_message_count() - self.chat_history_index)
+            > max_chat_history_length
+            > -1
         ):
             while (
-                    self.chat_history.get_message_count() - self.chat_history_index
+                self.chat_history.get_message_count() - self.chat_history_index
             ) > max_chat_history_length:
                 # Determine how many messages are associated with the current chat block
                 msg_count = self.tool_usage_history.get(self.chat_history_index, 1)
@@ -634,12 +573,12 @@ class AdvancedAgent:
                     message = self.chat_history.get_messages()[self.chat_history_index]
                     message2 = self.chat_history.get_messages()[
                         self.chat_history_index + 1
-                        ]
+                    ]
                 elif self.use_semantic_memory and msg_count > 2:
                     message = self.chat_history.get_messages()[self.chat_history_index]
                     message2 = self.chat_history.get_messages()[
                         self.chat_history_index + (msg_count - 1)
-                        ]
+                    ]
                 # If there are at least two messages to consolidate, build a memory string and store it
                 if self.use_semantic_memory and msg_count >= 2:
                     template = "{role}: {content}\n\n"
@@ -651,7 +590,7 @@ class AdvancedAgent:
                     )
 
                     if self.summarize_chat_pairs_before_storing and isinstance(
-                            self.summarization_prompt, MessageTemplate
+                        self.summarization_prompt, MessageTemplate
                     ):
                         prompt = self.summarization_prompt.generate_message_content(
                             CHAT_TURN=formatted_msgs,
@@ -676,59 +615,8 @@ class AdvancedAgent:
                         for content in match:
                             if self.debug_mode:
                                 print(content.replace("**", ""), flush=True)
-                            # Store in the refactored semantic memory
                             self.semantic_memory.store(content.replace("**", ""))
                     else:
-                        # Store in the refactored semantic memory
                         self.semantic_memory.store(formatted_msgs)
                 # Move the chat history index forward by the number of messages consolidated
                 self.chat_history_index += msg_count
-
-    # Additional helper methods for working with the refactored system
-
-    def get_memory_stats(self) -> Dict[str, int]:
-        """
-        Get statistics about the semantic memory.
-
-        Returns:
-            Dictionary with memory statistics.
-        """
-        if self.use_semantic_memory:
-            return self.semantic_memory.get_stats()
-        return {"working_count": 0, "long_term_count": 0}
-
-    def export_semantic_memory(self, include_embeddings: bool = False) -> Dict[str, Any]:
-        """
-        Export the semantic memory for backup or analysis.
-
-        Args:
-            include_embeddings (bool): Whether to include embedding vectors.
-
-        Returns:
-            Dictionary containing the exported memory data.
-        """
-        if self.use_semantic_memory:
-            return self.semantic_memory.export_memories(include_embeddings)
-        return {}
-
-    def import_semantic_memory(self, data: Dict[str, Any], overwrite: bool = False) -> bool:
-        """
-        Import semantic memory from a backup.
-
-        Args:
-            data (Dict[str, Any]): The memory data to import.
-            overwrite (bool): Whether to overwrite existing memories.
-
-        Returns:
-            True if successful, False otherwise.
-        """
-        if self.use_semantic_memory:
-            return self.semantic_memory.import_memories(data, overwrite)
-        return False
-
-    def clear_semantic_memory(self):
-        """
-        Clear all semantic memories.
-        """
-        if self.use_semantic_memory:
-            self.semantic_memory.clear_all_memories()
