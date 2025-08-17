@@ -132,8 +132,7 @@ class ChromaDbVectorDatabaseProvider(VectorDatabaseProvider):
             raise ValueError(f"No entries found with ids: {ids}")
 
         self.collection.update(
-            ids=existing_data["ids"],
+            ids=ids,
             metadatas=metadata,
-            documents=existing_data["documents"],
-            embeddings=existing_data["embeddings"]
+            embeddings=existing_data["embeddings"][0],
         )

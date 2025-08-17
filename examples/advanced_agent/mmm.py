@@ -46,7 +46,7 @@ def create_basic_memory_system():
         reranking_provider=reranking_provider,
         persistent_db_path="./semantic_memory",
         default_collection_name="working_memory",
-        persistent=True
+        persistent=False
     )
 
     # Configure semantic memory
@@ -96,7 +96,7 @@ def create_advanced_memory_system(agent, summarizer_settings):
         reranking_provider=None,
         persistent_db_path="./semantic_memory_advanced",
         default_collection_name="working_memory",
-        persistent=True
+        persistent=False
     )
 
     # Use advanced strategies

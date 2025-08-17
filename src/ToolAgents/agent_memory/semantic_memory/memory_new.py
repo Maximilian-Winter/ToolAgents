@@ -484,7 +484,7 @@ class SemanticMemory:
         for cluster_idx, cluster in enumerate(clusters):
             if len(cluster) < self.minimum_cluster_size:
                 continue
-
+            self.vector_db.create_or_set_current_collection(self.working_collection)
             pattern_id = f"pattern_{uuid.uuid4()}"
 
             pattern = self._extract_pattern(
@@ -499,13 +499,14 @@ class SemanticMemory:
             )
 
             self.vector_db.create_or_set_current_collection(self.long_term_collection)
-            existing = self.vector_db.query(
-                query=pattern["content"],
-                k=1
-            )
+            if self.vector_db.get_all_entries().ids:
+                existing = self.vector_db.query(
+                    query=pattern["content"],
+                    k=1
+                )
 
-            if existing.scores and existing.scores[0] <= 0.01:
-                continue
+                if existing.scores and existing.scores[0] <= 0.01:
+                    continue
 
             self.vector_db.add_texts_with_id(
                 ids=[pattern_id],
