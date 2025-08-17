@@ -3,26 +3,26 @@ from typing import Any
 
 import chromadb
 
-
 from ToolAgents.knowledge import Document
 from ToolAgents.knowledge.vector_database import (
     VectorDatabaseProvider,
     EmbeddingProvider,
     RerankingProvider,
     VectorSearchResult,
-    VectorCollectionSnapshot, EmbeddingTask,
+    EmbeddingTask,
 )
+from ToolAgents.knowledge.vector_database.vector_database_provider import VectorCollection
 
 
 class ChromaDbVectorDatabaseProvider(VectorDatabaseProvider):
 
     def __init__(
-        self,
-        embedding_provider: EmbeddingProvider,
-        reranking_provider: RerankingProvider = None,
-        persistent_db_path="./retrieval_memory",
-        default_collection_name="default_collection",
-        persistent: bool = False,
+            self,
+            embedding_provider: EmbeddingProvider,
+            reranking_provider: RerankingProvider = None,
+            persistent_db_path="./retrieval_memory",
+            default_collection_name="default_collection",
+            persistent: bool = False,
     ):
         super().__init__(embedding_provider, reranking_provider)
         if persistent:
@@ -59,10 +59,16 @@ class ChromaDbVectorDatabaseProvider(VectorDatabaseProvider):
     def add_texts(self, texts: list[str], metadata: list[dict]) -> None:
         mem = texts
         ids = [str(self.generate_unique_id()) for _ in range(len(texts))]
-        self.collection.add(documents=mem, metadatas=metadata, ids=ids)
+        embeddings = self.embedding_provider.get_embedding(texts=texts, embedding_task=EmbeddingTask.STORE)
+        self.collection.add(embeddings=embeddings, documents=mem, metadatas=metadata, ids=ids)
+
+    def add_texts_with_id(self, ids: list[str], texts: list[str], metadata: list[dict]) -> None:
+        mem = texts
+        embeddings = self.embedding_provider.get_embedding(texts=texts, embedding_task=EmbeddingTask.STORE)
+        self.collection.add(embeddings=embeddings, documents=mem, metadatas=metadata, ids=ids)
 
     def query(
-        self, query: str, query_filter: Any = None, k: int = 3, **kwargs
+            self, query: str, query_filter: Any = None, k: int = 3, **kwargs
     ) -> VectorSearchResult:
         query_embedding = self.embedding_provider.get_embedding([query], embedding_task=EmbeddingTask.QUERY)
         query_result = self.collection.query(
@@ -107,13 +113,27 @@ class ChromaDbVectorDatabaseProvider(VectorDatabaseProvider):
     def remove_by_ids(self, ids: list[str]) -> None:
         self.collection.delete(ids=ids)
 
-    def get_all_entries(self) -> VectorCollectionSnapshot:
-        all_data = self.collection.get(include=["documents", "metadatas"])
-        return VectorCollectionSnapshot(
+    def get_all_entries(self) -> VectorCollection:
+        all_data = self.collection.get(include=["documents", "embeddings", "metadatas"])
+        return VectorCollection(
             ids=all_data["ids"],
             chunks=all_data["documents"],
-            metadata=all_data["metadatas"]
+            metadata=all_data["metadatas"],
+            embeddings=all_data["embeddings"],
         )
 
     def delete_collection(self, collection_name: str) -> None:
         self.client.delete_collection(name=collection_name)
+
+    def update_metadata(self, ids: list[str], metadata: list[dict[str, Any]]) -> None:
+        existing_data = self.collection.get(ids=ids, include=["documents", "embeddings"])
+
+        if not existing_data["ids"]:
+            raise ValueError(f"No entries found with ids: {ids}")
+
+        self.collection.update(
+            ids=existing_data["ids"],
+            metadatas=metadata,
+            documents=existing_data["documents"],
+            embeddings=existing_data["embeddings"]
+        )
