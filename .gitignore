@@ -83,3 +83,8 @@ examples/agents/knowledge_graph44446.gv.pdf
 /examples/advanced_agent/test_agent/semantic_memory
 /src/ToolAgents/knowledge/document/implementations/__pycache__
 /src/ToolAgents/agent_memory/stream/__pycache__
+examples/advanced_agent/memory/chroma.sqlite3
+examples/advanced_agent/memory/25b398f9-c5ca-41d9-8f4e-d130f3d3d8c5/link_lists.bin
+examples/advanced_agent/memory/25b398f9-c5ca-41d9-8f4e-d130f3d3d8c5/length.bin
+examples/advanced_agent/memory/25b398f9-c5ca-41d9-8f4e-d130f3d3d8c5/header.bin
+examples/advanced_agent/memory/25b398f9-c5ca-41d9-8f4e-d130f3d3d8c5/data_level0.bin
