@@ -10,7 +10,7 @@ from ToolAgents.knowledge.vector_database import (
     EmbeddingProvider,
     RerankingProvider,
     VectorSearchResult,
-    VectorCollectionSnapshot,
+    VectorCollectionSnapshot, EmbeddingTask,
 )
 
 
@@ -49,7 +49,7 @@ class ChromaDbVectorDatabaseProvider(VectorDatabaseProvider):
                 ids.append(chunk.id)
                 texts.append(chunk.content)
                 metadata.append(meta)
-        embeddings = self.embedding_provider.get_embedding(texts=texts)
+        embeddings = self.embedding_provider.get_embedding(texts=texts, embedding_task=EmbeddingTask.STORE)
         embeddings = embeddings.embeddings
         mem = texts
         self.collection.add(
@@ -64,7 +64,7 @@ class ChromaDbVectorDatabaseProvider(VectorDatabaseProvider):
     def query(
         self, query: str, query_filter: Any = None, k: int = 3, **kwargs
     ) -> VectorSearchResult:
-        query_embedding = self.embedding_provider.get_embedding([query])
+        query_embedding = self.embedding_provider.get_embedding([query], embedding_task=EmbeddingTask.QUERY)
         query_result = self.collection.query(
             query_embedding.embeddings[0],
             n_results=min(k * 4, self.collection.count()),
