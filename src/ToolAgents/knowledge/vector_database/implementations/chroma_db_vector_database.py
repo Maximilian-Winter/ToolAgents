@@ -65,7 +65,7 @@ class ChromaDbVectorDatabaseProvider(VectorDatabaseProvider):
     def add_texts_with_id(self, ids: list[str], texts: list[str], metadata: list[dict]) -> None:
         mem = texts
         embeddings = self.embedding_provider.get_embedding(texts=texts, embedding_task=EmbeddingTask.STORE)
-        self.collection.add(embeddings=embeddings, documents=mem, metadatas=metadata, ids=ids)
+        self.collection.add(embeddings=embeddings.embeddings, documents=mem, metadatas=metadata, ids=ids)
 
     def query(
             self, query: str, query_filter: Any = None, k: int = 3, **kwargs
