@@ -19,11 +19,11 @@ class SentenceTransformerEmbeddingProvider(EmbeddingProvider):
         if embedding_task == EmbeddingTask.QUERY:
             texts = [self.prefix_config.query + text for text in texts]
         elif embedding_task == EmbeddingTask.STORE:
-            texts = [self.prefix_config.store + texts for texts in texts]
+            texts = [self.prefix_config.store + text for text in texts]
         elif embedding_task == EmbeddingTask.CLUSTER:
-            texts = [self.prefix_config.cluster + texts for texts in texts]
+            texts = [self.prefix_config.cluster + text for text in texts]
         elif embedding_task == EmbeddingTask.CUSTOM:
-            texts = [self.prefix_config.custom + texts for texts in texts]
+            texts = [self.prefix_config.custom + text for text in texts]
 
         embeddings = self.encoder.encode(texts)
         return EmbeddingResult(embeddings)

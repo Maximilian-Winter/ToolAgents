@@ -285,6 +285,8 @@ class OpenAIResponseConverter(BaseResponseConverter):
         alt_index = 0
 
         async for chunk in await stream_generator:
+            if len(chunk.choices) == 0:
+                continue
             delta = chunk.choices[0].delta
 
             if delta.content:

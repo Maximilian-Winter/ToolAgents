@@ -70,10 +70,15 @@ class ChromaDbVectorDatabaseProvider(VectorDatabaseProvider):
     def query(
             self, query: str, query_filter: Any = None, k: int = 3, **kwargs
     ) -> VectorSearchResult:
+
+        n_query = min(k * 4, self.collection.count())
+        if n_query == 0:
+            return VectorSearchResult([], [], [])
+
         query_embedding = self.embedding_provider.get_embedding([query], embedding_task=EmbeddingTask.QUERY)
         query_result = self.collection.query(
             query_embedding.embeddings[0],
-            n_results=min(k * 4, self.collection.count()),
+            n_results=n_query,
             include=[
                 "documents",
                 "metadatas",
