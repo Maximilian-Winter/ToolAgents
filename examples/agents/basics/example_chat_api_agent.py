@@ -28,10 +28,10 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Local OpenAI like API, like vllm or llama-cpp-server with jinja flag for tool calling.
-api = OpenAIChatAPI(api_key="token-abc123", base_url="http://127.0.0.1:8080/v1", model="Mistral-Small-3.2-24B-Instruct-2506")
+#api = OpenAIChatAPI(api_key="token-abc123", base_url="http://127.0.0.1:8080/v1", model="Mistral-Small-3.2-24B-Instruct-2506")
 
 # Official OpenAI API
-# api = OpenAIChatAPI(api_key=os.getenv("OPENAI_API_KEY"), model="gpt-4o-mini")
+api = OpenAIChatAPI(api_key=os.getenv("OPENAI_API_KEY"), model="gpt-5-nano")
 
 # Openrouter API
 #api = OpenAIChatAPI(
@@ -62,7 +62,7 @@ settings = api.get_default_settings()
 # Set sampling settings
 settings.temperature = 0.15
 settings.top_p = 1.0
-settings.set_extra_body({"top_k": 0, "min_p": 0.00, "repeat_penalty": 1.1, "repeat_last_n": 256})
+#settings.set_extra_body({"top_k": 0, "min_p": 0.00, "repeat_penalty": 1.1, "repeat_last_n": 256})
 
 # Define the tools
 tools = [
