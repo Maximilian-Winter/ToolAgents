@@ -234,6 +234,18 @@ class ChatMessage(BaseModel):
         )
 
     @staticmethod
+    def create_custom_role_message(message: str, custom_role) -> "ChatMessage":
+        date = datetime.datetime.now()
+        return ChatMessage(
+            id=str(uuid.uuid4()),
+            role=ChatMessageRole.Custom,
+            content=[TextContent(content=message)],
+            created_at=date,
+            updated_at=date,
+            additional_fields={"custom_role": custom_role},
+        )
+
+    @staticmethod
     def create_empty_system_message() -> "ChatMessage":
         date = datetime.datetime.now()
         return ChatMessage(
@@ -264,6 +276,18 @@ class ChatMessage(BaseModel):
             content=[],
             created_at=date,
             updated_at=date,
+        )
+
+    @staticmethod
+    def create_empty_custom_role_message(custom_role) -> "ChatMessage":
+        date = datetime.datetime.now()
+        return ChatMessage(
+            id=str(uuid.uuid4()),
+            role=ChatMessageRole.Custom,
+            content=[],
+            created_at=date,
+            updated_at=date,
+            additional_fields={"custom_role": custom_role},
         )
 
     @staticmethod
@@ -344,9 +368,9 @@ class ChatMessage(BaseModel):
                 result.append(f"Binary Content\nMime type: {content.mime_type}")
         return "\n".join(result)
 
-    def set_custom_role(self, custom_role_name: str) -> None:
+    def set_custom_role(self, custom_role: str) -> None:
         self.role = ChatMessageRole.Custom
-        self.additional_information["custom_role_name"] = custom_role_name
+        self.additional_information["custom_role"] = custom_role
 
     def set_additional_fields(self, additional_fields: Dict[str, Any]) -> None:
         self.additional_fields = additional_fields

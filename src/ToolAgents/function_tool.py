@@ -670,7 +670,10 @@ class ToolRegistry:
         del self.tools[tool_name]
 
     def get_tool(self, name: str) -> FunctionTool:
-        return self.tools[name]
+        if name in self.tools:
+            return self.tools[name]
+        else:
+            return None
 
     def get_tools(self):
         return self.tools.values()

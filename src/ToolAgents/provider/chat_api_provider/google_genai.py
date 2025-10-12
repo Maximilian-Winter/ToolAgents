@@ -21,8 +21,7 @@ from ToolAgents.provider.llm_provider import (
     ChatAPIProvider,
     ProviderSettings,
     StreamingChatMessage,
-    SamplerSetting,
-    AsyncChatAPIProvider,
+    AsyncChatAPIProvider, LLMSetting, SettingLevel,
 )
 from ToolAgents.data_models.messages import ChatMessage
 
@@ -38,15 +37,12 @@ class GoogleGenAIChatAPI(ChatAPIProvider):
         self.model = model
 
         # Configure default settings
-        self.settings = ProviderSettings(
-            {"type": "auto"},
-            [
-                SamplerSetting.create_sampler_setting("temperature", 1.0, 0.0),
-                SamplerSetting.create_sampler_setting("top_p", 1.0, 1.0),
-                SamplerSetting.create_sampler_setting("top_k", 32, 0),
-                SamplerSetting.create_sampler_setting("max_output_tokens", 2048, 2048),
-            ],
-        )
+        self.settings = ProviderSettings([
+            LLMSetting("temperature", default_value=1.0, neutral_value=1.0, level=SettingLevel.REQUEST),
+            LLMSetting("top_p", default_value=1.0, neutral_value=1.0, level=SettingLevel.REQUEST),
+            LLMSetting("top_k", default_value=0, neutral_value=0, level=SettingLevel.REQUEST),
+            LLMSetting("max_output_tokens", default_value=4096, neutral_value=4096, level=SettingLevel.REQUEST),
+        ])
         self.message_converter = GoogleGenAIMessageConverter()
         self.response_converter = GoogleGenAIResponseConverter()
 
@@ -120,15 +116,12 @@ class AsyncGoogleGenAIChatAPI(AsyncChatAPIProvider):
         self.model = genai.GenerativeModel(model)
 
         # Configure default settings
-        self.settings = ProviderSettings(
-            {"type": "auto"},
-            [
-                SamplerSetting.create_sampler_setting("temperature", 1.0, 0.0),
-                SamplerSetting.create_sampler_setting("top_p", 1.0, 1.0),
-                SamplerSetting.create_sampler_setting("top_k", 32, 0),
-                SamplerSetting.create_sampler_setting("max_output_tokens", 2048, 2048),
-            ],
-        )
+        self.settings = ProviderSettings([
+            LLMSetting("temperature", default_value=1.0, neutral_value=1.0, level=SettingLevel.REQUEST),
+            LLMSetting("top_p", default_value=1.0, neutral_value=1.0, level=SettingLevel.REQUEST),
+            LLMSetting("top_k", default_value=0, neutral_value=0, level=SettingLevel.REQUEST),
+            LLMSetting("max_output_tokens", default_value=4096, neutral_value=4096, level=SettingLevel.REQUEST),
+        ])
         self.message_converter = GoogleGenAIMessageConverter()
         self.response_converter = GoogleGenAIResponseConverter()
 

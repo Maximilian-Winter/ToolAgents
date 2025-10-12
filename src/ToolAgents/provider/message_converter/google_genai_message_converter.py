@@ -46,12 +46,7 @@ class GoogleGenAIMessageConverter(BaseMessageConverter):
                 break
 
         # Extract relevant parameters from settings
-        generation_config = {
-            "temperature": settings.temperature,
-            "top_p": settings.top_p,
-            "top_k": settings.top_k,
-            "max_output_tokens": settings.max_output_tokens,
-        }
+        generation_config = settings.to_dict()["REQUEST_SETTINGS"]
 
         request_kwargs = {
             "contents": converted_messages,

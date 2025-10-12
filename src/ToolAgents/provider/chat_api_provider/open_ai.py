@@ -13,8 +13,8 @@ from ToolAgents.provider.message_converter.open_ai_message_converter import (
 )
 from ToolAgents.provider.llm_provider import (
     ProviderSettings,
-    SamplerSetting,
-    AsyncChatAPIProvider,
+
+    AsyncChatAPIProvider, LLMSetting, SettingLevel,
 )
 from ToolAgents.provider.llm_provider import ChatAPIProvider, StreamingChatMessage
 from ToolAgents.data_models.messages import ChatMessage
@@ -33,13 +33,13 @@ class OpenAIChatAPI(ChatAPIProvider):
     ):
         self.client = OpenAI(api_key=api_key, base_url=base_url)
         self.model = model
-        self.settings = ProviderSettings(
-            "auto",
-            [
-                SamplerSetting.create_sampler_setting("temperature", 1.0, 0.0),
-                SamplerSetting.create_sampler_setting("top_p", 1.0, 1.0),
-            ],
-        )
+        self.settings = ProviderSettings([
+            LLMSetting("temperature", default_value=1.0, neutral_value=1.0, level=SettingLevel.REQUEST),
+            LLMSetting("top_p", default_value=1.0, neutral_value=1.0, level=SettingLevel.REQUEST),
+            LLMSetting("tool_choice", default_value="auto", neutral_value="auto", level=SettingLevel.REQUEST),
+            LLMSetting("extra_body", default_value=None, neutral_value=None, level=SettingLevel.REQUEST),
+            LLMSetting("response_format", default_value=None, neutral_value=None, level=SettingLevel.REQUEST),
+        ])
         self.message_converter = message_converter
         self.response_converter = response_converter
         self.debug_mode = debug_mode
@@ -109,13 +109,14 @@ class AsyncOpenAIChatAPI(AsyncChatAPIProvider):
     ):
         self.client = AsyncOpenAI(api_key=api_key, base_url=base_url)
         self.model = model
-        self.settings = ProviderSettings(
-            "auto",
-            [
-                SamplerSetting.create_sampler_setting("temperature", 1.0, 0.0),
-                SamplerSetting.create_sampler_setting("top_p", 1.0, 1.0),
-            ],
-        )
+
+        self.settings = ProviderSettings([
+            LLMSetting("temperature", default_value=1.0, neutral_value=1.0, level=SettingLevel.REQUEST),
+            LLMSetting("top_p", default_value=1.0, neutral_value=1.0, level=SettingLevel.REQUEST),
+            LLMSetting("tool_choice", default_value="auto", neutral_value="auto", level=SettingLevel.REQUEST),
+            LLMSetting("extra_body", default_value=None, neutral_value=None, level=SettingLevel.REQUEST),
+            LLMSetting("response_format", default_value=None, neutral_value=None, level=SettingLevel.REQUEST),
+        ])
         self.message_converter = message_converter
         self.response_converter = response_converter
         self.debug_mode = debug_mode

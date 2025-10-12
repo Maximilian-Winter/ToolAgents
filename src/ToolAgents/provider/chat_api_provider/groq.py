@@ -10,8 +10,7 @@ from ToolAgents.provider.message_converter.groq_message_converter import (
 )
 from ToolAgents.provider.llm_provider import (
     ProviderSettings,
-    SamplerSetting,
-    AsyncChatAPIProvider,
+    AsyncChatAPIProvider, LLMSetting, SettingLevel,
 )
 from ToolAgents.provider.llm_provider import ChatAPIProvider, StreamingChatMessage
 from ToolAgents.data_models.messages import ChatMessage
@@ -21,13 +20,10 @@ class GroqChatAPI(ChatAPIProvider):
     def __init__(self, api_key: str, model: str):
         self.client = Groq(api_key=api_key)
         self.model = model
-        self.settings = ProviderSettings(
-            "auto",
-            [
-                SamplerSetting.create_sampler_setting("temperature", 1.0, 0.0),
-                SamplerSetting.create_sampler_setting("top_p", 1.0, 1.0),
-            ],
-        )
+        self.settings = ProviderSettings([
+            LLMSetting("temperature", default_value=1.0, neutral_value=1.0, level=SettingLevel.REQUEST),
+            LLMSetting("top_p", default_value=1.0, neutral_value=1.0, level=SettingLevel.REQUEST),
+        ])
         self.message_converter = GroqMessageConverter()
         self.response_converter = GroqResponseConverter()
 
@@ -86,13 +82,10 @@ class AsyncGroqChatAPI(AsyncChatAPIProvider):
     def __init__(self, api_key: str, model: str):
         self.client = AsyncGroq(api_key=api_key)
         self.model = model
-        self.settings = ProviderSettings(
-            "auto",
-            [
-                SamplerSetting.create_sampler_setting("temperature", 1.0, 0.0),
-                SamplerSetting.create_sampler_setting("top_p", 1.0, 1.0),
-            ],
-        )
+        self.settings = ProviderSettings([
+            LLMSetting("temperature", default_value=1.0, neutral_value=1.0, level=SettingLevel.REQUEST),
+            LLMSetting("top_p", default_value=1.0, neutral_value=1.0, level=SettingLevel.REQUEST),
+        ])
         self.message_converter = GroqMessageConverter()
         self.response_converter = GroqResponseConverter()
 

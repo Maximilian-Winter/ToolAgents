@@ -33,16 +33,7 @@ class OpenAIMessageConverter(BaseMessageConverter):
         other_messages = self.to_provider_format(messages)
         open_ai_tools = [tool.to_openai_tool() for tool in tools] if tools else None
 
-        request_kwargs = settings.to_dict(
-            include=[
-                "temperature",
-                "top_p",
-                "max_tokens",
-                "tool_choice",
-                "extra_body",
-                "response_format",
-            ]
-        )
+        request_kwargs = settings.to_dict()["REQUEST_SETTINGS"]
         request_kwargs["model"] = model
         request_kwargs["messages"] = other_messages
         if open_ai_tools and len(open_ai_tools) > 0:
@@ -56,7 +47,7 @@ class OpenAIMessageConverter(BaseMessageConverter):
         for message in messages:
             role = message.role.value
             if role == ChatMessageRole.Custom.value:
-                role = message.additional_information["custom_role_name"]
+                role = message.additional_information["custom_role"]
             new_content = []
             tool_calls = []
             for content in message.content:

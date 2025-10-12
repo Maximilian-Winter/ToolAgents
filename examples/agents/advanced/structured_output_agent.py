@@ -54,7 +54,7 @@ schema = custom_json_schema(model=Book)
 
 print(json.dumps(schema, indent=2))
 
-settings.set_response_format({"type": "json_object", "schema": schema})
+settings.response_format = {"type": "json_object", "schema": schema}
 messages = [
     ChatMessage.create_system_message(
         f"""You are an advanced information extraction system designed to extract structured data from unstructured or semi-structured input. Your task is to extract user information based on a provided JSON schema and format it according to that schema.

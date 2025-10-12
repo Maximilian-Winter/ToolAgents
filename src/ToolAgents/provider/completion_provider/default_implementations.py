@@ -19,7 +19,7 @@ from ToolAgents.data_models.messages import (
     ChatMessageRole,
 )
 from ToolAgents.provider.message_converter.message_converter import BaseMessageConverter
-from ToolAgents.provider.llm_provider import ProviderSettings, SamplerSetting
+from ToolAgents.provider.llm_provider import ProviderSettings
 from ToolAgents.provider.completion_provider.completion_interfaces import (
     LLMTokenizer,
     LLMToolCallHandler,
@@ -207,7 +207,7 @@ class MistralMessageConverterLlamaCpp(BaseMessageConverter):
         for message in messages:
             role = message.role.value
             if role == ChatMessageRole.Custom.value:
-                role = message.additional_information["custom_role_name"]
+                role = message.additional_information["custom_role"]
             new_content = []
             tool_calls = []
             for content in message.content:

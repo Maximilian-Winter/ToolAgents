@@ -53,16 +53,7 @@ class AnthropicMessageConverter(BaseMessageConverter):
             [tool.to_anthropic_tool() for tool in tools] if tools else None
         )
 
-        request_kwargs = settings.to_dict(
-            include=[
-                "temperature",
-                "top_p",
-                "top_k",
-                "max_tokens",
-                "stop_sequences",
-                "tool_choice",
-            ]
-        )
+        request_kwargs = settings.to_dict()["REQUEST_SETTINGS"]
         request_kwargs["model"] = model
         request_kwargs["system"] = system
         request_kwargs["messages"] = other_messages

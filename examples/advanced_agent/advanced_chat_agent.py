@@ -20,9 +20,9 @@ provider = CompletionProvider(
 agent = ChatToolAgent(chat_api=provider)
 
 settings = provider.get_default_settings()
-settings.neutralize_all_samplers()
+settings.neutralize_all()
 settings.temperature = 0.4
-settings.set_max_new_tokens(4096)
+settings.max_new_tokens(4096)
 
 provider.set_default_settings(settings)
 

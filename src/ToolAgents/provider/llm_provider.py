@@ -49,7 +49,6 @@ class SettingLevel(enum.Enum):
     """Where a setting should be placed in the API request."""
     PROVIDER = "provider"  # Top-level request parameter
     REQUEST = "request"
-    EXTRA_BODY = "extra_body"  # Inside extra_body dict
     METADATA = "metadata"  # Not sent to API, used for tracking
 
 
@@ -109,6 +108,16 @@ class ProviderSettings:
         """Add a new setting."""
         self._settings[setting.name] = setting
 
+    def add_request_setting(self, name: str, value: Any) -> None:
+        """Add a new setting."""
+        setting = LLMSetting(name, value, value, level=SettingLevel.REQUEST)
+        self._settings[setting.name] = setting
+
+    def add_provider_setting(self, name: str, value: Any) -> None:
+        """Add a new setting."""
+        setting = LLMSetting(name, value, value, level=SettingLevel.PROVIDER)
+        self._settings[setting.name] = setting
+
     def remove_setting(self, name: str) -> None:
         """Remove a setting by name."""
         if name in self._settings:
@@ -128,14 +137,7 @@ class ProviderSettings:
         if name in self._settings:
             self._settings[name].set_value(value)
         else:
-            # If setting doesn't exist, create it as provider-level
-            self.add_setting(LLMSetting(
-                name=name,
-                default_value=value,
-                neutral_value=value,
-                level=SettingLevel.PROVIDER,
-                current_value=value
-            ))
+            raise KeyError(name)
 
     def update(self, **kwargs) -> None:
         """Update multiple settings at once."""
@@ -180,7 +182,7 @@ class ProviderSettings:
         Returns:
             Dict with provider-level settings at top level and extra_body nested
         """
-        result = { "PROVIDER_SETTINGS": {}, "REQUEST_SETTINGS": {}, "EXTRA_BODY": {}, "METADATA": {} }
+        result = { "PROVIDER_SETTINGS": {}, "REQUEST_SETTINGS": {}, "METADATA": {} }
 
         for name, setting in self._settings.items():
             # Filter by include/exclude
@@ -204,8 +206,6 @@ class ProviderSettings:
                 result["PROVIDER_SETTINGS"][output_name] = value
             elif setting.level == SettingLevel.REQUEST:
                 result["REQUEST_SETTINGS"][output_name] = value
-            elif setting.level == SettingLevel.EXTRA_BODY:
-                result["EXTRA_BODY"][output_name] = value
             elif setting.level == SettingLevel.METADATA:
                 result["METADATA"][output_name] = value
 
@@ -249,7 +249,7 @@ def create_openai_settings() -> ProviderSettings:
         LLMSetting("temperature", default_value=1.0, neutral_value=1.0, level=SettingLevel.REQUEST),
         LLMSetting("top_p", default_value=1.0, neutral_value=1.0, level=SettingLevel.REQUEST),
         LLMSetting("max_tokens", default_value=4096, neutral_value=4096, level=SettingLevel.REQUEST),
-        LLMSetting("frequency_penalty", default_value=0.0, neutral_value=0., level=SettingLevel.REQUEST0),
+        LLMSetting("frequency_penalty", default_value=0.0, neutral_value=0., level=SettingLevel.REQUEST),
         LLMSetting("presence_penalty", default_value=0.0, neutral_value=0.0, level=SettingLevel.REQUEST),
     ])
 
