@@ -1,11 +1,12 @@
 from enum import Enum
 from types import NoneType
 from typing import List
-
+from typing import List, Optional, Dict, Any
 from pydantic import BaseModel, Field
 
+
 from ToolAgents.data_models.tools import AgentTool
-from ToolAgents.data_models.messages import ChatMessage
+from ToolAgents.data_models.messages import ChatMessage, ChatMessageRole
 
 
 class Agent(BaseModel):
