@@ -4,7 +4,7 @@ import json
 import uuid
 from enum import Enum
 from os import PathLike
-from typing import List, Union, Dict, Any
+from typing import List, Union, Dict, Any, Optional
 
 import httpx
 from pydantic import BaseModel, Field
@@ -419,3 +419,32 @@ class ChatMessage(BaseModel):
                 content=base64_string,
             )
         )
+
+class StreamingChatMessage(BaseModel):
+    """
+    Represents a streaming chat API response.
+    """
+
+    chunk: str
+    is_tool_call: bool = False
+    tool_call: Optional[Dict[str, Any]] = None
+    finished: bool = False
+    finished_chat_message: Optional[ChatMessage] = None
+
+    def get_chunk(self) -> str:
+        return self.chunk
+
+    def get_is_tool_call(self) -> bool:
+        return self.is_tool_call
+
+    def get_tool_call(self) -> Dict[str, Any]:
+        return self.tool_call
+
+    def get_finished(self) -> bool:
+        return self.finished
+
+    def get_finished_chat_message(self) -> Union[ChatMessage, None]:
+        return self.finished_chat_message
+
+    class Config:
+        arbitrary_types_allowed = True  # To allow ChatMessage custom type

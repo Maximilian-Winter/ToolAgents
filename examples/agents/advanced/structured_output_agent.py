@@ -14,9 +14,7 @@ from ToolAgents.utilities.json_schema_generator.schema_generator import (
     custom_json_schema,
 )
 load_dotenv()
-api = OpenAIChatAPI(
-    api_key=os.getenv("OPENROUTER_API_KEY"), base_url="https://openrouter.ai/api/v1", model="openai/o3-mini"
-)
+api = OpenAIChatAPI(api_key="token-abc123", base_url="http://127.0.0.1:8080/v1", model="Mistral-Small-3.2-24B-Instruct-2506")
 
 # Create the ChatAPIAgent
 agent = ChatToolAgent(chat_api=api)
@@ -27,7 +25,6 @@ settings = api.get_default_settings()
 # Set sampling settings
 settings.temperature = 0.4
 settings.top_p = 1.0
-settings.set_max_new_tokens(8192)
 
 
 # Example enum for our output model
@@ -72,7 +69,7 @@ Here is the JSON schema that defines the structure of the information you need t
 
 chat_response = agent.get_response(messages=messages, settings=settings)
 
-print(chat_response.response, flush=True)
+print(chat_response.response)
 
 json_data = json.loads(chat_response.response)
 

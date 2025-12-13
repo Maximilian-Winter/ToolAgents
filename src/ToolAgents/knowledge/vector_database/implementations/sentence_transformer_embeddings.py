@@ -15,7 +15,7 @@ class SentenceTransformerEmbeddingProvider(EmbeddingProvider):
             device=device,
         )
 
-    def get_embedding(self, texts: list[str], embedding_task: EmbeddingTask) -> EmbeddingResult:
+    def get_embedding(self, texts: list[str], embedding_task: EmbeddingTask = EmbeddingTask.STORE) -> EmbeddingResult:
         if embedding_task == EmbeddingTask.QUERY:
             texts = [self.prefix_config.query + text for text in texts]
         elif embedding_task == EmbeddingTask.STORE:

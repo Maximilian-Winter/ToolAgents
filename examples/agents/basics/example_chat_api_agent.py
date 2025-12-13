@@ -29,17 +29,17 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Local OpenAI like API, like vllm or llama-cpp-server with jinja flag for tool calling.
-#api = OpenAIChatAPI(api_key="token-abc123", base_url="http://127.0.0.1:8080/v1", model="Mistral-Small-3.2-24B-Instruct-2506")
+api = OpenAIChatAPI(api_key="token-abc123", base_url="http://127.0.0.1:8080/v1", model="Mistral-Small-3.2-24B-Instruct-2506")
 
 # Official OpenAI API
 #api = OpenAIChatAPI(api_key=os.getenv("OPENAI_API_KEY"), model="gpt-5-nano")
 
 # Openrouter API
-api = OpenAIChatAPI(
-    api_key=os.getenv("OPENROUTER_API_KEY"),
-    model="meta-llama/llama-3.3-70b-instruct",
-    base_url="https://openrouter.ai/api/v1",
-)
+#api = OpenAIChatAPI(
+#    api_key=os.getenv("OPENROUTER_API_KEY"),
+#    model="meta-llama/llama-3.3-70b-instruct",
+#    base_url="https://openrouter.ai/api/v1",
+#)
 
 # Anthropic API
 #api = OpenAIChatAPI(api_key=os.getenv("GOOGLE_API_KEY"), base_url="https://generativelanguage.googleapis.com/v1beta/openai/", model="gemini-2.0-flash-lite-preview-02-05")
@@ -59,11 +59,11 @@ agent = ChatToolAgent(chat_api=api)
 settings = api.get_default_settings()
 
 # Set sampling settings
-settings.temperature = 0.6
-settings.top_p = 1.0
+settings.temperature = 0.3
+settings.top_p = 0.9
 
 # Add settings
-settings.extra_body = {"top_k": 0, "min_p": 0.00, "repeat_penalty": 1.1, "repeat_last_n": 256}
+settings.extra_body = {"top_k": 50, "min_p": 0.00, "repeat_penalty": 1.0, "repeat_last_n": 256}
 
 
 # Define the tools
@@ -77,9 +77,6 @@ tool_registry = ToolRegistry()
 tool_registry.add_tools(tools)
 
 messages = [
-    ChatMessage.create_system_message(
-        "You are Funky, an AI assistant specialized in interpreting user requests and generating appropriate function calls. Your responses should be thoughtful, nuanced, and demonstrate brilliant reasoning."
-    ),
     ChatMessage.create_user_message(
         "Perform all the following tasks: Get the current weather in celsius in the city of London, Great Britain, New York City, New York and at the North Pole, Arctica. Solve the following calculations: 42 * 42, 74 + 26, 7 * 26, 4 + 6  and 96/8. And retrieve the date and time in the format: %Y-%m-%d %H:%M:%S."
     ),

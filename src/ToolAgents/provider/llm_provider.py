@@ -10,38 +10,10 @@ from ToolAgents import FunctionTool, ToolRegistry
 from pydantic import BaseModel, Field
 from typing import Dict, Optional, Any, Union
 
-from ToolAgents.data_models.messages import ChatMessage
+from ToolAgents.data_models.messages import ChatMessage, StreamingChatMessage
 from ToolAgents.utilities.logging import EasyLogger
 
 
-class StreamingChatMessage(BaseModel):
-    """
-    Represents a streaming chat API response.
-    """
-
-    chunk: str
-    is_tool_call: bool = False
-    tool_call: Optional[Dict[str, Any]] = None
-    finished: bool = False
-    finished_chat_message: Optional[ChatMessage] = None
-
-    def get_chunk(self) -> str:
-        return self.chunk
-
-    def get_is_tool_call(self) -> bool:
-        return self.is_tool_call
-
-    def get_tool_call(self) -> Dict[str, Any]:
-        return self.tool_call
-
-    def get_finished(self) -> bool:
-        return self.finished
-
-    def get_finished_chat_message(self) -> Union[ChatMessage, None]:
-        return self.finished_chat_message
-
-    class Config:
-        arbitrary_types_allowed = True  # To allow ChatMessage custom type
 
 
 
@@ -231,7 +203,22 @@ class ProviderSettings:
         values = {name: setting.get_value() for name, setting in self._settings.items()}
         return f"ProviderSettings({values})"
 
+    def __getattr__(self, name: str) -> Any:
+        """Allow attribute access: settings.temperature"""
+        if name.startswith('_'):
+            raise AttributeError(name)
+        if name in self._settings:
+            return self.get_value(name)
+        raise AttributeError(f"No setting named '{name}'")
 
+    def __setattr__(self, name: str, value: Any) -> None:
+        """Allow attribute assignment: settings.temperature = 0.7"""
+        if name.startswith('_'):
+            object.__setattr__(self, name, value)
+        elif hasattr(self, '_settings') and name in self._settings:
+            self.set_value(name, value)
+        else:
+            object.__setattr__(self, name, value)
 # Convenience function for creating common settings
 def create_standard_settings() -> ProviderSettings:
     """Create standard LLM settings used by most providers."""

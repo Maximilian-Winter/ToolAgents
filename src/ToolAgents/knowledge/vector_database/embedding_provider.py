@@ -29,5 +29,5 @@ class EmbeddingProvider(abc.ABC):
         self.prefix_config = prefix_config
 
     @abc.abstractmethod
-    def get_embedding(self, texts: list[str], embedding_task: EmbeddingTask) -> EmbeddingResult:
+    def get_embedding(self, texts: list[str], embedding_task: EmbeddingTask = EmbeddingTask.STORE) -> EmbeddingResult:
         pass
