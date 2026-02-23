@@ -13,5 +13,5 @@ ei.export(filename="execution_log.json", exported_at=1700000002.0)
 ei.chain[0]["output"] = {"ok": False}
 print("Verification after tamper:", ei.verify())
 
-print("Exported: execution_log.json")
-print("Run verifier: python3 verify_export.py execution_log.json")
+print("Exported file: execution_log.json")
+print("Verify with: python3 verify_export.py execution_log.json")
