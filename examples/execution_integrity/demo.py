@@ -9,7 +9,6 @@ print("Verification before tamper:", ei.verify())
 
 ei.export(filename="execution_log.json", exported_at=1700000002.0)
 
-# 篡改演示
 ei.chain[0]["output"] = {"ok": False}
 print("Verification after tamper:", ei.verify())
 
