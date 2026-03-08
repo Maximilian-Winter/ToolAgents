@@ -7,7 +7,6 @@ from ToolAgents.agents import ChatToolAgent
 from ToolAgents.data_models.messages import ChatMessage
 from ToolAgents.provider import (
     AnthropicChatAPI,
-    GoogleGenAIChatAPI,
     OpenAIChatAPI,
     GroqChatAPI,
     MistralChatAPI,
@@ -29,17 +28,17 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Local OpenAI like API, like vllm or llama-cpp-server with jinja flag for tool calling.
-api = OpenAIChatAPI(api_key="token-abc123", base_url="http://127.0.0.1:8080/v1", model="Mistral-Small-3.2-24B-Instruct-2506")
+#api = OpenAIChatAPI(api_key="token-abc123", base_url="http://127.0.0.1:8080/v1", model="Mistral-Small-3.2-24B-Instruct-2506")
 
 # Official OpenAI API
-#api = OpenAIChatAPI(api_key=os.getenv("OPENAI_API_KEY"), model="gpt-5-nano")
+#api = OpenAIChatAPI(api_key=os.getenv("OPENAI_API_KEY"), model="google/gemini-3-flash-preview")
 
 # Openrouter API
-#api = OpenAIChatAPI(
-#    api_key=os.getenv("OPENROUTER_API_KEY"),
-#    model="meta-llama/llama-3.3-70b-instruct",
-#    base_url="https://openrouter.ai/api/v1",
-#)
+api = OpenAIChatAPI(
+    api_key=os.getenv("OPENROUTER_API_KEY"),
+    model="mistralai/ministral-8b-2512",
+    base_url="https://openrouter.ai/api/v1",
+)
 
 # Anthropic API
 #api = OpenAIChatAPI(api_key=os.getenv("GOOGLE_API_KEY"), base_url="https://generativelanguage.googleapis.com/v1beta/openai/", model="gemini-2.0-flash-lite-preview-02-05")
@@ -63,7 +62,7 @@ settings.temperature = 0.3
 settings.top_p = 0.9
 
 # Add settings
-settings.extra_body = {"top_k": 50, "min_p": 0.00, "repeat_penalty": 1.0, "repeat_last_n": 256}
+
 
 
 # Define the tools

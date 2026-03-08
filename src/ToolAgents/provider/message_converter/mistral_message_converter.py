@@ -34,7 +34,8 @@ class MistralMessageConverter(BaseMessageConverter):
         if open_ai_tools and len(open_ai_tools) > 0:
             request_kwargs["tools"] = open_ai_tools
         else:
-            request_kwargs.pop("tool_choice")
+            if "tool_choice" in request_kwargs:
+                request_kwargs.pop("tool_choice")
         return request_kwargs
 
     def to_provider_format(self, messages: List[ChatMessage]) -> List[Dict[str, Any]]:

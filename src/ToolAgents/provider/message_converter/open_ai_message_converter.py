@@ -1,4 +1,6 @@
 # openai_message_converter.py
+import random
+import string
 import uuid
 import datetime
 import json
@@ -17,6 +19,12 @@ from ToolAgents.data_models.messages import (
 from ToolAgents.provider.llm_provider import StreamingChatMessage, ProviderSettings
 from ToolAgents import FunctionTool
 
+
+def generate_tool_call_id(length=9):
+    # Characters to use in the ID
+    characters = string.ascii_letters + string.digits
+    # Random choice of characters
+    return "".join(random.choice(characters) for _ in range(length))
 
 class OpenAIMessageConverter(BaseMessageConverter):
 
@@ -118,6 +126,10 @@ class OpenAIMessageConverter(BaseMessageConverter):
 
 class OpenAIResponseConverter(BaseResponseConverter):
 
+    def __init__(self, tool_call_id_style: str = "openai"):
+        super().__init__()
+        self.tool_call_id_style = tool_call_id_style
+
     def from_provider_response(self, response_data: Any) -> ChatMessage:
         # OpenAI's response: get the first choice's message.
         if (
@@ -147,6 +159,8 @@ class OpenAIResponseConverter(BaseResponseConverter):
                         arguments = (
                             "Exception during JSON decoding of arguments: {}".format(e)
                         )
+                if self.tool_call_id_style == "mistral":
+                    tool_call.id = generate_tool_call_id()
                 content.append(
                     ToolCallContent(
                         tool_call_id=tool_call.id,
@@ -246,6 +260,8 @@ class OpenAIResponseConverter(BaseResponseConverter):
                             arguments = (
                                 f"Exception during JSON decoding of arguments: {e}"
                             )
+                        if self.tool_call_id_style == "mistral":
+                            tc["function"]["id"] = generate_tool_call_id()
                         contents.append(
                             ToolCallContent(
                                 tool_call_id=tc["function"]["id"],
@@ -359,6 +375,8 @@ class OpenAIResponseConverter(BaseResponseConverter):
                             arguments = (
                                 f"Exception during JSON decoding of arguments: {e}"
                             )
+                        if self.tool_call_id_style == "mistral":
+                            tc["function"]["id"] = generate_tool_call_id()
                         contents.append(
                             ToolCallContent(
                                 tool_call_id=tc["function"]["id"],

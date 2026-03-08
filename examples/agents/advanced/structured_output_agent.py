@@ -5,17 +5,18 @@ from enum import Enum
 from typing import List
 
 from dotenv import load_dotenv
+from mistralai import Mistral
 from pydantic import BaseModel, Field
 
 from ToolAgents.agents import ChatToolAgent
 from ToolAgents.data_models.messages import ChatMessage
-from ToolAgents.provider import OpenAIChatAPI
+from ToolAgents.provider import OpenAIChatAPI, MistralChatAPI
 from ToolAgents.utilities.json_schema_generator.schema_generator import (
     custom_json_schema,
 )
 load_dotenv()
-api = OpenAIChatAPI(api_key="token-abc123", base_url="http://127.0.0.1:8080/v1", model="Mistral-Small-3.2-24B-Instruct-2506")
-
+#api = OpenAIChatAPI(api_key="token-abc123", base_url="http://127.0.0.1:8080/v1", model="Mistral-Small-3.2-24B-Instruct-2506")
+api = MistralChatAPI(api_key=os.getenv("MISTRAL_API_KEY"), model="mistral-small-latest")
 # Create the ChatAPIAgent
 agent = ChatToolAgent(chat_api=api)
 
@@ -51,7 +52,11 @@ schema = custom_json_schema(model=Book)
 
 print(json.dumps(schema, indent=2))
 
-settings.response_format = {"type": "json_object", "schema": schema}
+settings.response_format = Book
+api_key = os.environ["MISTRAL_API_KEY"]
+model = "ministral-8b-latest"
+
+client = Mistral(api_key=api_key)
 messages = [
     ChatMessage.create_system_message(
         f"""You are an advanced information extraction system designed to extract structured data from unstructured or semi-structured input. Your task is to extract user information based on a provided JSON schema and format it according to that schema.

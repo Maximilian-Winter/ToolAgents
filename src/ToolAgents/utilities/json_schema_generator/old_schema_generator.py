@@ -147,7 +147,7 @@ def custom_json_schema(model: BaseModel):
             schema.pop("$defs")
         return schema
 
-    return refine_schema(model.schema(), model, 0)
+    return refine_schema(model.model_json_schema(), model, 0)
 
 
 def generate_list(

@@ -10,10 +10,8 @@ from ToolAgents.provider import (
     GroqChatAPI,
     MistralChatAPI,
 )
+from ToolAgents.provider.message_converter.open_ai_message_converter import OpenAIResponseConverter
 
-from ToolAgents.provider.completion_provider.default_implementations import (
-    LlamaCppServer,
-)
 from example_tools import (
     calculator_function_tool,
     current_datetime_function_tool,
@@ -28,7 +26,7 @@ load_dotenv()
 # api = OpenAIChatAPI(api_key="token-abc123", base_url="http://127.0.0.1:8080/v1", model="unsloth/Meta-Llama-3.1-8B-Instruct-bnb-4bit")
 
 # Official OpenAI API
-api = OpenAIChatAPI(api_key="token-abc123", base_url="http://127.0.0.1:8080/v1", model="unsloth/Meta-Llama-3.1-8B-Instruct-bnb-4bit")
+api = OpenAIChatAPI(api_key="token-abc123", base_url="http://127.0.0.1:8080/v1", model="unsloth/Meta-Llama-3.1-8B-Instruct-bnb-4bit", response_converter=OpenAIResponseConverter(tool_call_id_style="mistral"))
 
 # Anthropic API
 # api = AnthropicChatAPI(api_key=os.getenv("ANTHROPIC_API_KEY"), model="claude-3-5-sonnet-20241022")

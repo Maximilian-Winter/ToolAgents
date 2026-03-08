@@ -6,7 +6,7 @@ from typing import Union, get_origin, get_args, List, Any, Type
 from types import NoneType
 
 
-# New models for customization
+# Models for customization
 
 
 class AdditionalFieldPosition(Enum):
@@ -50,7 +50,7 @@ class OuterSchemaObject(BaseModel):
     additional_fields: List[AdditionalSchemaField] = Field(default_factory=list)
 
 
-# Original custom JSON schema generator (refined for clarity)
+# Core schema generation functions
 
 
 def get_json_type(annotation):
@@ -65,10 +65,35 @@ def get_json_type(annotation):
     return mapping.get(annotation)
 
 
+def process_enum(enum_class: Type[Enum]) -> dict:
+    """
+    Process an Enum class into a JSON schema dict.
+
+    Args:
+        enum_class: The Enum class to process
+
+    Returns:
+        A dict with 'enum' and 'type' keys
+    """
+    enum_values = [e.value for e in enum_class]
+    first_value = next(iter(enum_class)).value
+    return {
+        "enum": enum_values,
+        "type": get_json_type(type(first_value))
+    }
+
+
 def refine_schema(schema: dict, model: Type[BaseModel]) -> dict:
     """
     Refine the generated schema based on the model's annotations and field details.
     Recursively handles Enums, Unions, lists/sets, dictionaries, and nested Pydantic models.
+
+    Args:
+        schema: The base schema dict from model.model_json_schema()
+        model: The Pydantic model class
+
+    Returns:
+        Refined schema dict with all $refs resolved
     """
     if "properties" not in schema:
         return schema
@@ -87,11 +112,10 @@ def refine_schema(schema: dict, model: Type[BaseModel]) -> dict:
 
         # Handle Enums
         if isclass(annotation) and issubclass(annotation, Enum):
-            prop.pop("allOf", None)
-            prop["enum"] = [e.value for e in annotation]
-            first_value = next(iter(annotation)).value  # Assume uniform type
-            prop["type"] = get_json_type(type(first_value))
-            prop.pop("$ref", None)
+            prop.clear()  # Clear all existing keys including allOf, $ref
+            prop.update(process_enum(annotation))
+            prop["title"] = name.replace("_", " ").title()
+            prop["description"] = field.description or ""
             continue
 
         # Handle Unions (including Optional)
@@ -99,72 +123,106 @@ def refine_schema(schema: dict, model: Type[BaseModel]) -> dict:
             types = get_args(annotation)
             anyof_list = []
             for sub_type in types:
-                type_str = get_json_type(sub_type)
                 if sub_type is NoneType:
                     anyof_list.append({"type": "null"})
+                elif isclass(sub_type) and issubclass(sub_type, Enum):
+                    anyof_list.append(process_enum(sub_type))
                 elif isclass(sub_type) and issubclass(sub_type, BaseModel):
                     sub_schema = refine_schema(sub_type.model_json_schema(), sub_type)
+                    sub_schema.pop("$defs", None)
                     anyof_list.append(sub_schema)
-                elif type_str:
-                    anyof_list.append({"type": type_str})
+                else:
+                    type_str = get_json_type(sub_type)
+                    if type_str:
+                        anyof_list.append({"type": type_str})
+
+            # Clear existing keys and set anyOf
+            prop.clear()
             prop["anyOf"] = anyof_list
+            prop["title"] = name.replace("_", " ").title()
+            prop["description"] = field.description or ""
             continue
 
         # Handle lists and sets
         if origin in [list, set]:
             item_type = get_args(annotation)[0]
+
+            # Handle list of Pydantic models
             if isclass(item_type) and issubclass(item_type, BaseModel):
-                prop["items"] = refine_schema(item_type.model_json_schema(), item_type)
+                item_schema = refine_schema(item_type.model_json_schema(), item_type)
+                item_schema.pop("$defs", None)
+                prop["items"] = item_schema
+
+            # Handle list of Enums
+            elif isclass(item_type) and issubclass(item_type, Enum):
+                prop["items"] = process_enum(item_type)
+
+            # Handle list of Any
             elif item_type is Any:
                 prop["items"] = {
-                    "type": "object",
                     "anyOf": [
-                        {"type": t} for t in ["boolean", "number", "null", "string"]
+                        {"type": t} for t in ["boolean", "number", "null", "string", "object", "array"]
                     ],
                 }
+
+            # Handle list of Unions
             else:
                 item_origin = get_origin(item_type)
                 if item_origin is Union:
                     types = get_args(item_type)
                     anyof_list = []
                     for sub_type in types:
-                        type_str = get_json_type(sub_type)
                         if sub_type is NoneType:
                             anyof_list.append({"type": "null"})
+                        elif isclass(sub_type) and issubclass(sub_type, Enum):
+                            anyof_list.append(process_enum(sub_type))
                         elif isclass(sub_type) and issubclass(sub_type, BaseModel):
-                            sub_schema = refine_schema(
-                                sub_type.model_json_schema(), sub_type
-                            )
+                            sub_schema = refine_schema(sub_type.model_json_schema(), sub_type)
+                            sub_schema.pop("$defs", None)
                             anyof_list.append(sub_schema)
-                        elif type_str:
-                            anyof_list.append({"type": type_str})
+                        else:
+                            type_str = get_json_type(sub_type)
+                            if type_str:
+                                anyof_list.append({"type": type_str})
                     prop["items"] = {"anyOf": anyof_list}
                 else:
                     type_str = get_json_type(item_type)
                     if type_str:
                         prop["items"] = {"type": type_str}
+
+            prop["type"] = "array"
             prop["minItems"] = 1
             continue
 
         # Handle dictionaries
         if origin is dict:
             _, value_type = get_args(annotation)
-            if isclass(value_type) and issubclass(value_type, BaseModel):
-                prop["additionalProperties"] = refine_schema(
-                    value_type.model_json_schema(), value_type
-                )
+
+            if isclass(value_type) and issubclass(value_type, Enum):
+                prop["additionalProperties"] = process_enum(value_type)
+            elif isclass(value_type) and issubclass(value_type, BaseModel):
+                value_schema = refine_schema(value_type.model_json_schema(), value_type)
+                value_schema.pop("$defs", None)
+                prop["additionalProperties"] = value_schema
             else:
                 value_type_str = get_json_type(value_type)
                 prop["additionalProperties"] = (
                     {"type": value_type_str} if value_type_str else {}
                 )
+
             prop["type"] = "object"
             continue
 
         # Handle nested Pydantic models
         if isclass(annotation) and issubclass(annotation, BaseModel):
             nested_schema = refine_schema(annotation.model_json_schema(), annotation)
+            nested_schema.pop("$defs", None)
+            # Clear and update to avoid conflicts
+            prop.clear()
             prop.update(nested_schema)
+            # Restore title and description
+            prop["title"] = name.replace("_", " ").title()
+            prop["description"] = field.description or ""
 
     # Set top-level title and description
     schema["title"] = model.__name__
@@ -180,6 +238,7 @@ def refine_schema(schema: dict, model: Type[BaseModel]) -> dict:
     # Clean up unwanted keys
     schema.pop("$defs", None)
     schema.pop("$ref", None)
+    schema.pop("allOf", None)
 
     return schema
 
@@ -187,34 +246,49 @@ def refine_schema(schema: dict, model: Type[BaseModel]) -> dict:
 def custom_json_schema(model: Type[BaseModel]) -> dict:
     """
     Generate a custom JSON schema for a given Pydantic model.
+    All $refs are resolved inline for a fully expanded schema.
+
+    Args:
+        model: The Pydantic BaseModel class
+
+    Returns:
+        A fully resolved JSON schema dict
     """
     base_schema = model.model_json_schema()
     return refine_schema(base_schema, model)
 
 
-# New helper to merge additional schema fields into an existing schema
+# Helper functions for schema customization
 
 
 def insert_additional_fields(
-    schema: dict, additional_fields: List[AdditionalSchemaField]
+        schema: dict, additional_fields: List[AdditionalSchemaField]
 ) -> dict:
     """
     Insert additional fields into the schema's properties.
     Fields with position 'before' will be added at the start,
     and those with 'after' will be appended at the end.
+
+    Args:
+        schema: The schema dict to modify
+        additional_fields: List of additional fields to insert
+
+    Returns:
+        Modified schema dict
     """
     if len(additional_fields) == 0:
         return schema
     if "properties" not in schema:
         schema["properties"] = {}
 
-    # Convert properties to an OrderedDict to preserve insertion order.
+    # Convert properties to an OrderedDict to preserve insertion order
     orig_props = OrderedDict(schema["properties"])
     before = OrderedDict()
     after = OrderedDict()
     before_required_fields = []
     after_required_fields = []
-    # Create property definitions for additional fields.
+
+    # Create property definitions for additional fields
     for field in additional_fields:
         field_schema = {
             "description": field.description,
@@ -229,33 +303,38 @@ def insert_additional_fields(
             after[field.name] = field_schema
             if field.required:
                 after_required_fields.append(field.name)
-    # Merge additional fields with original properties.
+
+    # Merge additional fields with original properties
     merged = OrderedDict()
     merged.update(before)
     merged.update(orig_props)
     merged.update(after)
     schema["properties"] = dict(merged)
-    before_required_fields.extend(schema["required"])
-    schema["required"] = before_required_fields
-    schema["required"].extend(after_required_fields)
+
+    # Update required fields
+    if "required" not in schema:
+        schema["required"] = []
+
+    schema["required"] = before_required_fields + schema["required"] + after_required_fields
+
     return schema
-
-
-# New function to generate a JSON schema for a single SchemaObject
 
 
 def generate_schema_object(schema_obj: SchemaObject) -> dict:
     """
     Generate the JSON schema for a SchemaObject by processing its model
     and inserting any additional fields.
+
+    Args:
+        schema_obj: The SchemaObject to process
+
+    Returns:
+        Fully resolved JSON schema dict
     """
-    # Generate the base schema from the model.
+    # Generate the base schema from the model
     base_schema = custom_json_schema(schema_obj.model)
-    # Insert additional fields (if any) into the schema.
+    # Insert additional fields (if any) into the schema
     return insert_additional_fields(base_schema, schema_obj.additional_fields)
-
-
-# New function to generate the outer JSON schema from an OuterSchemaObject
 
 
 def generate_outer_json_schema(outer_obj: OuterSchemaObject, allow_list=False) -> dict:
@@ -263,11 +342,18 @@ def generate_outer_json_schema(outer_obj: OuterSchemaObject, allow_list=False) -
     Generate the outer JSON schema based on an OuterSchemaObject.
     Combines inner schemas (from each SchemaObject) using "anyOf" if needed,
     and then merges in outer additional fields.
+
+    Args:
+        outer_obj: The OuterSchemaObject to process
+        allow_list: If True, wrap the result in an array schema
+
+    Returns:
+        Combined JSON schema dict
     """
-    # Process each inner schema.
+    # Process each inner schema
     inner_schemas = [generate_schema_object(s) for s in outer_obj.schemas]
 
-    # Combine inner schemas: if only one, use it directly; otherwise use "anyOf".
+    # Combine inner schemas: if only one, use it directly; otherwise use "anyOf"
     if len(inner_schemas) == 1:
         combined_schema = inner_schemas[0]
     else:
@@ -278,12 +364,13 @@ def generate_outer_json_schema(outer_obj: OuterSchemaObject, allow_list=False) -
             }
         else:
             combined_schema = {"type": "object", "anyOf": inner_schemas}
-    # Insert additional outer fields.
+
+    # Insert additional outer fields
     combined_schema = insert_additional_fields(
         combined_schema, outer_obj.additional_fields
     )
 
-    # Set the outer schema details.
+    # Set the outer schema details
     combined_schema["title"] = outer_obj.name
     combined_schema["description"] = outer_obj.description
 
@@ -291,6 +378,15 @@ def generate_outer_json_schema(outer_obj: OuterSchemaObject, allow_list=False) -
 
 
 def get_tools_schema(tool_registry):
+    """
+    Generate a combined schema for all tools in a tool registry.
+
+    Args:
+        tool_registry: Object with a 'tools' dict attribute
+
+    Returns:
+        Combined JSON schema for all tools as an array
+    """
     tool_schema_objects = []
     for tool_name, tool in tool_registry.tools.items():
         tool_schema_objects.append(SchemaObject(model=tool.model))
@@ -298,4 +394,4 @@ def get_tools_schema(tool_registry):
     tools_schema = OuterSchemaObject(
         name="tool_calls", description="Tool calls", schemas=tool_schema_objects
     )
-    return generate_outer_json_schema(tools_schema, True)
+    return generate_outer_json_schema(tools_schema, allow_list=True)

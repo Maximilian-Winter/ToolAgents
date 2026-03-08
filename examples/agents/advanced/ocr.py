@@ -17,32 +17,24 @@ agent = ChatToolAgent(chat_api=api)
 settings = api.get_default_settings()
 settings.extra_body = { "min_p": 0.00 }
 
-# Set sampling settings
-settings.temperature = 0.3
-settings.top_p = 1.0
+for temp in [0.1, 0.1, 0.1]:
+    print(f"\n\nTemperature: {temp}")
+    # Set sampling settings
+    settings.temperature = temp
+    settings.top_p = 1.0
 
-messages = [
-    ChatMessage.create_system_message("You are a helpful assistant.")
-]
+    messages = [
+        ChatMessage.create_system_message("You are an OCR expert for extracting Chinese text from images. Ensure that the extracted text is correct."),
+    ]
 
-user_msg = ChatMessage.create_empty_user_message()
-user_msg.add_image_file_data("daozang_01_book_page_7.png", "png")
-user_msg.add_text(PROMPT_MAPPING["ocr_layout"])
-messages.append(user_msg)
+    user_msg = ChatMessage.create_empty_user_message()
+    user_msg.add_image_file_data("daozang_01_book_page_7.png", "png")
+    user_msg.add_text("Extract the chinese text from the image.")
+    messages.append(user_msg)
 
-#chat_response = agent.get_response(messages=messages, settings=settings)
+    result = agent.get_streaming_response(
+        messages=messages, settings=settings
+    )
 
-#print(chat_response.response)
-
-result = agent.get_streaming_response(
-    messages=messages, settings=settings
-)
-
-for res in result:
-    if res.get_tool_results():
-        print()
-        print(f"Tool Use: {res.get_tool_name()}")
-        print(f"Tool Arguments: {json.dumps(res.get_tool_arguments())}")
-        print(f"Tool Result: {res.get_tool_results()}")
-        print()
-    print(res.chunk, end="", flush=True)
+    for res in result:
+        print(res.chunk, end="", flush=True)
