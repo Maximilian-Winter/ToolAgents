@@ -1,4 +1,4 @@
-﻿# ToolAgents
+# ToolAgents
 
 ToolAgents is a lightweight and flexible framework for creating function-calling agents with various language models and APIs. It provides a unified interface for integrating different LLM providers and executing function calls seamlessly.
 
@@ -75,24 +75,34 @@ messages = [
 
 result = agent.get_streaming_response(
     messages=messages,
-    settings=settings, tool_registry=tool_registry)
-
+    settings=settings,
+    tool_registry=tool_registry,
+)
 
 for res in result:
     print(res.chunk, end='', flush=True)
-
 ```
 
 ### Different Providers
 ```python
+import os
+
+from dotenv import load_dotenv
+
 # Import different providers
-from ToolAgents.provider import AnthropicChatAPI, OpenAIChatAPI, GroqChatAPI, MistralChatAPI, CompletionProvider
+from ToolAgents.provider import AnthropicChatAPI, OpenAIChatAPI, GroqChatAPI, MistralChatAPI
+
+load_dotenv()
 
 # Official OpenAI API
 api = OpenAIChatAPI(api_key=os.getenv("OPENAI_API_KEY"), model="gpt-4o-mini")
 
-# Local OpenAI like API, like vllm or llama-cpp-server
-api = OpenAIChatAPI(api_key="token-abc123", base_url="http://127.0.0.1:8080/v1", model="unsloth/Meta-Llama-3.1-8B-Instruct-bnb-4bit")
+# Local OpenAI-compatible API, like vllm or llama-cpp-server
+api = OpenAIChatAPI(
+    api_key="token-abc123",
+    base_url="http://127.0.0.1:8080/v1",
+    model="unsloth/Meta-Llama-3.1-8B-Instruct-bnb-4bit",
+)
 
 # Anthropic API
 api = AnthropicChatAPI(api_key=os.getenv("ANTHROPIC_API_KEY"), model="claude-3-5-sonnet-20241022")
@@ -100,10 +110,8 @@ api = AnthropicChatAPI(api_key=os.getenv("ANTHROPIC_API_KEY"), model="claude-3-5
 # Groq API
 api = GroqChatAPI(api_key=os.getenv("GROQ_API_KEY"), model="llama-3.3-70b-versatile")
 
-
 # Mistral API
 api = MistralChatAPI(api_key=os.getenv("MISTRAL_API_KEY"), model="mistral-small-latest")
-
 ```
 
 ### Use ChatToolAgent with ChatHistory class
@@ -122,13 +130,17 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Openrouter API
-api = OpenAIChatAPI(api_key=os.getenv("OPENROUTER_API_KEY"), model="google/gemini-2.0-pro-exp-02-05:free", base_url="https://openrouter.ai/api/v1")
+# OpenRouter via the OpenAI-compatible API
+api = OpenAIChatAPI(
+    api_key=os.getenv("OPENROUTER_API_KEY"),
+    base_url="https://openrouter.ai/api/v1",
+    model="openai/gpt-4o-mini",  # or any OpenRouter-supported model
+)
 
 # Create the ChatAPIAgent
 agent = ChatToolAgent(chat_api=api)
 
-# Create a samplings settings object
+# Create a provider settings object
 settings = api.get_default_settings()
 
 # Set sampling settings
@@ -157,11 +169,12 @@ while True:
 
         chat_response = agent.get_response(
             messages=chat_history.get_messages(),
-            settings=settings, tool_registry=tool_registry)
+            settings=settings,
+            tool_registry=tool_registry,
+        )
 
         print(chat_response.response.strip())
         chat_history.add_messages(chat_response.messages)
-
 ```
 
 ### Use Streaming ChatToolAgent with ChatHistory class
@@ -180,13 +193,17 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Openrouter API
-api = OpenAIChatAPI(api_key=os.getenv("OPENROUTER_API_KEY"), model="google/gemini-2.0-pro-exp-02-05:free", base_url="https://openrouter.ai/api/v1")
+# OpenRouter via the OpenAI-compatible API
+api = OpenAIChatAPI(
+    api_key=os.getenv("OPENROUTER_API_KEY"),
+    base_url="https://openrouter.ai/api/v1",
+    model="openai/gpt-4o-mini",  # or any OpenRouter-supported model
+)
 
 # Create the ChatAPIAgent
 agent = ChatToolAgent(chat_api=api)
 
-# Create a samplings settings object
+# Create a provider settings object
 settings = api.get_default_settings()
 
 # Set sampling settings
@@ -215,16 +232,19 @@ while True:
 
         stream = agent.get_streaming_response(
             messages=chat_history.get_messages(),
-            settings=settings, tool_registry=tool_registry)
+            settings=settings,
+            tool_registry=tool_registry,
+        )
         chat_response = None
         for res in stream:
             print(res.chunk, end='', flush=True)
             if res.finished:
-              chat_response = res.finished_response
+                chat_response = res.finished_response
+
         if chat_response is not None:
             chat_history.add_messages(chat_response.messages)
         else:
-          raise Exception("Error during response generation")
+            raise RuntimeError("Error during response generation")
 ```
 ## Custom Tools
 
@@ -383,5 +403,3 @@ Contributions to ToolAgents are welcome! Please feel free to submit pull request
 ## License
 
 ToolAgents is released under the MIT License. See the [LICENSE](LICENSE) file for details.
-
-
