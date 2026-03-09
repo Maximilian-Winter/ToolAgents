@@ -1,4 +1,4 @@
-﻿*.pyc
+*.pyc
 __pycache__/
 .pytest_tmp/
 pytest_tmp/
@@ -43,11 +43,7 @@ build
 /examples/gradio/advanced_agent/agent_data/
 /examples/gradio/advanced_agent/__pycache__
 /examples/low_level_abstractions/__pycache__
-/src/ToolAgents/messages/chats.db
-/src/ToolAgents/messages/__pycache__
 /src/ToolAgents/provider/message_converter/__pycache__
-/src/ToolAgents/messages/__pycache__
-/src/ToolAgents/messages/__pycache__
 /src/ToolAgents/provider/generation_provider/__pycache__
 /src/ToolAgents/provider/completion_provider/__pycache__
 /examples/gradio/pdf_rag/__pycache__
@@ -62,20 +58,16 @@ examples/low_level_abstractions/example_chat_history.json
 /src/ToolAgents/knowledge/vector_database/implementations/__pycache__
 /examples/gradio/web_research_agent/__pycache__
 /examples/agents/__pycache__
-examples/agents/example_chat_history.json
 /src/ToolAgents/work_in_progress/knowledge_graphs/__pycache__
 /examples/advanced_agent/example_agent/
-examples/agents/knowledge_graph6222.gv.pdf
-examples/agents/knowledge_graph6.gv.pdf
-examples/agents/knowledge_graph6.gv
-examples/agents/knowledge_graph44446.gv.pdf
+/examples/advanced_agent/semantic_memory
 /src/ToolAgents/provider/completion_provider/implementations/__pycache__
 /src/ToolAgents/knowledge/text_processing/__pycache__
 /src/ToolAgents/work_in_progress/processes/__pycache__
 /src/ToolAgents/work_in_progress/__pycache__
 /src/ToolAgents/agent_tools/__pycache__
 /examples/agents/code_interpreter/.venv
-/examples/agents/memory/memory
+/examples/agents/memory/memory/
 /examples/agents/misc/code_interpreter/.venv
 /examples/agents/basics/__pycache__
 /examples/__pycache__
@@ -87,12 +79,15 @@ examples/agents/knowledge_graph44446.gv.pdf
 /examples/advanced_agent/test_agent/semantic_memory
 /src/ToolAgents/knowledge/document/implementations/__pycache__
 /src/ToolAgents/agent_memory/stream/__pycache__
-examples/advanced_agent/memory/chroma.sqlite3
-examples/advanced_agent/memory/25b398f9-c5ca-41d9-8f4e-d130f3d3d8c5/link_lists.bin
-examples/advanced_agent/memory/25b398f9-c5ca-41d9-8f4e-d130f3d3d8c5/length.bin
-examples/advanced_agent/memory/25b398f9-c5ca-41d9-8f4e-d130f3d3d8c5/header.bin
-examples/advanced_agent/memory/25b398f9-c5ca-41d9-8f4e-d130f3d3d8c5/data_level0.bin
-/examples/advanced_agent/semantic_memory
 /src/ToolAgents/agent_context/__pycache__
 
-
+# Generated example outputs
+/examples/agents/advanced/knowledge_graph*.gv
+/examples/agents/advanced/knowledge_graph*.gv.pdf
+/examples/agents/basics/chat_history_example.json
+/examples/agents/chat_history_example.json
+/examples/agents/test_tools_chat_history.json
+/examples/agents/misc/code_agent/*.png
+/examples/agents/misc/code_agent/test_chat_history_after.json
+/examples/agents/misc/code_interpreter/*.png
+/examples/agents/misc/code_interpreter/test_chat_history_after.json

@@ -1,456 +1,162 @@
-﻿---
+---
 title: Messages API
 ---
 
 # Messages API
 
-The Messages module provides classes for managing conversation messages, chat history, and templates.
+The current message surface is centered on `ChatMessage`, `ChatHistory`, `Chats`, `MessageTemplate`, and `PromptBuilder`.
 
 ## ChatMessage
-
-`ChatMessage` is the unified message format for all providers in ToolAgents.
 
 ```python
 from ToolAgents.data_models.messages import ChatMessage
 ```
 
-### Properties
+`ChatMessage` is the unified message model used across providers.
 
-- `id` (str): Unique identifier
-- `role` (str): Message role (system, user, assistant, tool)
-- `content` (str): Message content
-- `tool_calls` (List[dict]): Tool calls in the message
-- `tool_call_id` (str): ID of the tool call (for tool messages)
-- `name` (str): Name of the tool (for tool messages)
-- `embedding` (List[float]): Vector embedding for semantic search
+Common factory helpers:
 
-### Factory Methods
+- `ChatMessage.create_system_message(message)`
+- `ChatMessage.create_user_message(message)`
+- `ChatMessage.create_assistant_message(message)`
+- `ChatMessage.create_custom_role_message(message, custom_role)`
+- `ChatMessage.from_dictionaries(messages)` for simple `{"role", "content"}` payloads
 
-#### `create_system_message(content)`
+Useful methods:
 
-Creates a system message.
-
-**Parameters:**
-- `content` (str): The message content
-
-**Returns:**
-- `ChatMessage`: A new system message
-
-#### `create_user_message(content)`
-
-Creates a user message.
-
-**Parameters:**
-- `content` (str): The message content
-
-**Returns:**
-- `ChatMessage`: A new user message
-
-#### `create_assistant_message(content, tool_calls=None)`
-
-Creates an assistant message.
-
-**Parameters:**
-- `content` (str): The message content
-- `tool_calls` (List[dict], optional): List of tool calls
-
-**Returns:**
-- `ChatMessage`: A new assistant message
-
-#### `create_tool_message(name, content, tool_call_id=None)`
-
-Creates a tool message.
-
-**Parameters:**
-- `name` (str): The tool name
-- `content` (any): The tool result content
-- `tool_call_id` (str, optional): ID of the tool call
-
-**Returns:**
-- `ChatMessage`: A new tool message
-
-### Methods
-
-#### `get_as_text()`
-
-Gets the message content as text.
-
-**Returns:**
-- `str`: Message content as text
-
-#### `contains_tool_call()`
-
-Checks if the message contains tool calls.
-
-**Returns:**
-- `bool`: True if message contains tool calls
-
-#### `get_tool_calls()`
-
-Gets tool calls from the message.
-
-**Returns:**
-- `List[dict]`: List of tool calls
-
-#### `to_dict()`
-
-Converts the message to a dictionary.
-
-**Returns:**
-- `dict`: Message as a dictionary
-
-#### `from_dict(data)`
-
-Creates a message from a dictionary.
-
-**Parameters:**
-- `data` (dict): Message data
-
-**Returns:**
-- `ChatMessage`: A new message
+- `get_as_text()`
+- `contains_tool_call()`
+- `get_tool_calls()`
+- `get_tool_call_results()`
+- `model_dump()` / `model_dump_json()` from Pydantic
 
 ## ChatHistory
 
-`ChatHistory` manages collections of chat messages.
-
 ```python
 from ToolAgents.data_models.chat_history import ChatHistory
-
-# Create a new chat history
-chat_history = ChatHistory()
 ```
 
-### Methods
+Main methods:
 
-#### `add_message(message)`
+- `add_message(message)`
+- `add_messages(messages)`
+- `add_system_message(message)`
+- `add_user_message(message)`
+- `add_assistant_message(message)`
+- `add_message_from_dictionary(message)`
+- `add_messages_from_dictionaries(messages)`
+- `get_messages()`
+- `get_last_message()`
+- `get_last_k_messages(k)`
+- `get_message_count()`
+- `remove_last_message()`
+- `clear()`
+- `clear_history()`
+- `save_to_json(filepath)`
+- `ChatHistory.load_from_json(filepath)`
 
-Adds a message to the history.
+Example:
 
-**Parameters:**
-- `message` (ChatMessage): The message to add
+```python
+history = ChatHistory()
+history.add_system_message("You are helpful.")
+history.add_user_message("Hello")
+messages = history.get_messages()
+```
 
-#### `add_messages(messages)`
+## Chats
 
-Adds multiple messages to the history.
+```python
+from ToolAgents.data_models.chat_history import Chats
+```
 
-**Parameters:**
-- `messages` (List[ChatMessage]): Messages to add
+`Chats` is the JSON-serializable container for multiple `ChatHistory` objects.
 
-#### `add_system_message(content)`
+Main methods:
 
-Adds a system message to the history.
-
-**Parameters:**
-- `content` (str): The message content
-
-#### `add_user_message(content)`
-
-Adds a user message to the history.
-
-**Parameters:**
-- `content` (str): The message content
-
-#### `add_assistant_message(content, tool_calls=None)`
-
-Adds an assistant message to the history.
-
-**Parameters:**
-- `content` (str): The message content
-- `tool_calls` (List[dict], optional): List of tool calls
-
-#### `add_tool_message(name, content, tool_call_id=None)`
-
-Adds a tool message to the history.
-
-**Parameters:**
-- `name` (str): The tool name
-- `content` (any): The tool result content
-- `tool_call_id` (str, optional): ID of the tool call
-
-#### `get_messages()`
-
-Gets all messages in the history.
-
-**Returns:**
-- `List[ChatMessage]`: All messages
-
-#### `get_last_k_messages(k)`
-
-Gets the most recent messages.
-
-**Parameters:**
-- `k` (int): Number of messages to retrieve
-
-**Returns:**
-- `List[ChatMessage]`: The k most recent messages
-
-#### `set_messages(messages)`
-
-Sets the messages in the history.
-
-**Parameters:**
-- `messages` (List[ChatMessage]): New messages
-
-#### `clear()`
-
-Clears all messages from the history.
-
-#### `pop()`
-
-Removes and returns the last message.
-
-**Returns:**
-- `ChatMessage`: The removed message
-
-#### `save_to_json(filepath)`
-
-Saves the history to a JSON file.
-
-**Parameters:**
-- `filepath` (str): Path to the output file
-
-#### `load_from_json(filepath)`
-
-Loads history from a JSON file.
-
-**Parameters:**
-- `filepath` (str): Path to the input file
-
-**Returns:**
-- `ChatHistory`: A new chat history
-
-#### `estimate_token_count()`
-
-Estimates the number of tokens in the history.
-
-**Returns:**
-- `int`: Estimated token count
+- `create_chat(title)`
+- `get_messages(chat_id)`
+- `get_last_k_messages(chat_id, k)`
+- `add_message(chat_id, message)`
+- `add_system_message(chat_id, message)`
+- `add_user_message(chat_id, message)`
+- `add_assistant_message(chat_id, message)`
+- `save_to_json(filepath)`
+- `Chats.load_from_json(filepath)`
 
 ## ChatManager
 
-`ChatManager` manages multiple conversations.
-
 ```python
 from ToolAgents.utilities.chat_database import ChatManager
-
-# Create a new chat database
-chat_db = ChatManager()
 ```
 
-### Methods
+`ChatManager` is the SQLite-backed storage option.
 
-#### `create_conversation(name)`
+Main methods:
 
-Creates a new conversation.
+- `create_chat(title=None)`
+- `add_message(chat_id, message)`
+- `get_chat(chat_id)`
+- `get_chat_messages(chat_id)`
+- `delete_chat(chat_id)`
+- `update_chat_title(chat_id, title)`
 
-**Parameters:**
-- `name` (str): The conversation name
+Example:
 
-**Returns:**
-- `str`: The conversation ID
-
-#### `get_conversation(conversation_id)`
-
-Gets a conversation by ID.
-
-**Parameters:**
-- `conversation_id` (str): The conversation ID
-
-**Returns:**
-- `ChatHistory`: The conversation history
-
-#### `get_messages(conversation_id)`
-
-Gets messages from a conversation.
-
-**Parameters:**
-- `conversation_id` (str): The conversation ID
-
-**Returns:**
-- `List[ChatMessage]`: Conversation messages
-
-#### `add_message(conversation_id, message)`
-
-Adds a message to a conversation.
-
-**Parameters:**
-- `conversation_id` (str): The conversation ID
-- `message` (ChatMessage): The message to add
-
-#### `add_messages(conversation_id, messages)`
-
-Adds multiple messages to a conversation.
-
-**Parameters:**
-- `conversation_id` (str): The conversation ID
-- `messages` (List[ChatMessage]): Messages to add
-
-#### `add_system_message(conversation_id, content)`
-
-Adds a system message to a conversation.
-
-**Parameters:**
-- `conversation_id` (str): The conversation ID
-- `content` (str): The message content
-
-#### `add_user_message(conversation_id, content)`
-
-Adds a user message to a conversation.
-
-**Parameters:**
-- `conversation_id` (str): The conversation ID
-- `content` (str): The message content
-
-#### `add_assistant_message(conversation_id, content, tool_calls=None)`
-
-Adds an assistant message to a conversation.
-
-**Parameters:**
-- `conversation_id` (str): The conversation ID
-- `content` (str): The message content
-- `tool_calls` (List[dict], optional): List of tool calls
-
-#### `add_tool_message(conversation_id, name, content, tool_call_id=None)`
-
-Adds a tool message to a conversation.
-
-**Parameters:**
-- `conversation_id` (str): The conversation ID
-- `name` (str): The tool name
-- `content` (any): The tool result content
-- `tool_call_id` (str, optional): ID of the tool call
-
-#### `list_conversations()`
-
-Lists all conversations.
-
-**Returns:**
-- `List[dict]`: Conversation metadata
-
-#### `delete_conversation(conversation_id)`
-
-Deletes a conversation.
-
-**Parameters:**
-- `conversation_id` (str): The conversation ID
-
-#### `save_to_json(filepath)`
-
-Saves the database to a JSON file.
-
-**Parameters:**
-- `filepath` (str): Path to the output file
-
-#### `load_from_json(filepath)`
-
-Loads database from a JSON file.
-
-**Parameters:**
-- `filepath` (str): Path to the input file
-
-**Returns:**
-- `ChatManager`: A new chat database
+```python
+chat_db = ChatManager()
+chat = chat_db.create_chat("Weather Chat")
+chat_db.add_message(chat["id"], ChatMessage.create_user_message("Hello"))
+messages = chat_db.get_chat_messages(chat["id"])
+```
 
 ## MessageTemplate
 
-`MessageTemplate` provides a simple template system for messages.
-
 ```python
 from ToolAgents.utilities.message_template import MessageTemplate
-
-# Create a template
-template = MessageTemplate("You are an assistant specialized in {specialty}.")
 ```
 
-### Methods
+Current construction helpers:
 
-#### `format_message_content(**kwargs)`
+- `MessageTemplate.from_string(template_string)`
+- `MessageTemplate.from_file(template_file)`
+- `generate_message_content(template_fields=None, **kwargs)`
 
-Fills the template with values.
+Example:
 
-**Parameters:**
-- `**kwargs`: Template variables
-
-**Returns:**
-- `str`: Formatted message content
-
-#### `format_system_message(**kwargs)`
-
-Creates a system message from the template.
-
-**Parameters:**
-- `**kwargs`: Template variables
-
-**Returns:**
-- `ChatMessage`: A new system message
-
-#### `format_user_message(**kwargs)`
-
-Creates a user message from the template.
-
-**Parameters:**
-- `**kwargs`: Template variables
-
-**Returns:**
-- `ChatMessage`: A new user message
-
-#### `format_assistant_message(**kwargs)`
-
-Creates an assistant message from the template.
-
-**Parameters:**
-- `**kwargs`: Template variables
-
-**Returns:**
-- `ChatMessage`: A new assistant message
+```python
+template = MessageTemplate.from_string(
+    "You are an assistant specialized in {specialty}."
+)
+content = template.generate_message_content(specialty="weather")
+```
 
 ## PromptBuilder
 
-`PromptBuilder` helps construct complex prompts.
-
 ```python
 from ToolAgents.utilities.prompt_builder import PromptBuilder
-
-# Create a builder
-builder = PromptBuilder()
 ```
 
-### Methods
+Current builder helpers:
 
-#### `add_text(text)`
+- `add_text(text)`
+- `add_prompt_part(part)`
+- `add_file_content(file_path)`
+- `add_empty_line(n=1)`
+- `add_numbered_list(items)`
+- `add_bullet_list(items)`
+- `add_code_block(code, language="")`
+- `add_separator(char="-", length=40)`
+- `build()`
 
-Adds text to the prompt.
+Example:
 
-**Parameters:**
-- `text` (str): Text to add
-
-#### `add_code(code, language=None)`
-
-Adds a code block to the prompt.
-
-**Parameters:**
-- `code` (str): Code to add
-- `language` (str, optional): Programming language
-
-#### `add_list(items, ordered=False)`
-
-Adds a list to the prompt.
-
-**Parameters:**
-- `items` (List[str]): List items
-- `ordered` (bool): Whether to use ordered (numbered) list
-
-#### `add_table(headers, rows)`
-
-Adds a table to the prompt.
-
-**Parameters:**
-- `headers` (List[str]): Table headers
-- `rows` (List[List[str]]): Table rows
-
-#### `build()`
-
-Builds the complete prompt.
-
-**Returns:**
-- `str`: The constructed prompt
+```python
+builder = PromptBuilder()
+prompt = (
+    builder
+    .add_text("# Weather Assistant")
+    .add_bullet_list(["Answer weather questions", "Use tools when needed"])
+    .build()
+)
+```
