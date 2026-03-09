@@ -4,7 +4,7 @@ import uuid
 from typing import Any, List, Optional, Dict, Generator
 
 from ToolAgents import FunctionTool
-from ToolAgents.messages import ChatMessage, ChatMessageRole, TextContent
+from ToolAgents.data_models.messages import ChatMessage, ChatMessageRole, TextContent
 from ToolAgents.provider.llm_provider import (
     ProviderSettings,
     ChatAPIProvider,
@@ -30,11 +30,11 @@ class CompletionProvider(ChatAPIProvider):
     def __init__(
         self,
         completion_endpoint: CompletionEndpoint,
-        tokenizer: LLMTokenizer = MistralTokenizer(),
+        tokenizer: LLMTokenizer = None,
         message_converter: BaseMessageConverter = MistralMessageConverterLlamaCpp(),
         tool_call_handler: LLMToolCallHandler = TemplateToolCallHandler(),
     ):
-        self.tokenizer = tokenizer
+        self.tokenizer = tokenizer or MistralTokenizer()
         self.message_converter = message_converter
         self.completion_endpoint = completion_endpoint
         self.tool_call_handler = tool_call_handler
@@ -85,7 +85,7 @@ class CompletionProvider(ChatAPIProvider):
         tools: Optional[List[FunctionTool]] = None,
     ) -> Generator[StreamingChatMessage, None, None]:
         messages = self.message_converter.prepare_request(
-            "llama.cpp", messages, settings, tools
+            "llama.cpp", messages, settings if settings else self.get_default_settings(), tools
         )
         prompt = self.tokenizer.apply_template(
             messages=messages["messages"],
@@ -190,11 +190,11 @@ class AsyncCompletionProvider(AsyncChatAPIProvider):
     def __init__(
         self,
         completion_endpoint: AsyncCompletionEndpoint,
-        tokenizer: LLMTokenizer = MistralTokenizer(),
+        tokenizer: LLMTokenizer = None,
         message_converter: BaseMessageConverter = MistralMessageConverterLlamaCpp(),
         tool_call_handler: LLMToolCallHandler = TemplateToolCallHandler(),
     ):
-        self.tokenizer = tokenizer
+        self.tokenizer = tokenizer or MistralTokenizer()
         self.message_converter = message_converter
         self.completion_endpoint = completion_endpoint
         self.tool_call_handler = tool_call_handler

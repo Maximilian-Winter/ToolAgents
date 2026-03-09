@@ -1,18 +1,18 @@
-from ToolAgents.knowledge.vector_database import RAG
-from ToolAgents.knowledge.vector_database.implementations.chroma_db import (
+﻿from ToolAgents.knowledge.vector_database import RAG
+from ToolAgents.knowledge.vector_database.implementations.chroma_db_vector_database import (
     ChromaDbVectorDatabaseProvider,
 )
 from ToolAgents.knowledge.vector_database.implementations.sentence_transformer_embeddings import (
     SentenceTransformerEmbeddingProvider,
 )
-from ToolAgents.knowledge.vector_database.implementations.mbxai_reranking import (
-    MXBAIRerankingProvider,
+from ToolAgents.knowledge.vector_database.implementations.cross_encoder_reranking import (
+    CrossEncoderRerankingProvider,
 )
 
 if __name__ == "__main__":
     rag = RAG(
         ChromaDbVectorDatabaseProvider(
-            SentenceTransformerEmbeddingProvider(), MXBAIRerankingProvider()
+            SentenceTransformerEmbeddingProvider(), CrossEncoderRerankingProvider()
         )
     )
 
@@ -29,3 +29,4 @@ if __name__ == "__main__":
     ]
     rag.add_documents(texts)
     print(rag.retrieve_documents("Hola mundo!", 4))
+

@@ -1,4 +1,4 @@
-import datetime
+﻿import datetime
 import json
 import os
 import platform
@@ -8,15 +8,12 @@ from ToolAgents.agent_tools.file_tools import FilesystemTools
 from ToolAgents.agent_tools.git_tools import GitTools
 from ToolAgents.agent_tools.github_tools import GitHubTools
 from ToolAgents.agents import ChatToolAgent
-from ToolAgents.messages import ChatHistory, MessageTemplate
-from ToolAgents.messages.chat_message import ChatMessage
+from ToolAgents.data_models.chat_history import ChatHistory
+from ToolAgents.data_models.messages import ChatMessage
 from ToolAgents.provider import (
-    AnthropicChatAPI,
     OpenAIChatAPI,
-    GroqChatAPI,
-    MistralChatAPI,
-    CompletionProvider,
 )
+from ToolAgents.utilities.message_template import MessageTemplate
 
 from dotenv import load_dotenv
 
@@ -25,7 +22,7 @@ load_dotenv()
 # Mistral API
 api = OpenAIChatAPI(
     api_key=os.getenv("OPENROUTER_API_KEY"),
-    model="meta-llama/llama-3.1-405b-instruct",
+    model="openai/gpt-oss-120b",
     base_url="https://openrouter.ai/api/v1",
 )
 
@@ -123,3 +120,4 @@ while True:
             print()
     chat_history.add_messages(chat_response.messages)
     chat_history.save_to_json("coding_agent_history.json")
+

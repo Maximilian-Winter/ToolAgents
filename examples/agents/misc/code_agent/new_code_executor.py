@@ -1,4 +1,4 @@
-import ast
+﻿import ast
 import io
 import re
 import sys
@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from contextlib import contextmanager
 from pydantic import BaseModel
 from ToolAgents import FunctionTool
-from ToolAgents.messages import ChatHistory
+from ToolAgents.data_models.chat_history import ChatHistory
 from ToolAgents.utilities.llm_documentation.documentation_generation import (
     generate_type_definitions,
 )
@@ -433,3 +433,4 @@ def run_llm_code_agent(
             print()
         else:
             break
+

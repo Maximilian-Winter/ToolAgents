@@ -51,7 +51,7 @@ class ContextAppState:
         if not os.path.exists(file_path):
             return {}
         try:
-            with open(file_path, "r") as file:
+            with open(file_path, "r", encoding="utf-8") as file:
                 yaml_content = yaml.safe_load(file)
                 return yaml_content  # self._process_yaml_content(yaml_content)
         except yaml.YAMLError as e:
@@ -138,11 +138,11 @@ class ContextAppState:
             self.template_fields[key] = content.strip()
 
     def save_json(self, filename: str) -> None:
-        with open(filename, "w") as f:
+        with open(filename, "w", encoding="utf-8") as f:
             json.dump(self.template_fields, f, indent=2)
 
     def load_json(self, filename: str) -> None:
-        with open(filename, "r") as f:
+        with open(filename, "r", encoding="utf-8") as f:
             self.template_fields = json.load(f)
 
     def get_field(self, key: str, default: Any = None) -> Any:

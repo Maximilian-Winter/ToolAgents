@@ -1,0 +1,219 @@
+import asyncio
+import json
+from contextlib import AsyncExitStack
+from time import sleep
+from typing import Any, Callable, Dict, Optional, Tuple, TypeVar, Union
+
+from mcp import ClientSession, StdioServerParameters, types
+from mcp.client.stdio import stdio_client
+from mcp.client.streamable_http import streamablehttp_client
+
+from ToolAgents.utilities.mcp_conversion import convert_json_schema
+from ToolAgents import FunctionTool
+
+class SessionManager:
+    """
+    A wrapper class for ClientSession that manages connection and provides
+    access to tools, prompts, and resources.
+    """
+
+    def __init__(self, server_params, is_stdio_session=True, sampling_callback=None):
+        self.server_params = server_params
+        self.sampling_callback = sampling_callback
+        self.read = None
+        self.write = None
+        self.session = None
+        self.is_stdio_session = is_stdio_session
+        self.exit_stack = AsyncExitStack()
+
+    async def __aenter__(self):
+        """Support using as an async context manager."""
+        await self.connect()
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        """Clean up resources when exiting the context."""
+        await self.disconnect()
+
+    async def connect(self):
+        """Establish connection and initialize session."""
+        if self.session is not None:
+            return self
+
+        if self.is_stdio_session:
+            # Create and store the client context
+            self.read, self.write = await self.exit_stack.enter_async_context(stdio_client(self.server_params))
+
+            # Create and store the session context
+            self.session = await self.exit_stack.enter_async_context(ClientSession(self.read, self.write))
+
+            # Initialize the connection
+            await self.session.initialize()
+        else:
+            # Create and store the client context
+            self.read, self.write, _ = await self.exit_stack.enter_async_context(
+                streamablehttp_client(**self.server_params)
+            )
+
+            # Create and store the session context
+            self.session = await self.exit_stack.enter_async_context(
+                ClientSession(self.read, self.write, sampling_callback=self.sampling_callback)
+            )
+
+            # Initialize the connection
+            await self.session.initialize()
+        return self
+
+    async def disconnect(self):
+        """Close the session and connection."""
+        if self.session is None:
+            return
+        self.read.close()
+        self.write.close()
+
+        await self.exit_stack.aclose()
+
+        self.session = None
+        self.read = None
+        self.write = None
+        self.exit_stack = AsyncExitStack()
+
+    async def list_prompts(self):
+        """List available prompts."""
+        self._ensure_connected()
+        return await self.session.list_prompts()
+
+    async def get_prompt(self, prompt_name: str, arguments: Optional[Dict[str, Any]] = None):
+        """Get a specific prompt with optional arguments."""
+        self._ensure_connected()
+        return await self.session.get_prompt(prompt_name, arguments=arguments or {})
+
+    async def list_resources(self):
+        """List available resources."""
+        self._ensure_connected()
+        return await self.session.list_resources()
+
+    async def read_resource(self, path: str) -> Tuple[bytes, str]:
+        """Read a resource at the specified path."""
+        self._ensure_connected()
+        return await self.session.read_resource(path)
+
+    async def list_tools(self):
+        """List available tools."""
+        self._ensure_connected()
+        return await self.session.list_tools()
+
+    async def call_tool(self, tool_name: str, arguments: Optional[Dict[str, Any]] = None):
+        """Call a specific tool with optional arguments."""
+        self._ensure_connected()
+        return await self.session.call_tool(tool_name, arguments=arguments or {})
+
+    def _ensure_connected(self):
+        """Ensure the session is connected before operations."""
+        if self.session is None:
+            raise RuntimeError("Session is not connected. Call connect() first or use as context manager.")
+
+
+class MCPTool:
+    def __init__(self, name: str, description: str, input_schema: Dict[str, Any]):
+        self.name = name
+        self.description = description
+        self.inputSchema = input_schema
+
+    def get_pydantic_input_model(self):
+        return convert_json_schema(self.inputSchema)
+
+    def __repr__(self):
+        return f"MCPTool(name={self.name!r}, description={self.description!r}, inputSchema={self.inputSchema!r})"
+
+
+class MCPServerTools:
+    def __init__(self):
+        self.tools = None
+        self.server_params = None
+        self.session = None
+        self.is_stdio_session = False
+        self.sampling_callback = None
+
+    async def load_from_stdio_server(self, server_params: StdioServerParameters, sampling_callback: Optional[Callable] = None):
+        self.sampling_callback = sampling_callback
+        self.server_params = server_params
+        self.is_stdio_session = True
+        def create_tool_executor(tool_name):
+            async def execute_tool(**kwargs):
+                async with SessionManager(server_params=self.server_params, is_stdio_session=self.is_stdio_session, sampling_callback=self.sampling_callback) as session_mgr:
+                    return await session_mgr.call_tool(tool_name, arguments=kwargs)
+
+            def tool_executor(**kwargs):
+                loop = asyncio.get_event_loop_policy().new_event_loop()
+                asyncio.set_event_loop(loop)
+                result = loop.run_until_complete(execute_tool(**kwargs))
+                while loop.is_running():
+                    sleep(0.1)
+
+                return result
+
+            return tool_executor
+
+        async def load_tools():
+            async with SessionManager(server_params=self.server_params, is_stdio_session=self.is_stdio_session, sampling_callback=self.sampling_callback) as session_mgr:
+                tools = await session_mgr.list_tools()
+                self.tools = []
+                for tool in tools.tools:
+                    mcp_tool = MCPTool(tool.name, tool.description, tool.inputSchema)
+                    tool_executor = create_tool_executor(tool.name)
+                    function_tool = FunctionTool.from_pydantic_model_and_callable(
+                        mcp_tool.get_pydantic_input_model(), tool_executor
+                    )
+                    function_tool.set_name(tool.name)
+                    self.tools.append(function_tool)
+        try:
+
+            await load_tools()
+
+            return self.tools
+        except RuntimeError as e:
+            print(f"Error running tool loader: {e}")
+            return None
+
+    async def load_from_http_server(self, server_kwargs: dict[str, Any], sampling_callback: Optional[Callable] = None):
+        self.sampling_callback = sampling_callback
+        self.server_params = server_kwargs
+        self.is_stdio_session = False
+
+        def create_tool_executor(tool_name):
+            async def execute_tool(**kwargs):
+                async with SessionManager(server_params=self.server_params, is_stdio_session=self.is_stdio_session, sampling_callback=self.sampling_callback) as session_mgr:
+                    return await session_mgr.call_tool(tool_name, arguments=kwargs)
+
+            def tool_executor(**kwargs):
+                loop = asyncio.get_event_loop_policy().new_event_loop()
+                asyncio.set_event_loop(loop)
+                result = loop.run_until_complete(execute_tool(**kwargs))
+                while loop.is_running():
+                    sleep(0.1)
+
+                return result
+
+            return tool_executor
+
+        async def load_tools():
+            async with SessionManager(server_params=self.server_params, is_stdio_session=self.is_stdio_session, sampling_callback=self.sampling_callback) as session_mgr:
+                tools = await session_mgr.list_tools()
+                self.tools = []
+                for tool in tools.tools:
+                    mcp_tool = MCPTool(tool.name, tool.description, tool.inputSchema)
+                    tool_executor = create_tool_executor(tool.name)
+                    function_tool = FunctionTool.from_pydantic_model_and_callable(
+                        mcp_tool.get_pydantic_input_model(), tool_executor
+                    )
+                    function_tool.set_name(tool.name)
+                    self.tools.append(function_tool)
+        try:
+
+            await load_tools()
+
+            return self.tools
+        except RuntimeError as e:
+            print(f"Error running tool loader: {e}")
+            return None

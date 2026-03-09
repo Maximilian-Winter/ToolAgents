@@ -1,7 +1,7 @@
-import gradio as gr
+﻿import gradio as gr
 from typing import Iterator
 
-from ToolAgents.messages import ChatMessageRole
+from ToolAgents.data_models.messages import ChatMessageRole
 from agent import configurable_agent
 
 
@@ -111,3 +111,4 @@ with gr.Blocks(css=css) as demo:
     ).then(stream_chat_response, chatbox, chatbox)
 
 demo.launch()
+

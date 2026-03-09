@@ -4,205 +4,121 @@ title: Agents API
 
 # Agents API
 
-The Agents module contains the core agent classes that orchestrate interactions between language models and tools.
-
 ## BaseToolAgent
-
-`BaseToolAgent` is an abstract base class that defines the interface for tool-capable agents.
 
 ```python
 from ToolAgents.agents.base_llm_agent import BaseToolAgent
 ```
 
-### Methods
+Main synchronous interface:
 
-#### `get_default_settings()`
-
-Returns default settings for the agent.
-
-**Returns:**
-- Settings object specific to the provider being used
-
-#### `step(messages, tool_registry=None, settings=None, reset_last_messages_buffer=True)`
-
-Executes a single interaction step with the LLM.
-
-**Parameters:**
-- `messages` (List[ChatMessage]): The conversation messages
-- `tool_registry` (ToolRegistry, optional): Registry of available tools
-- `settings` (ProviderSettings, optional): Provider settings
-- `reset_last_messages_buffer` (bool): Whether to reset the messages buffer
-
-**Returns:**
-- `ChatResponse`: Response object containing messages and text
-
-#### `stream_step(messages, tool_registry=None, settings=None, reset_last_messages_buffer=True)`
-
-Streaming version of the step method.
-
-**Parameters:**
-- `messages` (List[ChatMessage]): The conversation messages
-- `tool_registry` (ToolRegistry, optional): Registry of available tools
-- `settings` (ProviderSettings, optional): Provider settings
-- `reset_last_messages_buffer` (bool): Whether to reset the messages buffer
-
-**Returns:**
-- Generator yielding `ChatResponseChunk` objects
-
-#### `get_response(messages, tool_registry=None, settings=None, reset_last_messages_buffer=True)`
-
-Get a complete response with automatic tool handling.
-
-**Parameters:**
-- `messages` (List[ChatMessage]): The conversation messages
-- `tool_registry` (ToolRegistry, optional): Registry of available tools
-- `settings` (ProviderSettings, optional): Provider settings
-- `reset_last_messages_buffer` (bool): Whether to reset the messages buffer
-
-**Returns:**
-- `ChatResponse`: Complete response including tool call results
-
-#### `get_streaming_response(messages, tool_registry=None, settings=None, reset_last_messages_buffer=True)`
-
-Get a streaming response with automatic tool handling.
-
-**Parameters:**
-- `messages` (List[ChatMessage]): The conversation messages
-- `tool_registry` (ToolRegistry, optional): Registry of available tools
-- `settings` (ProviderSettings, optional): Provider settings
-- `reset_last_messages_buffer` (bool): Whether to reset the messages buffer
-
-**Returns:**
-- Generator yielding `ChatResponseChunk` objects
-
-#### `get_last_response()`
-
-Returns the last response from the agent.
-
-**Returns:**
-- `ChatResponse`: The last response object
-
-## ChatToolAgent
-
-`ChatToolAgent` implements `BaseToolAgent` using LLM chat APIs.
-
-```python
-from ToolAgents.agents import ChatToolAgent
-
-agent = ChatToolAgent(chat_api=api_provider, debug_output=False)
-```
-
-### Constructor Parameters
-
-- `chat_api` (ChatAPIProvider): The chat API provider instance
-- `debug_output` (bool, optional): Whether to output debugging information. Defaults to False.
-
-### Methods
-
-In addition to implementing all methods from `BaseToolAgent`, `ChatToolAgent` provides:
-
-#### `handle_function_calling_response(chat_message, current_messages)`
-
-Handles the execution of function calls in responses.
-
-**Parameters:**
-- `chat_message` (ChatMessage): The message containing function calls
-- `current_messages` (List[ChatMessage]): Current conversation messages
-
-**Returns:**
-- `List[ChatMessage]`: Updated messages including tool responses
+- `get_default_settings()`
+- `step(messages, tool_registry=None, settings=None, reset_last_messages_buffer=True)`
+- `stream_step(messages, tool_registry=None, settings=None, reset_last_messages_buffer=True)`
+- `get_response(messages, tool_registry=None, settings=None, reset_last_messages_buffer=True)`
+- `get_streaming_response(messages, tool_registry=None, settings=None, reset_last_messages_buffer=True)`
+- `get_last_response()`
 
 ## AsyncBaseToolAgent
-
-Asynchronous version of `BaseToolAgent`.
 
 ```python
 from ToolAgents.agents.base_llm_agent import AsyncBaseToolAgent
 ```
 
-### Methods
+Main async interface:
 
-#### `get_response_async(messages, tool_registry=None, settings=None, reset_last_messages_buffer=True)`
+- `get_default_settings()`
+- `step(messages, tool_registry=None, settings=None, reset_last_messages_buffer=True)`
+- `stream_step(messages, tool_registry=None, settings=None, reset_last_messages_buffer=True)`
+- `get_response(messages, tool_registry=None, settings=None, reset_last_messages_buffer=True)`
+- `get_streaming_response(messages, tool_registry=None, settings=None, reset_last_messages_buffer=True)`
+- `get_last_response()`
 
-Asynchronous version of `get_response`.
-
-**Returns:**
-- `Awaitable[ChatResponse]`: Complete response including tool call results
-
-#### `get_streaming_response_async(messages, tool_registry=None, settings=None, reset_last_messages_buffer=True)`
-
-Asynchronous version of `get_streaming_response`.
-
-**Returns:**
-- Async generator yielding `ChatResponseChunk` objects
-
-## AsyncChatToolAgent
-
-Asynchronous version of `ChatToolAgent`.
+## ChatToolAgent
 
 ```python
 from ToolAgents.agents import ChatToolAgent
 
-agent = ChatToolAgent(chat_api=async_api_provider, debug_output=False)
+agent = ChatToolAgent(chat_api=api_provider, log_output=False, log_to_file=False)
 ```
+
+Constructor parameters:
+
+- `chat_api`: `ChatAPIProvider`
+- `log_output`: enable request/response logging
+- `log_to_file`: write logs to a timestamped file when logging is enabled
+
+Additional method:
+
+- `handle_function_calling_response(chat_message, current_messages)`
+
+## AsyncChatToolAgent
+
+```python
+from ToolAgents.agents import AsyncChatToolAgent
+
+agent = AsyncChatToolAgent(chat_api=async_api_provider)
+```
+
+Current constructor parameter:
+
+- `chat_api`: `AsyncChatAPIProvider`
 
 ## AdvancedAgent
 
-`AdvancedAgent` is an enhanced agent with stateful context and advanced management features.
-
 ```python
-from ToolAgents.agents import AdvancedAgent
+from ToolAgents import ToolRegistry
+from ToolAgents.agents import AdvancedAgent, ChatToolAgent
+from ToolAgents.agents.advanced_agent import AgentConfig
 
-agent = AdvancedAgent(
-    chat_api=api_provider,
-    context_app_state=app_state
+base_agent = ChatToolAgent(chat_api=api_provider)
+advanced_agent = AdvancedAgent(
+    agent=base_agent,
+    tool_registry=ToolRegistry(),
+    agent_config=AgentConfig(),
 )
 ```
 
-### Constructor Parameters
+Constructor parameters:
 
-- `chat_api` (ChatAPIProvider): The chat API provider instance
-- `context_app_state` (ContextAppState): State management instance
-- `debug_output` (bool, optional): Whether to output debugging information
+- `agent`: base `BaseToolAgent` implementation
+- `tool_registry`: optional `ToolRegistry`
+- `agent_config`: optional `AgentConfig`
+- `user_name`: optional display name for the user
+- `assistant_name`: optional display name for the assistant
+- `debug_mode`: enable verbose agent internals
 
-### Methods
-
-In addition to methods from `ChatToolAgent`, `AdvancedAgent` provides:
-
-#### `get_response(messages, settings=None, include_relevant_context=True, stream_context=False)`
-
-Get a response with context management.
-
-**Parameters:**
-- `messages` (List[ChatMessage]): The conversation messages
-- `settings` (ProviderSettings, optional): Provider settings
-- `include_relevant_context` (bool): Whether to include relevant context from memory
-- `stream_context` (bool): Whether to stream context augmentation 
-
-**Returns:**
-- `ChatResponse`: Complete response
-
-## Response Classes
+## Response Types
 
 ### ChatResponse
 
-Represents a complete response from the agent.
-
 ```python
-class ChatResponse:
-    messages: List[ChatMessage]  # All messages including tool calls and responses
-    response: str                # Final text response
+from ToolAgents.data_models.responses import ChatResponse
 ```
+
+Fields:
+
+- `messages`: full message list accumulated by the agent
+- `response`: final assistant text
 
 ### ChatResponseChunk
 
-Represents a chunk of a streaming response.
-
 ```python
-class ChatResponseChunk:
-    chunk: str                   # Text chunk
-    has_tool_call: bool          # Whether this chunk contains a tool call
-    tool_call: Optional[dict]    # Tool call data if present
-    finished: bool               # Whether this is the final chunk
-    finished_response: Optional[ChatResponse]  # Complete response in final chunk
+from ToolAgents.data_models.responses import ChatResponseChunk
 ```
+
+Fields:
+
+- `chunk`
+- `has_tool_call`
+- `tool_call`
+- `has_tool_call_result`
+- `tool_call_result`
+- `finished`
+- `finished_response`
+
+Helper methods:
+
+- `get_tool_name()`
+- `get_tool_arguments()`
+- `get_tool_results()`

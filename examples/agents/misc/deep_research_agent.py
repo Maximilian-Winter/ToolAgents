@@ -1,12 +1,12 @@
-import datetime
+﻿import datetime
 import os
 import json
 from typing import List, Dict, Any, Optional
 
 from ToolAgents import ToolRegistry, FunctionTool
 from ToolAgents.agents import ChatToolAgent
-from ToolAgents.messages import ChatHistory
-from ToolAgents.messages.chat_message import ChatMessage
+from ToolAgents.data_models.chat_history import ChatHistory
+from ToolAgents.data_models.messages import ChatMessage
 from ToolAgents.provider import OpenAIChatAPI, AnthropicChatAPI
 from ToolAgents.agent_tools.web_search_tool import WebSearchTool
 from ToolAgents.knowledge.web_search.implementations.googlesearch import (
@@ -223,3 +223,4 @@ if __name__ == "__main__":
 
     except Exception as e:
         print(f"An error occurred during research: {str(e)}")
+

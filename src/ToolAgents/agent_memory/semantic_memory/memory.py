@@ -8,12 +8,13 @@ from concurrent.futures import ThreadPoolExecutor
 from typing import List, Dict, Optional, Any, Mapping
 
 import chromadb
-from chromadb.api.types import IncludeEnum
+
 
 import numpy as np
 from torch import Tensor
 
-from ToolAgents.messages import ChatMessage, MessageTemplate
+from ToolAgents.data_models.messages import ChatMessage
+from ToolAgents.utilities.message_template import MessageTemplate
 from ToolAgents.provider.llm_provider import ProviderSettings
 from ToolAgents.agents.base_llm_agent import BaseToolAgent
 
@@ -345,7 +346,7 @@ class TimeBasedCleanupStrategy(CleanupStrategy):
     ) -> None:
         """Remove old working memories with low access counts."""
         # Retrieve all memories along with their metadata
-        memories = collection.get(include=[IncludeEnum.metadatas])
+        memories = collection.get(include=["metadatas"])
 
         if not memories["metadatas"]:
             return
@@ -370,7 +371,7 @@ class TimeBasedCleanupStrategy(CleanupStrategy):
         self, collection: chromadb.Collection, current_date: datetime
     ) -> None:
         """Remove very old long-term memories that haven't been accessed recently."""
-        memories = collection.get(include=[IncludeEnum.metadatas])
+        memories = collection.get(include=["metadatas"])
 
         if not memories["metadatas"]:
             return
@@ -761,9 +762,9 @@ class SemanticMemory:
         if self.embeddings_clusters_prefix is None:
             working_memories = self.working.get(
                 include=[
-                    IncludeEnum.metadatas,
-                    IncludeEnum.embeddings,
-                    IncludeEnum.documents,
+                    "metadatas",
+                    "embeddings",
+                    "documents",
                 ]
             )
             if not working_memories["documents"]:
@@ -772,7 +773,7 @@ class SemanticMemory:
             embeddings = [embed for embed in working_memories["embeddings"]]
         else:
             working_memories = self.working.get(
-                include=[IncludeEnum.metadatas, IncludeEnum.documents]
+                include=["metadatas", "documents"]
             )
             # Compute embeddings with the clusters prefix
             embeddings = [

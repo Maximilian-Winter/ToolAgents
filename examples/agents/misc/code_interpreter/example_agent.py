@@ -1,10 +1,10 @@
-import os
+﻿import os
 
 from ToolAgents import ToolRegistry
 from ToolAgents.agents import ChatToolAgent
 from ToolAgents.provider import AnthropicChatAPI
 
-from ToolAgents.messages import ChatHistory
+from ToolAgents.data_models.chat_history import ChatHistory
 
 from dotenv import load_dotenv
 
@@ -16,9 +16,9 @@ load_dotenv()
 api = AnthropicChatAPI(
     api_key=os.getenv("ANTHROPIC_API_KEY"), model="claude-3-5-sonnet-20241022"
 )
-settings = AnthropicSettings()
+settings = api.get_default_settings()
 
-agent = ChatToolAgent(chat_api=api, debug_output=True)
+agent = ChatToolAgent(chat_api=api, log_output=True)
 
 settings.temperature = 0.3
 settings.top_p = 1.0
@@ -68,3 +68,4 @@ print()
 chat_history.add_messages(agent.last_messages_buffer)
 
 chat_history.save_to_json("./test_chat_history_after.json")
+

@@ -21,28 +21,82 @@ The simplest way to install ToolAgents is through pip:
 pip install ToolAgents
 ```
 
-This will install the core ToolAgents library with basic dependencies required for function calling with various language model providers.
+This installs the core framework and the built-in chat providers.
 
 ## Installing Optional Features
 
-ToolAgents offers additional features that can be installed based on your needs:
+ToolAgents now groups optional functionality by feature area so you only install what you need.
 
-### Vector Embeddings and RAG Support
+### Advanced Agent App State
 
-If you plan to use vector embeddings, semantic search, or RAG capabilities:
+For `ContextAppState` and YAML-backed agent state files:
 
 ```bash
-pip install ToolAgents[additional_deps]
+pip install ToolAgents[advanced]
 ```
 
 This installs:
 
-- sentence_transformers, hdbscan, transformers
-- sentencepiece, protobuf, chromadb
-- PDF processing tools (pdf2image, pytesseract)
-- HTML processing tools (lxml_html_clean)
+- `PyYAML`
 
-### Web Search Capabilities
+### Database-Backed Chat Storage
+
+For SQLite-backed chat storage with `ChatManager`:
+
+```bash
+pip install ToolAgents[storage]
+```
+
+This installs:
+
+- `SQLAlchemy`
+
+### Semantic Memory and Vector Search
+
+For semantic memory, Chroma-backed storage, and sentence-transformer embeddings:
+
+```bash
+pip install ToolAgents[memory]
+```
+
+This installs:
+
+- `chromadb`
+- `hdbscan`
+- `numpy`
+- `sentence-transformers`
+- `torch`
+
+### Local Transformer-Based Inference
+
+For Hugging Face-based completion backends and tokenizer support:
+
+```bash
+pip install ToolAgents[local-inference]
+```
+
+This installs:
+
+- `transformers`
+- `sentencepiece`
+- `protobuf`
+
+### OCR and PDF Processing
+
+For OCR-based document ingestion:
+
+```bash
+pip install ToolAgents[ocr]
+```
+
+This installs:
+
+- `PyMuPDF`
+- `joblib`
+- `pdf2image`
+- `pytesseract`
+
+### Web Search and Crawling
 
 For web search and crawling functionality:
 
@@ -52,16 +106,30 @@ pip install ToolAgents[search]
 
 This installs:
 
-- googlesearch-python
-- markdownify
-- camoufox
+- `beautifulsoup4`
+- `camoufox`
+- `googlesearch-python`
+- `html5lib`
+- `trafilatura`
+
+### Model Context Protocol
+
+For MCP client/server tooling:
+
+```bash
+pip install ToolAgents[mcp]
+```
+
+This installs:
+
+- `mcp[cli]`
 
 ### Complete Installation
 
 To install ToolAgents with all optional dependencies:
 
 ```bash
-pip install ToolAgents[additional_deps,search]
+pip install ToolAgents[all]
 ```
 
 ## Development Installation
@@ -74,7 +142,11 @@ cd ToolAgents
 pip install -e .
 ```
 
-This will install the package in development mode, allowing you to make changes to the code and see them reflected immediately.
+To include every optional feature during development:
+
+```bash
+pip install -e .[all]
+```
 
 ## API Keys Setup
 
@@ -92,8 +164,13 @@ We recommend using environment variables or a `.env` file to manage your API key
 After installation, you can verify that ToolAgents is correctly installed by running:
 
 ```python
-import ToolAgents
-print(ToolAgents.__version__)
+from ToolAgents import ToolRegistry
+from ToolAgents.agents import ChatToolAgent
+from ToolAgents.provider import OpenAIChatAPI
+
+print(ToolRegistry)
+print(ChatToolAgent)
+print(OpenAIChatAPI)
 ```
 
 ## Troubleshooting
@@ -102,7 +179,7 @@ If you encounter any issues during installation:
 
 - Ensure you're using Python 3.10 or higher
 - Try upgrading pip: `pip install --upgrade pip`
-- If installing with optional dependencies fails, try installing dependencies individually
-- For PDF processing issues, ensure you have the required system dependencies (e.g., Tesseract OCR)
+- If an optional feature import fails, install the matching extra for that subsystem
+- For OCR issues, ensure you have the required system dependencies installed, especially Tesseract OCR
 
 If problems persist, please [create an issue](https://github.com/Maximilian-Winter/ToolAgents/issues) on GitHub.

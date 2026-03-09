@@ -1,7 +1,7 @@
-import os
+﻿import os
 
 from ToolAgents.agents import ChatToolAgent
-from ToolAgents.messages import ChatHistory
+from ToolAgents.data_models.chat_history import ChatHistory
 
 from ToolAgents.provider import OpenAIChatAPI
 
@@ -12,7 +12,7 @@ load_dotenv()
 # Openrouter API
 api = OpenAIChatAPI(
     api_key=os.getenv("OPENROUTER_API_KEY"),
-    model="google/gemini-2.0-pro-exp-02-05:free",
+    model="meta-llama/llama-3.3-70b-instruct",
     base_url="https://openrouter.ai/api/v1",
 )
 
@@ -28,7 +28,7 @@ settings.top_p = 1.0
 
 chat_history = ChatHistory()
 chat_history.add_system_message(
-    "You are a helpful assistant with tool calling capabilities. Only reply with a tool call if the function exists in the library provided by the user. Use JSON format to output your function calls. If it doesn't exist, just reply directly in natural language. When you receive a tool call response, use the output to format an answer to the original user question."
+    "You are a helpful assistant with tool calling capabilities."
 )
 
 while True:
@@ -55,3 +55,4 @@ while True:
             chat_history.add_messages(chat_response.messages)
         else:
             raise Exception("Error during response generation")
+

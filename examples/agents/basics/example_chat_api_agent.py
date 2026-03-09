@@ -1,11 +1,12 @@
-import json
+﻿import json
 import os
-from ToolAgents import ToolRegistry
+from copy import copy
+
+from ToolAgents.function_tool import ToolRegistry
 from ToolAgents.agents import ChatToolAgent
-from ToolAgents.messages.chat_message import ChatMessage
+from ToolAgents.data_models.messages import ChatMessage
 from ToolAgents.provider import (
     AnthropicChatAPI,
-    GoogleGenAIChatAPI,
     OpenAIChatAPI,
     GroqChatAPI,
     MistralChatAPI,
@@ -14,6 +15,7 @@ from ToolAgents.provider import (
 from ToolAgents.provider.completion_provider.default_implementations import (
     LlamaCppServer,
 )
+from ToolAgents.provider.llm_provider import LLMSetting, SettingLevel
 
 from example_tools import (
     calculator_function_tool,
@@ -26,30 +28,28 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Local OpenAI like API, like vllm or llama-cpp-server with jinja flag for tool calling.
-# api = OpenAIChatAPI(api_key="token-abc123", base_url="http://127.0.0.1:8080/v1", model="unsloth/Meta-Llama-3.1-8B-Instruct-bnb-4bit")
+#api = OpenAIChatAPI(api_key="token-abc123", base_url="http://127.0.0.1:8080/v1", model="Mistral-Small-3.2-24B-Instruct-2506")
 
 # Official OpenAI API
-# api = OpenAIChatAPI(api_key=os.getenv("OPENAI_API_KEY"), model="gpt-4o-mini")
+#api = OpenAIChatAPI(api_key=os.getenv("OPENAI_API_KEY"), model="google/gemini-3-flash-preview")
 
 # Openrouter API
 api = OpenAIChatAPI(
     api_key=os.getenv("OPENROUTER_API_KEY"),
-    model="meta-llama/llama-3.3-70b-instruct",
+    model="mistralai/ministral-8b-2512",
     base_url="https://openrouter.ai/api/v1",
 )
 
 # Anthropic API
-# api = OpenAIChatAPI(api_key=os.getenv("GOOGLE_API_KEY"), base_url="https://generativelanguage.googleapis.com/v1beta/openai/", model="gemini-2.0-flash-lite-preview-02-05")
+#api = OpenAIChatAPI(api_key=os.getenv("GOOGLE_API_KEY"), base_url="https://generativelanguage.googleapis.com/v1beta/openai/", model="gemini-2.0-flash-lite-preview-02-05")
 
 
 # Groq API
-# api = GroqChatAPI(api_key=os.getenv("GROQ_API_KEY"), model="llama-3.3-70b-versatile")
+#api = GroqChatAPI(api_key=os.getenv("GROQ_API_KEY"), model="llama-3.3-70b-versatile")
 
-# Llama Cpp Server Completion Based API with Mistral model
-# api = CompletionProvider(completion_endpoint=LlamaCppServer("http://127.0.0.1:8080"))
 
 # Mistral API
-# api = MistralChatAPI(api_key=os.getenv("MISTRAL_API_KEY"), model="mistral-small-latest")
+#api = MistralChatAPI(api_key=os.getenv("MISTRAL_API_KEY"), model="mistral-small-latest")
 
 # Create the ChatAPIAgent
 agent = ChatToolAgent(chat_api=api)
@@ -58,8 +58,12 @@ agent = ChatToolAgent(chat_api=api)
 settings = api.get_default_settings()
 
 # Set sampling settings
-settings.temperature = 0.45
-settings.top_p = 1.0
+settings.temperature = 0.3
+settings.top_p = 0.9
+
+# Add settings
+
+
 
 # Define the tools
 tools = [
@@ -72,17 +76,15 @@ tool_registry = ToolRegistry()
 tool_registry.add_tools(tools)
 
 messages = [
-    ChatMessage.create_system_message(
-        "You are a helpful assistant with tool calling capabilities. Only reply with a tool call if the function exists in the library provided by the user. Use JSON format to output your function calls. If it doesn't exist, just reply directly in natural language. When you receive a tool call response, use the output to format an answer to the original user question."
-    ),
     ChatMessage.create_user_message(
-        "Get the weather in London and New York. Calculate 420 x 420 and retrieve the date and time in the format: %Y-%m-%d %H:%M:%S."
+        "Perform all the following tasks: Get the current weather in celsius in the city of London, Great Britain, New York City, New York and at the North Pole, Arctica. Solve the following calculations: 42 * 42, 74 + 26, 7 * 26, 4 + 6  and 96/8. And retrieve the date and time in the format: %Y-%m-%d %H:%M:%S."
     ),
 ]
 
 
 chat_response = agent.get_response(
-    messages=messages, settings=settings, tool_registry=tool_registry
+    messages=copy(messages), tool_registry=tool_registry, settings=settings
 )
 
 print(chat_response.response)
+

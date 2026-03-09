@@ -12,10 +12,10 @@ from ToolAgents.provider.llm_provider import (
     ChatAPIProvider,
     ProviderSettings,
     StreamingChatMessage,
-    SamplerSetting,
-    AsyncChatAPIProvider,
+    LLMSetting,
+    AsyncChatAPIProvider, SettingLevel,
 )
-from ToolAgents.messages.chat_message import ChatMessage
+from ToolAgents.data_models.messages import ChatMessage
 
 
 class AnthropicChatAPI(ChatAPIProvider):
@@ -23,14 +23,12 @@ class AnthropicChatAPI(ChatAPIProvider):
     def __init__(self, api_key: str, model: str):
         self.client = Anthropic(api_key=api_key)
         self.model = model
-        self.settings = ProviderSettings(
-            {"type": "auto"},
-            [
-                SamplerSetting.create_sampler_setting("temperature", 1.0, 0.0),
-                SamplerSetting.create_sampler_setting("top_p", 1.0, 1.0),
-                SamplerSetting.create_sampler_setting("top_k", 0, 0),
-            ],
-        )
+        self.settings = ProviderSettings([
+            LLMSetting("temperature", default_value=1.0, neutral_value=1.0, level=SettingLevel.REQUEST),
+            LLMSetting("top_p", default_value=1.0, neutral_value=1.0, level=SettingLevel.REQUEST),
+            LLMSetting("top_k", default_value=0, neutral_value=0, level=SettingLevel.REQUEST),
+            LLMSetting("max_tokens", default_value=4096, neutral_value=4096, level=SettingLevel.REQUEST),
+        ])
         self.message_converter = AnthropicMessageConverter()
         self.response_converter = AnthropicResponseConverter()
 
@@ -85,14 +83,12 @@ class AsyncAnthropicChatAPI(AsyncChatAPIProvider):
     def __init__(self, api_key: str, model: str):
         self.client = AsyncAnthropic(api_key=api_key)
         self.model = model
-        self.settings = ProviderSettings(
-            {"type": "auto"},
-            [
-                SamplerSetting.create_sampler_setting("temperature", 1.0, 0.0),
-                SamplerSetting.create_sampler_setting("top_p", 1.0, 1.0),
-                SamplerSetting.create_sampler_setting("top_k", 0, 0),
-            ],
-        )
+        self.settings = ProviderSettings([
+            LLMSetting("temperature", default_value=1.0, neutral_value=1.0, level=SettingLevel.REQUEST),
+            LLMSetting("top_p", default_value=1.0, neutral_value=1.0, level=SettingLevel.REQUEST),
+            LLMSetting("top_k", default_value=0, neutral_value=0, level=SettingLevel.REQUEST),
+            LLMSetting("max_tokens", default_value=4096, neutral_value=4096, level=SettingLevel.REQUEST),
+        ])
         self.message_converter = AnthropicMessageConverter()
         self.response_converter = AnthropicResponseConverter()
 

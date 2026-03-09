@@ -1,4 +1,4 @@
-import copy
+﻿import copy
 import re
 from enum import Enum
 
@@ -12,14 +12,14 @@ from mistral_common.tokens.tokenizers.mistral import (
 )
 
 
-from ToolAgents.messages import ToolCallContent, TextContent, ChatMessage, BinaryContent
-from ToolAgents.messages.chat_message import (
+from ToolAgents.data_models.messages import ToolCallContent, TextContent, ChatMessage, BinaryContent
+from ToolAgents.data_models.messages import (
     BinaryStorageType,
     ToolCallResultContent,
     ChatMessageRole,
 )
 from ToolAgents.provider.message_converter.message_converter import BaseMessageConverter
-from ToolAgents.provider.llm_provider import ProviderSettings, SamplerSetting
+from ToolAgents.provider.llm_provider import LLMSetting, ProviderSettings, SettingLevel
 from ToolAgents.provider.completion_provider.completion_interfaces import (
     LLMTokenizer,
     LLMToolCallHandler,
@@ -64,7 +64,7 @@ class MistralTokenizer(LLMTokenizer):
     def __init__(
         self,
         tokenizer_file: str = None,
-        tokenizer_version: MistralTokenizerVersion = MistralTokenizerVersion.v7,
+        tokenizer_version: MistralTokenizerVersion = MistralTokenizerVersion.v3,
     ):
         if tokenizer_file is not None:
             self.tokenizer = MistralTokenizerOfficial.from_file(
@@ -84,7 +84,7 @@ class MistralTokenizer(LLMTokenizer):
         request = ChatCompletionRequest(tools=tools, messages=messages)
         tokenized = self.tokenizer.encode_chat_completion(request)
         text = tokenized.text
-        text = text.replace("▁", " ")[3:]
+        text = text.replace("â–", " ")[3:]
         text = text.replace("<0x0A>", "\n")
         return text
 
@@ -207,7 +207,7 @@ class MistralMessageConverterLlamaCpp(BaseMessageConverter):
         for message in messages:
             role = message.role.value
             if role == ChatMessageRole.Custom.value:
-                role = message.additional_information["custom_role_name"]
+                role = message.additional_information["custom_role"]
             new_content = []
             tool_calls = []
             for content in message.content:
@@ -274,61 +274,75 @@ import json
 
 class LlamaCppProviderSettings(ProviderSettings):
     def __init__(self):
-        # Define sampler settings with their default and neutral values
-        samplers = [
-            SamplerSetting.create_sampler_setting("temperature", 1.0, 1.0),
-            SamplerSetting.create_sampler_setting("top_k", 0, 0),
-            SamplerSetting.create_sampler_setting("top_p", 1.0, 1.0),
-            SamplerSetting.create_sampler_setting("min_p", 0.0, 0.0),
-            SamplerSetting.create_sampler_setting("tfs_z", 1.0, 1.0),
-            SamplerSetting.create_sampler_setting("typical_p", 1.0, 1.0),
-        ]
-
-        # Initialize base class with empty tool choice and samplers
-        super().__init__(initial_tool_choice="", samplers=samplers)
-
-        # Initialize other default settings
-        self.set_extra_request_kwargs(
-            n_keep=0,
-            repeat_penalty=1.1,
-            repeat_last_n=256,
-            penalize_nl=False,
-            presence_penalty=0.0,
-            frequency_penalty=0.0,
-            penalty_prompt=None,
-            mirostat=0,
-            mirostat_tau=5.0,
-            mirostat_eta=0.1,
-            cache_prompt=True,
-            seed=-1,
-            ignore_eos=False,
+        super().__init__(
+            [
+                LLMSetting("temperature", 1.0, 1.0, level=SettingLevel.REQUEST),
+                LLMSetting("top_k", 0, 0, level=SettingLevel.REQUEST),
+                LLMSetting("top_p", 1.0, 1.0, level=SettingLevel.REQUEST),
+                LLMSetting("min_p", 0.0, 0.0, level=SettingLevel.REQUEST),
+                LLMSetting("tfs_z", 1.0, 1.0, level=SettingLevel.REQUEST),
+                LLMSetting("typical_p", 1.0, 1.0, level=SettingLevel.REQUEST),
+                LLMSetting("max_tokens", 4096, 4096, level=SettingLevel.REQUEST),
+                LLMSetting("stop_sequences", None, None, level=SettingLevel.REQUEST),
+                LLMSetting("samplers", None, None, level=SettingLevel.REQUEST),
+                LLMSetting("n_keep", 0, 0, level=SettingLevel.REQUEST),
+                LLMSetting("repeat_penalty", 1.1, 1.1, level=SettingLevel.REQUEST),
+                LLMSetting("repeat_last_n", 256, 256, level=SettingLevel.REQUEST),
+                LLMSetting("penalize_nl", False, False, level=SettingLevel.REQUEST),
+                LLMSetting("presence_penalty", 0.0, 0.0, level=SettingLevel.REQUEST),
+                LLMSetting("frequency_penalty", 0.0, 0.0, level=SettingLevel.REQUEST),
+                LLMSetting("penalty_prompt", None, None, level=SettingLevel.REQUEST),
+                LLMSetting("mirostat", 0, 0, level=SettingLevel.REQUEST),
+                LLMSetting("mirostat_tau", 5.0, 5.0, level=SettingLevel.REQUEST),
+                LLMSetting("mirostat_eta", 0.1, 0.1, level=SettingLevel.REQUEST),
+                LLMSetting("cache_prompt", True, True, level=SettingLevel.REQUEST),
+                LLMSetting("seed", -1, -1, level=SettingLevel.REQUEST),
+                LLMSetting("ignore_eos", False, False, level=SettingLevel.REQUEST),
+                LLMSetting("extra_body", None, None, level=SettingLevel.REQUEST),
+            ]
         )
 
-    def __getattr__(self, name):
-        super().__getattr__(name)
+    def set_max_new_tokens(self, max_new_tokens: int):
+        self.max_tokens = max_new_tokens
 
-    def __setattr__(self, name, value):
-        super().__setattr__(name, value)
+    def set_stop_tokens(self, stop_sequences, _unused=None):
+        self.stop_sequences = stop_sequences
+
+    def neutralize_all_samplers(self):
+        for sampler_name in ["temperature", "top_k", "top_p", "min_p", "tfs_z", "typical_p"]:
+            self.neutralize(sampler_name)
+
+    def set_extra_request_kwargs(self, **kwargs):
+        for key, value in kwargs.items():
+            if key in self:
+                self[key] = value
+            else:
+                self.add_request_setting(key, value)
+
+    def set_extra_body(self, extra_body: dict[str, Any] | None):
+        self.extra_body = extra_body
 
     def to_dict(
-        self, include: list[str] = None, filter_out: list[str] = None
+        self, include: list[str] = None, exclude: list[str] = None, include_neutral: bool = True
     ) -> dict[str, Any]:
-        """Override to handle the specific requirements of llama.cpp"""
-        # Get base dictionary from parent class
-        result = super().to_dict(include, filter_out)
+        nested = super().to_dict(
+            include=include,
+            exclude=exclude,
+            include_neutral=include_neutral,
+        )
+        request_settings = dict(nested["REQUEST_SETTINGS"])
+        extra_body = request_settings.pop("extra_body", None)
+        stop_sequences = request_settings.pop("stop_sequences", None)
+        max_tokens = request_settings.pop("max_tokens", None)
 
-        # Rename max_tokens to n_predict if present
-        if "max_tokens" in result:
-            result["n_predict"] = result.pop("max_tokens")
-
-        # Rename stop_sequences to stop if present
-        if "stop_sequences" in result:
-            result["stop"] = result.pop("stop_sequences")
-
+        result = request_settings
+        if max_tokens is not None:
+            result["n_predict"] = max_tokens
+        if stop_sequences is not None:
+            result["stop"] = stop_sequences
+        if extra_body:
+            result.update(extra_body)
         return result
-
-    def set_extra_body(self, extra_body: dict[str, Any]):
-        pass
 
 
 class LlamaCppServer(CompletionEndpoint):
@@ -520,3 +534,4 @@ class AsyncLlamaCppServer(AsyncCompletionEndpoint):
                             yield data["content"]
                         except json.JSONDecodeError as e:
                             raise RuntimeError(f"Failed to parse JSON: {buffer}") from e
+

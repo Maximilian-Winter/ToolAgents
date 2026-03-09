@@ -1,4 +1,4 @@
-import json
+﻿import json
 import os
 from enum import Enum
 
@@ -9,8 +9,7 @@ from ToolAgents.agents import ChatToolAgent
 from ToolAgents.pipelines.pipeline import ProcessStep, Pipeline, SequentialProcess
 
 from ToolAgents.provider.chat_api_provider.anthropic import (
-    AnthropicChatAPI,
-    AnthropicSettings,
+    AnthropicChatAPI
 )
 
 load_dotenv()
@@ -85,3 +84,4 @@ pipeline = Pipeline()
 pipeline.add_process(math_greeting)
 results = pipeline.run_pipeline(operation="multiply", num1=5, num2=3, name="Alex")
 print(results["greeting"])
+

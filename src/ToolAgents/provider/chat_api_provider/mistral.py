@@ -10,24 +10,20 @@ from ToolAgents.provider.message_converter.mistral_message_converter import (
 )
 from ToolAgents.provider.llm_provider import (
     ProviderSettings,
-    SamplerSetting,
-    AsyncChatAPIProvider,
+    AsyncChatAPIProvider, LLMSetting, SettingLevel,
 )
 from ToolAgents.provider.llm_provider import ChatAPIProvider, StreamingChatMessage
-from ToolAgents.messages.chat_message import ChatMessage
+from ToolAgents.data_models.messages import ChatMessage
 
 
 class MistralChatAPI(ChatAPIProvider):
     def __init__(self, api_key: str, model: str):
         self.client = Mistral(api_key=api_key)
         self.model = model
-        self.settings = ProviderSettings(
-            "auto",
-            [
-                SamplerSetting.create_sampler_setting("temperature", 1.0, 0.0),
-                SamplerSetting.create_sampler_setting("top_p", 1.0, 1.0),
-            ],
-        )
+        self.settings = ProviderSettings([
+            LLMSetting("temperature", default_value=1.0, neutral_value=1.0, level=SettingLevel.REQUEST),
+            LLMSetting("top_p", default_value=1.0, neutral_value=1.0, level=SettingLevel.REQUEST),
+        ])
         self.message_converter = MistralMessageConverter()
         self.response_converter = MistralResponseConverter()
 
@@ -82,13 +78,10 @@ class AsyncMistralChatAPI(AsyncChatAPIProvider):
     def __init__(self, api_key: str, model: str):
         self.client = Mistral(api_key=api_key)
         self.model = model
-        self.settings = ProviderSettings(
-            "auto",
-            [
-                SamplerSetting.create_sampler_setting("temperature", 1.0, 0.0),
-                SamplerSetting.create_sampler_setting("top_p", 1.0, 1.0),
-            ],
-        )
+        self.settings = ProviderSettings([
+            LLMSetting("temperature", default_value=1.0, neutral_value=1.0, level=SettingLevel.REQUEST),
+            LLMSetting("top_p", default_value=1.0, neutral_value=1.0, level=SettingLevel.REQUEST),
+        ])
         self.message_converter = MistralMessageConverter()
         self.response_converter = MistralResponseConverter()
 

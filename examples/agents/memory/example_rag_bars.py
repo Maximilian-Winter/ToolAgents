@@ -1,19 +1,19 @@
-import requests
+﻿import requests
 
 from ToolAgents import ToolRegistry, FunctionTool
 from ToolAgents.agents import ChatToolAgent
 from ToolAgents.knowledge.vector_database import RAG
-from ToolAgents.knowledge.vector_database.implementations.chroma_db import (
+from ToolAgents.knowledge.vector_database.implementations.chroma_db_vector_database import (
     ChromaDbVectorDatabaseProvider,
 )
-from ToolAgents.knowledge.vector_database.implementations.mbxai_reranking import (
-    MXBAIRerankingProvider,
+from ToolAgents.knowledge.vector_database.implementations.cross_encoder_reranking import (
+    CrossEncoderRerankingProvider,
 )
 from ToolAgents.knowledge.vector_database.implementations.sentence_transformer_embeddings import (
     SentenceTransformerEmbeddingProvider,
 )
-from ToolAgents.messages import ChatMessage
-from ToolAgents.provider import CompletionProvider
+from ToolAgents.data_models.messages import ChatMessage
+from ToolAgents.provider import CompletionProvider, OpenAIChatAPI
 from ToolAgents.provider.completion_provider.default_implementations import (
     LlamaCppServer,
 )
@@ -49,7 +49,7 @@ from ToolAgents.knowledge.text_processing.text_splitter import (
 
 rag = RAG(
     ChromaDbVectorDatabaseProvider(
-        SentenceTransformerEmbeddingProvider(), MXBAIRerankingProvider()
+        SentenceTransformerEmbeddingProvider(device="cuda"), CrossEncoderRerankingProvider(device="cuda")
     )
 )
 
@@ -86,11 +86,11 @@ for split in splits:
         continue
     rag.add_document(split)
 
-api = CompletionProvider(completion_endpoint=LlamaCppServer("http://127.0.0.1:8080"))
+api = OpenAIChatAPI(api_key="<KEY>", base_url="http://127.0.0.1:8080/v1", model="gpt-4o-mini")
 
-agent = ChatToolAgent(chat_api=api, debug_output=True)
+agent = ChatToolAgent(chat_api=api, log_output=True)
 
-system_message = "You are an advanced AI assistant, trained by OpenAI."
+system_message = "You are an advanced AI assistant"
 
 
 settings = api.get_default_settings()
@@ -131,7 +131,7 @@ def create_query_extension(query_extension: QueryExtension):
     """
     global output_settings
     output_settings = query_extension
-
+    return "Query extension created successfully."
 
 # Define a query extension agent which will extend the query with additional queries.
 system_message = "You are a world class query extension algorithm capable of extending queries by writing new queries. Do not answer the queries, use your 'create_query_extension' tool to create new queries."
@@ -169,7 +169,7 @@ prompt += "\n======================\nQuestion: " + query
 
 
 # Define a query extension agent which will extend the query with additional queries.
-system_message = "You are an advanced AI assistant, trained by OpenAI. Only answer question based on the context information provided."
+system_message = "You are an advanced AI assistant."
 chat_history = [
     ChatMessage.create_system_message(system_message),
     ChatMessage.create_user_message(prompt),
@@ -178,3 +178,4 @@ chat_history = [
 # Perform the query extension with the agent.
 output = agent.get_response(chat_history)
 print(output.response)
+

@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 from typing import List, Dict, Any, Generator, Optional, AsyncGenerator
 
 from ToolAgents import FunctionTool
-from ToolAgents.messages.chat_message import ChatMessage
+from ToolAgents.data_models.messages import ChatMessage
 from ToolAgents.provider.llm_provider import StreamingChatMessage, ProviderSettings
 
 

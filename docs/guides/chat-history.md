@@ -4,209 +4,133 @@ title: Working with Chat History
 
 # Working with Chat History
 
-Maintaining chat history is essential for building coherent conversations with LLM agents. This guide covers the ChatHistory class and related functionality in ToolAgents.
+`ChatHistory` is the main in-memory conversation container in ToolAgents.
 
-## The ChatHistory Class
-
-ToolAgents provides a `ChatHistory` class that simplifies managing conversation messages:
+## Basic Usage
 
 ```python
-from ToolAgents.messages import ChatHistory
-from ToolAgents.messages.chat_message import ChatMessage
+from ToolAgents.data_models.chat_history import ChatHistory
 
-# Create a new chat history
 chat_history = ChatHistory()
-
-# Add a system message
 chat_history.add_system_message(
     "You are a helpful assistant with tool calling capabilities."
 )
-
-# Add a user message
 chat_history.add_user_message("Can you help me find the weather in San Francisco?")
 
-# Get all messages as a list
 messages = chat_history.get_messages()
 ```
 
 ## Adding Messages
 
-You can add different types of messages to the chat history:
+```python
+from ToolAgents.data_models.messages import ChatMessage
+
+chat_history.add_system_message("Additional system instructions...")
+chat_history.add_user_message("What's the weather like today?")
+chat_history.add_assistant_message("I'll check that for you.")
+
+chat_history.add_message(
+    ChatMessage.create_user_message("Another question")
+)
+chat_history.add_messages(
+    [
+        ChatMessage.create_assistant_message("Another answer"),
+    ]
+)
+```
+
+For simple text dictionaries, you can also use:
 
 ```python
-# Add a system message
-chat_history.add_system_message("Additional system instructions...")
-
-# Add a user message
-chat_history.add_user_message("What's the weather like today?")
-
-# Add an assistant message
-chat_history.add_assistant_message("I'll check the weather for you.")
-
-# Add a tool result message
-chat_history.add_tool_message("get_weather", {"temperature": 22, "condition": "sunny"})
-
-# Add multiple messages at once
-additional_messages = [
-    ChatMessage.create_user_message("Another question"),
-    ChatMessage.create_assistant_message("Another answer")
-]
-chat_history.add_messages(additional_messages)
+chat_history.add_message_from_dictionary(
+    {"role": "user", "content": "Hello"}
+)
+chat_history.add_messages_from_dictionaries(
+    [
+        {"role": "system", "content": "You are helpful."},
+        {"role": "user", "content": "What can you do?"},
+    ]
+)
 ```
 
 ## Using Chat History with Agents
 
-Here's how to use chat history with a `ChatToolAgent`:
-
 ```python
+from ToolAgents import ToolRegistry
 from ToolAgents.agents import ChatToolAgent
 from ToolAgents.provider import OpenAIChatAPI
-from ToolAgents import ToolRegistry
 
-# Set up the API and agent
 api = OpenAIChatAPI(api_key="your-api-key", model="gpt-4o-mini")
 agent = ChatToolAgent(chat_api=api)
 settings = api.get_default_settings()
 
-# Set up tools
 tool_registry = ToolRegistry()
-tool_registry.add_tools([your_tool1, your_tool2])
+# tool_registry.add_tool(your_tool)
 
-# Initialize chat history
-chat_history = ChatHistory()
-chat_history.add_system_message(
-    "You are a helpful assistant with access to tools."
+response = agent.get_response(
+    messages=chat_history.get_messages(),
+    settings=settings,
+    tool_registry=tool_registry,
 )
 
-# User interaction loop
-while True:
-    user_input = input("User: ")
-    if user_input.lower() == "exit":
-        break
-        
-    # Add user message to history
-    chat_history.add_user_message(user_input)
-    
-    # Get response from agent
-    response = agent.get_response(
-        messages=chat_history.get_messages(),
-        settings=settings,
-        tool_registry=tool_registry
-    )
-    
-    # Display response
-    print(f"Assistant: {response.response}")
-    
-    # Add generated messages to history
-    chat_history.add_messages(response.messages)
+chat_history.add_messages(response.messages)
 ```
 
-## Saving and Loading Chat History
-
-You can save chat history to and load it from JSON files:
+## Saving and Loading
 
 ```python
-# Save chat history to a file
 chat_history.save_to_json("conversation.json")
-
-# Load chat history from a file
 loaded_history = ChatHistory.load_from_json("conversation.json")
 ```
 
-## Manipulating Chat History
-
-You can also manipulate the chat history:
+## Common Operations
 
 ```python
-# Get the number of messages
-message_count = len(chat_history)
+message_count = chat_history.get_message_count()
+last_message = chat_history.get_last_message()
+recent_messages = chat_history.get_last_k_messages(5)
 
-# Get a specific message
-first_message = chat_history[0]
-
-# Remove the last message
-chat_history.pop()
-
-# Clear the entire history
+chat_history.remove_last_message()
 chat_history.clear()
-
-# Set a completely new list of messages
-new_messages = [
-    ChatMessage.create_system_message("System prompt"),
-    ChatMessage.create_user_message("User message")
-]
-chat_history.set_messages(new_messages)
+chat_history.clear_history()
 ```
 
-## Advanced: Chat Database
+## Managing Multiple Chats
 
-For more complex applications, ToolAgents also provides a `ChatDatabase` class that can manage multiple conversations:
+For multiple in-memory conversations, use `Chats`:
 
 ```python
-from ToolAgents.messages import ChatDatabase
+from ToolAgents.data_models.chat_history import Chats
 
-# Create a chat database
-chat_db = ChatDatabase()
+chats = Chats()
+chat_id = chats.create_chat("My Conversation")
+chats.add_system_message(chat_id, "You are helpful.")
+chats.add_user_message(chat_id, "Hello")
 
-# Create a new conversation
-conversation_id = chat_db.create_conversation("My Conversation")
-
-# Add messages to a conversation
-chat_db.add_system_message(conversation_id, "System instructions")
-chat_db.add_user_message(conversation_id, "Hello")
-
-# Get all messages for a conversation
-messages = chat_db.get_messages(conversation_id)
-
-# Save and load the entire database
-chat_db.save_to_json("chat_database.json")
-loaded_db = ChatDatabase.load_from_json("chat_database.json")
+messages = chats.get_messages(chat_id)
+chats.save_to_json("chats.json")
+loaded_chats = Chats.load_from_json("chats.json")
 ```
 
-## Chat History with Memory
+## Database-Backed Chat Storage
 
-For agents that need long-term memory, you can combine chat history with semantic memory:
+If you want SQLite-backed persistence, use `ChatManager`:
 
 ```python
-from ToolAgents.agent_memory.semantic_memory import HierarchicalMemory
+from ToolAgents.data_models.messages import ChatMessage
+from ToolAgents.utilities.chat_database import ChatManager
 
-# Create a memory instance
-memory = HierarchicalMemory()
-
-# Store important information in memory
-memory.add_memory("User likes hiking.")
-memory.add_memory("User is from San Francisco.")
-
-# Retrieve relevant memories for the current conversation
-query = "What activities should I recommend?"
-relevant_memories = memory.search_memory(query, top_k=3)
-
-# Incorporate memories into the system message
-system_message = f"""
-You are a helpful assistant.
-Here's what you know about the user:
-{' '.join(relevant_memories)}
-"""
-
-chat_history = ChatHistory()
-chat_history.add_system_message(system_message)
+chat_db = ChatManager()
+chat = chat_db.create_chat("My Conversation")
+chat_db.add_message(chat["id"], ChatMessage.create_user_message("Hello"))
+messages = chat_db.get_chat_messages(chat["id"])
 ```
+
+`ChatManager` is database-oriented; JSON save/load is handled by `ChatHistory` and `Chats`.
 
 ## Best Practices
 
-When working with chat history:
-
-1. **Keep system messages concise**: Include only what the agent needs to know
-2. **Manage context length**: For long conversations, consider summarizing or truncating older messages
-3. **Include tool calls**: Keep tool calls and their results in the history for context
-4. **Preserve format**: Avoid modifying message formats to maintain compatibility
-5. **Save regularly**: Save chat history at appropriate intervals to prevent data loss
-
-## Next Steps
-
-Now that you know how to work with chat history:
-
-- [Use streaming responses](streaming.md) for a better user experience
-- [Explore different agent types](../components/agents.md)
-- [Learn about memory features](../examples/memory.md)
-- [See complete examples](../examples/basic-agents.md)
+1. Keep `ChatHistory` as the source of truth for the current conversation.
+2. Append full `response.messages` after agent calls so tool results stay in context.
+3. Use `Chats` when you want multiple JSON-serializable conversations.
+4. Use `ChatManager` only when you want database-backed storage.

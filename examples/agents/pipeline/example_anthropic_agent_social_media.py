@@ -1,4 +1,4 @@
-import os
+﻿import os
 
 from dotenv import load_dotenv
 
@@ -6,8 +6,7 @@ from ToolAgents.agents import ChatToolAgent
 from ToolAgents.pipelines.pipeline import ProcessStep, Pipeline, SequentialProcess
 
 from ToolAgents.provider.chat_api_provider.anthropic import (
-    AnthropicChatAPI,
-    AnthropicSettings,
+    AnthropicChatAPI
 )
 
 
@@ -18,7 +17,7 @@ api = AnthropicChatAPI(
 )
 
 # Create the ChatAPIAgent
-agent = ChatToolAgent(chat_api=api, debug_output=True)
+agent = ChatToolAgent(chat_api=api)
 
 settings = api.get_default_settings()
 settings.neutralize_all_samplers()
@@ -54,10 +53,10 @@ results = pipeline.run_pipeline(
 Quantum computing represents a revolutionary approach to information processing, leveraging the principles of quantum mechanics to solve problems that are intractable for classical computers. This article explores the fundamental concepts of quantum computing, its potential applications, and the challenges it faces.
 
 **Quantum Mechanics and Computing**
-Quantum computers use quantum bits, or qubits, which can exist in multiple states simultaneously, thanks to superposition. This capability, combined with entanglement—where the state of one qubit can depend on the state of another, no matter the distance between them—allows quantum computers to process a vast number of possibilities concurrently.
+Quantum computers use quantum bits, or qubits, which can exist in multiple states simultaneously, thanks to superposition. This capability, combined with entanglementâ€”where the state of one qubit can depend on the state of another, no matter the distance between themâ€”allows quantum computers to process a vast number of possibilities concurrently.
 
 **Quantum Algorithms**
-Several algorithms have been developed for quantum computers that show significant speed-ups over their classical counterparts. Shor’s Algorithm, for instance, can factorize large integers exponentially faster than the best-known classical algorithms, which has profound implications for cryptography. Grover's Algorithm offers a quadratic speedup for unstructured search problems.
+Several algorithms have been developed for quantum computers that show significant speed-ups over their classical counterparts. Shorâ€™s Algorithm, for instance, can factorize large integers exponentially faster than the best-known classical algorithms, which has profound implications for cryptography. Grover's Algorithm offers a quadratic speedup for unstructured search problems.
 
 **Applications**
 Quantum computing has potential applications across various fields:
@@ -76,3 +75,4 @@ Quantum computing is still in its infancy, but it holds the promise of massive c
 )
 
 print(results["social_media_post"])
+

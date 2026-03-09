@@ -3,9 +3,11 @@ import dataclasses
 import uuid
 from typing import Optional, Any
 
+from numpy import ndarray
+
 from ToolAgents.knowledge import Document
 from ToolAgents.knowledge.vector_database.reranking_provider import RerankingProvider
-from ToolAgents.knowledge.vector_database.embedding_provider import EmbeddingProvider
+from ToolAgents.knowledge.vector_database.embedding_provider import EmbeddingProvider, EmbeddingResult
 
 
 @dataclasses.dataclass
@@ -13,6 +15,14 @@ class VectorSearchResult:
     ids: list[str]
     chunks: list[str]
     scores: list[float]
+    metadata: Optional[list[dict[str, Any]]] = None
+
+
+@dataclasses.dataclass
+class VectorCollection:
+    ids: list[str]
+    chunks: list[str]
+    embeddings: list[ndarray]
     metadata: Optional[list[dict[str, Any]]] = None
 
 
@@ -35,6 +45,10 @@ class VectorDatabaseProvider(abc.ABC):
         pass
 
     @abc.abstractmethod
+    def add_texts_with_id(self, ids: list[str], texts: list[str], metadata: list[dict]) -> None:
+        pass
+
+    @abc.abstractmethod
     def query(
         self, query: str, query_filter: Any = None, k: int = 3, **kwargs
     ) -> VectorSearchResult:
@@ -42,6 +56,22 @@ class VectorDatabaseProvider(abc.ABC):
 
     @abc.abstractmethod
     def create_or_set_current_collection(self, collection_name: str) -> None:
+        pass
+
+    @abc.abstractmethod
+    def remove_by_ids(self, ids: list[str]) -> None:
+        pass
+
+    @abc.abstractmethod
+    def get_all_entries(self) -> VectorCollection:
+        pass
+
+    @abc.abstractmethod
+    def delete_collection(self, collection_name: str) -> None:
+        pass
+
+    @abc.abstractmethod
+    def update_metadata(self, ids: list[str], metadata: list[dict[str, Any]]) -> None:
         pass
 
     @staticmethod

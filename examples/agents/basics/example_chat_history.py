@@ -1,8 +1,8 @@
-import os
+﻿import os
 
 from ToolAgents import ToolRegistry
 from ToolAgents.agents import ChatToolAgent
-from ToolAgents.messages import ChatHistory
+from ToolAgents.data_models.chat_history import ChatHistory
 
 from ToolAgents.provider import GroqChatAPI
 
@@ -54,3 +54,4 @@ print(chat_response.response)
 
 chat_history.add_messages(chat_response.messages)
 chat_history.save_to_json("chat_history_example.json")
+

@@ -1,4 +1,4 @@
-from ToolAgents.agent_memory import (
+﻿from ToolAgents.agent_memory import (
     SemanticMemory,
     semantic_memory_nomic_text_gpu_config,
 )
@@ -6,21 +6,19 @@ from ToolAgents.agent_memory.semantic_memory.hdbscan_cluster_embeddings_strategy
     HDBSCANClusterEmbeddingsStrategy,
 )
 from ToolAgents.agents import ChatToolAgent
-from ToolAgents.messages import ChatMessage
+from ToolAgents.data_models.messages import ChatMessage
 
-from ToolAgents.provider import CompletionProvider
-from ToolAgents.provider.completion_provider.default_implementations import (
-    LlamaCppServer,
-)
+from ToolAgents.provider import OpenAIChatAPI
 
-api = CompletionProvider(completion_endpoint=LlamaCppServer("http://127.0.0.1:8080"))
 
-agent = ChatToolAgent(chat_api=api, debug_output=True)
+api = OpenAIChatAPI(api_key="token-abc123", base_url="http://127.0.0.1:8080/v1", model="Mistral-Small-3.2-24B-Instruct-2506")
+
+agent = ChatToolAgent(chat_api=api)
 
 settings = api.get_default_settings()
 settings.neutralize_all_samplers()
 settings.temperature = 0.4
-settings.set_stop_tokens(["</s>", "<|im_end|>"])
+
 settings.set_max_new_tokens(4096)
 
 pair = []
@@ -63,7 +61,7 @@ chat_history = [
     },
     {
         "role": "user",
-        "content": "That’s mind-blowing! Does this mean time travel to the future is possible?",
+        "content": "Thatâ€™s mind-blowing! Does this mean time travel to the future is possible?",
     },
     {
         "role": "assistant",
@@ -71,7 +69,7 @@ chat_history = [
     },
     {
         "role": "user",
-        "content": "I've been thinking more about our discussion on relativity. You mentioned time dilation near a black hole—does that mean astronauts could use this to extend their lifespan?",
+        "content": "I've been thinking more about our discussion on relativity. You mentioned time dilation near a black holeâ€”does that mean astronauts could use this to extend their lifespan?",
     },
     {
         "role": "assistant",
@@ -99,7 +97,7 @@ chat_history = [
     },
     {
         "role": "assistant",
-        "content": "Good memory! Some theoretical models suggest that time travel to the past might be possible under special conditions. One idea involves 'closed timelike curves,' predicted in solutions to Einstein's equations, like those involving rotating black holes (Kerr black holes) or wormholes. However, these require exotic matter with negative energy, which hasn’t been observed in nature.",
+        "content": "Good memory! Some theoretical models suggest that time travel to the past might be possible under special conditions. One idea involves 'closed timelike curves,' predicted in solutions to Einstein's equations, like those involving rotating black holes (Kerr black holes) or wormholes. However, these require exotic matter with negative energy, which hasnâ€™t been observed in nature.",
     },
     {
         "role": "user",
@@ -115,15 +113,15 @@ chat_history = [
     },
     {
         "role": "assistant",
-        "content": "It really does! Einstein revolutionized our understanding of reality, showing that time isn’t absolute and space can bend. The universe is far stranger than we ever imagined!",
+        "content": "It really does! Einstein revolutionized our understanding of reality, showing that time isnâ€™t absolute and space can bend. The universe is far stranger than we ever imagined!",
     },
     {
         "role": "user",
-        "content": "I've been thinking about what you said last time—if time slows down near a black hole, does that mean someone could theoretically survive to see the end of the universe?",
+        "content": "I've been thinking about what you said last timeâ€”if time slows down near a black hole, does that mean someone could theoretically survive to see the end of the universe?",
     },
     {
         "role": "assistant",
-        "content": "That’s a fascinating thought! In theory, yes—if someone stayed near the event horizon of a supermassive black hole without falling in, time for them would pass much slower than for the rest of the universe. Billions of years could pass outside while they only experience a fraction of that time. However, surviving that long near a black hole would be nearly impossible due to extreme radiation and tidal forces.",
+        "content": "Thatâ€™s a fascinating thought! In theory, yesâ€”if someone stayed near the event horizon of a supermassive black hole without falling in, time for them would pass much slower than for the rest of the universe. Billions of years could pass outside while they only experience a fraction of that time. However, surviving that long near a black hole would be nearly impossible due to extreme radiation and tidal forces.",
     },
     {
         "role": "user",
@@ -131,7 +129,7 @@ chat_history = [
     },
     {
         "role": "assistant",
-        "content": "Great question! Tidal forces occur because gravity pulls more strongly on objects that are closer to a massive body. Near a black hole, this difference in gravitational pull can be extreme—if you were falling in feet-first, your feet would experience much stronger gravity than your head, stretching you into what scientists call 'spaghettification.'",
+        "content": "Great question! Tidal forces occur because gravity pulls more strongly on objects that are closer to a massive body. Near a black hole, this difference in gravitational pull can be extremeâ€”if you were falling in feet-first, your feet would experience much stronger gravity than your head, stretching you into what scientists call 'spaghettification.'",
     },
     {
         "role": "user",
@@ -139,7 +137,7 @@ chat_history = [
     },
     {
         "role": "assistant",
-        "content": "Yes! Rotating black holes, also known as Kerr black holes, have a unique feature called an ergosphere, where space itself is dragged along with the rotation. Some theories suggest that if you enter a Kerr black hole at just the right angle, you might avoid the singularity and possibly emerge somewhere else—though whether that 'somewhere else' is another universe or just oblivion is unknown.",
+        "content": "Yes! Rotating black holes, also known as Kerr black holes, have a unique feature called an ergosphere, where space itself is dragged along with the rotation. Some theories suggest that if you enter a Kerr black hole at just the right angle, you might avoid the singularity and possibly emerge somewhere elseâ€”though whether that 'somewhere else' is another universe or just oblivion is unknown.",
     },
     {
         "role": "user",
@@ -147,7 +145,7 @@ chat_history = [
     },
     {
         "role": "assistant",
-        "content": "You're making great connections! Some theories suggest that a rotating black hole could act as a natural wormhole, but we don’t have any evidence to confirm this. Wormholes require exotic matter to stay open, whereas a Kerr black hole still has an event horizon, meaning once you cross it, escape isn’t guaranteed.",
+        "content": "You're making great connections! Some theories suggest that a rotating black hole could act as a natural wormhole, but we donâ€™t have any evidence to confirm this. Wormholes require exotic matter to stay open, whereas a Kerr black hole still has an event horizon, meaning once you cross it, escape isnâ€™t guaranteed.",
     },
     {
         "role": "user",
@@ -163,7 +161,7 @@ chat_history = [
     },
     {
         "role": "assistant",
-        "content": "One reason is causality—allowing backward time travel could lead to paradoxes, like the famous 'grandfather paradox,' where someone could alter their own past and create logical inconsistencies. Additionally, even theoretical models that permit time loops require conditions that may not exist in reality, like exotic matter with negative energy density.",
+        "content": "One reason is causalityâ€”allowing backward time travel could lead to paradoxes, like the famous 'grandfather paradox,' where someone could alter their own past and create logical inconsistencies. Additionally, even theoretical models that permit time loops require conditions that may not exist in reality, like exotic matter with negative energy density.",
     },
     {
         "role": "user",
@@ -179,7 +177,7 @@ chat_history = [
     },
     {
         "role": "assistant",
-        "content": "Absolutely! Einstein’s work opened up a universe of strange possibilities, many of which we’re still exploring today. The more we learn, the more mysterious and beautiful the cosmos becomes!",
+        "content": "Absolutely! Einsteinâ€™s work opened up a universe of strange possibilities, many of which weâ€™re still exploring today. The more we learn, the more mysterious and beautiful the cosmos becomes!",
     },
 ]
 
@@ -214,3 +212,4 @@ result = agent.get_streaming_response(
 for tok in result:
     print(tok.chunk, end="", flush=True)
 print()
+

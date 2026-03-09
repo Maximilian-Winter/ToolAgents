@@ -1,263 +1,254 @@
 import abc
 import copy
 import datetime
+import enum
 import json
+from dataclasses import dataclass
 from typing import List, Dict, Optional, Generator, Any, Union, AsyncGenerator
 
 from ToolAgents import FunctionTool, ToolRegistry
 from pydantic import BaseModel, Field
 from typing import Dict, Optional, Any, Union
 
-from ToolAgents.messages.chat_message import ChatMessage
+from ToolAgents.data_models.messages import ChatMessage, StreamingChatMessage
 from ToolAgents.utilities.logging import EasyLogger
 
 
-class StreamingChatMessage(BaseModel):
+
+
+
+class SettingLevel(enum.Enum):
+    """Where a setting should be placed in the API request."""
+    PROVIDER = "provider"  # Top-level request parameter
+    REQUEST = "request"
+    METADATA = "metadata"  # Not sent to API, used for tracking
+
+
+@dataclass
+class LLMSetting:
     """
-    Represents a streaming chat API response.
+    Represents a single LLM setting with default and neutral values.
+
+    Simplified from the original - just stores the values directly
+    instead of wrapping them in dicts.
     """
+    name: str
+    default_value: Any
+    neutral_value: Any
+    level: SettingLevel = SettingLevel.PROVIDER
+    current_value: Any = None
 
-    chunk: str
-    is_tool_call: bool = False
-    tool_call: Optional[Dict[str, Any]] = None
-    finished: bool = False
-    finished_chat_message: Optional[ChatMessage] = None
-
-    def get_chunk(self) -> str:
-        return self.chunk
-
-    def get_is_tool_call(self) -> bool:
-        return self.is_tool_call
-
-    def get_tool_call(self) -> Dict[str, Any]:
-        return self.tool_call
-
-    def get_finished(self) -> bool:
-        return self.finished
-
-    def get_finished_chat_message(self) -> Union[ChatMessage, None]:
-        return self.finished_chat_message
-
-    class Config:
-        arbitrary_types_allowed = True  # To allow ChatMessage custom type
-
-
-class SamplerSetting(BaseModel):
-    name: str = Field(..., title="Sampler name")
-    default_value: dict[str, Any] = Field(..., title="Sampler default value")
-    neutral_value: dict[str, Any] = Field(
-        ..., title="Sampler when neutral (turned off)"
-    )
-    sampler_value: dict[str, Any] = Field(..., title="Sampler value")
-    is_single_value: bool = Field(..., title="Sampler when value is single value")
-
-    @staticmethod
-    def create_sampler_setting(
-        name: str, default_value: Any, neutral_value: Any
-    ) -> "SamplerSetting":
-        if isinstance(default_value, dict) and isinstance(neutral_value, dict):
-            return SamplerSetting(
-                name=name,
-                default_value=default_value,
-                neutral_value=neutral_value,
-                sampler_value=default_value,
-                is_single_value=False,
-            )
-        elif not isinstance(default_value, dict) and not isinstance(
-            neutral_value, dict
-        ):
-            return SamplerSetting(
-                name=name,
-                default_value={name: default_value},
-                neutral_value={name: neutral_value},
-                sampler_value={name: default_value},
-                is_single_value=True,
-            )
-        else:
-            raise RuntimeError(
-                f"Wrong default and neutral value types, has to be either both dict or not!\nDefault Value Type:{default_value}\nNeutral Value:{neutral_value}"
-            )
-
-    def get_sampler_name(self) -> str:
-        return self.name
-
-    def get_default_value(self) -> Any:
-        if self.is_single_value:
-            return self.default_value[self.name]
-        else:
-            return self.sampler_default_value
-
-    def get_neutral_value(self) -> Any:
-        if self.is_single_value:
-            return self.sampler_neutral_value[self.name]
-        else:
-            return self.sampler_neutral_value
+    def __post_init__(self):
+        if self.current_value is None:
+            self.current_value = self.default_value
 
     def get_value(self) -> Any:
-        if self.is_single_value:
-            return self.sampler_value[self.name]
-        else:
-            return self.sampler_value
+        """Get current value."""
+        return self.current_value
 
     def set_value(self, value: Any) -> None:
-        if self.is_single_value:
-            self.sampler_value[self.name] = value
-        else:
-            self.sampler_value = value
+        """Set current value."""
+        self.current_value = value
 
     def reset(self) -> None:
-        self.sampler_value = self.default_value
+        """Reset to default value."""
+        self.current_value = self.default_value
 
     def neutralize(self) -> None:
-        self.sampler_value = self.neutral_value
+        """Set to neutral (disabled) value."""
+        self.current_value = self.neutral_value
+
+    def is_neutral(self) -> bool:
+        """Check if currently at neutral value."""
+        return self.current_value == self.neutral_value
 
 
-class ProviderSettings(abc.ABC):
-    def __init__(
-        self, initial_tool_choice: Union[str, dict], samplers: List[SamplerSetting]
-    ):
-        self.extra_body = None
-        self.response_format = None
-        self.request_kwargs = {}
-        self.tool_choice = initial_tool_choice
-        self.max_tokens = 4096
-        self.stop_sequences = []
-        self.samplers = {}
-        for sampler in samplers:
-            self.samplers[sampler.name] = sampler
+class ProviderSettings:
+    """
+    Manages LLM settings with support for different placement levels.
 
-    def set(self, setting_key: str, setting_value: Any):
-        if hasattr(self, setting_key):
-            setattr(self, setting_key, setting_value)
+    Settings can be at provider level (top-level params) or in extra_body.
+    """
+
+    def __init__(self, settings: Optional[List[LLMSetting]] = None):
+        self._settings: Dict[str, LLMSetting] = {}
+        if settings:
+            for setting in settings:
+                self._settings[setting.name] = setting
+
+    def add_setting(self, setting: LLMSetting) -> None:
+        """Add a new setting."""
+        self._settings[setting.name] = setting
+
+    def add_request_setting(self, name: str, value: Any) -> None:
+        """Add a new setting."""
+        setting = LLMSetting(name, value, value, level=SettingLevel.REQUEST)
+        self._settings[setting.name] = setting
+
+    def add_provider_setting(self, name: str, value: Any) -> None:
+        """Add a new setting."""
+        setting = LLMSetting(name, value, value, level=SettingLevel.PROVIDER)
+        self._settings[setting.name] = setting
+
+    def remove_setting(self, name: str) -> None:
+        """Remove a setting by name."""
+        if name in self._settings:
+            del self._settings[name]
+
+    def get_setting(self, name: str) -> Optional[LLMSetting]:
+        """Get a setting object by name."""
+        return self._settings.get(name)
+
+    def get_value(self, name: str) -> Any:
+        """Get current value of a setting."""
+        setting = self._settings.get(name)
+        return setting.get_value() if setting else None
+
+    def set_value(self, name: str, value: Any) -> None:
+        """Set current value of a setting."""
+        if name in self._settings:
+            self._settings[name].set_value(value)
         else:
-            if self.request_kwargs is None:
-                self.request_kwargs = {}
-            self.request_kwargs[setting_key] = setting_value
+            raise KeyError(name)
 
-    def save_to_file(self, settings_file: str):
-        with open(settings_file, "w") as f:
-            json.dump(self.to_dict(), f, indent=2)
+    def update(self, **kwargs) -> None:
+        """Update multiple settings at once."""
+        for name, value in kwargs.items():
+            self.set_value(name, value)
 
-    def load_from_file(self, settings_file: str):
-        with open(settings_file, "r") as f:
-            data = json.load(f)
-        for key, value in data.items():
-            setattr(self, key, value)
+    def reset(self, name: str) -> None:
+        """Reset a setting to default."""
+        if name in self._settings:
+            self._settings[name].reset()
+
+    def reset_all(self) -> None:
+        """Reset all settings to defaults."""
+        for setting in self._settings.values():
+            setting.reset()
+
+    def neutralize(self, name: str) -> None:
+        """Set a setting to neutral value."""
+        if name in self._settings:
+            self._settings[name].neutralize()
+
+    def neutralize_all(self) -> None:
+        """Set all settings to neutral values."""
+        for setting in self._settings.values():
+            setting.neutralize()
 
     def to_dict(
-        self, include: list[str] = None, filter_out: list[str] = None
-    ) -> dict[str, Any]:
-        result = {
-            "max_tokens": self.max_tokens,
-            "stop_sequences": self.stop_sequences,
-            "tool_choice": self.tool_choice,
-        }
-        if self.extra_body:
-            result["extra_body"] = self.extra_body
-        if self.response_format:
-            result["response_format"] = self.response_format
+            self,
+            include: Optional[List[str]] = None,
+            exclude: Optional[List[str]] = None,
+            include_neutral: bool = True,
+            param_mapping: Optional[Dict[str, str]] = None
+    ) -> Dict[str, Any]:
+        """
+        Convert settings to dict for API request.
 
-        if len(self.request_kwargs) > 0:
-            for key, value in self.request_kwargs.items():
-                result[key] = value
+        Args:
+            include: Only include these setting names
+            exclude: Exclude these setting names
+            include_neutral: Include settings at neutral value
+            param_mapping: Rename parameters (e.g., {'max_tokens': 'max_new_tokens'})
+        Returns:
+            Dict with provider-level settings at top level and extra_body nested
+        """
+        result = { "PROVIDER_SETTINGS": {}, "REQUEST_SETTINGS": {}, "METADATA": {} }
 
-        for key, value in self.samplers.items():
-            result[key] = value.get_value()
+        for name, setting in self._settings.items():
+            # Filter by include/exclude
+            if include and name not in include:
+                continue
+            if exclude and name in exclude:
+                continue
 
-        filtered = {}
-        if include is not None:
-            for key in include:
-                if key in result:
-                    filtered[key] = result[key]
-            result = filtered
-        if filter_out is not None:
-            for key in filter_out:
-                if key in result:
-                    result.pop(key)
+            # Skip neutral values unless explicitly included
+            if not include_neutral and setting.is_neutral():
+                continue
+
+            # Get the value
+            value = setting.get_value()
+
+            # Apply parameter mapping
+            output_name = param_mapping.get(name, name) if param_mapping else name
+
+            # Place in appropriate location based on level
+            if setting.level == SettingLevel.PROVIDER:
+                result["PROVIDER_SETTINGS"][output_name] = value
+            elif setting.level == SettingLevel.REQUEST:
+                result["REQUEST_SETTINGS"][output_name] = value
+            elif setting.level == SettingLevel.METADATA:
+                result["METADATA"][output_name] = value
 
         return result
 
-    def set_stop_tokens(self, tokens: List[str]):
-        self.stop_sequences = tokens
+    def copy(self) -> "ProviderSettings":
+        """Create a deep copy of settings."""
+        return copy.deepcopy(self)
 
-    def set_max_new_tokens(self, max_new_tokens: int):
-        self.max_tokens = max_new_tokens
+    def __getitem__(self, name: str) -> Any:
+        """Allow dict-like access: settings['temperature']"""
+        return self.get_value(name)
 
-    def set_sampler_value(self, sampler_name: str, sampler_value: Any):
-        self.samplers[sampler_name].set_value(sampler_value)
+    def __setitem__(self, name: str, value: Any) -> None:
+        """Allow dict-like assignment: settings['temperature'] = 0.7"""
+        self.set_value(name, value)
 
-    def reset_sampler_value(self, sampler_name: str):
-        self.samplers[sampler_name].reset()
+    def __contains__(self, name: str) -> bool:
+        """Check if setting exists: 'temperature' in settings"""
+        return name in self._settings
 
-    def reset_all_samplers(self):
-        for sampler in self.samplers.values():
-            sampler.reset()
+    def __repr__(self) -> str:
+        values = {name: setting.get_value() for name, setting in self._settings.items()}
+        return f"ProviderSettings({values})"
 
-    def neutralize_sampler(self, sampler_name: str):
-        self.samplers[sampler_name].neutralize()
+    def __getattr__(self, name: str) -> Any:
+        """Allow attribute access: settings.temperature"""
+        if name.startswith('_'):
+            raise AttributeError(name)
+        if name in self._settings:
+            return self.get_value(name)
+        raise AttributeError(f"No setting named '{name}'")
 
-    def neutralize_all_samplers(self):
-        for sampler in self.samplers.values():
-            sampler.neutralize()
-
-    def set_response_format(self, response_format: dict[str, Any]):
-        self.response_format = response_format
-
-    def set_extra_body(self, extra_body: dict[str, Any]):
-        self.extra_body = extra_body
-
-    def set_extra_request_kwargs(self, **kwargs):
-        for key, value in kwargs.items():
-            self.request_kwargs[key] = value
-
-    def set_tool_choice(self, tool_choice):
-        self.tool_choice = tool_choice
-
-    def __getattr__(self, name):
-        if name in [
-            "max_tokens",
-            "stop_sequences",
-            "tool_choice",
-            "extra_body",
-            "response_format",
-            "request_kwargs",
-            "samplers",
-        ]:
-            # Access the underlying dict to avoid recursion
-            return super().__getattribute__(name)
+    def __setattr__(self, name: str, value: Any) -> None:
+        """Allow attribute assignment: settings.temperature = 0.7"""
+        if name.startswith('_'):
+            object.__setattr__(self, name, value)
+        elif hasattr(self, '_settings') and name in self._settings:
+            self.set_value(name, value)
         else:
-            if name in self.request_kwargs:
-                return self.request_kwargs[name]
-            elif name in self.samplers:
-                return self.samplers[name].get_value()
-            else:
-                raise RuntimeError(f"Setting attribute {name} not found.")
+            object.__setattr__(self, name, value)
+# Convenience function for creating common settings
+def create_standard_settings() -> ProviderSettings:
+    """Create standard LLM settings used by most providers."""
+    return ProviderSettings([
+        LLMSetting("temperature", default_value=1.0, neutral_value=1.0, level=SettingLevel.REQUEST),
+        LLMSetting("top_p", default_value=1.0, neutral_value=1.0, level=SettingLevel.REQUEST),
+        LLMSetting("top_k", default_value=0, neutral_value=0, level=SettingLevel.REQUEST),
+        LLMSetting("max_tokens", default_value=4096, neutral_value=4096, level=SettingLevel.REQUEST),
+    ])
 
-    def __setattr__(self, name, value):
-        if name in [
-            "max_tokens",
-            "stop_sequences",
-            "tool_choice",
-            "extra_body",
-            "response_format",
-            "request_kwargs",
-            "samplers",
-        ]:
-            # Use object.__setattr__ to bypass this method for core attributes
-            super().__setattr__(name, value)
-        else:
-            # Make sure core attributes are initialized
-            if not hasattr(self, "request_kwargs") or not hasattr(self, "samplers"):
-                super().__setattr__(name, value)
-                return
 
-            if name in self.request_kwargs:
-                self.request_kwargs[name] = value
-            elif name in self.samplers:
-                self.samplers[name].set_value(value)
-            else:
-                raise RuntimeError(f"Setting attribute {name} not found.")
+def create_openai_settings() -> ProviderSettings:
+    """Create OpenAI-specific settings."""
+    return ProviderSettings([
+        LLMSetting("temperature", default_value=1.0, neutral_value=1.0, level=SettingLevel.REQUEST),
+        LLMSetting("top_p", default_value=1.0, neutral_value=1.0, level=SettingLevel.REQUEST),
+        LLMSetting("max_tokens", default_value=4096, neutral_value=4096, level=SettingLevel.REQUEST),
+        LLMSetting("frequency_penalty", default_value=0.0, neutral_value=0., level=SettingLevel.REQUEST),
+        LLMSetting("presence_penalty", default_value=0.0, neutral_value=0.0, level=SettingLevel.REQUEST),
+    ])
 
+
+def create_anthropic_settings() -> ProviderSettings:
+    """Create Anthropic-specific settings."""
+    return ProviderSettings([
+        LLMSetting("temperature", default_value=1.0, neutral_value=1.0, level=SettingLevel.REQUEST),
+        LLMSetting("top_p", default_value=1.0, neutral_value=1.0, level=SettingLevel.REQUEST),
+        LLMSetting("top_k", default_value=0, neutral_value=0, level=SettingLevel.REQUEST),
+        LLMSetting("max_tokens", default_value=4096, neutral_value=4096, level=SettingLevel.REQUEST),
+    ])
 
 class ChatAPIProvider(abc.ABC):
 

@@ -1,10 +1,8 @@
 import dataclasses
-from typing import Union
-
-from pydantic import BaseModel
 
 from ToolAgents.agents import ChatToolAgent
-from ToolAgents.messages import MessageTemplate, ChatMessage
+from ToolAgents.data_models.messages import ChatMessage
+from ToolAgents.utilities.message_template import MessageTemplate
 from ToolAgents.provider import ProviderSettings
 
 

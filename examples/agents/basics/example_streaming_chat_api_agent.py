@@ -1,19 +1,17 @@
-import json
+﻿import json
 import os
 
 from ToolAgents import ToolRegistry
 from ToolAgents.agents import ChatToolAgent
-from ToolAgents.messages.chat_message import ChatMessage
+from ToolAgents.data_models.messages import ChatMessage
 from ToolAgents.provider import (
     AnthropicChatAPI,
     OpenAIChatAPI,
     GroqChatAPI,
     MistralChatAPI,
 )
+from ToolAgents.provider.message_converter.open_ai_message_converter import OpenAIResponseConverter
 
-from ToolAgents.provider.completion_provider.default_implementations import (
-    LlamaCppServer,
-)
 from example_tools import (
     calculator_function_tool,
     current_datetime_function_tool,
@@ -28,7 +26,7 @@ load_dotenv()
 # api = OpenAIChatAPI(api_key="token-abc123", base_url="http://127.0.0.1:8080/v1", model="unsloth/Meta-Llama-3.1-8B-Instruct-bnb-4bit")
 
 # Official OpenAI API
-api = OpenAIChatAPI(api_key=os.getenv("OPENAI_API_KEY"), model="gpt-4o-mini")
+api = OpenAIChatAPI(api_key="token-abc123", base_url="http://127.0.0.1:8080/v1", model="unsloth/Meta-Llama-3.1-8B-Instruct-bnb-4bit", response_converter=OpenAIResponseConverter(tool_call_id_style="mistral"))
 
 # Anthropic API
 # api = AnthropicChatAPI(api_key=os.getenv("ANTHROPIC_API_KEY"), model="claude-3-5-sonnet-20241022")
@@ -45,7 +43,7 @@ api = OpenAIChatAPI(api_key=os.getenv("OPENAI_API_KEY"), model="gpt-4o-mini")
 # Create the ChatAPIAgent
 agent = ChatToolAgent(chat_api=api)
 settings = api.get_default_settings()
-settings.temperature = 0.45
+settings.temperature = 0.2
 settings.top_p = 1.0
 
 # Define the tools
@@ -59,7 +57,7 @@ tool_registry = ToolRegistry()
 tool_registry.add_tools(tools)
 messages = [
     ChatMessage.create_system_message(
-        "You are a helpful assistant with tool calling capabilities. Only reply with a tool call if the function exists in the library provided by the user. Use JSON format to output your function calls. If it doesn't exist, just reply directly in natural language. When you receive a tool call response, use the output to format an answer to the original user question."
+        "You are a helpful assistant with tool calling capabilities."
     ),
     ChatMessage.create_user_message(
         "Get the weather in London and New York. Calculate 420 x 420 and retrieve the date and time in the format: %Y-%m-%d %H:%M:%S."
@@ -78,3 +76,4 @@ for res in result:
         print(f"Tool Result: {res.get_tool_results()}")
         print()
     print(res.chunk, end="", flush=True)
+

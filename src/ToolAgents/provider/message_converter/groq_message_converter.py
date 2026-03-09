@@ -5,7 +5,7 @@ import json
 from typing import List, Dict, Any, Generator, Optional, AsyncGenerator
 
 from .message_converter import BaseMessageConverter, BaseResponseConverter
-from ToolAgents.messages.chat_message import (
+from ToolAgents.data_models.messages import (
     ChatMessage,
     ChatMessageRole,
     TextContent,
@@ -29,16 +29,7 @@ class GroqMessageConverter(BaseMessageConverter):
         other_messages = self.to_provider_format(messages)
         open_ai_tools = [tool.to_openai_tool() for tool in tools] if tools else None
 
-        request_kwargs = settings.to_dict(
-            include=[
-                "temperature",
-                "top_p",
-                "max_tokens",
-                "tool_choice",
-                "extra_body",
-                "response_format",
-            ]
-        )
+        request_kwargs = settings.to_dict()["REQUEST_SETTINGS"]
         request_kwargs["model"] = model
         request_kwargs["messages"] = other_messages
         if open_ai_tools and len(open_ai_tools) > 0:

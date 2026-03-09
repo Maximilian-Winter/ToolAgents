@@ -1,3 +1,8 @@
+from pathlib import Path
+
+import pymupdf
+from joblib import Parallel, delayed
+from pdf2image import convert_from_path, convert_from_bytes
 from pytesseract import pytesseract
 
 from ToolAgents.knowledge import DocumentGenerator, Document
@@ -54,7 +59,7 @@ class PDFOCRProvider(DocumentProvider):
                 for file in files:
                     if file.lower().endswith(extension.lower()):
                         # Create full file path and add to list
-                        full_path = os.path.join(root, file)
+                        full_path = os.path.abspath(f"{root}/{file}")
                         matching_files.append(full_path)
 
             return matching_files
@@ -66,8 +71,12 @@ class PDFOCRProvider(DocumentProvider):
     @staticmethod
     def process_pdf(path):
         results = []
+        pages = []
         for file in PDFOCRProvider.find_files_by_extension(path, "pdf"):
-            pages = convert_from_path(str(file), dpi=300, fmt="PNG")
+            doc = pymupdf.open(file)  # open document
+            for page in doc:  # iterate through the pages
+                pix = page.get_pixmap()  # render page to an image
+                pages.append(pix)  # add the image to the list
             page_texts = Parallel(n_jobs=-1)(
                 delayed(PDFOCRProvider.process_page)(page) for page in pages
             )

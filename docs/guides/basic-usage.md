@@ -1,4 +1,4 @@
----
+﻿---
 title: Basic Usage
 ---
 
@@ -71,7 +71,7 @@ tool_registry.add_tools([hello_tool, another_tool, third_tool])
 To interact with the agent, you need to construct messages:
 
 ```python
-from ToolAgents.messages.chat_message import ChatMessage
+from ToolAgents.data_models.messages import ChatMessage
 
 # Create messages
 system_message = ChatMessage.create_system_message(

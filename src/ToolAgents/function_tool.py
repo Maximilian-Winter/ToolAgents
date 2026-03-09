@@ -11,12 +11,12 @@ from typing import Any, List, Union, Callable, Tuple
 
 from pydantic import BaseModel
 
+BaseToolAgent = type
+from ToolAgents.data_models.messages import ChatMessage
 from ToolAgents.utilities.gbnf_grammar_generator.gbnf_grammar_from_pydantic_models import (
     generate_gbnf_grammar_from_pydantic_models,
 )
-from ToolAgents.utilities.json_schema_generator.old_schema_generator import (
-    generate_json_schemas,
-)
+
 from ToolAgents.utilities.json_schema_generator.schema_generator import get_tools_schema
 
 from ToolAgents.utilities.llm_documentation.documentation_generation import (
@@ -151,6 +151,7 @@ class FunctionTool:
         require_confirmation: Whether to require user confirmation before executing the tool
         confirmation_description: Optional description for the confirmation request
         confirmation_handler: Optional callable that handles confirmation requests
+        with_execution_context: Only applicable for pydantic tools. If True, the run method will be called with an additional parameter containing the execution context.
         **additional_parameters: Additional parameters to pass to the call if function is called.
     """
 
@@ -165,6 +166,7 @@ class FunctionTool:
         confirmation_handler: typing.Optional[
             Callable[[ConfirmationRequest], None]
         ] = None,
+        with_execution_context: bool = False,
         **additional_parameters,
     ):
         # Initialize function tool as before...
@@ -668,7 +670,10 @@ class ToolRegistry:
         del self.tools[tool_name]
 
     def get_tool(self, name: str) -> FunctionTool:
-        return self.tools[name]
+        if name in self.tools:
+            return self.tools[name]
+        else:
+            return None
 
     def get_tools(self):
         return self.tools.values()
@@ -713,6 +718,9 @@ class ToolRegistry:
 
         return result
 
+class ToolExecutionContext:
+    agent: BaseToolAgent
+    messages: List[ChatMessage]
 
 def cli_confirmation_handler(request: ConfirmationRequest):
     """Simple CLI-based confirmation handler."""

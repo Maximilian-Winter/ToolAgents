@@ -1,14 +1,15 @@
-import asyncio
+﻿import asyncio
 import json
 import os
 
 from ToolAgents import ToolRegistry
 from ToolAgents.agents.chat_tool_agent import AsyncChatToolAgent
-from ToolAgents.messages.chat_message import ChatMessage
+from ToolAgents.provider.chat_api_provider.open_ai import AsyncOpenAIChatAPI
+from ToolAgents.data_models.messages import ChatMessage
 from ToolAgents.provider.chat_api_provider.anthropic import AsyncAnthropicChatAPI
 from ToolAgents.provider.chat_api_provider.groq import AsyncGroqChatAPI
 from ToolAgents.provider.chat_api_provider.mistral import AsyncMistralChatAPI
-from ToolAgents.provider.chat_api_provider.open_ai import AsyncOpenAIChatAPI
+
 
 from example_tools import (
     calculator_function_tool,
@@ -21,7 +22,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Official OpenAI API
-# api = AsyncOpenAIChatAPI(api_key=os.getenv("OPENAI_API_KEY"), model="gpt-4o-mini")
+api = AsyncOpenAIChatAPI(api_key=os.getenv("OPENAI_API_KEY"), model="gpt-4o-mini")
 
 # Anthropic API
 # api = AsyncAnthropicChatAPI(api_key=os.getenv("ANTHROPIC_API_KEY"), model="claude-3-5-sonnet-20241022")
@@ -30,9 +31,9 @@ load_dotenv()
 # api = AsyncGroqChatAPI(api_key=os.getenv("GROQ_API_KEY"), model="llama-3.3-70b-versatile")
 
 # Mistral API
-api = AsyncMistralChatAPI(
-    api_key=os.getenv("MISTRAL_API_KEY"), model="mistral-small-latest"
-)
+#api = AsyncMistralChatAPI(
+#    api_key=os.getenv("MISTRAL_API_KEY"), model="mistral-small-latest"
+#)
 
 # Create the ChatAPIAgent
 agent = AsyncChatToolAgent(chat_api=api)
@@ -76,3 +77,4 @@ async def main():
 
 
 asyncio.run(main())
+

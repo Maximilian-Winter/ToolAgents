@@ -1,12 +1,12 @@
-import datetime
+﻿import datetime
 import uuid
 from typing import Optional, List, Any, Generator, AsyncGenerator
-from ToolAgents import ToolRegistry
-from ToolAgents.agents.base_llm_agent import (
-    BaseToolAgent,
+
+ToolRegistry = type
+from ToolAgents.agents.base_llm_agent import BaseToolAgent, AsyncBaseToolAgent
+from ToolAgents.data_models.responses import (
     ChatResponse,
     ChatResponseChunk,
-    AsyncBaseToolAgent,
 )
 
 from ToolAgents.provider.llm_provider import (
@@ -14,7 +14,7 @@ from ToolAgents.provider.llm_provider import (
     StreamingChatMessage,
     AsyncChatAPIProvider,
 )
-from ToolAgents.messages.chat_message import (
+from ToolAgents.data_models.messages import (
     ChatMessage,
     ChatMessageRole,
     ToolCallResultContent,
@@ -31,6 +31,7 @@ class ChatToolAgent(BaseToolAgent):
         log_to_file: bool = False,
     ):
         super().__init__()
+        from ToolAgents import ToolRegistry
         self.chat_api = chat_api
         self.log_output = log_output
         if log_output:
@@ -60,20 +61,8 @@ class ChatToolAgent(BaseToolAgent):
         settings: Optional[Any] = None,
         reset_last_messages_buffer: bool = True,
     ) -> ChatMessage:
-        """
-        Performs a single step of interaction with the chat API, returning the result
-        and whether it contains tool calls.
-
-        Args:
-            messages: List of message dictionaries
-            tool_registry: Optional ToolRegistry containing available tools
-            settings: Optional settings for the API call
-            reset_last_messages_buffer: Whether to reset the message buffer
-
-        Returns:
-            Tuple of (result, contains_tool_calls)
-        """
         if tool_registry is None:
+            from ToolAgents import ToolRegistry
             tool_registry = ToolRegistry()
 
         if reset_last_messages_buffer:
@@ -100,19 +89,7 @@ class ChatToolAgent(BaseToolAgent):
         settings: Optional[Any] = None,
         reset_last_messages_buffer: bool = True,
     ) -> Generator[StreamingChatMessage, None, None]:
-        """
-        Performs a single streaming step of interaction with the chat API,
-        yielding chunks and whether they contain tool calls.
-
-        Args:
-            messages: List of message dictionaries
-            tool_registry: Optional ToolRegistry containing available tools
-            settings: Optional settings for the API call
-            reset_last_messages_buffer: Whether to reset the message buffer
-
-        Yields:
-            Tuples of (chunk, contains_tool_calls)
-        """
+        from ToolAgents.function_tool import ToolRegistry
         if tool_registry is None:
             tool_registry = ToolRegistry()
 
@@ -147,18 +124,6 @@ class ChatToolAgent(BaseToolAgent):
         settings: Optional[Any] = None,
         reset_last_messages_buffer: bool = True,
     ) -> ChatResponse:
-        """
-        Gets a complete response from the chat API, handling any tool calls.
-
-        Args:
-            messages: List of message dictionaries
-            tool_registry: Optional ToolRegistry containing available tools
-            settings: Optional settings for the API call
-            reset_last_messages_buffer: Whether to reset the message buffer
-
-        Returns:
-            The final response string
-        """
         if reset_last_messages_buffer:
             self.last_response_has_tool_calls = False
         result = self.step(
@@ -187,18 +152,7 @@ class ChatToolAgent(BaseToolAgent):
         settings: Optional[Any] = None,
         reset_last_messages_buffer: bool = True,
     ) -> Generator[ChatResponseChunk, None, None]:
-        """
-        Gets a streaming response from the chat API, handling any tool calls.
-
-        Args:
-            messages: List of message dictionaries
-            tool_registry: Optional ToolRegistry containing available tools
-            settings: Optional settings for the API call
-            reset_last_messages_buffer: Whether to reset the message buffer
-
-        Yields:
-            Response chunks
-        """
+        from ToolAgents.function_tool import ToolRegistry
         if reset_last_messages_buffer:
             self.last_response_has_tool_calls = False
 
@@ -272,13 +226,6 @@ class ChatToolAgent(BaseToolAgent):
         chat_message: ChatMessage,
         current_messages: List[ChatMessage],
     ) -> None:
-        """
-        Handles the response containing function calls by executing tools and updating messages.
-
-        Args:
-            chat_message: chat message
-            current_messages: List of current conversation messages
-        """
         tool_calls = chat_message.get_tool_calls()
         content = []
         for tool_call in tool_calls:
@@ -313,6 +260,7 @@ class AsyncChatToolAgent(AsyncBaseToolAgent):
 
     def __init__(self, chat_api: AsyncChatAPIProvider, debug_output: bool = False):
         super().__init__()
+        from ToolAgents.function_tool import ToolRegistry
         self.chat_api = chat_api
         self.debug_output = debug_output
         self.last_messages_buffer: list[ChatMessage] = []
@@ -329,19 +277,7 @@ class AsyncChatToolAgent(AsyncBaseToolAgent):
         settings: Optional[Any] = None,
         reset_last_messages_buffer: bool = True,
     ) -> ChatMessage:
-        """
-        Performs a single step of interaction with the chat API, returning the result
-        and whether it contains tool calls.
-
-        Args:
-            messages: List of message dictionaries
-            tool_registry: Optional ToolRegistry containing available tools
-            settings: Optional settings for the API call
-            reset_last_messages_buffer: Whether to reset the message buffer
-
-        Returns:
-            Tuple of (result, contains_tool_calls)
-        """
+        from ToolAgents.function_tool import ToolRegistry
         if tool_registry is None:
             tool_registry = ToolRegistry()
 
@@ -370,19 +306,7 @@ class AsyncChatToolAgent(AsyncBaseToolAgent):
         settings: Optional[Any] = None,
         reset_last_messages_buffer: bool = True,
     ) -> AsyncGenerator[StreamingChatMessage, None]:
-        """
-        Performs a single streaming step of interaction with the chat API,
-        yielding chunks and whether they contain tool calls.
-
-        Args:
-            messages: List of message dictionaries
-            tool_registry: Optional ToolRegistry containing available tools
-            settings: Optional settings for the API call
-            reset_last_messages_buffer: Whether to reset the message buffer
-
-        Yields:
-            Tuples of (chunk, contains_tool_calls)
-        """
+        from ToolAgents.function_tool import ToolRegistry
         if tool_registry is None:
             tool_registry = ToolRegistry()
 
@@ -415,18 +339,6 @@ class AsyncChatToolAgent(AsyncBaseToolAgent):
         settings: Optional[Any] = None,
         reset_last_messages_buffer: bool = True,
     ) -> ChatResponse:
-        """
-        Gets a complete response from the chat API, handling any tool calls.
-
-        Args:
-            messages: List of message dictionaries
-            tool_registry: Optional ToolRegistry containing available tools
-            settings: Optional settings for the API call
-            reset_last_messages_buffer: Whether to reset the message buffer
-
-        Returns:
-            The final response string
-        """
         if reset_last_messages_buffer:
             self.last_response_has_tool_calls = False
         result = await self.step(
@@ -455,18 +367,7 @@ class AsyncChatToolAgent(AsyncBaseToolAgent):
         settings: Optional[Any] = None,
         reset_last_messages_buffer: bool = True,
     ) -> AsyncGenerator[ChatResponseChunk, None]:
-        """
-        Gets a streaming response from the chat API, handling any tool calls.
-
-        Args:
-            messages: List of message dictionaries
-            tool_registry: Optional ToolRegistry containing available tools
-            settings: Optional settings for the API call
-            reset_last_messages_buffer: Whether to reset the message buffer
-
-        Yields:
-            Response chunks
-        """
+        from ToolAgents.function_tool import ToolRegistry
         if reset_last_messages_buffer:
             self.last_response_has_tool_calls = False
 
@@ -477,10 +378,9 @@ class AsyncChatToolAgent(AsyncBaseToolAgent):
             self.last_messages_buffer = []
 
         self.tool_registry = tool_registry
-
-        finished_message = None
         has_tool_call = False
         tool_call = None
+        finished_message = None
         async for chunk in self.stream_step(
             messages=messages,
             tool_registry=tool_registry,
@@ -493,10 +393,11 @@ class AsyncChatToolAgent(AsyncBaseToolAgent):
                 chunk=chunk.chunk,
                 has_tool_call=chunk.is_tool_call,
                 tool_call=chunk.tool_call,
-                finished=chunk.get_finished(),
+                finished=False,
             )
-            tool_call = chunk.tool_call
             has_tool_call = chunk.is_tool_call
+            tool_call = chunk.tool_call
+
         if finished_message.contains_tool_call():
             self.last_response_has_tool_calls = True
             await self.handle_function_calling_response(finished_message, messages)
@@ -510,13 +411,13 @@ class AsyncChatToolAgent(AsyncBaseToolAgent):
                     tool_call_result=tool_call_result.model_dump(),
                 )
 
-            async for chunk in self.get_streaming_response(
+            async for response in self.get_streaming_response(
                 messages=messages,
                 tool_registry=tool_registry,
                 settings=settings,
                 reset_last_messages_buffer=False,
             ):
-                yield chunk
+                yield response
         else:
             self.last_messages_buffer.append(finished_message)
             yield ChatResponseChunk(
@@ -541,13 +442,6 @@ class AsyncChatToolAgent(AsyncBaseToolAgent):
         chat_message: ChatMessage,
         current_messages: List[ChatMessage],
     ) -> None:
-        """
-        Handles the response containing function calls by executing tools and updating messages.
-
-        Args:
-            chat_message: chat message
-            current_messages: List of current conversation messages
-        """
         tool_calls = chat_message.get_tool_calls()
         content = []
         for tool_call in tool_calls:
@@ -556,7 +450,10 @@ class AsyncChatToolAgent(AsyncBaseToolAgent):
 
             if tool:
                 call_parameters = tool_call.tool_call_arguments
-                output = await tool.execute_async(call_parameters)
+                if hasattr(tool, "execute_async"):
+                    output = await tool.execute_async(call_parameters)
+                else:
+                    output = tool.execute(call_parameters)
                 content.append(
                     ToolCallResultContent(
                         tool_call_result_id=str(uuid.uuid4()),
@@ -565,13 +462,12 @@ class AsyncChatToolAgent(AsyncBaseToolAgent):
                         tool_call_result=str(output),
                     )
                 )
-        date = datetime.datetime.now()
         tool_message = ChatMessage(
             id=str(uuid.uuid4()),
             role=ChatMessageRole.Tool,
             content=content,
-            created_at=date,
-            updated_at=date,
+            created_at=datetime.datetime.now(),
+            updated_at=datetime.datetime.now(),
         )
         self.last_messages_buffer.append(chat_message)
         current_messages.append(chat_message)

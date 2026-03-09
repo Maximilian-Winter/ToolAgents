@@ -9,7 +9,7 @@ from typing import List, Dict, Any, Generator, Optional, AsyncGenerator
 import httpx
 
 from .message_converter import BaseMessageConverter, BaseResponseConverter
-from ToolAgents.messages.chat_message import (
+from ToolAgents.data_models.messages import (
     ChatMessage,
     ChatMessageRole,
     TextContent,
@@ -53,16 +53,7 @@ class AnthropicMessageConverter(BaseMessageConverter):
             [tool.to_anthropic_tool() for tool in tools] if tools else None
         )
 
-        request_kwargs = settings.to_dict(
-            include=[
-                "temperature",
-                "top_p",
-                "top_k",
-                "max_tokens",
-                "stop_sequences",
-                "tool_choice",
-            ]
-        )
+        request_kwargs = settings.to_dict()["REQUEST_SETTINGS"]
         request_kwargs["model"] = model
         request_kwargs["system"] = system
         request_kwargs["messages"] = other_messages
@@ -257,7 +248,7 @@ class AnthropicResponseConverter(BaseResponseConverter):
                             current_tool_call["function"]["arguments"]
                         )
                     except JSONDecodeError as e:
-                        arguments = f"Exception during JSON decoding of arguments: {e}"
+                        arguments = {"parsing_error": f"Exception during JSON decoding of arguments: {e}"}
                     contents.append(
                         ToolCallContent(
                             tool_call_id=current_tool_call["function"]["id"],

@@ -1,4 +1,4 @@
-import json
+﻿import json
 
 from fastapi import FastAPI, Request
 import os
@@ -6,17 +6,15 @@ import os
 from dotenv import load_dotenv
 from starlette.responses import HTMLResponse, JSONResponse
 
-from ToolAgents.provider import AnthropicChatAPI
+from ToolAgents.provider import AnthropicChatAPI, OpenAIChatAPI
 from ToolAgents.agents import ChatToolAgent
 
-from ToolAgents.messages import ChatMessage
+from ToolAgents.data_models.messages import ChatMessage
 
 load_dotenv()
 
-provider = AnthropicChatAPI(
-    os.getenv("ANTHROPIC_API_KEY"), "claude-3-5-sonnet-20241022"
-)
-agent = ChatToolAgent(chat_api=provider, debug_output=False)
+provider = OpenAIChatAPI(api_key="token-abc123", base_url="http://127.0.0.1:8080/v1", model="Mistral-Small-3.2-24B-Instruct-2506")
+agent = ChatToolAgent(chat_api=provider)
 app = FastAPI()
 
 
@@ -44,3 +42,4 @@ if __name__ == "__main__":
     import uvicorn
 
     uvicorn.run(app, host="localhost", port=8000)
+

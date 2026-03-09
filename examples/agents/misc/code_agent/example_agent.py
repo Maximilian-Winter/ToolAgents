@@ -1,14 +1,11 @@
-import os
-
+﻿
 from ToolAgents.agents import ChatToolAgent
 from ToolAgents.provider import (
     AnthropicChatAPI,
-    AnthropicSettings,
-    OpenAIChatAPI,
-    OpenAISettings,
+    OpenAIChatAPI
 )
 
-from ToolAgents.messages import ChatHistory
+from ToolAgents.data_models.chat_history import ChatHistory
 from example_tools import (
     get_weather_function_tool,
     calculator_function_tool,
@@ -27,8 +24,8 @@ api = OpenAIChatAPI(
     base_url="http://127.0.0.1:8080/v1",
     model="unsloth/Meta-Llama-3.1-8B-Instruct-bnb-4bit",
 )
-settings = OpenAISettings()
-agent = ChatToolAgent(chat_api=api, debug_output=True)
+settings = api.get_default_settings()
+agent = ChatToolAgent(chat_api=api, log_output=True)
 
 settings.neutralize_all_samplers()
 settings.temperature = 0.1
@@ -83,3 +80,4 @@ run_llm_code_agent(
 )
 
 chat_history.save_to_json("./test_chat_history_after.json")
+

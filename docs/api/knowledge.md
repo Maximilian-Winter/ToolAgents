@@ -1,4 +1,4 @@
----
+﻿---
 title: Knowledge API
 ---
 
@@ -120,7 +120,7 @@ Queries for similar texts.
 Implementation of VectorDatabaseProvider using Chroma.
 
 ```python
-from ToolAgents.knowledge.vector_database.implementations.chroma_db import ChromaDB
+from ToolAgents.knowledge.vector_database.implementations.chroma_db_vector_database import ChromaDB
 
 vector_db = ChromaDB(
     collection_name="your_collection",
@@ -188,7 +188,7 @@ Reranks documents based on relevance to the query.
 Implementation of RerankingProvider using MBXAI's reranking.
 
 ```python
-from ToolAgents.knowledge.vector_database.implementations.mbxai_reranking import MBXAIReranking
+from ToolAgents.knowledge.vector_database.implementations.cross_encoder_reranking import MBXAIReranking
 
 reranker = MBXAIReranking(
     api_key="your-mbxai-key",

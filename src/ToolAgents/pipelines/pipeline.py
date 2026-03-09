@@ -3,8 +3,8 @@ from typing import Any
 
 from ToolAgents import FunctionTool, ToolRegistry
 from ToolAgents.agents.base_llm_agent import BaseToolAgent
-from ToolAgents.messages.message_template import MessageTemplate
-from ToolAgents.messages import ChatMessage
+from ToolAgents.utilities.message_template import MessageTemplate
+from ToolAgents.data_models.messages import ChatMessage
 
 
 class ProcessStep:

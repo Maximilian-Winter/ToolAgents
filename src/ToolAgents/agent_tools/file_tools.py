@@ -1,6 +1,8 @@
+import json
 import os
 import shutil
 import glob
+import subprocess
 from pathlib import Path
 from typing import List, Dict, Optional, Tuple, Union
 import re
@@ -127,7 +129,7 @@ class FilesystemTools:
             return f"Failed to read file '{file_path}': {str(e)}"
 
     def edit_file(
-        self, file_path: str, old_text: str, new_text: str, append: bool
+            self, file_path: str, old_text: str, new_text: str, append: bool
     ) -> str:
         """
         Edit a file by replacing text or setting its entire content.
@@ -364,6 +366,112 @@ class FilesystemTools:
         except Exception as e:
             return f"Failed to set working directory: {str(e)}"
 
+    def execute_command(self, command: str, timeout: Optional[int] = 300) -> dict:
+        """
+        Execute a generic shell command and capture stdout, stderr.
+
+        Args:
+            command (str): The command to execute.
+            timeout (Optional[int]): Maximum execution time in seconds. Default is 300.
+
+        Returns:
+            dict: Dictionary containing the following keys:
+                - 'success': Boolean indicating if the command was successful
+                - 'exit_code': The exit code of the process
+                - 'stdout': Standard output from the command
+                - 'stderr': Standard error from the command
+                - 'error': Error message if an exception occurred, otherwise None
+        """
+        try:
+            # Create a subprocess with pipes for stdin, stdout, and stderr
+            process = subprocess.Popen(
+                command,
+                shell=True,
+                cwd=self.working_directory,
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True
+            )
+
+            # Communicate with the process and get output, with timeout
+            stdout, stderr = process.communicate(timeout=timeout)
+
+            return {
+                'success': process.returncode == 0,
+                'exit_code': process.returncode,
+                'stdout': stdout,
+                'stderr': stderr,
+                'error': None
+            }
+
+        except subprocess.TimeoutExpired:
+            # If a timeout occurs, try to kill the process
+            try:
+                process.kill()
+                stdout, stderr = process.communicate()
+            except Exception:
+                stdout, stderr = "", ""
+
+            return {
+                'success': False,
+                'exit_code': None,
+                'stdout': stdout,
+                'stderr': stderr,
+                'error': f"Command timed out after {timeout} seconds."
+            }
+
+        except Exception as e:
+            return {
+                'success': False,
+                'exit_code': None,
+                'stdout': "",
+                'stderr': "",
+                'error': f"Error executing command: {str(e)}"
+            }
+
+    def execute_npm_command(self, args: str, timeout: Optional[int] = 300) -> str:
+        """
+        Execute a npm command.
+
+        Args:
+            args (str): Arguments to pass to npm.
+            timeout (Optional[int]): Maximum execution time in seconds. Default is 300.
+
+        Returns:
+            str: Command output or error message.
+        """
+        command = f"npm {args}"
+        return json.dumps(self.execute_command(command, timeout), indent=2)
+
+    def execute_npx_command(self, args: str, timeout: Optional[int] = 300) -> str:
+        """
+        Execute a npx command.
+
+        Args:
+            args (str): Arguments to pass to npx.
+            timeout (Optional[int]): Maximum execution time in seconds. Default is 300.
+
+        Returns:
+            str: Command output or error message.
+        """
+        command = f"npx {args}"
+        return json.dumps(self.execute_command(command, timeout), indent=2)
+
+    def execute_pnpm_command(self, args: str, timeout: Optional[int] = 300) -> str:
+        """
+        Execute a pnpm command.
+
+        Args:
+            args (str): Arguments to pass to pnpm.
+            timeout (Optional[int]): Maximum execution time in seconds. Default is 300.
+
+        Returns:
+            str: Command output or error message.
+        """
+        command = f"pnpm {args}"
+        return json.dumps(self.execute_command(command, timeout), indent=2)
+
     def get_tools(self) -> List[FunctionTool]:
         """
         Get a list of FunctionTools for all the FilesystemTools methods.
@@ -379,4 +487,12 @@ class FilesystemTools:
             FunctionTool(self.create_directories),
             FunctionTool(self.get_working_directory),
             FunctionTool(self.set_working_directory),
+            FunctionTool(self.move_file),
+            FunctionTool(self.copy_file),
+            FunctionTool(self.get_file_info),
+            # New command execution tools
+            FunctionTool(self.execute_command),
+            FunctionTool(self.execute_npm_command),
+            FunctionTool(self.execute_npx_command),
+            FunctionTool(self.execute_pnpm_command),
         ]

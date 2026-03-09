@@ -1,4 +1,4 @@
----
+﻿---
 title: Tools API
 ---
 
@@ -280,7 +280,7 @@ from ToolAgents import FunctionTool
 def get_weather(location, unit):
     """Get the current weather in a given location"""
     # Implementation details...
-    return f"Weather in {location}: 22°{unit[0].upper()}"
+    return f"Weather in {location}: 22Â°{unit[0].upper()}"
 
 weather_tool_spec = {
     "type": "function",

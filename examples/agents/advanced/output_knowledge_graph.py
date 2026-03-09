@@ -1,5 +1,4 @@
-# Example that uses the StructuredOutputAgent class to create a dataset entry of a book, out of unstructured data.
-import json
+﻿import json
 import os
 from typing import List
 
@@ -8,18 +7,14 @@ from graphviz import Digraph
 from pydantic import BaseModel, Field
 
 from ToolAgents.agents import ChatToolAgent
-from ToolAgents.messages import ChatMessage
+from ToolAgents.data_models.messages import ChatMessage
 from ToolAgents.provider import OpenAIChatAPI
 from ToolAgents.utilities.json_schema_generator.schema_generator import (
     custom_json_schema,
 )
 
 load_dotenv()
-api = OpenAIChatAPI(
-    api_key=os.getenv("OPENROUTER_API_KEY"),
-    base_url="https://openrouter.ai/api/v1",
-    model="openai/o3-mini-high",
-)
+api = OpenAIChatAPI(api_key="token-abc123", base_url="http://127.0.0.1:8080/v1", model="Mistral-Small-3.2-24B-Instruct-2506")
 
 # Create the ChatAPIAgent
 agent = ChatToolAgent(chat_api=api)
@@ -28,9 +23,11 @@ agent = ChatToolAgent(chat_api=api)
 settings = api.get_default_settings()
 
 # Set sampling settings
-settings.temperature = 0.45
+settings.temperature = 0.6
 settings.top_p = 1.0
-settings.set_max_new_tokens(16378)
+
+# Add settings
+settings.extra_body = {"top_k": 0, "min_p": 0.00, "repeat_penalty": 1.1, "repeat_last_n": 256}
 
 
 class Node(BaseModel):
@@ -63,13 +60,13 @@ def visualize_knowledge_graph(kg):
         dot.edge(str(edge.source), str(edge.target), label=edge.label, color=edge.color)
 
     # Render the graph
-    dot.render("knowledge_graph6.gv", view=True)
+    dot.render("knowledge_graph3.gv", view=True)
 
 
 def generate_graph(user_input: str):
-    prompt = f"""Help me understand the following by describing it as a extremely detailed knowledge graph with at least 20 nodes: {user_input}""".strip()
+    prompt = f"""Help me understand the following by describing it as a extremely detailed knowledge graph with at least 30 nodes: {user_input}""".strip()
     schema = custom_json_schema(KnowledgeGraph)
-    settings.set_response_format({"type": "json_object", "schema": schema})
+    settings.response_format = {"type": "json_object", "schema": schema}
     messages = [
         ChatMessage.create_system_message(
             f"""You are knowledge graph builder. You will build the knowledge graph according to the following JSON-Schema:\n\n{json.dumps(schema, indent=2)}"""
@@ -84,5 +81,6 @@ def generate_graph(user_input: str):
     return KnowledgeGraph(**json.loads(chat_response.response))
 
 
-graph = generate_graph("The Coup d'état of Donald Trump and Elon Musk")
+graph = generate_graph("The Industrial Military Complex")
 visualize_knowledge_graph(graph)
+

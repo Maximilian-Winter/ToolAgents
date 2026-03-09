@@ -1,4 +1,4 @@
-import os
+﻿import os
 import platform
 import shutil
 import subprocess
@@ -289,3 +289,4 @@ class CodeInterpreter:
             FunctionTool(self.write_file_contents),
             FunctionTool(self.download_file),
         ]
+
