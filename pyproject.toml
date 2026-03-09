@@ -1,50 +1,93 @@
 [build-system]
-requires = [  "setuptools>=42"]
+requires = ["setuptools>=42"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "ToolAgents"
 version = "0.2.9"
 description = "ToolAgents is a lightweight and flexible framework for creating function-calling agents with various language models and APIs."
-
 readme = "ReadMe.md"
-
 requires-python = ">=3.10"
-classifiers = [ "Programming Language :: Python :: 3", "License :: OSI Approved :: MIT License", "Operating System :: OS Independent" ]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
 
 dependencies = [
+    "aiohttp",
+    "anthropic",
+    "docstring_parser",
+    "groq",
+    "httpx",
+    "mistral-common",
+    "mistralai",
+    "openai",
     "pydantic",
     "requests",
-    "pydantic-settings",
-    "docstring_parser",
-    "aiohttp",
-    "mistralai",
-    "mistral-common",
-    "openai",
-    "google-generativeai",
-    "anthropic",
-    "groq",
-    "mcp[cli]",
 ]
 
 [project.optional-dependencies]
-additional_deps = [
-    "sentence_transformers",
-    "hdbscan",
-    "transformers",
-    "sentencepiece",
-    "protobuf",
+advanced = [
+    "PyYAML",
+]
+storage = [
+    "SQLAlchemy",
+]
+memory = [
     "chromadb",
+    "hdbscan",
+    "numpy",
+    "sentence-transformers",
+    "torch",
+]
+local-inference = [
+    "protobuf",
+    "sentencepiece",
+    "transformers",
+]
+ocr = [
+    "PyMuPDF",
+    "joblib",
     "pdf2image",
     "pytesseract",
-    "lxml_html_clean",
 ]
-search = ["googlesearch-python", "markdownify", "camoufox"]
+search = [
+    "beautifulsoup4",
+    "camoufox",
+    "googlesearch-python",
+    "html5lib",
+    "trafilatura",
+]
+mcp = [
+    "mcp[cli]",
+]
+all = [
+    "PyMuPDF",
+    "PyYAML",
+    "SQLAlchemy",
+    "beautifulsoup4",
+    "camoufox",
+    "chromadb",
+    "googlesearch-python",
+    "hdbscan",
+    "html5lib",
+    "joblib",
+    "mcp[cli]",
+    "numpy",
+    "pdf2image",
+    "protobuf",
+    "pytesseract",
+    "sentence-transformers",
+    "sentencepiece",
+    "torch",
+    "transformers",
+    "trafilatura",
+]
 
 [[project.authors]]
 name = "Maximilian Winter"
 email = "maximilian.winter.91@gmail.com"
-
 
 [project.urls]
 Homepage = "https://github.com/Maximilian-Winter/ToolAgents"
@@ -52,4 +95,3 @@ Homepage = "https://github.com/Maximilian-Winter/ToolAgents"
 
 [tool.setuptools.packages.find]
 where = ["src"]
-

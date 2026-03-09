@@ -59,6 +59,7 @@ What is true now:
 - Legacy provider aliases like `OpenAISettings` and `AnthropicSettings` have been removed.
 - Tests have been reduced to the supported surface rather than carrying ignored legacy integration tests.
 - Generated example artifacts and stale tracked outputs have been removed and are now ignored.
+- Optional dependencies are now grouped by feature area in `pyproject.toml`.
 
 Current test baseline:
 - `python -m pytest -q`
@@ -101,7 +102,7 @@ These areas still deserve careful handling:
 - optional-dependency surfaces such as semantic memory and some advanced-agent paths
 - MCP and retrieval examples, which may be valid but are broader than the minimal supported baseline
 - docs/examples may still need occasional alignment as the cleaned API continues to settle
-- `google-generativeai` is still listed in `pyproject.toml`, but Google GenAI support was intentionally deferred during stabilization and should be treated as unresolved until explicitly restored or removed
+- Google GenAI support is currently not part of the maintained dependency surface. If it is restored later, it should come back with explicit code ownership, tests, and documentation.
 
 ## Recommended Next Steps
 
