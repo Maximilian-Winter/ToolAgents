@@ -161,6 +161,29 @@ class ToolCallResultContent(ContentBase):
         return result
 
 
+class TokenUsage(BaseModel):
+    """
+    Normalized token usage from any provider.
+
+    Populated automatically by provider response converters.
+    After the first API call in a conversation, token counts are always available.
+
+    Attributes:
+        input_tokens: Number of tokens in the prompt/input.
+        output_tokens: Number of tokens in the completion/output.
+        total_tokens: Total tokens used (input + output).
+        details: Optional provider-specific extras (e.g., cache hits, reasoning tokens).
+    """
+
+    input_tokens: int = Field(default=0, description="Number of tokens in the prompt/input.")
+    output_tokens: int = Field(default=0, description="Number of tokens in the completion/output.")
+    total_tokens: int = Field(default=0, description="Total tokens used (input + output).")
+    details: Dict[str, Any] = Field(
+        default_factory=dict,
+        description="Optional provider-specific extras (e.g., cache read/write tokens, reasoning tokens).",
+    )
+
+
 class ChatMessage(BaseModel):
     """
     Model representing a chat message in the messaging protocol.
@@ -173,6 +196,7 @@ class ChatMessage(BaseModel):
         updated_at: The date and time the message was last updated.
         additional_fields: Extra fields for the chat message (e.g., for caching).
         additional_information: Extra metadata or information related to the chat message.
+        token_usage: Normalized token usage from the provider response, if available.
     """
 
     id: str = Field(..., description="Unique identifier for the chat message.")
@@ -198,6 +222,10 @@ class ChatMessage(BaseModel):
     additional_information: Dict[str, Any] = Field(
         default_factory=dict,
         description="Additional metadata or information related to the chat message.",
+    )
+    token_usage: Optional[TokenUsage] = Field(
+        default=None,
+        description="Normalized token usage from the provider response, if available.",
     )
 
     @staticmethod

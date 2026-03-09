@@ -13,6 +13,7 @@ from ToolAgents.data_models.messages import (
     BinaryContent,
     BinaryStorageType,
     ToolCallResultContent,
+    TokenUsage,
 )
 from ToolAgents.provider.llm_provider import StreamingChatMessage, ProviderSettings
 from ToolAgents import FunctionTool
@@ -150,6 +151,18 @@ class GroqResponseConverter(BaseResponseConverter):
                         tool_call_arguments=arguments,
                     )
                 )
+        # Extract normalized token usage
+        token_usage = None
+        usage_data = additional_information.get("usage")
+        if usage_data and isinstance(usage_data, dict):
+            token_usage = TokenUsage(
+                input_tokens=usage_data.get("prompt_tokens", 0),
+                output_tokens=usage_data.get("completion_tokens", 0),
+                total_tokens=usage_data.get("total_tokens", 0),
+                details={k: v for k, v in usage_data.items()
+                         if k not in ("prompt_tokens", "completion_tokens", "total_tokens") and v is not None},
+            )
+
         return ChatMessage(
             id=str(uuid.uuid4()),
             role=ChatMessageRole.Assistant,
@@ -157,6 +170,7 @@ class GroqResponseConverter(BaseResponseConverter):
             created_at=datetime.datetime.now(),
             updated_at=datetime.datetime.now(),
             additional_information=additional_information,
+            token_usage=token_usage,
         )
 
     def yield_from_provider(
@@ -250,8 +264,20 @@ class GroqResponseConverter(BaseResponseConverter):
                         )
                 additional_data = chunk.__dict__
                 additional_data.pop("choices")
+                token_usage = None
                 if additional_data["usage"] is not None:
-                    additional_data["usage"] = chunk.x_groq.model_dump()
+                    groq_data = chunk.x_groq.model_dump()
+                    additional_data["usage"] = groq_data
+                    # Groq returns usage in x_groq which may contain usage dict
+                    usage_dict = groq_data.get("usage", groq_data) if isinstance(groq_data, dict) else {}
+                    if isinstance(usage_dict, dict):
+                        token_usage = TokenUsage(
+                            input_tokens=usage_dict.get("prompt_tokens", 0),
+                            output_tokens=usage_dict.get("completion_tokens", 0),
+                            total_tokens=usage_dict.get("total_tokens", 0),
+                            details={k: v for k, v in usage_dict.items()
+                                     if k not in ("prompt_tokens", "completion_tokens", "total_tokens") and v is not None},
+                        )
                 else:
                     additional_data.pop("usage")
                 finished_message = ChatMessage(
@@ -261,6 +287,7 @@ class GroqResponseConverter(BaseResponseConverter):
                     created_at=datetime.datetime.now(),
                     updated_at=datetime.datetime.now(),
                     additional_information=additional_data,
+                    token_usage=token_usage,
                 )
                 yield StreamingChatMessage(
                     chunk="",
@@ -365,8 +392,19 @@ class GroqResponseConverter(BaseResponseConverter):
                         )
                 additional_data = chunk.__dict__
                 additional_data.pop("choices")
+                token_usage = None
                 if additional_data["usage"] is not None:
-                    additional_data["usage"] = chunk.x_groq.model_dump()
+                    groq_data = chunk.x_groq.model_dump()
+                    additional_data["usage"] = groq_data
+                    usage_dict = groq_data.get("usage", groq_data) if isinstance(groq_data, dict) else {}
+                    if isinstance(usage_dict, dict):
+                        token_usage = TokenUsage(
+                            input_tokens=usage_dict.get("prompt_tokens", 0),
+                            output_tokens=usage_dict.get("completion_tokens", 0),
+                            total_tokens=usage_dict.get("total_tokens", 0),
+                            details={k: v for k, v in usage_dict.items()
+                                     if k not in ("prompt_tokens", "completion_tokens", "total_tokens") and v is not None},
+                        )
                 else:
                     additional_data.pop("usage")
                 finished_message = ChatMessage(
@@ -376,6 +414,7 @@ class GroqResponseConverter(BaseResponseConverter):
                     created_at=datetime.datetime.now(),
                     updated_at=datetime.datetime.now(),
                     additional_information=additional_data,
+                    token_usage=token_usage,
                 )
                 yield StreamingChatMessage(
                     chunk="",

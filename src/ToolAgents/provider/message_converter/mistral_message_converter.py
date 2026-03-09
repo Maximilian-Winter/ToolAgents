@@ -12,6 +12,7 @@ from ToolAgents.data_models.messages import (
     BinaryContent,
     BinaryStorageType,
     ToolCallResultContent,
+    TokenUsage,
 )
 from ToolAgents.provider.llm_provider import StreamingChatMessage, ProviderSettings
 from ToolAgents import FunctionTool
@@ -127,6 +128,18 @@ class MistralResponseConverter(BaseResponseConverter):
                         tool_call_arguments=arguments,
                     )
                 )
+        # Extract normalized token usage
+        token_usage = None
+        usage_data = additional_information.get("usage")
+        if usage_data and isinstance(usage_data, dict):
+            token_usage = TokenUsage(
+                input_tokens=usage_data.get("prompt_tokens", 0),
+                output_tokens=usage_data.get("completion_tokens", 0),
+                total_tokens=usage_data.get("total_tokens", 0),
+                details={k: v for k, v in usage_data.items()
+                         if k not in ("prompt_tokens", "completion_tokens", "total_tokens") and v is not None},
+            )
+
         return ChatMessage(
             id=str(uuid.uuid4()),
             role=ChatMessageRole.Assistant,
@@ -134,6 +147,7 @@ class MistralResponseConverter(BaseResponseConverter):
             created_at=datetime.datetime.now(),
             updated_at=datetime.datetime.now(),
             additional_information=additional_information,
+            token_usage=token_usage,
         )
 
     def yield_from_provider(
@@ -227,6 +241,23 @@ class MistralResponseConverter(BaseResponseConverter):
                         )
                 additional_data = chunk.data.__dict__
                 additional_data.pop("choices")
+                token_usage = None
+                usage_data = additional_data.get("usage")
+                if usage_data is not None:
+                    if hasattr(usage_data, "model_dump"):
+                        usage_dict = usage_data.model_dump()
+                    elif isinstance(usage_data, dict):
+                        usage_dict = usage_data
+                    else:
+                        usage_dict = {}
+                    if usage_dict:
+                        token_usage = TokenUsage(
+                            input_tokens=usage_dict.get("prompt_tokens", 0),
+                            output_tokens=usage_dict.get("completion_tokens", 0),
+                            total_tokens=usage_dict.get("total_tokens", 0),
+                            details={k: v for k, v in usage_dict.items()
+                                     if k not in ("prompt_tokens", "completion_tokens", "total_tokens") and v is not None},
+                        )
 
                 finished_message = ChatMessage(
                     id=str(uuid.uuid4()),
@@ -235,6 +266,7 @@ class MistralResponseConverter(BaseResponseConverter):
                     created_at=datetime.datetime.now(),
                     updated_at=datetime.datetime.now(),
                     additional_information=additional_data,
+                    token_usage=token_usage,
                 )
                 yield StreamingChatMessage(
                     chunk="",
@@ -339,6 +371,23 @@ class MistralResponseConverter(BaseResponseConverter):
                         )
                 additional_data = chunk.data.__dict__
                 additional_data.pop("choices")
+                token_usage = None
+                usage_data = additional_data.get("usage")
+                if usage_data is not None:
+                    if hasattr(usage_data, "model_dump"):
+                        usage_dict = usage_data.model_dump()
+                    elif isinstance(usage_data, dict):
+                        usage_dict = usage_data
+                    else:
+                        usage_dict = {}
+                    if usage_dict:
+                        token_usage = TokenUsage(
+                            input_tokens=usage_dict.get("prompt_tokens", 0),
+                            output_tokens=usage_dict.get("completion_tokens", 0),
+                            total_tokens=usage_dict.get("total_tokens", 0),
+                            details={k: v for k, v in usage_dict.items()
+                                     if k not in ("prompt_tokens", "completion_tokens", "total_tokens") and v is not None},
+                        )
                 finished_message = ChatMessage(
                     id=str(uuid.uuid4()),
                     role=ChatMessageRole.Assistant,
@@ -346,6 +395,7 @@ class MistralResponseConverter(BaseResponseConverter):
                     created_at=datetime.datetime.now(),
                     updated_at=datetime.datetime.now(),
                     additional_information=additional_data,
+                    token_usage=token_usage,
                 )
                 yield StreamingChatMessage(
                     chunk="",

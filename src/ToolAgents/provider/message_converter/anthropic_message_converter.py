@@ -17,6 +17,7 @@ from ToolAgents.data_models.messages import (
     BinaryContent,
     BinaryStorageType,
     ToolCallResultContent,
+    TokenUsage,
 )
 from ToolAgents.provider.llm_provider import StreamingChatMessage, ProviderSettings
 from ToolAgents import FunctionTool
@@ -190,12 +191,31 @@ class AnthropicResponseConverter(BaseResponseConverter):
                     )
                 elif block.type == "text":
                     contents.append(TextContent(content=block.text))
+        # Extract normalized token usage from Anthropic response
+        token_usage = None
+        if hasattr(response_data, "usage") and response_data.usage is not None:
+            usage = response_data.usage
+            input_tokens = getattr(usage, "input_tokens", 0)
+            output_tokens = getattr(usage, "output_tokens", 0)
+            details = {}
+            if hasattr(usage, "cache_creation_input_tokens") and usage.cache_creation_input_tokens:
+                details["cache_creation_input_tokens"] = usage.cache_creation_input_tokens
+            if hasattr(usage, "cache_read_input_tokens") and usage.cache_read_input_tokens:
+                details["cache_read_input_tokens"] = usage.cache_read_input_tokens
+            token_usage = TokenUsage(
+                input_tokens=input_tokens,
+                output_tokens=output_tokens,
+                total_tokens=input_tokens + output_tokens,
+                details=details,
+            )
+
         return ChatMessage(
             id=str(uuid.uuid4()),
             role=ChatMessageRole.Assistant,
             content=contents,
             created_at=datetime.datetime.now(),
             updated_at=datetime.datetime.now(),
+            token_usage=token_usage,
         )
 
     def yield_from_provider(
@@ -205,8 +225,27 @@ class AnthropicResponseConverter(BaseResponseConverter):
         contents = []
         content = None
         has_tool_call = False
+        input_tokens = 0
+        output_tokens = 0
+        usage_details = {}
 
         for chunk in stream_generator:
+            # Capture usage from message_start event
+            if chunk.type == "message_start" and hasattr(chunk, "message"):
+                msg = chunk.message
+                if hasattr(msg, "usage") and msg.usage is not None:
+                    input_tokens = getattr(msg.usage, "input_tokens", 0)
+                    output_tokens = getattr(msg.usage, "output_tokens", 0)
+                    if hasattr(msg.usage, "cache_creation_input_tokens") and msg.usage.cache_creation_input_tokens:
+                        usage_details["cache_creation_input_tokens"] = msg.usage.cache_creation_input_tokens
+                    if hasattr(msg.usage, "cache_read_input_tokens") and msg.usage.cache_read_input_tokens:
+                        usage_details["cache_read_input_tokens"] = msg.usage.cache_read_input_tokens
+                continue
+            # Capture usage from message_delta event
+            if chunk.type == "message_delta":
+                if hasattr(chunk, "usage") and chunk.usage is not None:
+                    output_tokens = getattr(chunk.usage, "output_tokens", output_tokens)
+                continue
             if chunk.type == "content_block_start":
                 if chunk.content_block.type == "tool_use":
                     current_tool_call = {
@@ -263,6 +302,14 @@ class AnthropicResponseConverter(BaseResponseConverter):
                         tool_call=contents[-1].model_dump(),
                     )
                     current_tool_call = None
+        token_usage = None
+        if input_tokens > 0 or output_tokens > 0:
+            token_usage = TokenUsage(
+                input_tokens=input_tokens,
+                output_tokens=output_tokens,
+                total_tokens=input_tokens + output_tokens,
+                details=usage_details,
+            )
         yield StreamingChatMessage(
             chunk="",
             is_tool_call=False,
@@ -273,6 +320,7 @@ class AnthropicResponseConverter(BaseResponseConverter):
                 content=contents,
                 created_at=datetime.datetime.now(),
                 updated_at=datetime.datetime.now(),
+                token_usage=token_usage,
             ),
         )
 
@@ -283,7 +331,26 @@ class AnthropicResponseConverter(BaseResponseConverter):
         content = None
         has_tool_call = False
         contents = []
+        input_tokens = 0
+        output_tokens = 0
+        usage_details = {}
         async for chunk in await stream_generator:
+            # Capture usage from message_start event
+            if chunk.type == "message_start" and hasattr(chunk, "message"):
+                msg = chunk.message
+                if hasattr(msg, "usage") and msg.usage is not None:
+                    input_tokens = getattr(msg.usage, "input_tokens", 0)
+                    output_tokens = getattr(msg.usage, "output_tokens", 0)
+                    if hasattr(msg.usage, "cache_creation_input_tokens") and msg.usage.cache_creation_input_tokens:
+                        usage_details["cache_creation_input_tokens"] = msg.usage.cache_creation_input_tokens
+                    if hasattr(msg.usage, "cache_read_input_tokens") and msg.usage.cache_read_input_tokens:
+                        usage_details["cache_read_input_tokens"] = msg.usage.cache_read_input_tokens
+                continue
+            # Capture usage from message_delta event
+            if chunk.type == "message_delta":
+                if hasattr(chunk, "usage") and chunk.usage is not None:
+                    output_tokens = getattr(chunk.usage, "output_tokens", output_tokens)
+                continue
             if chunk.type == "content_block_start":
                 if chunk.content_block.type == "tool_use":
                     current_tool_call = {
@@ -341,6 +408,14 @@ class AnthropicResponseConverter(BaseResponseConverter):
                         tool_call=contents[-1].model_dump(),
                     )
                     current_tool_call = None
+        token_usage = None
+        if input_tokens > 0 or output_tokens > 0:
+            token_usage = TokenUsage(
+                input_tokens=input_tokens,
+                output_tokens=output_tokens,
+                total_tokens=input_tokens + output_tokens,
+                details=usage_details,
+            )
         yield StreamingChatMessage(
             chunk="",
             is_tool_call=False,
@@ -352,5 +427,6 @@ class AnthropicResponseConverter(BaseResponseConverter):
                 content=contents,
                 created_at=datetime.datetime.now(),
                 updated_at=datetime.datetime.now(),
+                token_usage=token_usage,
             ),
         )
