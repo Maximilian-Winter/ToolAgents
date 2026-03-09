@@ -1,4 +1,4 @@
-# ToolAgents
+﻿# ToolAgents
 
 ToolAgents is a lightweight and flexible framework for creating function-calling agents with various language models and APIs. It provides a unified interface for integrating different LLM providers and executing function calls seamlessly.
 
@@ -46,7 +46,7 @@ import os
 
 from ToolAgents import ToolRegistry
 from ToolAgents.agents import ChatToolAgent
-from ToolAgents.messages.chat_message import ChatMessage
+from ToolAgents.data_models.messages import ChatMessage
 from ToolAgents.provider import OpenAIChatAPI
 from example_tools import calculator_function_tool, current_datetime_function_tool, get_weather_function_tool
 
@@ -112,7 +112,7 @@ import os
 
 from ToolAgents import ToolRegistry
 from ToolAgents.agents import ChatToolAgent
-from ToolAgents.messages import ChatHistory
+from ToolAgents.data_models.chat_history import ChatHistory
 
 from ToolAgents.provider import OpenAIChatAPI
 
@@ -170,7 +170,7 @@ import os
 
 from ToolAgents import ToolRegistry
 from ToolAgents.agents import ChatToolAgent
-from ToolAgents.messages import ChatHistory
+from ToolAgents.data_models.chat_history import ChatHistory
 
 from ToolAgents.provider import OpenAIChatAPI
 
@@ -383,3 +383,4 @@ Contributions to ToolAgents are welcome! Please feel free to submit pull request
 ## License
 
 ToolAgents is released under the MIT License. See the [LICENSE](LICENSE) file for details.
+

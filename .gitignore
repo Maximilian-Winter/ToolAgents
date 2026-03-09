@@ -1,3 +1,7 @@
+﻿*.pyc
+__pycache__/
+.pytest_tmp/
+pytest_tmp/
 .env
 .venv
 build
@@ -90,3 +94,5 @@ examples/advanced_agent/memory/25b398f9-c5ca-41d9-8f4e-d130f3d3d8c5/header.bin
 examples/advanced_agent/memory/25b398f9-c5ca-41d9-8f4e-d130f3d3d8c5/data_level0.bin
 /examples/advanced_agent/semantic_memory
 /src/ToolAgents/agent_context/__pycache__
+
+

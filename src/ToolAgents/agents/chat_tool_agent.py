@@ -1,4 +1,4 @@
-import datetime
+﻿import datetime
 import uuid
 from typing import Optional, List, Any, Generator, AsyncGenerator
 
@@ -29,10 +29,13 @@ class ChatToolAgent(BaseToolAgent):
         chat_api: ChatAPIProvider,
         log_output: bool = False,
         log_to_file: bool = False,
+        debug_output: Optional[bool] = None,
     ):
         super().__init__()
         from ToolAgents import ToolRegistry
         self.chat_api = chat_api
+        if debug_output is not None:
+            log_output = debug_output
         self.log_output = log_output
         if log_output:
             self.logger = EasyLogger(
@@ -586,3 +589,6 @@ class AsyncChatToolAgent(AsyncBaseToolAgent):
         current_messages.append(chat_message)
         self.last_messages_buffer.append(tool_message)
         current_messages.append(tool_message)
+
+
+

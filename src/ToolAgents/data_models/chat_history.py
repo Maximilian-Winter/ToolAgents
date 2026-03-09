@@ -1,5 +1,6 @@
-import json
+﻿import json
 import uuid
+from collections.abc import Iterable
 from typing import List, Dict, Any
 from datetime import datetime
 from pydantic import BaseModel, Field
@@ -8,7 +9,6 @@ from ToolAgents.data_models.messages import ChatMessageRole
 from ToolAgents.data_models.messages import (
     ChatMessage,
     TextContent,
-
 )
 
 
@@ -111,12 +111,18 @@ class ChatHistory(BaseModel):
         self.messages.extend(messages)
 
     def add_message_from_dictionary(self, message: Dict[str, str]) -> None:
-
         self.messages.extend(ChatMessage.from_dictionaries([message]))
 
     def add_messages_from_dictionaries(self, messages: List[Dict[str, str]]) -> None:
-
         self.messages.extend(ChatMessage.from_dictionaries(messages))
+
+    # Backwards-compatible alias used throughout older examples/tests.
+    def add_list_of_dicts(self, messages: Iterable[Dict[str, Any] | ChatMessage]) -> None:
+        for message in messages:
+            if isinstance(message, ChatMessage):
+                self.messages.append(message)
+            else:
+                self.add_message_from_dictionary(message)
 
     def get_messages(self) -> List[ChatMessage]:
         """
@@ -158,19 +164,20 @@ class ChatHistory(BaseModel):
         Args:
             filepath: Path to save the JSON file
         """
-        # Convert to dictionary and handle datetime serialization
         data = self.model_dump()
 
-        # Custom JSON encoder to handle datetime objects
         class DateTimeEncoder(json.JSONEncoder):
             def default(self, obj):
                 if isinstance(obj, datetime):
                     return obj.isoformat()
                 return super().default(obj)
 
-        # Write to file with pretty printing
         with open(filepath, "w", encoding="utf-8") as f:
             json.dump(data, f, cls=DateTimeEncoder, indent=2)
+
+    # Backwards-compatible alias used by older examples/tests.
+    def save_history(self, filepath: str) -> None:
+        self.save_to_json(filepath)
 
     @classmethod
     def load_from_json(cls, filepath: str) -> "ChatHistory":
@@ -186,12 +193,23 @@ class ChatHistory(BaseModel):
         with open(filepath, "r", encoding="utf-8") as f:
             data = json.load(f)
 
-        # Convert ISO format strings back to datetime objects
+        # Older history files stored a simple list of role/content dictionaries.
+        if isinstance(data, list):
+            return cls(messages=ChatMessage.from_dictionaries(data))
+
         for message in data["messages"]:
             message["created_at"] = datetime.fromisoformat(message["created_at"])
             message["updated_at"] = datetime.fromisoformat(message["updated_at"])
 
         return cls(**data)
+
+    # Backwards-compatible alias used by older examples/tests.
+    def load_history(self, filepath: str) -> None:
+        loaded_history = self.load_from_json(filepath)
+        self.id = loaded_history.id
+        self.title = loaded_history.title
+        self.messages = loaded_history.messages
+        self.metadata = loaded_history.metadata
 
     def get_last_message(self) -> ChatMessage | None:
         """
@@ -212,6 +230,10 @@ class ChatHistory(BaseModel):
             Number of messages
         """
         return len(self.messages)
+
+    # Backwards-compatible alias used by older examples/tests.
+    def to_list(self) -> List[ChatMessage]:
+        return self.get_messages()
 
 
 class Chats(BaseModel):
@@ -284,7 +306,6 @@ class Chats(BaseModel):
         with open(filepath, "r", encoding="utf-8") as f:
             data = json.load(f)
 
-        # Convert ISO format strings back to datetime objects for all chats
         for key, chat in data["chats"].items():
             for message in chat["messages"]:
                 message["created_at"] = datetime.fromisoformat(message["created_at"])
@@ -293,13 +314,10 @@ class Chats(BaseModel):
         return cls(**data)
 
 
-# Example usage
 if __name__ == "__main__":
-    # Create a new chat history
     test_chats = Chats()
     test_chat_id = test_chats.create_chat("New Chat")
     test_date = datetime.now()
-    # Create a sample message
     test_message = ChatMessage(
         id="1",
         role=ChatMessageRole.User,
@@ -308,16 +326,10 @@ if __name__ == "__main__":
         updated_at=test_date,
     )
 
-    # Add message to history
     test_chats.add_message(test_chat_id, test_message)
-
-    # Save to JSON
     test_chats.save_to_json("chat_history.json")
-
-    # Load from JSON
     test_loaded_history = Chats.load_from_json("chat_history.json")
 
-    # Print the loaded message
     print(
         test_loaded_history.get_last_k_messages(test_chat_id, 1)[0].model_dump_json(
             indent=2

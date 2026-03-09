@@ -1,4 +1,4 @@
-import os
+﻿import os
 import asyncio
 from typing import List, Dict, Any
 
@@ -6,7 +6,7 @@ from ToolAgents import ToolRegistry, FunctionTool
 from ToolAgents.agents import ChatToolAgent
 from ToolAgents.data_models.chat_history import ChatHistory
 from ToolAgents.data_models.messages import ChatMessage
-from ToolAgents.provider import OpenAIChatAPI, GoogleGenAIChatAPI
+from ToolAgents.provider import OpenAIChatAPI
 from ToolAgents.agent_tools.discord_tool import (
     init_discord_tools,
     DiscordEmbedData,
@@ -165,3 +165,4 @@ if __name__ == "__main__":
     #     message="Hello everyone! This message was sent by an AI Discord agent."
     # )
     # print(f"Result: {result}")
+
