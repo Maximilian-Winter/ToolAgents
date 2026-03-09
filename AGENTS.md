@@ -6,7 +6,7 @@ ToolAgents is a Python framework for building tool-calling LLM agents on top of 
 
 Current package metadata:
 - Name: `ToolAgents`
-- Version: `0.2.9`
+- Version: `0.3.0`
 - Python: `>=3.10`
 - Source layout: `src/ToolAgents`
 
@@ -119,3 +119,4 @@ When in doubt, trust these in order:
 2. current supported tests under `tests`
 3. updated docs under `docs`
 4. older examples only if they match the code above
+
