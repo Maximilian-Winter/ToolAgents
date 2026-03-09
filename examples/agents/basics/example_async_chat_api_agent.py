@@ -11,12 +11,7 @@ from ToolAgents.provider.chat_api_provider.open_ai import AsyncOpenAIChatAPI
 from ToolAgents.provider.completion_provider.completion_provider import (
     AsyncCompletionProvider,
 )
-from ToolAgents.provider.completion_provider.default_implementations import (
-    AsyncLlamaCppServer,
-)
-from ToolAgents.provider.completion_provider.implementations.llama_cpp_python import (
-    AsyncLlamaCppPythonEndpoint,
-)
+
 
 from example_tools import (
     calculator_function_tool,
