@@ -3,52 +3,42 @@ import re
 
 
 class TextSplitter(abc.ABC):
+
     @abc.abstractmethod
-    def get_chunks(self, text=None):
+    def get_chunks(self, text):
         pass
 
 
 class NonTextSplitter(TextSplitter):
     """
     A class that does not split text at all, returning the entire text as a single chunk.
+
+    Parameters:
+    -----------
+    text : str
+        The string to be chunked.
     """
 
-    def __init__(self, text=None):
-        self.text = text
-
-    def get_chunks(self, text=None):
-        text = self.text if text is None else text
-        return [] if text is None else [text]
+    def get_chunks(self, text):
+        return [text]
 
 
 class SimpleTextSplitter(TextSplitter):
     """
-    Split text into overlapping or non-overlapping fixed-size chunks.
-
-    Supports both the current style `SimpleTextSplitter(chunk_size=..., overlap=...)`
-    and the legacy style `SimpleTextSplitter(text, chunk_size=..., overlap=...)`.
+    A class for splitting text into consecutive overlapping (or non-overlapping) chunks.
     """
 
-    def __init__(self, text=None, chunk_size=None, overlap=0):
-        if chunk_size is None and isinstance(text, int):
-            chunk_size = text
-            text = None
-        if chunk_size is None:
-            raise ValueError('chunk_size must be provided.')
+    def __init__(self, chunk_size, overlap=0):
         if chunk_size <= 0:
-            raise ValueError('chunk_size must be a positive integer.')
+            raise ValueError("chunk_size must be a positive integer.")
         if overlap < 0:
-            raise ValueError('overlap cannot be negative.')
+            raise ValueError("overlap cannot be negative.")
         if overlap >= chunk_size:
-            raise ValueError('overlap must be strictly less than chunk_size.')
-        self.text = text
+            raise ValueError("overlap must be strictly less than chunk_size.")
         self.chunk_size = chunk_size
         self.overlap = overlap
 
-    def get_chunks(self, text=None):
-        text = self.text if text is None else text
-        if text is None:
-            raise ValueError('text must be provided either at initialization or call time.')
+    def get_chunks(self, text):
         chunks = []
         start = 0
         while start < len(text):
@@ -60,7 +50,8 @@ class SimpleTextSplitter(TextSplitter):
 
 class RecursiveCharacterTextSplitter(TextSplitter):
     """
-    Recursively split text by a hierarchy of separators and then merge into chunks.
+    A class that recursively splits text by a hierarchy of separators
+    and eventually falls back to fixed-size splitting with overlap.
     """
 
     def __init__(
@@ -72,25 +63,19 @@ class RecursiveCharacterTextSplitter(TextSplitter):
         keep_separator=False,
     ):
         if chunk_size <= 0:
-            raise ValueError('chunk_size must be a positive integer.')
+            raise ValueError("chunk_size must be a positive integer.")
         if chunk_overlap < 0:
-            raise ValueError('chunk_overlap cannot be negative.')
+            raise ValueError("chunk_overlap cannot be negative.")
         if chunk_overlap >= chunk_size:
-            raise ValueError('chunk_overlap must be strictly less than chunk_size.')
+            raise ValueError("chunk_overlap must be strictly less than chunk_size.")
         self.separators = separators
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
         self.length_function = length_function
         self.keep_separator = keep_separator
 
-    def get_chunks(self, text=None):
-        if text is None:
-            raise ValueError('text must be provided.')
+    def get_chunks(self, text):
         return self._split_text(text)
-
-    # Backwards-compatible alias used by older tests/examples.
-    def split_text(self, text):
-        return self.get_chunks(text)
 
     def _split_text(self, text, depth=0):
         if len(text) <= self.chunk_size:
@@ -100,11 +85,11 @@ class RecursiveCharacterTextSplitter(TextSplitter):
             return self._split_into_fixed_size(text)
 
         current_separator = self.separators[depth]
-        if current_separator == '':
+        if current_separator == "":
             return list(text)
 
         if self.keep_separator:
-            pieces = re.split(f'({re.escape(current_separator)})', text)
+            pieces = re.split(f"({re.escape(current_separator)})", text)
             merged_pieces = []
             for i in range(0, len(pieces), 2):
                 piece = pieces[i]

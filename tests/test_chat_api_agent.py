@@ -1,56 +1,50 @@
 import json
 import os
 
+from dotenv import load_dotenv
+
+from ToolAgents import ToolRegistry
 from ToolAgents.agents import ChatToolAgent
-from ToolAgents.provider import (
-    OpenAIChatAPI,
-    OpenAISettings,
-    AnthropicChatAPI,
-    AnthropicSettings,
-)
-from ToolAgents.utilities import ChatHistory
+from ToolAgents.data_models.chat_history import ChatHistory
+from ToolAgents.provider import AnthropicChatAPI, OpenAIChatAPI
 from test_tools import (
     calculator_function_tool,
     current_datetime_function_tool,
     get_weather_function_tool,
 )
 
-from dotenv import load_dotenv
-
 load_dotenv()
 
 # api = OpenAIChatAPI(api_key=os.getenv("OPENAI_API_KEY"), base_url="https://api.openai.com/v1", model="gpt-4o")
-# settings = OpenAISettings()
-
 api = AnthropicChatAPI(
     api_key=os.getenv("ANTHROPIC_API_KEY"), model="claude-3-5-sonnet-20240620"
 )
-settings = AnthropicSettings()
+settings = api.get_default_settings()
 
-# Create the ChatAPIAgent
-agent = ChatToolAgent(chat_api=api, debug_output=True)
-
+agent = ChatToolAgent(chat_api=api, log_output=True)
 settings.temperature = 0.45
 settings.top_p = 0.85
 
-# Define the tools
-tools = [
-    calculator_function_tool,
-    current_datetime_function_tool,
-    get_weather_function_tool,
-]
+tool_registry = ToolRegistry()
+tool_registry.add_tools(
+    [
+        calculator_function_tool,
+        current_datetime_function_tool,
+        get_weather_function_tool,
+    ]
+)
 
 chat_history = ChatHistory()
-chat_history.load_history("./test_tools_chat_history.json")
+with open("./test_tools_chat_history.json", "r", encoding="utf-8") as f:
+    chat_history.add_messages_from_dictionaries(json.load(f))
 
-# Get a response
 result = agent.get_streaming_response(
-    messages=chat_history.to_list(), tools=tools, settings=settings
+    messages=chat_history.get_messages(), tool_registry=tool_registry, settings=settings
 )
 
 for res in result:
     print(res, end="", flush=True)
 print()
 
-chat_history.add_list_of_dicts(agent.last_messages_buffer)
-chat_history.save_history("./test_chat_history_after_chat_api.json")
+chat_history.add_messages(agent.last_messages_buffer)
+chat_history.save_to_json("./test_chat_history_after_chat_api.json")

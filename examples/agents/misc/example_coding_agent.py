@@ -1,4 +1,4 @@
-import datetime
+﻿import datetime
 import json
 import os
 import platform
@@ -120,3 +120,4 @@ while True:
             print()
     chat_history.add_messages(chat_response.messages)
     chat_history.save_to_json("coding_agent_history.json")
+

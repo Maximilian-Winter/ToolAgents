@@ -1,4 +1,4 @@
----
+﻿---
 title: Working with Chat History
 ---
 
@@ -11,8 +11,8 @@ Maintaining chat history is essential for building coherent conversations with L
 ToolAgents provides a `ChatHistory` class that simplifies managing conversation messages:
 
 ```python
-from ToolAgents.messages import ChatHistory
-from ToolAgents.messages.chat_message import ChatMessage
+from ToolAgents.data_models.chat_history import ChatHistory
+from ToolAgents.data_models.messages import ChatMessage
 
 # Create a new chat history
 chat_history = ChatHistory()
@@ -140,13 +140,13 @@ chat_history.set_messages(new_messages)
 
 ## Advanced: Chat Database
 
-For more complex applications, ToolAgents also provides a `ChatDatabase` class that can manage multiple conversations:
+For more complex applications, ToolAgents also provides a `ChatManager` class that can manage multiple conversations:
 
 ```python
-from ToolAgents.messages import ChatDatabase
+from ToolAgents.utilities.chat_database import ChatManager
 
 # Create a chat database
-chat_db = ChatDatabase()
+chat_db = ChatManager()
 
 # Create a new conversation
 conversation_id = chat_db.create_conversation("My Conversation")
@@ -160,7 +160,7 @@ messages = chat_db.get_messages(conversation_id)
 
 # Save and load the entire database
 chat_db.save_to_json("chat_database.json")
-loaded_db = ChatDatabase.load_from_json("chat_database.json")
+loaded_db = ChatManager.load_from_json("chat_database.json")
 ```
 
 ## Chat History with Memory

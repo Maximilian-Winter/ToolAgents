@@ -1,4 +1,4 @@
----
+﻿---
 title: Messages
 ---
 
@@ -13,7 +13,7 @@ ToolAgents uses a unified message format to handle chat history and communicatio
 The `ChatMessage` class is the fundamental building block for communication:
 
 ```python
-from ToolAgents.messages.chat_message import ChatMessage
+from ToolAgents.data_models.messages import ChatMessage
 
 # Create different types of messages
 system_message = ChatMessage.create_system_message(
@@ -55,7 +55,7 @@ tool_response_message = ChatMessage.create_tool_message(
 The `ChatHistory` class manages collections of messages:
 
 ```python
-from ToolAgents.messages import ChatHistory
+from ToolAgents.data_models.chat_history import ChatHistory
 
 # Create a new chat history
 chat_history = ChatHistory()
@@ -80,15 +80,15 @@ chat_history.pop()  # Remove the last message
 chat_history.clear()  # Remove all messages
 ```
 
-### ChatDatabase
+### ChatManager
 
-The `ChatDatabase` class manages multiple conversations:
+The `ChatManager` class manages multiple conversations:
 
 ```python
-from ToolAgents.messages import ChatDatabase
+from ToolAgents.utilities.chat_database import ChatManager
 
 # Create a new chat database
-chat_db = ChatDatabase()
+chat_db = ChatManager()
 
 # Create a new conversation
 conversation_id = chat_db.create_conversation("Weather Chat")
@@ -137,7 +137,7 @@ loaded_history = ChatHistory.load_from_json("conversation.json")
 chat_db.save_to_json("chat_database.json")
 
 # Load chat database from a file
-loaded_db = ChatDatabase.load_from_json("chat_database.json")
+loaded_db = ChatManager.load_from_json("chat_database.json")
 ```
 
 ### Message Templates
@@ -145,7 +145,7 @@ loaded_db = ChatDatabase.load_from_json("chat_database.json")
 ToolAgents provides message templates for common patterns:
 
 ```python
-from ToolAgents.messages.message_template import MessageTemplate
+from ToolAgents.utilities.message_template import MessageTemplate
 
 # Create a template
 template = MessageTemplate("""
@@ -170,7 +170,7 @@ chat_history.add_message(system_message)
 For more complex prompts, use the `PromptBuilder`:
 
 ```python
-from ToolAgents.messages.prompt_builder import PromptBuilder
+from ToolAgents.utilities.prompt_builder import PromptBuilder
 
 # Create a builder
 builder = PromptBuilder()
@@ -199,7 +199,7 @@ system_message = ChatMessage.create_system_message(prompt)
 ### Creating Tool Calls
 
 ```python
-from ToolAgents.messages.chat_message import ChatMessage
+from ToolAgents.data_models.messages import ChatMessage
 
 # Create a message with a single tool call
 calculator_call = ChatMessage.create_assistant_message(

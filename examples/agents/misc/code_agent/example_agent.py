@@ -1,4 +1,4 @@
-
+﻿
 from ToolAgents.agents import ChatToolAgent
 from ToolAgents.provider import (
     AnthropicChatAPI,
@@ -25,7 +25,7 @@ api = OpenAIChatAPI(
     model="unsloth/Meta-Llama-3.1-8B-Instruct-bnb-4bit",
 )
 settings = api.get_default_settings()
-agent = ChatToolAgent(chat_api=api, debug_output=True)
+agent = ChatToolAgent(chat_api=api, log_output=True)
 
 settings.neutralize_all_samplers()
 settings.temperature = 0.1
@@ -80,3 +80,4 @@ run_llm_code_agent(
 )
 
 chat_history.save_to_json("./test_chat_history_after.json")
+

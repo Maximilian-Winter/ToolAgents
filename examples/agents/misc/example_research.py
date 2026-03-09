@@ -1,4 +1,4 @@
-import os
+﻿import os
 
 from ToolAgents import ToolRegistry
 from ToolAgents.agents import ChatToolAgent
@@ -164,3 +164,4 @@ chat_response = agent.get_response(
 print(chat_response.response.strip())
 
 print("\n".join([msg.model_dump_json(indent=4) for msg in chat_response.messages]))
+

@@ -1,4 +1,4 @@
-from ToolAgents.knowledge.vector_database import RAG
+﻿from ToolAgents.knowledge.vector_database import RAG
 from ToolAgents.knowledge.vector_database.implementations.chroma_db_vector_database import (
     ChromaDbVectorDatabaseProvider,
 )
@@ -29,3 +29,4 @@ if __name__ == "__main__":
     ]
     rag.add_documents(texts)
     print(rag.retrieve_documents("Hola mundo!", 4))
+

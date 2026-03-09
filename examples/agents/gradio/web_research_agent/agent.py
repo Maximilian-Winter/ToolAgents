@@ -1,4 +1,4 @@
-import os
+﻿import os
 
 from ToolAgents import ToolRegistry
 from ToolAgents.agents import ChatToolAgent
@@ -27,7 +27,7 @@ api = AnthropicChatAPI(
 )
 
 # Create the ChatAPIAgent
-# agent = ChatAPIAgent(chat_api=provider, debug_output=True)
+# agent = ChatAPIAgent(chat_api=provider, log_output=True)
 agent = ChatToolAgent(chat_api=api, log_output=True)
 
 settings = api.get_default_settings()
@@ -51,3 +51,4 @@ tool_registry.add_tool(web_search_tool.get_tool())
 chat = ChatHistory()
 
 system_prompt = "You are a helpful assistant.\n\nDate: 2025-02-19 08:00 am"
+

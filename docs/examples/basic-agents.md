@@ -1,4 +1,4 @@
----
+﻿---
 title: Basic Agents
 ---
 
@@ -15,7 +15,7 @@ import os
 from dotenv import load_dotenv
 
 from ToolAgents.agents import ChatToolAgent
-from ToolAgents.messages.chat_message import ChatMessage
+from ToolAgents.data_models.messages import ChatMessage
 from ToolAgents.provider import OpenAIChatAPI
 
 # Load environment variables
@@ -64,7 +64,7 @@ from dotenv import load_dotenv
 
 from ToolAgents import ToolRegistry, FunctionTool
 from ToolAgents.agents import ChatToolAgent
-from ToolAgents.messages.chat_message import ChatMessage
+from ToolAgents.data_models.messages import ChatMessage
 from ToolAgents.provider import OpenAIChatAPI
 
 # Load environment variables
@@ -149,7 +149,7 @@ from dotenv import load_dotenv
 
 from ToolAgents import ToolRegistry, FunctionTool
 from ToolAgents.agents import ChatToolAgent
-from ToolAgents.messages import ChatHistory
+from ToolAgents.data_models.chat_history import ChatHistory
 from ToolAgents.provider import OpenAIChatAPI
 
 # Load environment variables
@@ -209,7 +209,7 @@ def get_weather(location: str, unit: str = "celsius") -> str:
     if unit.lower() == "fahrenheit":
         temp = (temp * 9/5) + 32
     
-    return f"The weather in {location} is {temp}°{'F' if unit.lower() == 'fahrenheit' else 'C'}, " \
+    return f"The weather in {location} is {temp}Â°{'F' if unit.lower() == 'fahrenheit' else 'C'}, " \
            f"{weather['condition'].lower()} with {weather['humidity']}% humidity."
 
 # Create tools
@@ -271,7 +271,7 @@ import os
 from dotenv import load_dotenv
 
 from ToolAgents.agents import ChatToolAgent
-from ToolAgents.messages.chat_message import ChatMessage
+from ToolAgents.data_models.messages import ChatMessage
 from ToolAgents.provider import (
     OpenAIChatAPI,
     AnthropicChatAPI,
@@ -341,7 +341,7 @@ from dotenv import load_dotenv
 
 from ToolAgents import ToolRegistry, FunctionTool
 from ToolAgents.agents import ChatToolAgent
-from ToolAgents.messages.chat_message import ChatMessage
+from ToolAgents.data_models.messages import ChatMessage
 from ToolAgents.provider import OpenAIChatAPI
 
 # Load environment variables

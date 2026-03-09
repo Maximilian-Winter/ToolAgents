@@ -1,4 +1,4 @@
-# This show an advanced agent that will handle all the things like chat history by itself, also contains optional memory and app state functionality.
+﻿# This show an advanced agent that will handle all the things like chat history by itself, also contains optional memory and app state functionality.
 
 from ToolAgents.agents import AdvancedAgent
 from ToolAgents.agents.advanced_agent import AgentConfig
@@ -32,3 +32,4 @@ print(result)
 
 result = configurable_agent.chat_with_agent("Hello! Tell me about you!")
 print(result)
+

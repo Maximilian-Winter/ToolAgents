@@ -1,13 +1,11 @@
 from ToolAgents.agents import OllamaAgent
-from ToolAgents.utilities import ChatHistory
+from ToolAgents.data_models.chat_history import ChatHistory
 
 from test_tools import get_flight_times_tool
 
 
 def run():
-
-    agent = OllamaAgent(model="llama3.1:8b", debug_output=False)
-
+    agent = OllamaAgent(model="llama3.1:8b", log_output=False)
     tools = [get_flight_times_tool]
 
     messages = [
@@ -18,34 +16,30 @@ def run():
         },
     ]
 
-    response = agent.get_response(
-        messages=messages,
-        tools=tools,
-    )
-
+    response = agent.get_response(messages=messages, tools=tools)
     print(response)
 
     chat_history = ChatHistory()
-    messages = [
-        {"role": "system", "content": "You are a helpful assistant."},
-        {
-            "role": "user",
-            "content": "What is the flight time from London (LHR) to New York (JFK)?",
-        },
-    ]
-    chat_history.add_list_of_dicts(messages)
+    chat_history.add_messages_from_dictionaries(
+        [
+            {"role": "system", "content": "You are a helpful assistant."},
+            {
+                "role": "user",
+                "content": "What is the flight time from London (LHR) to New York (JFK)?",
+            },
+        ]
+    )
 
     print("\nStreaming response:")
     for chunk in agent.get_streaming_response(
-        messages=chat_history.to_list(),
+        messages=chat_history.get_messages(),
         tools=tools,
     ):
         print(chunk, end="", flush=True)
 
-    chat_history.add_list_of_dicts(agent.last_messages_buffer)
-    chat_history.save_history("./test_chat_history_after_ollama.json")
+    chat_history.add_messages(agent.last_messages_buffer)
+    chat_history.save_to_json("./test_chat_history_after_ollama.json")
 
 
-# Run the function
 if __name__ == "__main__":
     run()

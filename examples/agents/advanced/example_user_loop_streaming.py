@@ -1,4 +1,4 @@
-import os
+﻿import os
 
 from ToolAgents.agents import ChatToolAgent
 from ToolAgents.data_models.chat_history import ChatHistory
@@ -55,3 +55,4 @@ while True:
             chat_history.add_messages(chat_response.messages)
         else:
             raise Exception("Error during response generation")
+

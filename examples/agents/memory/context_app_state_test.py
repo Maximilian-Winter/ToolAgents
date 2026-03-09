@@ -1,4 +1,4 @@
-from ToolAgents.agent_memory.context_app_state import ContextAppState
+﻿from ToolAgents.agent_memory.context_app_state import ContextAppState
 from ToolAgents.agents import ChatToolAgent
 from ToolAgents.data_models.messages import ChatMessage
 
@@ -94,3 +94,4 @@ result = agent.get_streaming_response(
 for tok in result:
     print(tok.chunk, end="", flush=True)
 print()
+

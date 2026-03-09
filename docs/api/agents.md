@@ -1,4 +1,4 @@
----
+﻿---
 title: Agents API
 ---
 
@@ -89,7 +89,7 @@ Returns the last response from the agent.
 ```python
 from ToolAgents.agents import ChatToolAgent
 
-agent = ChatToolAgent(chat_api=api_provider, debug_output=False)
+agent = ChatToolAgent(chat_api=api_provider, log_output=False)
 ```
 
 ### Constructor Parameters
@@ -143,7 +143,7 @@ Asynchronous version of `ChatToolAgent`.
 ```python
 from ToolAgents.agents import ChatToolAgent
 
-agent = ChatToolAgent(chat_api=async_api_provider, debug_output=False)
+agent = ChatToolAgent(chat_api=async_api_provider, log_output=False)
 ```
 
 ## AdvancedAgent

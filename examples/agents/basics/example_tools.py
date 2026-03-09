@@ -1,4 +1,4 @@
-import datetime
+﻿import datetime
 import os
 from enum import Enum
 from typing import List
@@ -57,11 +57,11 @@ class calculator(BaseModel):
 def get_current_weather(location, unit):
     """Get the current weather in a given location"""
     if "London" in location:
-        return f"Weather in {location}: {22}° {unit.value}"
+        return f"Weather in {location}: {22}Â° {unit.value}"
     elif "New York" in location:
-        return f"Weather in {location}: {24}° {unit.value}"
+        return f"Weather in {location}: {24}Â° {unit.value}"
     elif "North Pole" in location:
-        return f"Weather in {location}: {-42}° {unit.value}"
+        return f"Weather in {location}: {-42}Â° {unit.value}"
     else:
         return f"Weather in {location}: unknown"
 
@@ -174,3 +174,4 @@ get_weather_function_tool = FunctionTool.from_openai_tool(
 read_file_tool = FunctionTool(read_file)
 write_file_tool = FunctionTool(write_file)
 list_files_tool = FunctionTool(list_files)
+

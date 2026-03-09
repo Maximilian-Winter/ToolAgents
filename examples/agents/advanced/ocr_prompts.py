@@ -1,4 +1,4 @@
-ALLOWED_TAGS = [
+﻿ALLOWED_TAGS = [
     "math",
     "br",
     "i",

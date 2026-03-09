@@ -1,4 +1,4 @@
----
+﻿---
 title: Messages API
 ---
 
@@ -11,7 +11,7 @@ The Messages module provides classes for managing conversation messages, chat hi
 `ChatMessage` is the unified message format for all providers in ToolAgents.
 
 ```python
-from ToolAgents.messages.chat_message import ChatMessage
+from ToolAgents.data_models.messages import ChatMessage
 ```
 
 ### Properties
@@ -114,7 +114,7 @@ Creates a message from a dictionary.
 `ChatHistory` manages collections of chat messages.
 
 ```python
-from ToolAgents.messages import ChatHistory
+from ToolAgents.data_models.chat_history import ChatHistory
 
 # Create a new chat history
 chat_history = ChatHistory()
@@ -226,15 +226,15 @@ Estimates the number of tokens in the history.
 **Returns:**
 - `int`: Estimated token count
 
-## ChatDatabase
+## ChatManager
 
-`ChatDatabase` manages multiple conversations.
+`ChatManager` manages multiple conversations.
 
 ```python
-from ToolAgents.messages import ChatDatabase
+from ToolAgents.utilities.chat_database import ChatManager
 
 # Create a new chat database
-chat_db = ChatDatabase()
+chat_db = ChatManager()
 ```
 
 ### Methods
@@ -349,14 +349,14 @@ Loads database from a JSON file.
 - `filepath` (str): Path to the input file
 
 **Returns:**
-- `ChatDatabase`: A new chat database
+- `ChatManager`: A new chat database
 
 ## MessageTemplate
 
 `MessageTemplate` provides a simple template system for messages.
 
 ```python
-from ToolAgents.messages.message_template import MessageTemplate
+from ToolAgents.utilities.message_template import MessageTemplate
 
 # Create a template
 template = MessageTemplate("You are an assistant specialized in {specialty}.")
@@ -409,7 +409,7 @@ Creates an assistant message from the template.
 `PromptBuilder` helps construct complex prompts.
 
 ```python
-from ToolAgents.messages.prompt_builder import PromptBuilder
+from ToolAgents.utilities.prompt_builder import PromptBuilder
 
 # Create a builder
 builder = PromptBuilder()

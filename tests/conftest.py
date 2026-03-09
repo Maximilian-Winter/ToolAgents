@@ -12,7 +12,6 @@ collect_ignore = [
     'advanced_chat_agent_test.py',
     'example_rag_bars.py',
     'test_advanced_agent.py',
-    'test_advanced_chat_formatter.py',
     'test_chat_api_agent.py',
     'test_llama_31_agent.py',
     'test_mistral_agent.py',

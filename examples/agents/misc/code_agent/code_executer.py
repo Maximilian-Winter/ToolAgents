@@ -7,11 +7,11 @@ from typing import List
 
 from pydantic import BaseModel
 from ToolAgents import FunctionTool
-from ToolAgents.utilities import ChatHistory
+from ToolAgents.data_models.chat_history import ChatHistory
 from ToolAgents.utilities.llm_documentation.documentation_generation import (
     generate_type_definitions,
 )
-from ToolAgents.messages.message_template import MessageTemplate
+from ToolAgents.utilities.message_template import MessageTemplate
 
 system_message_code_agent = """You are an advanced AI assistant with the ability to execute Python code. You have access to a Python code interpreter that allows you to execute Python code to accomplish various tasks. This capability enables you to perform a wide range of operations, from simple calculations to complex data analysis and system interactions.
 
@@ -233,7 +233,7 @@ def run_code_agent(
     print("Response: ", end="")
     chat_history.add_user_message(user_input)
     result_gen = agent.get_streaming_response(
-        messages=chat_history.to_list(), settings=settings
+        messages=chat_history.get_messages(), settings=settings
     )
 
     full_response = ""
@@ -248,13 +248,11 @@ def run_code_agent(
             code_ex, has_error = python_code_executor.run(full_response)
             print("Python Execution Output: ")
             print(code_ex)
-            chat_history.add_message(
-                "user", "Results of last Code execution:\n" + code_ex
-            )
+            chat_history.add_user_message("Results of last Code execution:\n" + code_ex)
 
             print("Response: ", end="")
             result_gen = agent.get_streaming_response(
-                messages=chat_history.to_list(), settings=settings
+                messages=chat_history.get_messages(), settings=settings
             )
             full_response = ""
             for tok in result_gen:
@@ -263,3 +261,6 @@ def run_code_agent(
             print()
         else:
             break
+
+
+

@@ -1,4 +1,4 @@
-import requests
+﻿import requests
 
 from ToolAgents import ToolRegistry, FunctionTool
 from ToolAgents.agents import ChatToolAgent
@@ -178,3 +178,4 @@ chat_history = [
 # Perform the query extension with the agent.
 output = agent.get_response(chat_history)
 print(output.response)
+

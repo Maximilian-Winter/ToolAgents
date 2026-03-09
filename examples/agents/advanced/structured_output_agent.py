@@ -1,4 +1,4 @@
-import json
+﻿import json
 import os
 
 from enum import Enum
@@ -68,7 +68,7 @@ Here is the JSON schema that defines the structure of the information you need t
 </json_schema>"""
     ),
     ChatMessage.create_user_message(
-        """The book 'The Feynman Lectures on Physics' is a physics textbook based on some lectures by Richard Feynman, a Nobel laureate who has sometimes been called "The Great Explainer". The lectures were presented before undergraduate students at the California Institute of Technology (Caltech), during 1961–1963. The book's co-authors are Feynman, Robert B. Leighton, and Matthew Sands."""
+        """The book 'The Feynman Lectures on Physics' is a physics textbook based on some lectures by Richard Feynman, a Nobel laureate who has sometimes been called "The Great Explainer". The lectures were presented before undergraduate students at the California Institute of Technology (Caltech), during 1961â€“1963. The book's co-authors are Feynman, Robert B. Leighton, and Matthew Sands."""
     ),
 ]
 
@@ -82,3 +82,4 @@ book = Book(**json_data)
 
 print(book)
 print(json.dumps(json_data, indent=2))
+

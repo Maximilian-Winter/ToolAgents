@@ -1,4 +1,4 @@
-import json
+﻿import json
 import os
 from typing import List
 
@@ -83,3 +83,4 @@ def generate_graph(user_input: str):
 
 graph = generate_graph("The Industrial Military Complex")
 visualize_knowledge_graph(graph)
+

@@ -1,4 +1,4 @@
-import json
+﻿import json
 import os
 from enum import Enum
 
@@ -84,3 +84,4 @@ pipeline = Pipeline()
 pipeline.add_process(math_greeting)
 results = pipeline.run_pipeline(operation="multiply", num1=5, num2=3, name="Alex")
 print(results["greeting"])
+

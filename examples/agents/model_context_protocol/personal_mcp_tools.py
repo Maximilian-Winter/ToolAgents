@@ -1,4 +1,4 @@
-# Create a sample function tool
+﻿# Create a sample function tool
 from enum import Enum
 
 from mcp.server import FastMCP

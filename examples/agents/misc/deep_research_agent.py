@@ -1,4 +1,4 @@
-import datetime
+﻿import datetime
 import os
 import json
 from typing import List, Dict, Any, Optional
@@ -223,3 +223,4 @@ if __name__ == "__main__":
 
     except Exception as e:
         print(f"An error occurred during research: {str(e)}")
+

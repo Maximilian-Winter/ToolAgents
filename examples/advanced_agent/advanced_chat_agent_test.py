@@ -1,4 +1,4 @@
-# This show an advanced agent that will handle all the things like chat history by itself, also contains optional memory and app state functionality.
+﻿# This show an advanced agent that will handle all the things like chat history by itself, also contains optional memory and app state functionality.
 from ToolAgents.agent_memory import (
     semantic_memory_nomic_text_gpu_config,
     SummarizationExtractPatternStrategy,
@@ -40,9 +40,9 @@ You are a helpful and context-aware assistant. Your goal is to assist the user e
 - Always keep this information in mind when responding to queries.
 
 ### Response Guidelines:
-- Be concise yet informative—avoid over-explaining unless the user asks for details.
-- Prioritize accuracy—do not assume facts that were not explicitly stated in memory.
-- Clarify uncertainties—if information is missing, prompt the user instead of making up details.
+- Be concise yet informativeâ€”avoid over-explaining unless the user asks for details.
+- Prioritize accuracyâ€”do not assume facts that were not explicitly stated in memory.
+- Clarify uncertaintiesâ€”if information is missing, prompt the user instead of making up details.
 - Use structured responses when listing multiple items (e.g., numbered lists for recommendations).
 
 ### App State
@@ -69,26 +69,26 @@ configurable_agent.process_chat_history(max_chat_history_length=0)
 
 
 semantic_memory_test_questions = [
-    # 🎵 Music & Books
-    "What’s my favorite music genre?",
+    # ðŸŽµ Music & Books
+    "Whatâ€™s my favorite music genre?",
     "Do you know my favorite artist?",
     "Can you recommend music similar to what I like?",
     "Which album do I love the most?",
     "What book by Haruki Murakami do I like the most?",
     "Can you recommend authors similar to Murakami?",
-    # 🍣 Food Preferences
-    "What’s my favorite dish?",
+    # ðŸ£ Food Preferences
+    "Whatâ€™s my favorite dish?",
     "Is there any food I dislike?",
     "Do I have any food allergies?",
     "What do I usually drink with sushi?",
-    # 📸 Hobbies & Daily Habits
-    "What’s my hobby?",
+    # ðŸ“¸ Hobbies & Daily Habits
+    "Whatâ€™s my hobby?",
     "Do I prefer landscapes or street photography?",
     "What camera do I use?",
     "Which software do I edit my photos with?",
     "What time do I want to wake up every day?",
     "Can you give me some morning motivation?",
-    # 📢 Memory Validation & Contextual Understanding
+    # ðŸ“¢ Memory Validation & Contextual Understanding
     "Remind me of everything you know about my preferences.",
     "Summarize my favorite things in a few sentences.",
     "Did I ever mention anything I dislike?",
@@ -102,3 +102,4 @@ for question in semantic_memory_test_questions:
     for output in result:
         print(output.chunk, end="", flush=True)
     print("\n---\n")
+

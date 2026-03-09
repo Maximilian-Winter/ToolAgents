@@ -1,4 +1,4 @@
-import json
+﻿import json
 import os
 
 from ToolAgents import ToolRegistry
@@ -76,3 +76,4 @@ for res in result:
         print(f"Tool Result: {res.get_tool_results()}")
         print()
     print(res.chunk, end="", flush=True)
+

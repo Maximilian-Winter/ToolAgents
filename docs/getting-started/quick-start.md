@@ -1,4 +1,4 @@
----
+﻿---
 title: Quick Start
 ---
 
@@ -24,7 +24,7 @@ from dotenv import load_dotenv
 
 from ToolAgents import ToolRegistry
 from ToolAgents.agents import ChatToolAgent
-from ToolAgents.messages.chat_message import ChatMessage
+from ToolAgents.data_models.messages import ChatMessage
 from ToolAgents.provider import OpenAIChatAPI
 
 # Load environment variables from a .env file (optional)
@@ -105,7 +105,7 @@ def get_weather(location: str, unit: str = "celsius") -> str:
     if unit.lower() == "fahrenheit":
         temp = (temp * 9/5) + 32
     
-    return f"The weather in {location} is {temp}°{'F' if unit.lower() == 'fahrenheit' else 'C'} and {weather['condition'].lower()}."
+    return f"The weather in {location} is {temp}Â°{'F' if unit.lower() == 'fahrenheit' else 'C'} and {weather['condition'].lower()}."
 
 # Create FunctionTool instances
 calculator_tool = FunctionTool(calculator)
@@ -189,7 +189,7 @@ from dotenv import load_dotenv
 
 from ToolAgents import ToolRegistry, FunctionTool
 from ToolAgents.agents import ChatToolAgent
-from ToolAgents.messages.chat_message import ChatMessage
+from ToolAgents.data_models.messages import ChatMessage
 from ToolAgents.provider import OpenAIChatAPI
 
 # Load environment variables
@@ -215,7 +215,7 @@ def get_weather(location: str, unit: str = "celsius") -> str:
     temp = weather["temperature"]
     if unit.lower() == "fahrenheit":
         temp = (temp * 9/5) + 32
-    return f"The weather in {location} is {temp}°{'F' if unit.lower() == 'fahrenheit' else 'C'} and {weather['condition'].lower()}."
+    return f"The weather in {location} is {temp}Â°{'F' if unit.lower() == 'fahrenheit' else 'C'} and {weather['condition'].lower()}."
 
 # Create tool instances
 calculator_tool = FunctionTool(calculator)

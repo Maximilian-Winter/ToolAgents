@@ -1,4 +1,4 @@
-from ToolAgents.agents import ChatToolAgent
+﻿from ToolAgents.agents import ChatToolAgent
 from ToolAgents.agent_memory import (
     semantic_memory_nomic_text_gpu_config,
     SummarizationExtractPatternStrategy,
@@ -24,7 +24,7 @@ api = OpenAIChatAPI(api_key="token-abc123", base_url="http://127.0.0.1:8080/v1",
 # provider = AnthropicChatAPI(api_key=os.getenv("ANTHROPIC_API_KEY"), model="claude-3-5-sonnet-20241022")
 
 # Create the ChatAPIAgent
-# agent = ChatAPIAgent(chat_api=provider, debug_output=True)
+# agent = ChatAPIAgent(chat_api=provider, log_output=True)
 agent = ChatToolAgent(chat_api=api)
 
 settings = api.get_default_settings()
@@ -54,7 +54,7 @@ agent_config.summarize_chat_pairs_before_storing = True
 agent_config.semantic_chat_history_config.extract_pattern_strategy = (
     SummarizationExtractPatternStrategy(
         user_name="Maximilian Winter",
-        assistant_name="Jiutian Xuannü, the mysterious lady of the nine heavens",
+        assistant_name="Jiutian XuannÃ¼, the mysterious lady of the nine heavens",
         agent=agent,
         summarizer_settings=summarizer_settings,
         debug_mode=True
@@ -68,3 +68,4 @@ configurable_agent.set_summarization_prompt(summarization_prompt_pairs)
 # configurable_agent.add_to_chat_history_from_json("./abc_cleaned.json")
 # configurable_agent.process_chat_history()
 configurable_agent.save_agent()
+

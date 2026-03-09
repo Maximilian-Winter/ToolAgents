@@ -1,4 +1,4 @@
-import json
+﻿import json
 from dotenv import load_dotenv
 
 from ToolAgents.agents import ChatToolAgent
@@ -8,7 +8,7 @@ from ToolAgents.provider import OpenAIChatAPI
 load_dotenv()
 
 # System prompt for Daozang OCR
-SYSTEM_PROMPT_DAOZANG_OCR = """You are a specialized OCR system for Classical Chinese Daoist scriptures (道藏).
+SYSTEM_PROMPT_DAOZANG_OCR = """You are a specialized OCR system for Classical Chinese Daoist scriptures (é“è—).
 
 ## Task
 Extract Chinese text from images of traditional woodblock-printed Daoist texts with maximum accuracy.
@@ -19,26 +19,26 @@ Extract Chinese text from images of traditional woodblock-printed Daoist texts w
 - This is traditional Chinese text layout
 
 ## Text Characteristics
-- Traditional Chinese characters (繁體字), NOT simplified
-- Classical Chinese (文言文) grammar
+- Traditional Chinese characters (ç¹é«”å­—), NOT simplified
+- Classical Chinese (æ–‡è¨€æ–‡) grammar
 - Daoist technical terminology
 
 ## Common Terms to Recognize Correctly
 These terms appear frequently - ensure correct recognition:
 
-- 靈寶 (Língbǎo) - NOT 靈寳
-- 無量 (wúliàng) - NOT 有量
-- 元始天尊 (Yuánshǐ Tiānzūn) - primordial deity name
-- 碧落 (bìluò) - azure void - NOT 睹落
-- 眾真 (zhòngzhēn) - assembled perfected ones - NOT 泉真
-- 痼疾 (gùjí) - chronic illness - NOT 癡疾
-- 懷姙 (huáirèn) - pregnant - NOT 懷雉, 懷姪
-- 反黑 (fǎnhēi) - return to black - NOT 及黑
-- 反壯 (fǎnzhuàng) - return to vigor - NOT 及壯
-- 發泄 (fāxiè) - reveal - NOT 發世
-- 金玉 (jīnyù) - gold and jade - NOT 金毛
-- 丹霄 (dānxiāo) - red clouds - NOT 舟霄
-- 說經一偏 - first recitation (偏 not 編)
+- éˆå¯¶ (LÃ­ngbÇŽo) - NOT éˆå¯³
+- ç„¡é‡ (wÃºliÃ ng) - NOT æœ‰é‡
+- å…ƒå§‹å¤©å°Š (YuÃ¡nshÇ TiÄnzÅ«n) - primordial deity name
+- ç¢§è½ (bÃ¬luÃ²) - azure void - NOT ç¹è½
+- çœ¾çœŸ (zhÃ²ngzhÄ“n) - assembled perfected ones - NOT æ³‰çœŸ
+- ç—¼ç–¾ (gÃ¹jÃ­) - chronic illness - NOT ç™¡ç–¾
+- æ‡·å§™ (huÃ¡irÃ¨n) - pregnant - NOT æ‡·é›‰, æ‡·å§ª
+- åé»‘ (fÇŽnhÄ“i) - return to black - NOT åŠé»‘
+- åå£¯ (fÇŽnzhuÃ ng) - return to vigor - NOT åŠå£¯
+- ç™¼æ³„ (fÄxiÃ¨) - reveal - NOT ç™¼ä¸–
+- é‡‘çŽ‰ (jÄ«nyÃ¹) - gold and jade - NOT é‡‘æ¯›
+- ä¸¹éœ„ (dÄnxiÄo) - red clouds - NOT èˆŸéœ„
+- èªªç¶“ä¸€å - first recitation (å not ç·¨)
 
 ## Output Format
 - Output extracted text only
@@ -50,7 +50,7 @@ These terms appear frequently - ensure correct recognition:
 # User prompt
 USER_PROMPT_DAOZANG = """Extract the Chinese text from this Daoist scripture image.
 
-Source: 道藏 (Daoist Canon)
+Source: é“è— (Daoist Canon)
 Read: Right-to-left, top-to-bottom
 Output: Text only, traditional characters"""
 

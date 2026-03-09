@@ -1,4 +1,4 @@
----
+﻿---
 title: Agents
 ---
 
@@ -60,7 +60,7 @@ class CustomAgent(BaseLLMAgent):
 ### Basic Response Generation
 
 ```python
-from ToolAgents.messages.chat_message import ChatMessage
+from ToolAgents.data_models.messages import ChatMessage
 
 # Define messages
 messages = [
@@ -150,7 +150,7 @@ asyncio.run(get_agent_response())
 ### Chat History Integration
 
 ```python
-from ToolAgents.messages import ChatHistory
+from ToolAgents.data_models.chat_history import ChatHistory
 
 # Create chat history
 chat_history = ChatHistory()

@@ -1,4 +1,4 @@
----
+﻿---
 title: Streaming Responses
 ---
 
@@ -13,7 +13,7 @@ To get streaming responses from a ChatToolAgent, use the `get_streaming_response
 ```python
 from ToolAgents.agents import ChatToolAgent
 from ToolAgents.provider import OpenAIChatAPI
-from ToolAgents.messages.chat_message import ChatMessage
+from ToolAgents.data_models.messages import ChatMessage
 from ToolAgents import ToolRegistry
 
 # Set up API and agent
@@ -90,7 +90,7 @@ from dotenv import load_dotenv
 
 from ToolAgents import ToolRegistry, FunctionTool
 from ToolAgents.agents import ChatToolAgent
-from ToolAgents.messages import ChatHistory
+from ToolAgents.data_models.chat_history import ChatHistory
 from ToolAgents.provider import OpenAIChatAPI
 
 # Load environment variables

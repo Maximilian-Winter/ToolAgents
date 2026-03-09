@@ -1,4 +1,4 @@
-import gradio as gr
+﻿import gradio as gr
 import os
 import shutil
 
@@ -10,7 +10,7 @@ from ToolAgents.knowledge.default_providers import (
     MXBAIRerankingProvider,
 )
 from ToolAgents.utilities import SimpleTextSplitter
-from ToolAgents.messages.chat_history import ChatHistory
+from ToolAgents.data_models.chat_history import ChatHistory
 from agent import answer_agent
 
 has_ingested = False
@@ -207,3 +207,4 @@ with gr.Blocks(css=css) as demo:
     upload_button.click(upload_files, [file_uploader], status_output)
 
 demo.launch()
+

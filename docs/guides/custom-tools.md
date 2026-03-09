@@ -1,4 +1,4 @@
----
+﻿---
 title: Custom Tools
 ---
 
@@ -118,7 +118,7 @@ def get_weather(location, unit):
     else:
         temp = weather["temp"]
         
-    return f"{location}: {temp}°{'F' if unit == 'fahrenheit' else 'C'}, {weather['condition']}"
+    return f"{location}: {temp}Â°{'F' if unit == 'fahrenheit' else 'C'}, {weather['condition']}"
 
 # OpenAI-style function specification
 weather_tool_spec = {

@@ -1,4 +1,4 @@
-import requests
+﻿import requests
 
 from ToolAgents import ToolRegistry, FunctionTool
 from ToolAgents.agents import MistralAgent
@@ -34,7 +34,7 @@ from ToolAgents.provider import LlamaCppServerProvider
 model = LlamaCppServerProvider("http://127.0.0.1:8080")
 
 # Define a test agent to see the answer without retrieved information.
-agent = MistralAgent(model, debug_output=True)
+agent = MistralAgent(model, log_output=True)
 
 settings = model.get_default_settings()
 settings.neutralize_all_samplers()
@@ -82,3 +82,4 @@ for _ in range(100):
     ]
     output = agent.step(chat_history, tool_registry=tool_registry)
     print(output)
+

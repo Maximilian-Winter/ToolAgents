@@ -1,4 +1,4 @@
-from ToolAgents.knowledge.vector_database.sentence_transformer_embeddings import SentenceTransformerEmbeddingProvider
+﻿from ToolAgents.knowledge.vector_database.sentence_transformer_embeddings import SentenceTransformerEmbeddingProvider
 from ToolAgents.knowledge.vector_database.cross_encoder_reranking import CrossEncoderRerankingProvider
 from ToolAgents.knowledge.vector_database.chroma_db_vector_database import ChromaDbVectorDatabaseProvider
 from bm25_vector_database import BM25VectorDatabaseProvider
@@ -22,3 +22,4 @@ hybrid = EnsembleVectorDatabaseProvider(
 )
 
 rag = RAG(vector_database_provider=hybrid)
+

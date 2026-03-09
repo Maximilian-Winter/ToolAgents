@@ -1,4 +1,4 @@
-import gradio as gr
+﻿import gradio as gr
 from typing import Iterator, List, Tuple
 import time
 import base64
@@ -20,11 +20,11 @@ def format_chat_history_as_markdown(history: List[ChatMessage]) -> str:
         content = entry.get_as_text()
 
         if role == ChatMessageRole.User:
-            md_string += f"👤 You:\n{content}\n\n\n\n"
+            md_string += f"ðŸ‘¤ You:\n{content}\n\n\n\n"
         elif role == ChatMessageRole.Assistant:
-            md_string += f"🤖 Assistant:\n{content}\n\n\n\n"
+            md_string += f"ðŸ¤– Assistant:\n{content}\n\n\n\n"
         #elif role == ChatMessageRole.System:
-        #    md_string += f"⚙️ System:\n```text\n{content}```\n\n\n\n"
+        #    md_string += f"âš™ï¸ System:\n```text\n{content}```\n\n\n\n"
 
     return md_string.strip()
 
@@ -88,7 +88,7 @@ css = """
 
 with gr.Blocks(css=css, title="Chat Agent") as demo:
     # Header
-    gr.Markdown("# 🤖 Personal Chat Agent")
+    gr.Markdown("# ðŸ¤– Personal Chat Agent")
 
     # State
     initial_history = configurable_agent.get_current_chat_history()

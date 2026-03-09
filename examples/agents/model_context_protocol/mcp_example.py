@@ -1,4 +1,4 @@
-import os
+﻿import os
 import shutil
 from copy import copy
 
@@ -86,4 +86,5 @@ if loop.is_running():
         sleep(0.1)
         loop.stop()
     loop.close()
+
 
