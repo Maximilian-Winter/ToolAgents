@@ -511,3 +511,57 @@ def create_async_harness(
             harness.add_tools(ext_tools)
 
     return harness
+
+
+def create_async_harness_with_extensions(
+    provider: AsyncChatAPIProvider,
+    system_prompt: str = "You are a helpful assistant.",
+    skill_paths: Optional[List] = None,
+    scan_defaults: bool = True,
+    **kwargs,
+) -> AsyncAgentHarness:
+    """Create an async harness with extension system pre-configured.
+
+    Sets up ExtensionManager + SkillFolderHandler, scans for skills,
+    and passes everything to create_async_harness().
+
+    Args:
+        provider: The async LLM provider.
+        system_prompt: Base system prompt.
+        skill_paths: Additional directories to scan for skills.
+        scan_defaults: Whether to scan default locations (.agents/skills/).
+        **kwargs: Additional arguments passed to create_async_harness().
+
+    Returns:
+        A configured AsyncAgentHarness with extensions enabled.
+    """
+    from pathlib import Path
+    from ToolAgents.extensions import ExtensionManager, SkillFolderHandler, ExtensionScanPath
+
+    manager = ExtensionManager()
+    manager.register_handler(SkillFolderHandler())
+
+    if scan_defaults:
+        cwd = Path.cwd()
+        home = Path.home()
+        for subdir in [".agents/skills", ".claude/skills"]:
+            project_path = cwd / subdir
+            if project_path.is_dir():
+                manager.add_scan_path(ExtensionScanPath(path=project_path, scope="project", priority=10))
+        for subdir in [".agents/skills", ".claude/skills"]:
+            user_path = home / subdir
+            if user_path.is_dir():
+                manager.add_scan_path(ExtensionScanPath(path=user_path, scope="user", priority=0))
+
+    if skill_paths:
+        for sp in skill_paths:
+            manager.add_scan_path(ExtensionScanPath(path=Path(sp), scope="project", priority=10))
+
+    manager.discover()
+
+    return create_async_harness(
+        provider=provider,
+        system_prompt=system_prompt,
+        extension_manager=manager,
+        **kwargs,
+    )

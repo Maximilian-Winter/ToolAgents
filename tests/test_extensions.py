@@ -819,3 +819,101 @@ class TestAsyncHarnessExtensionIntegration:
 
             assert "async-skill" in harness.config.system_prompt
             assert harness.extension_manager is mgr
+
+
+# ---------------------------------------------------------------------------
+# Tasks 8 & 9: End-to-End Integration Tests + Convenience Factory
+# ---------------------------------------------------------------------------
+
+
+class TestEndToEnd:
+    """Full round-trip: create skills -> discover -> build catalog -> activate -> verify."""
+
+    def test_full_lifecycle(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            # Create two skills
+            _create_full_skill(tmp_path, "code-review", "Review code for bugs and style",
+                              "# Code Review\n\n1. Check for bugs\n2. Check style",
+                              add_scripts=True)
+            _create_full_skill(tmp_path, "testing", "Write and run tests",
+                              "# Testing\n\nUse pytest.", pin_in_context=False)
+
+            # Setup
+            mgr = ExtensionManager()
+            mgr.register_handler(SkillFolderHandler())
+            mgr.add_scan_path(ExtensionScanPath(path=tmp_path, scope="project", priority=10))
+
+            # Discovery
+            result = mgr.discover()
+            assert len(result["skills"]) == 2
+
+            # Catalog
+            catalog = mgr.build_catalog()
+            assert "code-review" in catalog
+            assert "testing" in catalog
+            assert "<available_skills>" in catalog
+
+            # Tools
+            tools = mgr.get_tools()
+            assert len(tools) == 1
+            assert tools[0].model.__name__ == "activate_skill"
+
+            # Activation via manager
+            cr_result = mgr.activate("code-review")
+            assert cr_result is not None
+            assert cr_result.pin_in_context is True
+            assert "Check for bugs" in cr_result.content
+            assert '<skill_content name="code-review">' in cr_result.content
+            assert cr_result.resources is not None
+
+            # Activation via slash command
+            test_result = mgr.try_handle_command("testing")
+            assert test_result is not None
+            assert test_result.pin_in_context is False
+            assert "Use pytest" in test_result.content
+
+            # Deduplication
+            cr_result2 = mgr.activate("code-review")
+            assert cr_result2 is cr_result
+
+            # Deactivate and re-activate
+            mgr.deactivate("code-review")
+            assert not mgr.is_active("code-review")
+            cr_result3 = mgr.activate("code-review")
+            assert cr_result3 is not cr_result
+
+            # Introspection
+            assert len(mgr.entries) == 2
+            assert len(mgr.active_entries) == 2
+
+            # Tool execution
+            tool = tools[0]
+            tool_output = tool.execute({"skill_name": "testing"})
+            assert "Use pytest" in tool_output
+
+            # Unknown activation
+            assert mgr.activate("nonexistent") is None
+            assert mgr.try_handle_command("nonexistent") is None
+
+
+class TestConvenienceFactory:
+    def test_create_harness_with_extensions(self):
+        from unittest.mock import MagicMock
+        from ToolAgents.agent_harness import create_harness_with_extensions
+
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            _create_full_skill(tmp_path, "conv-skill", "Convenience test", "# Content")
+
+            provider = MagicMock()
+            harness = create_harness_with_extensions(
+                provider=provider,
+                system_prompt="Base.",
+                skill_paths=[tmp_path],
+                scan_defaults=False,
+            )
+
+            assert harness.extension_manager is not None
+            assert "conv-skill" in harness.config.system_prompt
+            assert "activate_skill" in harness._tool_registry.tools

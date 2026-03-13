@@ -10,8 +10,10 @@ Uses lazy imports so the module is lightweight until accessed.
 __all__ = [
     "AgentHarness",
     "create_harness",
+    "create_harness_with_extensions",
     "AsyncAgentHarness",
     "create_async_harness",
+    "create_async_harness_with_extensions",
     "HarnessConfig",
     "HarnessEvent",
     "HarnessEventData",
@@ -22,20 +24,22 @@ __all__ = [
 
 
 def __getattr__(name: str):
-    if name in {"AgentHarness", "create_harness"}:
-        from .harness import AgentHarness, create_harness
+    if name in {"AgentHarness", "create_harness", "create_harness_with_extensions"}:
+        from .harness import AgentHarness, create_harness, create_harness_with_extensions
 
         return {
             "AgentHarness": AgentHarness,
             "create_harness": create_harness,
+            "create_harness_with_extensions": create_harness_with_extensions,
         }[name]
 
-    if name in {"AsyncAgentHarness", "create_async_harness"}:
-        from .async_harness import AsyncAgentHarness, create_async_harness
+    if name in {"AsyncAgentHarness", "create_async_harness", "create_async_harness_with_extensions"}:
+        from .async_harness import AsyncAgentHarness, create_async_harness, create_async_harness_with_extensions
 
         return {
             "AsyncAgentHarness": AsyncAgentHarness,
             "create_async_harness": create_async_harness,
+            "create_async_harness_with_extensions": create_async_harness_with_extensions,
         }[name]
 
     if name == "HarnessConfig":
