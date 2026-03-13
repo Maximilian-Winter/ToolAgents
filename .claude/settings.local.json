@@ -1,3 +1,18 @@
 {
-  "outputStyle": "Jiǔtiān Xuánmǎ Nǚ"
+  "permissions": {
+    "allow": [
+      "Bash(cd \"H:\\\\Dev42\\\\ToolAgentsDev\" && python -c \"from ToolAgents.agent_tools.coding_tools import CodingTools; ct = CodingTools\\(\\); print\\('Tools:', [t.model['name'] for t in ct.get_tools\\(\\)]\\); print\\('Docs preview:'\\); print\\(ct.get_tools_documentation\\(\\)[:1000]\\)\")",
+      "Bash(cd \"H:\\\\Dev42\\\\ToolAgentsDev\" && python -c \"from ToolAgents.agent_tools.coding_tools import CodingTools; ct = CodingTools\\(\\); print\\('Tools:', [t.model['name'] for t in ct.get_tools\\(\\)]\\)\")",
+      "Bash(cd \"H:\\\\Dev42\\\\ToolAgentsDev\" && python -c \"\nimport traceback\ntry:\n    from ToolAgents.agent_tools.coding_tools import CodingTools\n    ct = CodingTools\\(\\)\n    tools = ct.get_tools\\(\\)\n    print\\('Tools:', [t.model['name'] for t in tools]\\)\nexcept Exception as e:\n    traceback.print_exc\\(\\)\n\")",
+      "Bash(cd \"H:\\\\Dev42\\\\ToolAgentsDev\" && python -c \"\nfrom ToolAgents.agent_tools.coding_tools import CodingTools\nct = CodingTools\\(\\)\ntools = ct.get_tools\\(\\)\nprint\\('Tools:', [t.model.__name__ for t in tools]\\)\nprint\\(\\)\nprint\\('Documentation:'\\)\nprint\\(ct.get_tools_documentation\\(\\)[:2000]\\)\n\")",
+      "Bash(cd \"H:\\\\Dev42\\\\ToolAgentsDev\" && python -c \"\nwith open\\('src/ToolAgents/agent_tools/__init__.py', 'rb'\\) as f:\n    content = f.read\\(\\)\nprint\\(repr\\(content\\)\\)\n\")",
+      "Bash(grep -r \"difflib\\\\|patch\\\\|unified_diff\" \"H:\\\\Dev42\\\\ToolAgentsDev/src\" --include=\"*.py\" 2>/dev/null | head -20)",
+      "Bash(python -c \"import difflib; print\\('difflib available'\\)\" 2>/dev/null && echo \"Python difflib is available\")",
+      "Bash(ls -la \"H:/Dev42/ToolAgentsDev/textual_docs_examples/examples/\" | grep -E \"\\\\.py$\")",
+      "Bash(find \"H:/Dev42/ToolAgentsDev/examples\" -name \"*harness*\" -o -name \"*io*\" -o -name \"*ui*\" 2>/dev/null | head -20)",
+      "Bash(wc -l \"H:/Dev42/ToolAgentsDev/textual_docs_examples/docs/examples/guide\"*/*.py | tail -1)",
+      "Bash(cd H:/Dev42/ToolAgentsDev && python -c \"import textual; print\\('textual version:', textual.__version__\\)\")"
+    ]
+  },
+  "outputStyle": "費洛莊智慧機 - Feynman-Lovelace-Zhuangzi Wisdom Mechanism"
 }

@@ -10,6 +10,8 @@ Uses lazy imports so the module is lightweight until accessed.
 __all__ = [
     "AgentHarness",
     "create_harness",
+    "AsyncAgentHarness",
+    "create_async_harness",
     "HarnessConfig",
     "HarnessEvent",
     "HarnessEventData",
@@ -26,6 +28,14 @@ def __getattr__(name: str):
         return {
             "AgentHarness": AgentHarness,
             "create_harness": create_harness,
+        }[name]
+
+    if name in {"AsyncAgentHarness", "create_async_harness"}:
+        from .async_harness import AsyncAgentHarness, create_async_harness
+
+        return {
+            "AsyncAgentHarness": AsyncAgentHarness,
+            "create_async_harness": create_async_harness,
         }[name]
 
     if name == "HarnessConfig":
