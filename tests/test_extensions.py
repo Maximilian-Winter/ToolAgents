@@ -100,8 +100,6 @@ class TestExtensionsPublicAPI:
 # Task 4: ExtensionManager tests
 # ---------------------------------------------------------------------------
 
-import tempfile
-
 from ToolAgents.extensions.manager import ExtensionManager
 from ToolAgents.extensions.models import ExtensionEntry, ActivationResult, ExtensionScanPath
 
@@ -917,3 +915,91 @@ class TestConvenienceFactory:
             assert harness.extension_manager is not None
             assert "conv-skill" in harness.config.system_prompt
             assert "activate_skill" in harness._tool_registry.tools
+
+
+# ---------------------------------------------------------------------------
+# Additional edge-case tests (from code review)
+# ---------------------------------------------------------------------------
+
+
+class TestSkillHandlerEdgeCases:
+    def test_yaml_retry_with_unquoted_values(self):
+        """Test that malformed YAML with unquoted special chars is retried with quoting."""
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            skill_dir = base / "retry-skill"
+            skill_dir.mkdir()
+            # Colons in values cause YAML parse errors without quoting
+            (skill_dir / "SKILL.md").write_text(
+                "---\nname: retry-skill\ndescription: handles: edge cases: well\n---\n# Body\n"
+            )
+            handler = SkillFolderHandler()
+            entry = handler.discover(skill_dir / "SKILL.md")
+            # Should succeed via the retry path
+            assert entry is not None
+            assert entry.name == "retry-skill"
+
+    def test_resource_truncation_at_50(self):
+        """Test that resources are capped at 50 files with a warning."""
+        import logging
+
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            skill_dir = _create_full_skill(base, "many-res", description="Many resources")
+            scripts_dir = skill_dir / "scripts"
+            scripts_dir.mkdir(exist_ok=True)
+            for i in range(60):
+                (scripts_dir / f"script_{i:03d}.py").write_text(f"# script {i}")
+
+            handler = SkillFolderHandler()
+            entry = handler.discover(skill_dir / "SKILL.md")
+
+            # Capture log warning
+            records = []
+
+            class Capture(logging.Handler):
+                def emit(self, record):
+                    records.append(record)
+
+            capture = Capture()
+            skill_logger = logging.getLogger("ToolAgents.extensions.skill_handler")
+            skill_logger.addHandler(capture)
+            try:
+                result = handler.activate(entry)
+            finally:
+                skill_logger.removeHandler(capture)
+
+            assert result.resources is not None
+            assert len(result.resources) == 50
+            assert any("truncating" in r.getMessage().lower() for r in records)
+
+    def test_name_defaults_to_directory_name(self):
+        """Test that name defaults to directory name when frontmatter name is missing."""
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            skill_dir = base / "auto-named"
+            skill_dir.mkdir()
+            (skill_dir / "SKILL.md").write_text(
+                "---\ndescription: Skill without explicit name\n---\n# Body\n"
+            )
+            handler = SkillFolderHandler()
+            entry = handler.discover(skill_dir / "SKILL.md")
+            assert entry is not None
+            assert entry.name == "auto-named"
+
+    def test_activate_handles_deleted_file(self):
+        """Test that activate() handles a file deleted between discover and activate."""
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            skill_dir = _create_full_skill(base, "vanish", description="Will disappear")
+            handler = SkillFolderHandler()
+            entry = handler.discover(skill_dir / "SKILL.md")
+            assert entry is not None
+
+            # Delete the file after discovery
+            (skill_dir / "SKILL.md").unlink()
+
+            result = handler.activate(entry)
+            assert result is not None
+            assert "Error" in result.content or "error" in result.content
+            assert result.pin_in_context is False

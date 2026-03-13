@@ -107,7 +107,14 @@ class SkillFolderHandler:
         return "\n".join(lines)
 
     def activate(self, entry: ExtensionEntry) -> ActivationResult:
-        text = entry.path.read_text(encoding="utf-8")
+        try:
+            text = entry.path.read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError) as e:
+            logger.error("Failed to read %s during activation: %s", entry.path, e)
+            return ActivationResult(
+                content=f"Error: could not read skill '{entry.name}': {e}",
+                pin_in_context=False,
+            )
         _, body = _parse_frontmatter(text)
         skill_dir = entry.path.parent
         resources = self._enumerate_resources(skill_dir)
