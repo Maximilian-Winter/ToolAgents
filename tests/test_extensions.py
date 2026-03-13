@@ -440,3 +440,259 @@ class TestExtensionManagerIntrospection:
             active = manager.active_entries
             assert "skill-a" in active
             assert "skill-b" not in active
+
+
+# ---------------------------------------------------------------------------
+# Task 5: SkillFolderHandler tests
+# ---------------------------------------------------------------------------
+
+from ToolAgents.extensions.skill_handler import SkillFolderHandler
+
+
+def _create_full_skill(base_path, name, description="A skill", body="# Instructions\nDo things.",
+                       extra_frontmatter="", pin_in_context=None, add_scripts=False, add_references=False):
+    skill_dir = base_path / name
+    skill_dir.mkdir(parents=True, exist_ok=True)
+    fm_lines = [f"name: {name}", f"description: {description}"]
+    if pin_in_context is not None:
+        fm_lines.append(f"pin_in_context: {str(pin_in_context).lower()}")
+    if extra_frontmatter:
+        fm_lines.append(extra_frontmatter)
+    content = "---\n" + "\n".join(fm_lines) + "\n---\n" + body
+    (skill_dir / "SKILL.md").write_text(content, encoding="utf-8")
+    if add_scripts:
+        scripts = skill_dir / "scripts"
+        scripts.mkdir()
+        (scripts / "run.py").write_text("print('hello')")
+    if add_references:
+        refs = skill_dir / "references"
+        refs.mkdir()
+        (refs / "guide.md").write_text("# Guide")
+    return skill_dir
+
+
+class TestSkillFolderHandlerDiscovery:
+    def test_valid_skill(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            skill_dir = _create_full_skill(base, "my-skill", description="Does useful things")
+            handler = SkillFolderHandler()
+            entry = handler.discover(skill_dir / "SKILL.md")
+            assert entry is not None
+            assert entry.name == "my-skill"
+            assert entry.description == "Does useful things"
+            assert entry.handler_type == "skills"
+
+    def test_missing_description_returns_none(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            skill_dir = base / "no-desc"
+            skill_dir.mkdir()
+            (skill_dir / "SKILL.md").write_text("---\nname: no-desc\n---\n# Body\n")
+            handler = SkillFolderHandler()
+            entry = handler.discover(skill_dir / "SKILL.md")
+            assert entry is None
+
+    def test_unparseable_yaml_returns_none(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            skill_dir = base / "bad-yaml"
+            skill_dir.mkdir()
+            # Write content without valid frontmatter delimiters
+            (skill_dir / "SKILL.md").write_text("no frontmatter here\n# Just body\n")
+            handler = SkillFolderHandler()
+            entry = handler.discover(skill_dir / "SKILL.md")
+            assert entry is None
+
+    def test_optional_fields_stored_in_metadata(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            skill_dir = _create_full_skill(base, "meta-skill", description="Has metadata",
+                                           extra_frontmatter="license: MIT")
+            handler = SkillFolderHandler()
+            entry = handler.discover(skill_dir / "SKILL.md")
+            assert entry is not None
+            assert entry.metadata.get("license") == "MIT"
+
+    def test_pin_in_context_default_not_set(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            skill_dir = _create_full_skill(base, "no-pin", description="No pin setting")
+            handler = SkillFolderHandler()
+            entry = handler.discover(skill_dir / "SKILL.md")
+            assert entry is not None
+            assert "pin_in_context" not in entry.metadata
+
+    def test_pin_in_context_custom_false(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            skill_dir = _create_full_skill(base, "unpin-skill", description="Unpinned skill",
+                                           pin_in_context=False)
+            handler = SkillFolderHandler()
+            entry = handler.discover(skill_dir / "SKILL.md")
+            assert entry is not None
+            assert entry.metadata.get("pin_in_context") is False
+
+    def test_name_mismatch_logs_warning(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            import logging
+            base = Path(tmp)
+            skill_dir = base / "dir-name"
+            skill_dir.mkdir()
+            # Name in frontmatter differs from directory name
+            (skill_dir / "SKILL.md").write_text(
+                "---\nname: different-name\ndescription: Mismatch test\n---\n# Body\n"
+            )
+            handler = SkillFolderHandler()
+            with self._capture_warnings() as records:
+                entry = handler.discover(skill_dir / "SKILL.md")
+            assert entry is not None
+            assert entry.name == "different-name"
+            # A warning should have been emitted about the mismatch
+            assert any("does not match" in r.message for r in records)
+
+    @staticmethod
+    def _capture_warnings():
+        import logging
+        from contextlib import contextmanager
+
+        @contextmanager
+        def ctx():
+            records = []
+            handler_log = logging.handlers_list = []
+
+            class Capture(logging.Handler):
+                def emit(self, record):
+                    records.append(record)
+
+            capture = Capture()
+            skill_logger = logging.getLogger("ToolAgents.extensions.skill_handler")
+            skill_logger.addHandler(capture)
+            try:
+                yield records
+            finally:
+                skill_logger.removeHandler(capture)
+
+        return ctx()
+
+
+class TestSkillFolderHandlerCatalog:
+    def test_catalog_format(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            skill_dir_a = _create_full_skill(base, "alpha", description="Does alpha")
+            skill_dir_b = _create_full_skill(base, "beta", description="Does beta")
+            handler = SkillFolderHandler()
+            entry_a = handler.discover(skill_dir_a / "SKILL.md")
+            entry_b = handler.discover(skill_dir_b / "SKILL.md")
+            catalog = handler.build_catalog([entry_a, entry_b])
+            assert "<available_skills>" in catalog
+            assert "activate_skill" in catalog
+            assert 'name="alpha"' in catalog
+            assert 'name="beta"' in catalog
+            assert "Does alpha" in catalog
+            assert "Does beta" in catalog
+
+    def test_catalog_empty(self):
+        handler = SkillFolderHandler()
+        catalog = handler.build_catalog([])
+        assert catalog == ""
+
+
+class TestSkillFolderHandlerActivation:
+    def test_activate_returns_content(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            skill_dir = _create_full_skill(base, "my-skill", description="A skill",
+                                           body="# Instructions\nDo things.")
+            handler = SkillFolderHandler()
+            entry = handler.discover(skill_dir / "SKILL.md")
+            result = handler.activate(entry)
+            assert result is not None
+            assert '<skill_content name="my-skill">' in result.content
+            assert "# Instructions" in result.content
+            assert "</skill_content>" in result.content
+
+    def test_activate_pin_default_true(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            skill_dir = _create_full_skill(base, "pin-skill", description="Pin default")
+            handler = SkillFolderHandler()
+            entry = handler.discover(skill_dir / "SKILL.md")
+            result = handler.activate(entry)
+            assert result.pin_in_context is True
+
+    def test_activate_pin_false(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            skill_dir = _create_full_skill(base, "unpin-skill", description="Unpin",
+                                           pin_in_context=False)
+            handler = SkillFolderHandler()
+            entry = handler.discover(skill_dir / "SKILL.md")
+            result = handler.activate(entry)
+            assert result.pin_in_context is False
+
+    def test_activate_lists_resources(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            skill_dir = _create_full_skill(base, "res-skill", description="Has resources",
+                                           add_scripts=True, add_references=True)
+            handler = SkillFolderHandler()
+            entry = handler.discover(skill_dir / "SKILL.md")
+            result = handler.activate(entry)
+            assert result.resources is not None
+            # Resources use forward slashes regardless of OS
+            resource_paths = result.resources
+            assert any("scripts/run.py" in r or "scripts\\run.py" in r for r in resource_paths)
+            # Content should list resource files
+            assert "<skill_resources>" in result.content
+            assert "run.py" in result.content
+
+    def test_activate_no_resources(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            skill_dir = _create_full_skill(base, "bare-skill", description="No resources")
+            handler = SkillFolderHandler()
+            entry = handler.discover(skill_dir / "SKILL.md")
+            result = handler.activate(entry)
+            assert result.resources is None
+            assert "<skill_resources>" not in result.content
+
+
+class TestSkillFolderHandlerTools:
+    def test_get_tools_with_entries(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            _create_full_skill(base, "my-skill", description="A useful skill")
+            manager = ExtensionManager()
+            handler = SkillFolderHandler()
+            manager.register_handler(handler)
+            manager.add_scan_path(ExtensionScanPath(path=base, scope="project", priority=10))
+            manager.discover()
+            tools = handler.get_tools(manager)
+            assert len(tools) == 1
+            assert tools[0].model.__name__ == "activate_skill"
+
+    def test_get_tools_no_entries(self):
+        manager = ExtensionManager()
+        handler = SkillFolderHandler()
+        manager.register_handler(handler)
+        tools = handler.get_tools(manager)
+        assert tools == []
+
+    def test_activate_skill_tool_works(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            _create_full_skill(base, "my-skill", description="A useful skill",
+                               body="# My Skill\nDetailed instructions here.")
+            manager = ExtensionManager()
+            handler = SkillFolderHandler()
+            manager.register_handler(handler)
+            manager.add_scan_path(ExtensionScanPath(path=base, scope="project", priority=10))
+            manager.discover()
+            tools = handler.get_tools(manager)
+            assert len(tools) == 1
+            tool = tools[0]
+            content = tool.execute({"skill_name": "my-skill"})
+            assert '<skill_content name="my-skill">' in content
+            assert "my-skill" in manager._pending_activations
