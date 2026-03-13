@@ -1,10 +1,10 @@
 # harness.py — Core AgentHarness wrapping ChatToolAgent + ContextManager.
-from typing import List, Optional, Generator
+from typing import List, Optional, Generator, TYPE_CHECKING
 
 from ToolAgents.agents.chat_tool_agent import ChatToolAgent
 from ToolAgents.context_manager.context_manager import ContextManager, create_context_manager
 from ToolAgents.context_manager.events import ContextEvent
-from ToolAgents.data_models.messages import ChatMessage, ChatMessageRole
+from ToolAgents.data_models.messages import ChatMessage, ChatMessageRole, ToolCallResultContent
 from ToolAgents.data_models.responses import ChatResponse, ChatResponseChunk
 from ToolAgents.function_tool import FunctionTool, ToolRegistry
 from ToolAgents.provider.llm_provider import ChatAPIProvider, ProviderSettings
@@ -12,6 +12,9 @@ from ToolAgents.provider.llm_provider import ChatAPIProvider, ProviderSettings
 from .config import HarnessConfig
 from .events import HarnessEvent, HarnessEventData, HarnessEventBus
 from .io_handlers import IOHandler, ConsoleIOHandler
+
+if TYPE_CHECKING:
+    from ToolAgents.extensions.manager import ExtensionManager as _ExtensionManager
 
 
 class AgentHarness:
@@ -49,6 +52,7 @@ class AgentHarness:
         context_manager: Optional[ContextManager] = None,
         settings: Optional[ProviderSettings] = None,
         log_output: bool = False,
+        extension_manager: Optional["_ExtensionManager"] = None,
     ):
         """Initialize the harness.
 
@@ -60,6 +64,7 @@ class AgentHarness:
                 created from config.context_manager_config.
             settings: Provider settings (temperature, max_tokens, etc.).
             log_output: Whether to enable agent-level logging.
+            extension_manager: Optional ExtensionManager for skill/extension support.
         """
         # Config
         if config is None:
@@ -97,6 +102,9 @@ class AgentHarness:
             ContextEvent.BUDGET_EXCEEDED,
             self._on_budget_exceeded,
         )
+
+        # Extension manager (optional)
+        self._extension_manager = extension_manager
 
     # --- Tool Management ---
 
@@ -292,6 +300,21 @@ class AgentHarness:
             if not user_input.strip():
                 continue
 
+            # Slash command interception for extensions
+            if (user_input.strip().startswith("/")
+                    and self._extension_manager is not None):
+                command = user_input.strip()[1:]
+                result = self._extension_manager.try_handle_command(command)
+                if result is not None:
+                    msg = ChatMessage.create_system_message(result.content)
+                    self._messages.append(msg)
+                    if result.pin_in_context:
+                        self._context_manager.pin_message(msg.id)
+                    if result.tools:
+                        self.add_tools(result.tools)
+                    io_handler.on_text(f"Skill '{command}' activated.")
+                    continue
+
             try:
                 if self.config.streaming:
                     for chunk in self.chat_stream(user_input):
@@ -353,6 +376,22 @@ class AgentHarness:
             elif msg.role == ChatMessageRole.Tool:
                 self._context_manager.notify_tool_result(msg)
 
+                # Check for extension activation results that need pinning
+                if self._extension_manager is not None:
+                    for content in msg.content:
+                        if (isinstance(content, ToolCallResultContent)
+                                and content.tool_call_name == "activate_skill"):
+                            pending = self._extension_manager._pending_activations
+                            for act_name in list(pending.keys()):
+                                act_result = pending[act_name]
+                                if act_result.content in content.tool_call_result:
+                                    if act_result.pin_in_context:
+                                        self._context_manager.pin_message(msg.id)
+                                    if act_result.tools:
+                                        self.add_tools(act_result.tools)
+                                    del pending[act_name]
+                                    break
+
     def _on_budget_exceeded(self, event_data) -> None:
         """Handler for context manager budget exceeded event."""
         self._budget_exceeded = True
@@ -386,6 +425,11 @@ class AgentHarness:
     def context_manager(self) -> ContextManager:
         """The underlying ContextManager instance."""
         return self._context_manager
+
+    @property
+    def extension_manager(self):
+        """The ExtensionManager, if one was provided."""
+        return self._extension_manager
 
     @property
     def events(self) -> HarnessEventBus:
@@ -427,6 +471,7 @@ def create_harness(
     settings: Optional[ProviderSettings] = None,
     tools: Optional[List[FunctionTool]] = None,
     log_output: bool = False,
+    extension_manager=None,
     **context_kwargs,
 ) -> AgentHarness:
     """Convenience factory: create a fully configured AgentHarness in one call.
@@ -441,6 +486,7 @@ def create_harness(
         settings: Provider settings (temperature, max_tokens, etc.).
         tools: Optional list of FunctionTools to register.
         log_output: Whether to enable agent-level logging.
+        extension_manager: Optional ExtensionManager for skill/extension support.
         **context_kwargs: Additional kwargs for create_context_manager
             (e.g., strategy, reserve_tokens, keep_last_n).
 
@@ -464,6 +510,12 @@ def create_harness(
     if total_budget_tokens is not None:
         context_config["total_budget_tokens"] = total_budget_tokens
 
+    # Append extension catalog to system prompt if extension_manager provided
+    if extension_manager is not None:
+        catalog = extension_manager.build_catalog()
+        if catalog:
+            system_prompt = system_prompt + "\n\n" + catalog
+
     config = HarnessConfig(
         system_prompt=system_prompt,
         max_turns=max_turns,
@@ -476,9 +528,16 @@ def create_harness(
         config=config,
         settings=settings,
         log_output=log_output,
+        extension_manager=extension_manager,
     )
 
     if tools:
         harness.add_tools(tools)
+
+    # Register extension tools
+    if extension_manager is not None:
+        ext_tools = extension_manager.get_tools()
+        if ext_tools:
+            harness.add_tools(ext_tools)
 
     return harness

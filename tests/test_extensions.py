@@ -696,3 +696,126 @@ class TestSkillFolderHandlerTools:
             content = tool.execute({"skill_name": "my-skill"})
             assert '<skill_content name="my-skill">' in content
             assert "my-skill" in manager._pending_activations
+
+
+# ---------------------------------------------------------------------------
+# Tasks 6 & 7: Harness integration tests
+# ---------------------------------------------------------------------------
+
+
+class TestHarnessExtensionIntegration:
+    def test_create_harness_with_extension_manager_stores_it(self):
+        from unittest.mock import MagicMock
+        from ToolAgents.agent_harness.harness import AgentHarness
+
+        provider = MagicMock()
+        mgr = ExtensionManager()
+        handler = SkillFolderHandler()
+        mgr.register_handler(handler)
+
+        harness = AgentHarness(provider=provider, extension_manager=mgr)
+        assert harness.extension_manager is mgr
+
+    def test_create_harness_factory_with_extension_manager(self):
+        import tempfile
+        from unittest.mock import MagicMock
+        from ToolAgents.agent_harness.harness import create_harness
+
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            _create_full_skill(tmp_path, "test-skill", "Test skill", "# Content")
+
+            provider = MagicMock()
+            mgr = ExtensionManager()
+            mgr.register_handler(SkillFolderHandler())
+            mgr.add_scan_path(ExtensionScanPath(path=tmp_path, scope="project", priority=10))
+            mgr.discover()
+
+            harness = create_harness(
+                provider=provider,
+                system_prompt="Base prompt.",
+                extension_manager=mgr,
+            )
+
+            assert "test-skill" in harness.config.system_prompt
+            assert "Base prompt." in harness.config.system_prompt
+            tool_names = list(harness._tool_registry.tools.keys())
+            assert "activate_skill" in tool_names
+            assert harness.extension_manager is mgr
+
+    def test_create_harness_without_extension_manager(self):
+        from unittest.mock import MagicMock
+        from ToolAgents.agent_harness.harness import create_harness
+
+        provider = MagicMock()
+        harness = create_harness(provider=provider, system_prompt="Hello.")
+
+        assert harness.extension_manager is None
+        assert harness.config.system_prompt == "Hello."
+
+    def test_slash_command_interception_in_run(self):
+        import tempfile
+        from unittest.mock import MagicMock
+        from ToolAgents.agent_harness.harness import AgentHarness
+
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            _create_full_skill(tmp_path, "my-skill", "Test", "# Content\nInstructions.")
+
+            provider = MagicMock()
+            mgr = ExtensionManager()
+            mgr.register_handler(SkillFolderHandler())
+            mgr.add_scan_path(ExtensionScanPath(path=tmp_path))
+            mgr.discover()
+
+            harness = AgentHarness(provider=provider, extension_manager=mgr)
+
+            io_handler = MagicMock()
+            io_handler.get_input = MagicMock(side_effect=["/my-skill", None])
+
+            harness.run(io_handler=io_handler)
+
+            io_handler.on_text.assert_called()
+            confirm_text = io_handler.on_text.call_args[0][0]
+            assert "my-skill" in confirm_text.lower() or "activated" in confirm_text.lower()
+
+            assert len(harness._messages) == 1
+            assert harness._messages[0].role.value == "system"
+            assert harness.turn_count == 0
+
+
+class TestAsyncHarnessExtensionIntegration:
+    def test_async_harness_accepts_extension_manager(self):
+        from unittest.mock import MagicMock
+        from ToolAgents.agent_harness.async_harness import AsyncAgentHarness
+
+        provider = MagicMock()
+        mgr = ExtensionManager()
+        mgr.register_handler(SkillFolderHandler())
+
+        harness = AsyncAgentHarness(provider=provider, extension_manager=mgr)
+        assert harness.extension_manager is mgr
+
+    def test_create_async_harness_factory(self):
+        import tempfile
+        from unittest.mock import MagicMock
+        from ToolAgents.agent_harness.async_harness import create_async_harness
+
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            _create_full_skill(tmp_path, "async-skill", "Async test", "# Async Content")
+
+            provider = MagicMock()
+            mgr = ExtensionManager()
+            mgr.register_handler(SkillFolderHandler())
+            mgr.add_scan_path(ExtensionScanPath(path=tmp_path))
+            mgr.discover()
+
+            harness = create_async_harness(
+                provider=provider,
+                system_prompt="Async base.",
+                extension_manager=mgr,
+            )
+
+            assert "async-skill" in harness.config.system_prompt
+            assert harness.extension_manager is mgr
