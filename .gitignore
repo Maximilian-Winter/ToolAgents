@@ -91,3 +91,6 @@ examples/low_level_abstractions/example_chat_history.json
 /examples/agents/misc/code_agent/test_chat_history_after.json
 /examples/agents/misc/code_interpreter/*.png
 /examples/agents/misc/code_interpreter/test_chat_history_after.json
+skills_docs/adding-skills-support.md
+skills_docs/specification.md
+skills_docs/what-are-skills.md
