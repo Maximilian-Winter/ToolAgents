@@ -3,12 +3,7 @@ import os
 import shutil
 
 from ToolAgents import FunctionTool, ToolRegistry
-from ToolAgents.knowledge.default_providers import (
-    PDFOCRProvider,
-    ChromaDbVectorDatabaseProvider,
-    SentenceTransformerEmbeddingProvider,
-    MXBAIRerankingProvider,
-)
+
 from ToolAgents.utilities import SimpleTextSplitter
 from ToolAgents.data_models.chat_history import ChatHistory
 from agent import answer_agent

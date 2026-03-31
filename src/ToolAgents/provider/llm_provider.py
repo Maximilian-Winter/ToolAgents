@@ -11,7 +11,7 @@ from pydantic import BaseModel, Field
 from typing import Dict, Optional, Any, Union
 
 from ToolAgents.data_models.messages import ChatMessage, StreamingChatMessage
-from ToolAgents.utilities.logging import EasyLogger
+from ToolAgents.utilities.logger_utilities import EasyLogger
 
 
 

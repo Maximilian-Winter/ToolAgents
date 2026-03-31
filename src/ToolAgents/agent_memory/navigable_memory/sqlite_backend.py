@@ -24,7 +24,7 @@ import sqlite3
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from ..navigable_memory import Document
+from .navigable_memory import Document
 
 logger = logging.getLogger(__name__)
 

@@ -1,15 +1,17 @@
 ﻿from ToolAgents.agent_memory.context_app_state import ContextAppState
+from ToolAgents.agent_memory.xml_game_state import XMLAppState
+from ToolAgents.agent_memory.navigable_memory import NavigableMemory, SQLiteBackend
 from ToolAgents.agents import ChatToolAgent
 from ToolAgents.data_models.messages import ChatMessage
 
-from ToolAgents.provider import CompletionProvider, OpenAIChatAPI
-from ToolAgents.provider.completion_provider.default_implementations import (
-    LlamaCppServer,
-)
+from ToolAgents.provider import OpenAIChatAPI
 
 
 
 app_state = ContextAppState(initial_state_file="rpg_elysia.yaml")
+xml_state = XMLAppState(initial_state_file="rpg_elysia.xml")
+navigable_memory = NavigableMemory(SQLiteBackend("./knowledge.db"), context_window=5)
+
 system_prompt = f"""You are tasked with acting as a Game Master (GM) for a text-based role-playing game. Your primary goal is to create an engaging, immersive, and dynamic role-playing experience for the player. You will narrate the story, describe the world, control non-player characters (NPCs), and adjudicate rules based on the provided game state.
 
 First, here is the current game state information:

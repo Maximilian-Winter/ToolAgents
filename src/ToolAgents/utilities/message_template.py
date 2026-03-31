@@ -133,3 +133,19 @@ class MessageTemplate:
         prompt = re.sub(r"\{(\w+)\}", replace_placeholder, self.template)
 
         return self._remove_empty_placeholders(prompt)
+
+class ChatFormatter:
+    def __init__(self, template, role_names: Dict[str, str] = None):
+        self.template = template
+        self.role_names = role_names or {}
+
+    def format_messages(self, messages):
+        formatted_chat = []
+        for message in messages:
+            msg_dict = message.to_dict()
+            role = msg_dict["role"]
+            content = msg_dict['content']
+            display_name = self.role_names.get(role, role.capitalize())
+            formatted_message = self.template.format(role=display_name, content=content)
+            formatted_chat.append(formatted_message)
+        return '\n'.join(formatted_chat)

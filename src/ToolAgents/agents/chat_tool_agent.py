@@ -19,7 +19,7 @@ from ToolAgents.data_models.messages import (
     ChatMessageRole,
     ToolCallResultContent,
 )
-from ToolAgents.utilities.logging import EasyLogger
+from ToolAgents.utilities.logger_utilities import EasyLogger
 
 
 class ChatToolAgent(BaseToolAgent):

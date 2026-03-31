@@ -71,24 +71,15 @@ from ToolAgents.agent_harness.smart_messages import (
     MessageLifecycle,
     ExpiryAction,
 )
-from ToolAgents.provider import OpenAIChatAPI, GroqChatAPI
+from ToolAgents.provider import OpenAIChatAPI
 
-# ── NavigableMemory ─────────────────────────────────────────────
-# Option A: from dao_framework (if installed as a package)
-#   from dao_framework.navigable_memory import NavigableMemory, InMemoryBackend, DepartureRecord
-#   from dao_framework.backends.agora import AgoraBackend
-#
-# Option B: standalone (copy navigable_memory.py to your project)
-#   from navigable_memory import NavigableMemory, InMemoryBackend, DepartureRecord
-
-from ToolAgents.navigable_memory import (
+from ToolAgents.agent_memory.navigable_memory import (
     NavigableMemory,
     InMemoryBackend,
     DepartureRecord,
+    SQLiteBackend,
+    AgoraBackend
 )
-
-# Uncomment to use Agora KB instead of in-memory:
-# from dao_framework.backends.agora import AgoraBackend
 
 load_dotenv()
 
