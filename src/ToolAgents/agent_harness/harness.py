@@ -1,4 +1,17 @@
 # harness.py — Core AgentHarness wrapping ChatToolAgent + ContextManager.
+#
+# Updated to integrate:
+#   - PromptComposer: modular system prompt assembly
+#   - SmartMessageManager: lifecycle-aware messages
+#
+# Turn cycle order:
+#   1. PromptComposer.compile() → system message
+#   2. SmartMessageManager.tick() → process lifecycles, expire messages
+#   3. SmartMessageManager.get_active_messages() → filtered conversation
+#   4. ContextManager.prepare_messages() → trim if over budget
+#   5. Send to LLM
+#   6. Post-process: track tokens, handle tool calls, add response messages
+
 from typing import List, Optional, Generator, TYPE_CHECKING
 
 from ToolAgents.agents.chat_tool_agent import ChatToolAgent
@@ -13,6 +26,15 @@ from .config import HarnessConfig
 from .events import HarnessEvent, HarnessEventData, HarnessEventBus
 from .io_handlers import IOHandler, ConsoleIOHandler
 
+# New imports for the modular systems
+from .prompt_composer import PromptComposer, PromptModule, create_prompt_composer
+from .smart_messages import (
+    SmartMessageManager,
+    MessageLifecycle,
+    ExpiryAction,
+    ExpiryResult,
+)
+
 if TYPE_CHECKING:
     from ToolAgents.extensions.manager import ExtensionManager as _ExtensionManager
 
@@ -21,27 +43,39 @@ class AgentHarness:
     """Wraps ChatToolAgent + ContextManager into an interactive runtime.
 
     The harness is the OUTER loop around the agent. It manages:
-    - The growing message list across user turns
-    - System prompt (always prepended, never trimmed)
-    - Context window management (trim before, track after)
+    - Modular system prompt composition (PromptComposer)
+    - Lifecycle-aware conversation messages (SmartMessageManager)
+    - Context window management (ContextManager)
     - Tool registration
     - Turn lifecycle and event hooks
     - Interactive REPL or programmatic use
 
-    The agent's internal tool-call loop is used as-is. After each agent call,
-    the harness retroactively processes the agent's last_messages_buffer to
-    update context tracking.
+    Turn cycle:
+        1. compile system prompt from modules
+        2. tick smart messages (expire, summarize, archive)
+        3. get active messages
+        4. context trim if needed
+        5. call LLM
+        6. post-process response
 
     Usage:
         harness = create_harness(provider=my_provider, system_prompt="You are helpful.")
         harness.add_tool(FunctionTool(my_function))
 
-        # Programmatic
-        print(harness.chat("Hello!"))
-        print(harness.chat("Do something"))
+        # Add a dynamic prompt module
+        harness.prompt_composer.add_module(
+            "memory", position=10,
+            content_fn=lambda: core_memory.build_context(),
+            prefix="<core_memory>", suffix="</core_memory>"
+        )
 
-        # Or interactive REPL
-        harness.run()
+        # Add an ephemeral message
+        harness.add_smart_message(
+            ChatMessage.create_system_message("Temporary context"),
+            lifecycle=MessageLifecycle(ttl=3, on_expire=ExpiryAction.REMOVE)
+        )
+
+        print(harness.chat("Hello!"))
     """
 
     def __init__(
@@ -53,25 +87,32 @@ class AgentHarness:
         settings: Optional[ProviderSettings] = None,
         log_output: bool = False,
         extension_manager: Optional["_ExtensionManager"] = None,
+        prompt_composer: Optional[PromptComposer] = None,
+        smart_message_manager: Optional[SmartMessageManager] = None,
     ):
         """Initialize the harness.
 
         Args:
-            provider: The LLM provider (OpenAI, Anthropic, Groq, Mistral, etc.).
-            system_prompt: System prompt for the agent. Ignored if config is provided.
+            provider: The LLM provider.
+            system_prompt: System prompt for the agent. Used to create a default
+                PromptComposer if prompt_composer is not provided. Ignored if
+                config is provided (config.system_prompt is used instead).
             config: Full HarnessConfig. If None, one is created from system_prompt.
-            context_manager: Optional pre-configured ContextManager. If None, one is
-                created from config.context_manager_config.
+            context_manager: Optional pre-configured ContextManager.
             settings: Provider settings (temperature, max_tokens, etc.).
             log_output: Whether to enable agent-level logging.
             extension_manager: Optional ExtensionManager for skill/extension support.
+            prompt_composer: Optional pre-configured PromptComposer. If None, one
+                is created from the system_prompt with a single "instructions" module.
+            smart_message_manager: Optional pre-configured SmartMessageManager.
+                If None, one is created with default settings.
         """
         # Config
         if config is None:
             config = HarnessConfig(system_prompt=system_prompt)
         self.config = config
 
-        # Agent (composition — we create it, never modify its internals)
+        # Agent (composition)
         self._agent = ChatToolAgent(chat_api=provider, log_output=log_output)
 
         # Context manager
@@ -82,14 +123,25 @@ class AgentHarness:
         else:
             self._context_manager = create_context_manager()
 
+        # Prompt composer
+        if prompt_composer is not None:
+            self._prompt_composer = prompt_composer
+        else:
+            self._prompt_composer = create_prompt_composer(config.system_prompt)
+
+        # Smart message manager
+        if smart_message_manager is not None:
+            self._smart_message_manager = smart_message_manager
+        else:
+            self._smart_message_manager = SmartMessageManager()
+
         # Tool registry
         self._tool_registry = ToolRegistry()
 
         # Provider settings
         self._settings = settings
 
-        # Conversation state
-        self._messages: List[ChatMessage] = []
+        # Conversation state (legacy _messages kept for backward compat)
         self._turn_count: int = 0
         self._stopped: bool = False
         self._budget_exceeded: bool = False
@@ -123,33 +175,68 @@ class AgentHarness:
         self._tool_registry.remove(name)
         return self
 
+    # --- Smart Message Convenience API ---
+
+    def add_smart_message(
+        self,
+        message: ChatMessage,
+        lifecycle: Optional[MessageLifecycle] = None,
+    ) -> None:
+        """Add a message with optional lifecycle to the conversation.
+
+        This is the primary way to add messages to the conversation when
+        using smart message features.
+
+        Args:
+            message: The ChatMessage to add.
+            lifecycle: Optional lifecycle configuration. None = permanent.
+        """
+        self._smart_message_manager.add_message(message, lifecycle)
+
+    def add_ephemeral_message(
+        self,
+        message: ChatMessage,
+        ttl: int = 3,
+        on_expire: ExpiryAction = ExpiryAction.REMOVE,
+    ) -> None:
+        """Convenience: add a message that expires after a number of turns.
+
+        Args:
+            message: The ChatMessage to add.
+            ttl: Number of turns before expiry.
+            on_expire: What to do on expiry. Defaults to REMOVE.
+        """
+        self._smart_message_manager.add_message(
+            message,
+            MessageLifecycle(ttl=ttl, on_expire=on_expire),
+        )
+
+    def add_pinned_message(self, message: ChatMessage) -> None:
+        """Convenience: add a permanent, pinned message.
+
+        Pinned messages are exempt from both lifecycle expiry and context
+        trimming.
+
+        Args:
+            message: The ChatMessage to add.
+        """
+        self._smart_message_manager.add_message(
+            message,
+            MessageLifecycle(pinned=True),
+        )
+
     # --- Core API ---
 
     def chat(self, user_input: str) -> str:
-        """Send a message, get a response string. Simplest API.
-
-        Args:
-            user_input: The user's message text.
-
-        Returns:
-            The agent's response as a string.
-        """
+        """Send a message, get a response string. Simplest API."""
         response = self.chat_response(user_input)
         return response.response
 
     def chat_response(self, user_input: str) -> ChatResponse:
-        """Send a message, get a full ChatResponse with message history.
-
-        Args:
-            user_input: The user's message text.
-
-        Returns:
-            ChatResponse containing the full message list and response text.
-        """
+        """Send a message, get a full ChatResponse with message history."""
         self._check_stopped()
         self._turn_count += 1
 
-        # Emit TURN_START
         self._events.emit(
             HarnessEvent.TURN_START,
             HarnessEventData(
@@ -159,29 +246,28 @@ class AgentHarness:
             ),
         )
 
-        # Build user message and append to conversation
+        # Add user message to smart message manager
         user_msg = ChatMessage.create_user_message(user_input)
-        self._messages.append(user_msg)
+        self._smart_message_manager.add_message(user_msg)
         self._context_manager.notify_user_message(user_msg)
 
-        # Prepare messages: system prompt + trimmed conversation (as a COPY)
+        # Prepare messages: compile prompt → tick lifecycles → trim context
         send_messages = self._prepare_messages()
 
-        # Call agent — it handles tool-call loop internally
+        # Call agent
         response = self._agent.get_response(
             messages=send_messages,
             tool_registry=self._tool_registry,
             settings=self._settings,
         )
 
-        # Post-process: walk last_messages_buffer for context tracking
+        # Post-process
         self._process_agent_buffer(self._agent.last_messages_buffer)
 
-        # Append buffer messages to our conversation history
+        # Add agent response messages to smart message manager
         for msg in self._agent.last_messages_buffer:
-            self._messages.append(msg)
+            self._smart_message_manager.add_message(msg)
 
-        # Notify turn complete
         self._context_manager.notify_turn_complete()
 
         # Emit events
@@ -202,22 +288,13 @@ class AgentHarness:
             ),
         )
 
-        # Check max turns
         if 0 < self.config.max_turns <= self._turn_count:
             self._stopped = True
 
         return response
 
     def chat_stream(self, user_input: str) -> Generator[ChatResponseChunk, None, None]:
-        """Send a message, yield streaming chunks.
-
-        Args:
-            user_input: The user's message text.
-
-        Yields:
-            ChatResponseChunk objects. The final chunk has finished=True and
-            contains the finished_response.
-        """
+        """Send a message, yield streaming chunks."""
         self._check_stopped()
         self._turn_count += 1
 
@@ -231,12 +308,11 @@ class AgentHarness:
         )
 
         user_msg = ChatMessage.create_user_message(user_input)
-        self._messages.append(user_msg)
+        self._smart_message_manager.add_message(user_msg)
         self._context_manager.notify_user_message(user_msg)
 
         send_messages = self._prepare_messages()
 
-        # Yield all chunks from the agent's streaming response
         finished_response = None
         for chunk in self._agent.get_streaming_response(
             messages=send_messages,
@@ -247,10 +323,9 @@ class AgentHarness:
             if chunk.finished and chunk.finished_response is not None:
                 finished_response = chunk.finished_response
 
-        # Post-process buffer (only safe after generator is fully exhausted)
         self._process_agent_buffer(self._agent.last_messages_buffer)
         for msg in self._agent.last_messages_buffer:
-            self._messages.append(msg)
+            self._smart_message_manager.add_message(msg)
 
         self._context_manager.notify_turn_complete()
 
@@ -276,14 +351,7 @@ class AgentHarness:
             self._stopped = True
 
     def run(self, io_handler: IOHandler = None) -> None:
-        """Start the interactive REPL loop.
-
-        Reads user input, sends to agent, displays response. Loops until
-        the user exits, max turns is reached, or budget is exceeded.
-
-        Args:
-            io_handler: I/O handler for input/output. Defaults to ConsoleIOHandler.
-        """
+        """Start the interactive REPL loop."""
         if io_handler is None:
             io_handler = ConsoleIOHandler()
 
@@ -307,9 +375,9 @@ class AgentHarness:
                 result = self._extension_manager.try_handle_command(command)
                 if result is not None:
                     msg = ChatMessage.create_system_message(result.content)
-                    self._messages.append(msg)
-                    if result.pin_in_context:
-                        self._context_manager.pin_message(msg.id)
+                    # Add as smart message — skills can be ephemeral or permanent
+                    lifecycle = MessageLifecycle(pinned=result.pin_in_context)
+                    self._smart_message_manager.add_message(msg, lifecycle)
                     if result.tools:
                         self.add_tools(result.tools)
                     io_handler.on_text(f"Skill '{command}' activated.")
@@ -341,36 +409,61 @@ class AgentHarness:
     # --- Internal Methods ---
 
     def _prepare_messages(self) -> List[ChatMessage]:
-        """Build the message list for the agent: system prompt + context-managed conversation.
+        """Build the message list for the agent.
 
-        Always returns a COPY so the agent's in-place mutations (appending tool call
-        messages) do not affect self._messages.
+        Order of operations:
+        1. Compile system prompt from PromptComposer modules
+        2. Tick smart message lifecycles (process expiry)
+        3. Get active (non-expired) messages
+        4. Sync pinned message IDs to the context manager
+        5. Run context trimming if needed
+        6. Return a copy for the agent
+
+        Returns:
+            The assembled and trimmed message list.
         """
-        system_msg = ChatMessage.create_system_message(self.config.system_prompt)
-        full_messages = [system_msg] + self._messages
+        # 1. Compile system prompt from modules
+        system_prompt = self._prompt_composer.compile()
+        system_msg = ChatMessage.create_system_message(system_prompt)
+
+        # 2. Tick smart message lifecycles
+        expiry_result = self._smart_message_manager.tick()
+
+        # Emit expiry event if anything changed
+        if expiry_result.has_changes:
+            self._events.emit(
+                HarnessEvent.TURN_START,  # Reuse TURN_START or add a new event type
+                HarnessEventData(
+                    event=HarnessEvent.TURN_START,
+                    turn_number=self._turn_count,
+                    metadata={"expiry_result": expiry_result},
+                ),
+            )
+
+        # 3. Get active messages
+        active_messages = self._smart_message_manager.get_active_messages()
+
+        # 4. Sync pinned IDs to context manager
+        pinned_ids = self._smart_message_manager.get_pinned_message_ids()
+        self._context_manager.state.pinned_message_ids = pinned_ids
+
+        # 5. Build full message list and run context trimming
+        full_messages = [system_msg] + active_messages
 
         tools_list = list(self._tool_registry.tools.values())
         trimmed = self._context_manager.prepare_messages(
             full_messages, tools=tools_list
         )
 
-        # Always return a copy — the agent mutates the list in-place
+        # 6. Return a copy
         return list(trimmed)
 
     def _process_agent_buffer(self, buffer: List[ChatMessage]) -> None:
-        """Walk the agent's last_messages_buffer and update context tracking.
-
-        For each message in the buffer:
-        - Assistant messages with token_usage: call on_response() for tracking
-        - Assistant messages with tool calls: call notify_tool_call()
-        - Tool messages: call notify_tool_result()
-        """
+        """Walk the agent's last_messages_buffer and update context tracking."""
         for msg in buffer:
             if msg.role == ChatMessageRole.Assistant:
-                # Track token usage from every assistant response
                 if msg.token_usage is not None:
                     self._context_manager.on_response(msg)
-                # Notify tool calls
                 if msg.contains_tool_call():
                     self._context_manager.notify_tool_call(msg)
             elif msg.role == ChatMessageRole.Tool:
@@ -386,20 +479,18 @@ class AgentHarness:
                                 act_result = pending[act_name]
                                 if act_result.content in content.tool_call_result:
                                     if act_result.pin_in_context:
-                                        self._context_manager.pin_message(msg.id)
+                                        self._smart_message_manager.pin_message(msg.id)
                                     if act_result.tools:
                                         self.add_tools(act_result.tools)
                                     del pending[act_name]
                                     break
 
     def _on_budget_exceeded(self, event_data) -> None:
-        """Handler for context manager budget exceeded event."""
         self._budget_exceeded = True
         if self.config.stop_on_budget_exceeded:
             self._stopped = True
 
     def _check_stopped(self) -> None:
-        """Raise if the harness is stopped."""
         if self._stopped:
             reason = "budget exceeded" if self._budget_exceeded else "max turns reached"
             raise RuntimeError(f"Harness is stopped ({reason}).")
@@ -408,56 +499,63 @@ class AgentHarness:
 
     @property
     def messages(self) -> List[ChatMessage]:
-        """Current conversation messages (copy)."""
-        return list(self._messages)
+        """Current active conversation messages (from smart message manager)."""
+        return self._smart_message_manager.get_active_messages()
+
+    @property
+    def prompt_composer(self) -> PromptComposer:
+        """The PromptComposer for modular system prompt management."""
+        return self._prompt_composer
+
+    @property
+    def smart_messages(self) -> SmartMessageManager:
+        """The SmartMessageManager for lifecycle-aware messages."""
+        return self._smart_message_manager
 
     @property
     def turn_count(self) -> int:
-        """Number of completed user turns."""
         return self._turn_count
 
     @property
     def context_state(self):
-        """Current context manager state snapshot."""
         return self._context_manager.state
 
     @property
     def context_manager(self) -> ContextManager:
-        """The underlying ContextManager instance."""
         return self._context_manager
 
     @property
     def extension_manager(self):
-        """The ExtensionManager, if one was provided."""
         return self._extension_manager
 
     @property
     def events(self) -> HarnessEventBus:
-        """The harness event bus for registering handlers."""
         return self._events
 
     @property
     def is_stopped(self) -> bool:
-        """Whether the harness has been stopped."""
         return self._stopped
 
     def reset(self) -> None:
-        """Reset conversation state for a new conversation.
-
-        Clears messages, turn count, and stopped flags.
-        Does NOT reset the context manager's cumulative token tracking.
-        """
-        self._messages = []
+        """Reset conversation state for a new conversation."""
+        self._smart_message_manager.clear()
         self._turn_count = 0
         self._stopped = False
         self._budget_exceeded = False
 
     def set_system_prompt(self, prompt: str) -> None:
-        """Change the system prompt. Takes effect on the next chat() call."""
+        """Change the base instructions prompt module.
+
+        If using the PromptComposer, this updates the "instructions" module.
+        For more control, use prompt_composer directly.
+        """
+        if self._prompt_composer.has_module("instructions"):
+            self._prompt_composer.update_module("instructions", content=prompt)
+        else:
+            self._prompt_composer.add_module("instructions", position=0, content=prompt)
         self.config.system_prompt = prompt
 
     def set_settings(self, settings: ProviderSettings) -> None:
-        """Change the provider settings (temperature, max_tokens, etc.)."""
         self._settings = settings
 
 
@@ -472,26 +570,29 @@ def create_harness(
     tools: Optional[List[FunctionTool]] = None,
     log_output: bool = False,
     extension_manager=None,
+    prompt_composer: Optional[PromptComposer] = None,
+    smart_message_manager: Optional[SmartMessageManager] = None,
     **context_kwargs,
 ) -> AgentHarness:
-    """Convenience factory: create a fully configured AgentHarness in one call.
+    """Convenience factory: create a fully configured AgentHarness.
 
     Args:
-        provider: The LLM provider (OpenAI, Anthropic, Groq, Mistral, etc.).
+        provider: The LLM provider.
         system_prompt: System prompt for the agent.
         max_context_tokens: Max context window size in tokens.
         max_turns: Maximum user turns (-1 for unlimited).
         streaming: Whether to stream responses by default in run().
-        total_budget_tokens: Optional hard cap on total tokens for the conversation.
-        settings: Provider settings (temperature, max_tokens, etc.).
+        total_budget_tokens: Optional hard cap on total tokens.
+        settings: Provider settings.
         tools: Optional list of FunctionTools to register.
         log_output: Whether to enable agent-level logging.
-        extension_manager: Optional ExtensionManager for skill/extension support.
-        **context_kwargs: Additional kwargs for create_context_manager
-            (e.g., strategy, reserve_tokens, keep_last_n).
+        extension_manager: Optional ExtensionManager.
+        prompt_composer: Optional pre-configured PromptComposer.
+        smart_message_manager: Optional pre-configured SmartMessageManager.
+        **context_kwargs: Additional kwargs for create_context_manager.
 
     Returns:
-        A configured AgentHarness ready for use.
+        A configured AgentHarness.
 
     Example:
         harness = create_harness(
@@ -500,7 +601,20 @@ def create_harness(
             max_context_tokens=128000,
             streaming=True,
         )
-        harness.add_tool(FunctionTool(my_function))
+
+        # Add a dynamic core memory module
+        harness.prompt_composer.add_module(
+            "core_memory", position=10,
+            content_fn=lambda: my_memory.build_context(),
+            prefix="<core_memory>", suffix="</core_memory>"
+        )
+
+        # Add an ephemeral context injection
+        harness.add_ephemeral_message(
+            ChatMessage.create_system_message("The user prefers dark mode."),
+            ttl=5
+        )
+
         harness.run()
     """
     context_config = {
@@ -510,11 +624,19 @@ def create_harness(
     if total_budget_tokens is not None:
         context_config["total_budget_tokens"] = total_budget_tokens
 
-    # Append extension catalog to system prompt if extension_manager provided
+    # Build prompt composer if not provided
+    if prompt_composer is None:
+        prompt_composer = create_prompt_composer(system_prompt)
+
+    # If extension_manager provided, add catalog as a prompt module
     if extension_manager is not None:
         catalog = extension_manager.build_catalog()
         if catalog:
-            system_prompt = system_prompt + "\n\n" + catalog
+            prompt_composer.add_module(
+                name="extension_catalog",
+                position=100,  # late in the prompt
+                content=catalog,
+            )
 
     config = HarnessConfig(
         system_prompt=system_prompt,
@@ -529,6 +651,8 @@ def create_harness(
         settings=settings,
         log_output=log_output,
         extension_manager=extension_manager,
+        prompt_composer=prompt_composer,
+        smart_message_manager=smart_message_manager,
     )
 
     if tools:
@@ -552,14 +676,11 @@ def create_harness_with_extensions(
 ) -> AgentHarness:
     """Create a harness with extension system pre-configured.
 
-    Sets up ExtensionManager + SkillFolderHandler, scans for skills,
-    and passes everything to create_harness().
-
     Args:
         provider: The LLM provider.
         system_prompt: Base system prompt.
         skill_paths: Additional directories to scan for skills.
-        scan_defaults: Whether to scan default locations (.agents/skills/).
+        scan_defaults: Whether to scan default locations.
         **kwargs: Additional arguments passed to create_harness().
 
     Returns:
@@ -577,15 +698,21 @@ def create_harness_with_extensions(
         for subdir in [".agents/skills", ".claude/skills"]:
             project_path = cwd / subdir
             if project_path.is_dir():
-                manager.add_scan_path(ExtensionScanPath(path=project_path, scope="project", priority=10))
+                manager.add_scan_path(ExtensionScanPath(
+                    path=project_path, scope="project", priority=10,
+                ))
         for subdir in [".agents/skills", ".claude/skills"]:
             user_path = home / subdir
             if user_path.is_dir():
-                manager.add_scan_path(ExtensionScanPath(path=user_path, scope="user", priority=0))
+                manager.add_scan_path(ExtensionScanPath(
+                    path=user_path, scope="user", priority=0,
+                ))
 
     if skill_paths:
         for sp in skill_paths:
-            manager.add_scan_path(ExtensionScanPath(path=Path(sp), scope="project", priority=10))
+            manager.add_scan_path(ExtensionScanPath(
+                path=Path(sp), scope="project", priority=10,
+            ))
 
     manager.discover()
 

@@ -94,3 +94,4 @@ examples/low_level_abstractions/example_chat_history.json
 skills_docs/adding-skills-support.md
 skills_docs/specification.md
 skills_docs/what-are-skills.md
+claude_agent_sdk/
