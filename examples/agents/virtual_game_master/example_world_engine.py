@@ -959,16 +959,16 @@ def main():
         return
 
     # ── LLM Provider ──
-    api = GroqChatAPI(
-        api_key=os.getenv("GROQ_API_KEY"),
-        model="llama-3.3-70b-versatile",
-    )
+    #api = GroqChatAPI(
+    #    api_key=os.getenv("GROQ_API_KEY"),
+    #    model="llama-3.3-70b-versatile",
+    #)
     # Alternative: OpenRouter
-    # api = OpenAIChatAPI(
-    #     api_key=os.getenv("OPENROUTER_API_KEY"),
-    #     base_url="https://openrouter.ai/api/v1",
-    #     model="openai/gpt-4o-mini",
-    # )
+    api = OpenAIChatAPI(
+        api_key=os.getenv("OPENROUTER_API_KEY"),
+        base_url="https://openrouter.ai/api/v1",
+        model="openai/gpt-4o-mini",
+    )
 
     agent = ChatToolAgent(chat_api=api)
     settings = api.get_default_settings()
