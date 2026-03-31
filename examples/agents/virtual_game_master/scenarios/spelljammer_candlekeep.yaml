@@ -1,0 +1,208 @@
+setting: >
+  The adventure begins in Candlekeep, the legendary fortress library on the Sword Coast of Faerûn. The year is 1492 DR (Dale Reckoning), a time of relative peace but growing tensions across the Sword Coast.
+
+player_character: >
+  Elysia Thunderscribe: A Human female Wizard and Sage of Candlekeep with expressive, indigo eyes full of knowledge and secrets. Her charcoal-black hair is streaked with silver and often loosely tied in a braid, shimmering with astral sparkles whenever she casts a spell. Even though she is in her late twenties, the look in her eyes is ageless, indicating wisdom far beyond her years. Her slender figure is draped in a celestial-blue robe adorned with runic symbols, the fabric shimmering as if dusted with stardust. She carries an ornate staff, topped with a crystal orb pulsating with arcane energy. Though her delicate features might deceive some, her aura emanates formidable power, proof of her prowess in the arcane arts and her extensive knowledge as a Candlekeep sage.
+
+companions:
+  - Lyra Flameheart: An Eladrin female Fighter (Eldritch Knight) and fellow Sage of Candlekeep with eyes that shift color with the seasons - currently a warm amber for summer. Her wild, copper-red hair flows like living flame, occasionally shimmering with fey light. Eternally youthful as an Eladrin, her alabaster skin bears subtle, swirling patterns that glow softly when she uses magic. Lyra's athletic build is encased in elegant elven half-plate armor, its design reminiscent of autumn leaves and forest vines. A longsword with a hilt wrapped in living vines hangs at her side, while a shield emblazoned with the symbol of a tree in four seasonal states is strapped to her back. Despite her martial bearing, there's an otherworldly grace to her movements, hinting at her fey nature. Her expression often shifts between fierce determination and mischievous mirth, reflecting the changeable nature of the Feywild. As a sage, she combines her martial prowess with a deep understanding of arcane lore.
+  - Zephyr: A Tiefling female Warlock (Pact of the Genie) in her late 20s. She has vibrant purple skin, spiraling horns adorned with golden rings, and eyes that swirl with gold and violet. Zephyr dresses in flowing, colorful silks that shimmer with an otherworldly quality. She carries an ornate oil lamp (her genie vessel) at her hip, which can serve as a safe haven for up to 4 people for 48 hours. Zephyr is charismatic and flamboyant, skilled in deception and persuasion.
+
+location: >
+  Secret underground dock beneath Candlekeep, housing the Arboreal Voyager.
+
+story_summary: >
+  Elysia Thunderscribe, along with her companions Lyra Flameheart and Zephyr, have been summoned by the Keeper of Tomes to a confidential meeting in a secret underground dock beneath Candlekeep. Here, they are introduced to the Arboreal Voyager, a living Spelljammer ship recently excavated by Candlekeep archaeologists. The ship, partially made of a living treant, holds immense potential for magical research and exploration. The party is tasked with understanding the ship's needs, communicating with the treant, and ultimately getting the ship airborne. As they begin their work, they discover hints of the ship's ability to perceive distortions in the fabric of reality, adding an unexpected dimension to their mission. The party now faces the challenge of not only activating the ship but also unraveling the mysteries of its unique abilities.
+
+important_events:
+  - Discovery of the Arboreal Voyager by Candlekeep archaeologists
+  - Briefing of the party by the Keeper of Tomes
+  - Initial examination of the Arboreal Voyager
+  - First attempts to communicate with the treant
+
+active_quests:
+  - Primary: Activate and gain control of the Arboreal Voyager
+  - Secondary: Understand and communicate with the treant
+  - Tertiary: Research the ship's apparent ability to perceive reality distortions
+
+key_npcs:
+  - Keeper of Tomes: The high-ranking Candlekeep official who briefs the party
+  - The Treant: The living heart of the Arboreal Voyager, semi-conscious and difficult to communicate with
+  - Miirym the Spectral Guardian: A ghostly silver dragon who guards Candlekeep's secrets
+  - First Reader Teodoro Ashmore: Head librarian of Candlekeep, skeptical of the Arboreal Voyager project
+
+inventory:
+  - Ornate staff with crystal orb
+  - Spellbook
+  - Component pouch
+  - Backpack
+  - Bedroll
+  - Mess kit
+  - Tinderbox
+  - 10 torches
+  - 10 days of rations
+  - Waterskin
+  - 50 feet of hempen rope
+  - 1200 gold pieces
+  - Candlekeep seal of authority (grants access to certain restricted areas and resources)
+
+special_items:
+  - name: Ring of Whispered Thoughts
+    description: >
+      This unassuming silver ring is adorned with a small, smoky quartz gem. 
+      When activated, the gem seems to swirl with mist-like patterns.
+    properties:
+      - Once per day, the wearer can activate the ring as a bonus action.
+      - For the next hour, the wearer can read the surface thoughts of any creature within 180 feet that the wearer can see.
+      - The target is unaware of this mind-reading attempt and gets no saving throw.
+      - The wearer receives general impressions, emotional states, and current thoughts. Complex or deep memories are not accessible.
+      - The effect is completely silent and invisible, making it undetectable through normal means.
+      - If a creature has telepathic abilities or is protected against mind-reading, they might sense the intrusion with a DC 20 Wisdom (Insight) check.
+    limitations:
+      - The ring requires attunement.
+      - Prolonged use (more than 3 times per week) might have side effects like headaches or temporary inability to block out others' thoughts.
+  - name: Zephyr's Genie Vessel
+    description: An ornate oil lamp carried by Zephyr, serving as her genie vessel.
+    properties:
+      - Can be used as a safe haven for up to 4 people for 48 hours.
+
+party_members:
+  - Elysia Thunderscribe
+  - Lyra Flameheart
+  - Zephyr
+
+world_state:
+  - Candlekeep is in a state of excitement and secrecy due to the discovery of the Arboreal Voyager
+  - The wider world is unaware of the ship's existence
+  - Tensions are rising between various factions on the Sword Coast
+  - Reports of strange magical phenomena are increasing across Faerûn
+
+factions:
+  - Candlekeep Avowed: Supportive of the mission, eager for new magical knowledge
+  - Harpers: Likely interested in the implications of the Arboreal Voyager's discovery
+  - Zhentarim: Always seeking new sources of power and profit
+  - Lords' Alliance: Concerned with maintaining stability on the Sword Coast
+  - Emerald Enclave: Would be interested in the living nature of the Arboreal Voyager
+
+time_and_calendar:
+  - Current date: Kythorn 10, 1492 DR (Dale Reckoning)
+  - Season: Late spring
+  - Time of day: Early morning, as the party begins their examination of the Arboreal Voyager
+
+relationships:
+  - Elysia and Lyra are girlfriends, fellow sages, and adventuring companions.
+  - Zephyr is a recent addition to the group, recruited for her unique magical abilities.
+
+character_details:
+  Elysia Thunderscribe:
+    Race: Human
+    Class: Wizard
+    Background: Sage of Candlekeep
+    Age: Late twenties
+    Notable features:
+      - Indigo eyes
+      - Charcoal-black hair with silver streaks
+      - Celestial-blue robe with runic symbols
+      - Ornate staff with crystal orb
+  Lyra Flameheart:
+    Race: Eladrin
+    Class: Fighter
+    Subclass: Eldritch Knight
+    Background: Sage of Candlekeep
+    Age: Eternally youthful (typical for Eladrin)
+    Notable features:
+      - Eyes that change color with seasons (currently amber for summer)
+      - Copper-red hair with fey light
+      - Elven half-plate armor designed with nature motifs
+      - Longsword with vine-wrapped hilt
+      - Shield with four-seasons tree symbol
+  Zephyr:
+    Race: Tiefling
+    Class: Warlock
+    Subclass: Pact of the Genie
+    Background: Charlatan
+    Age: Late 20s
+    Notable features:
+      - Vibrant purple skin
+      - Spiraling horns adorned with golden rings
+      - Eyes that swirl with gold and violet
+      - Flowing, colorful silks that shimmer
+      - Ornate oil lamp (genie vessel) at her hip
+
+game_world_information:
+  Candlekeep:
+    Overview: >
+      Candlekeep is a towering fortress library that stands on a crag overlooking the Sea of Swords. 
+      It is the most comprehensive and up-to-date repository of knowledge in all of Faerûn.
+    Key Features:
+      - Strictly controlled access: Visitors must donate a book of significant value to enter
+      - Home to the Avowed: Monks dedicated to cataloging and protecting knowledge
+      - Protected by powerful wards and the spectral dragon Miirym
+    Notable Locations:
+      - Court of Air: Open courtyard where most day-to-day activities occur
+      - Emerald Door: Main entrance to the Inner Ward
+      - House of the Binder: Where books are repaired and rebound
+      - Vaults: Deepest levels containing the rarest and most dangerous tomes
+    Current State:
+      - Excitement and tension due to the discovery of the Arboreal Voyager
+      - Increased security measures to protect the secret of the living ship
+      - Debates among the senior Avowed about the implications of the discovery
+
+  Arboreal Voyager:
+    Overview: >
+      A unique Spelljammer ship, part machine and part living entity, recently excavated by Candlekeep archaeologists.
+    Key Features:
+      - Living Hull: Partially made of a mature treant, fused with traditional Spelljammer components
+      - Sentient: The treant is semi-conscious but difficult to communicate with
+      - Magical Anomaly: Shows signs of being able to perceive distortions in reality
+    Current State:
+      - Dormant but showing signs of awakening
+      - Housed in a secret underground dock beneath Candlekeep
+      - Subject of intense study and speculation among Candlekeep's scholars
+
+  Sword Coast:
+    Overview: >
+      The Sword Coast is a region on the northwestern coast of Faerûn, home to several prominent city-states and the site of many adventures.
+    Key Locations:
+      - Waterdeep: The City of Splendors, largest city on the Sword Coast
+      - Baldur's Gate: Important city south of Candlekeep, known for trade and intrigue
+      - Neverwinter: City to the north, still recovering from a cataclysmic eruption
+    Current State:
+      - Relative peace, but with underlying tensions between various factions
+      - Increased reports of strange magical phenomena
+      - Growing concerns about potential threats from the sea
+
+  Magic and the Weave:
+    Overview: >
+      Magic in Faerûn is tied to the Weave, a metaphysical structure that allows mortals to access and shape magical energies.
+    Key Concepts:
+      - The Weave: Maintained by Mystra, goddess of magic
+      - Wild Magic: Unpredictable magical effects, often tied to areas of damaged Weave
+      - Spellplague: A relatively recent magical catastrophe that reshaped parts of Toril
+    Current State:
+      - The Weave has largely stabilized since the Spellplague
+      - Some areas still exhibit strange magical properties
+      - Growing interest in alternative sources of magic (e.g., Spelljammer technology)
+
+  Spelljamming:
+    Overview: >
+      Spelljamming is the art and science of magical space travel between celestial bodies and crystal spheres.
+    Key Concepts:
+      - Spelljammer Helm: Magical device that powers and steers Spelljammer ships
+      - Wildspace: The void between planets within a crystal sphere
+      - Phlogiston: The chaotic medium between crystal spheres
+    Current State:
+      - Relatively rare knowledge on Toril, but of great interest to certain scholars
+      - The discovery of the Arboreal Voyager represents a significant find in this field
+
+  Threats and Conflicts:
+    Overview: >
+      While the Sword Coast is currently at peace, various threats loom on the horizon.
+    Potential Dangers:
+      - Cult of the Dragon: Always seeking to bring Tiamat into the world
+      - Mind Flayer Incursions: Increasing reports of Illithid activity
+      - Underwater Threats: Rumors of sahuagin armies massing in the Sea of Swords
+    Political Tensions:
+      - Rivalry between Waterdeep and Baldur's Gate for trade dominance
+      - Luskan's attempts to regain prominence and legitimacy
+      - The Lords' Alliance's efforts to maintain stability in the region

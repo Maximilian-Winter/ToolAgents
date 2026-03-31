@@ -1,0 +1,151 @@
+setting: >
+  Earth, specifically England, on a Thursday morning. Unbeknownst to its inhabitants, the planet is scheduled for demolition to make way for a hyperspace bypass. The universe is vast, mostly harmless, and filled with improbable adventures.
+
+player_character: >
+  Arthur Dent: A human male, age 30. Average height and build, with a perpetually confused expression. Currently wearing a dressing gown, as he was rudely awakened and rushed out of his house. Carries a towel, recently given to him by Ford. Known for his love of tea, general bewilderment at the universe, and his house which is about to be demolished to make way for a bypass.
+
+companions:
+  - Ford Prefect: A male alien from a small planet somewhere in the vicinity of Betelgeuse, disguised as an out-of-work actor, age unknown. Looks human, carries a satchel containing a trusty electronic thumb, a Sub-Etha Sens-O-Matic, and a copy of the Hitchhiker's Guide to the Galaxy. Known for his ability to see the big picture, his love of Pan Galactic Gargle Blasters, and his catchphrase "Don't Panic".
+
+location: >
+  The Horse and Groom, a local pub in the English countryside. It's Thursday lunchtime, and Ford has just convinced Arthur to go for a few pints to calm his nerves about his house's imminent demolition.
+
+story_summary: >
+  Arthur Dent's thoroughly ordinary Thursday is about to become extraordinary. His house is scheduled for demolition to make way for a bypass, but that's just the start of his problems. His friend Ford Prefect, who Arthur has known for years as a bit of an oddball, reveals that he's actually an alien researcher for the Hitchhiker's Guide to the Galaxy. Even more shockingly, Ford informs Arthur that Earth is about to be destroyed by a Vogon Constructor Fleet to make way for a hyperspace bypass. With mere minutes to spare, Ford must convince Arthur to leave his planet and hitchhike across the galaxy. Their improbable adventure will involve Vogon poetry, Babel fish, and the search for the Ultimate Question to Life, the Universe, and Everything.
+
+important_events:
+  - The attempted demolition of Arthur's house this morning
+  - Ford's revelation of his true alien nature
+  - The impending destruction of Earth by the Vogon Constructor Fleet
+
+active_quests:
+  - Escape Earth before it's destroyed
+  - Survive a reading of Vogon poetry
+  - Find out why digital watches ever seemed like a good idea
+
+key_npcs:
+  - Prostetnic Vogon Jeltz: Commander of the Vogon Constructor Fleet, terrible poet
+  - Zaphod Beeblebrox: Galactic President, adventurer, and Ford's semi-cousin
+  - Trillian: Human astrophysicist who Arthur once met at a party
+
+inventory:
+  Arthur:
+    - Dressing gown
+    - Towel (recently acquired)
+    - House keys (to a soon-to-be non-existent house)
+    - Watch (soon to be obsolete)
+  Ford:
+    - Electronic thumb (for hitchhiking on spacecraft)
+    - Sub-Etha Sens-O-Matic (for detecting spacecraft)
+    - The Hitchhiker's Guide to the Galaxy (electronic book)
+    - A bottle of something which looks suspiciously like beer
+
+party_members:
+  - Arthur Dent
+  - Ford Prefect
+
+world_state:
+  - Earth is moments away from destruction
+  - The Hitchhiker's Guide to the Galaxy is a wildly successful book (more popular than the Encyclopedia Galactica)
+  - Hyperspace travel is commonplace, making the galaxy feel much smaller
+  - The Answer to the Ultimate Question of Life, the Universe, and Everything is 42, but the Question itself is unknown
+
+factions:
+  - Vogons: Unpleasant, bureaucratic alien race currently about to destroy Earth
+  - Golgafrinchans: A race that Arthur and Ford will encounter later in their travels
+  - Mice: Hyper-intelligent pan-dimensional beings who commissioned the Earth
+
+time_and_calendar:
+  - Current date: A Thursday
+  - Time of day: Lunchtime, moments before Earth's scheduled demolition
+
+relationships:
+  - Arthur and Ford have been friends for several years, though Arthur is about to learn Ford's true nature
+  - Arthur is generally confused by the universe and skeptical of Ford's claims
+  - Ford has connections throughout the galaxy, mostly other field researchers for the Guide
+
+character_details:
+  Arthur Dent:
+    Class: Bewildered Earthling
+    Age: 30
+    Notable features:
+      - Perpetually confused expression
+      - Dressing gown
+      - Recently acquired towel
+    Skills:
+      - Making tea in improbable situations
+      - Complaining about bureaucracy
+      - Surviving against cosmically improbable odds
+
+  Ford Prefect:
+    Class: Roving Researcher for the Hitchhiker's Guide
+    Age: Unknown
+    Notable features:
+      - Appears human but isn't
+      - Carries a satchel with essential galactic hitchhiking gear
+      - Permanent expression of mild surprise
+    Skills:
+      - Hitchhiking on spacecraft
+      - Knowing where his towel is
+      - Drinking Pan Galactic Gargle Blasters
+
+game_world_information:
+  The Galaxy:
+    - Mostly harmless
+    - Home to countless alien species, many of which are more advanced than humans
+    - Governed by a President of the Galaxy (currently Zaphod Beeblebrox)
+    - Spans about 100,000 light years and contains roughly 400 billion stars
+
+  Technology:
+    - Faster-than-light travel: Achieved through Infinite Improbability Drives
+    - Babel fish: Small, leech-like creatures that allow instant translation of any language
+    - Matter transportation: Including matter-transference beams and teleportation
+    - The Hitchhiker's Guide to the Galaxy: An electronic guidebook containing knowledge about life, the universe, and everything
+
+  Key Locations:
+    - Milliways: The Restaurant at the End of the Universe
+    - Magrathea: Ancient planet capable of manufacturing custom-made luxury planets
+    - Sqornshellous Zeta: Swampy world, home to living mattresses
+    - Ursa Minor Beta: Location of the Hitchhiker's Guide offices
+
+  Notable Species:
+    - Vogons: Bureaucratic, unpleasant, and authors of the third worst poetry in the universe
+    - Dentrassi: Cooks who work on Vogon ships, more amenable to hitchhikers
+    - Hooloovoo: Superintelligent shade of the color blue
+    - Krikkiters: Xenophobic race once imprisoned in an envelope of slow time
+    - Golgafrinchans: Descendants of a crashed refugee ship, possibly the ancestors of modern humans
+
+  Cosmic Phenomena:
+    - The Answer to Life, the Universe, and Everything: 42 (Question unknown)
+    - Infinite Improbability: A principle allowing for the most improbable events to occur
+    - Time travel: Possible but complicated, often resulting in paradoxes
+    - Parallel universes: Exist and occasionally intersect
+
+  Cultural Notes:
+    - Towels: Considered the most massively useful thing an interstellar hitchhiker can have
+    - Tea: A substance almost entirely unlike the tea found on most civilized planets
+    - Digital watches: Still thought to be a pretty neat idea by some primitive planets
+    - Pan Galactic Gargle Blaster: The best drink in existence, effects similar to having your brains smashed out by a slice of lemon wrapped round a large gold brick
+
+  Economic System:
+    - Altairian Dollars: Common currency
+    - Triganic Pu: A triangular coin worth 8 Ningis
+    - Ningi: A triangular rubber coin, 100 of which equal one Pu
+    - Financing often involves future planning and time travel
+
+  Philosophy and Religion:
+    - The Great Green Arkleseizure: Theorized source of the universe (which sneezed it out)
+    - The Coming of the Great White Handkerchief: Predicted end of the universe
+    - Jatravartid people of Viltvodle VI: Believe the universe was sneezed out of the nose of a being called the Great Green Arkleseizure
+
+  Laws and Customs:
+    - Galactic bureaucracy is complex and often nonsensical
+    - Hitchhiking is a common and accepted form of transportation
+    - Time is not absolute and can be experienced differently on various planets
+
+  Threats and Dangers:
+    - Ravenous Bugblatter Beast of Traal: A mindboggingly stupid animal, but very dangerous
+    - Vogon poetry: Third worst in the universe, can be fatal if listened to
+    - Infinite Improbability: Can cause chaotic and unpredictable events
+
+  The Guide's Most Important Advice: DON'T PANIC

@@ -1,0 +1,38 @@
+setting: >
+
+player_character: >
+
+companions:
+
+location: >
+
+story_summary: >
+
+important_events:
+
+active_quests:
+
+key_npcs:
+
+inventory:
+
+special_items:
+
+party_members:
+
+world_state:
+
+factions:
+
+time_and_calendar:
+  - Current date:
+  - Season:
+  - Time of day:
+
+relationships:
+
+character_details:
+
+game_world_information:
+
+

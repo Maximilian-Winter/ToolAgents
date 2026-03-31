@@ -1,0 +1,158 @@
+setting: >
+  Tang Dynasty China (618-907 CE), infused with elements of Chinese mythology, Buddhism, and Daoism. The mortal world is intertwined with heavenly and demonic realms, creating a landscape filled with both earthly and supernatural challenges.
+
+player_character: >
+  Sun Wukong, the Monkey King, recently freed from 500 years of imprisonment under Five Finger Mountain. Now serving as a disciple to Tang Sanzang on the journey to retrieve Buddhist scriptures from India.
+
+companions:
+  - Tang Sanzang: A Buddhist monk on a quest to retrieve sacred scriptures from India
+  - Zhu Bajie: A pig-demon, former celestial commander punished for misdeeds
+  - Sha Wujing: A sand demon, formerly a celestial general seeking redemption
+
+location: >
+  The foothills of Five Finger Mountain, where Sun Wukong was just freed by Tang Sanzang
+
+story_summary: >
+  Tang Sanzang has been tasked by the Bodhisattva Guanyin to journey to India and retrieve Buddhist scriptures. He has just freed Sun Wukong to be his disciple and protector. The group must now embark on their perilous journey westward, facing numerous trials and demonic encounters.
+
+important_events:
+  - Sun Wukong's release from Five Finger Mountain
+  - Tang Sanzang's appointment to retrieve the scriptures
+  - Formation of the initial group (Sanzang and Wukong)
+
+active_quests:
+  - Main Quest: Journey to India to retrieve Buddhist scriptures
+  - Side Quest: Find and recruit Zhu Bajie and Sha Wujing
+
+key_npcs:
+  - Bodhisattva Guanyin: Compassionate goddess who initiated the journey
+  - Jade Emperor: Ruler of Heaven, wary of Sun Wukong
+  - Bull Demon King: A powerful demon and old acquaintance of Sun Wukong
+
+inventory:
+  - Tang Sanzang's kasaya (monk robe)
+  - Sun Wukong's golden cudgel (Ruyi Jingu Bang)
+  - Basic provisions for the journey
+
+special_items:
+  - Tight-banded circlet: Can be used to control Sun Wukong
+  - Sun Wukong's phoenix-feather cap
+  - Tang Sanzang's nine-ringed monk's staff
+
+party_members:
+  - Sun Wukong
+  - Tang Sanzang
+
+world_state:
+  - The journey is known throughout the realms, attracting both aid and obstacles
+  - Balance between Buddhist and Daoist forces influences many encounters
+  - Demons actively seek to consume Tang Sanzang for immortality
+  - Human kingdoms vary in their reception of the pilgrims, from reverence to suspicion
+
+factions:
+  - Buddha's Followers: Actively support the journey
+  - Celestial Court: Cautiously supportive, still wary of Sun Wukong
+  - Demon Clans: Largely opposed to the pilgrims, with some exceptions
+  - Daoist Sects: Varying levels of support or opposition
+  - Mortal Kingdoms: Each with their own agendas and attitudes towards the pilgrims
+
+time_and_calendar:
+  - Current date: 3rd day of the 3rd month, 1st year of the journey
+  - Season: Spring
+  - Time of day: Early morning
+
+relationships:
+  - Sun Wukong and Tang Sanzang: New master-disciple relationship, still developing trust
+  - Sun Wukong and Heavenly Court: Tense due to past conflicts
+  - Tang Sanzang and Guanyin: Respectful, with Sanzang seeing Guanyin as a guide
+
+character_details:
+  Sun Wukong:
+    - Abilities: Superhuman strength, 72 transformations, cloud-somersault
+    - Weaknesses: Impulsive nature, susceptibility to the tight-banded circlet
+  Tang Sanzang:
+    - Abilities: Buddhist magic, high moral virtue
+    - Weaknesses: Physically weak, naive to worldly dangers
+
+game_world_information:
+  Cosmic Structure:
+    - The universe maintains its division into Heaven, Earth, and the Underworld
+    - The journey to retrieve the scriptures spans the mortal realm but frequently intersects with other planes
+    - Buddha's Western Paradise (India) is the ultimate destination, seen as a bridge between mortal and divine realms
+
+  Earth Realm:
+    - The journey covers 108,000 li (about 54,000 kilometers) from Chang'an to India
+    - Landscape is a mix of historical Tang Dynasty geography and mythical locations
+    - Key locations:
+        - Chang'an: Starting point of the journey, capital of Tang China
+        - Flaming Mountains: A deadly obstacle on the path west
+        - Kingdom of Wuji: Where Sun Wukong was imprisoned under Five Finger Mountain
+        - Scattered monasteries and temples, often housing magical artifacts or beings
+    - Numerous kingdoms, both real and fictional, each presenting unique challenges
+    - Wilderness areas often hide entrances to demon lairs or immortal realms
+
+  Heavenly Realm:
+    - Celestial Court: Still active in cosmic governance, but now wary of Sun Wukong
+    - Heaven's relationship with Sun Wukong is complex due to his past rebellion
+    - Heavenly beings occasionally intervene in the journey, both helping and testing the pilgrims
+
+  Underworld:
+    - Yama Kings maintain their role but are now cautious of Sun Wukong due to his past actions
+    - The journey may require occasional visits to the underworld to resolve cosmic imbalances
+
+  Races and Beings:
+    Humans:
+      - Most common inhabitants of the Earth Realm
+      - Vary from ordinary mortals to cultivators with magical abilities
+      - Some humans possess great faith, affecting their interactions with supernatural beings
+
+    Demons:
+      - More prevalent and aggressive than in earlier eras
+      - Many actively seek to consume Tang Sanzang to gain immortality
+      - Demon kingdoms and societies exist parallel to human ones
+
+    Animals:
+      - Many animals have developed sentience and magical powers
+      - Some serve as guardians of natural locations
+      - Others have become demons, either benevolent or malevolent
+
+    Buddhas and Bodhisattvas:
+      - More active in worldly affairs, guiding and testing the pilgrims
+      - Often appear in disguise to teach moral lessons
+
+    Daoist Immortals:
+      - Maintain a complex relationship with the Buddhist figures
+      - Some aid the journey, others present challenges to test the pilgrims
+
+  Major Deities and Figures:
+    Buddhist Pantheon:
+      - Gautama Buddha: Oversees the journey from afar
+      - Guanyin: Actively guides and aids the pilgrims, often in disguise
+      - Eighteen Arhats: Perfected beings who may assist or test the travelers
+
+    Daoist Pantheon:
+      - Laozi: Occasionally intervenes, especially in matters relating to Sun Wukong
+      - Erlang Shen: Maintains a rivalry with Sun Wukong
+
+    Celestial Court:
+      - Jade Emperor: Wary of Sun Wukong but supportive of the pilgrimage
+      - Nezha: Potential ally or rival to Sun Wukong
+
+    Demonic Figures:
+      - Bull Demon King and Princess Iron Fan: Powerful demons with past connections to Sun Wukong
+      - Various Demon Kings: Rule over territories that the pilgrims must pass through
+
+  Magical Concepts:
+    - 81 Tribulations: Predetermined trials that the pilgrims must overcome
+    - Karma: Plays a crucial role in the pilgrims' journey and personal development
+    - Cultivation: Many beings seek to advance their cultivation through the pilgrims' quest
+
+  Artifacts and Treasures:
+    - Buddhist Scriptures: The ultimate goal of the journey, said to have cosmic significance
+    - Ruyi Jingu Bang: Sun Wukong's primary weapon, retrieved from the Dragon King's palace
+    - Tight-banded Circlet: Used to control Sun Wukong, given by Guanyin
+    - Tang Sanzang's Nine-ringed Monk's Staff: A weapon and symbol of his authority
+    - Zhu Bajie's Nine-toothed Rake: Powerful weapon of the pig demon
+    - Sha Wujing's Monk's Spade: Weapon of the sand demon
+    - Dragon Horse: Tang Sanzang's steed, actually a son of the Dragon King of the West Sea
+

@@ -1,0 +1,93 @@
+setting: >
+  Ancient China, late Han Dynasty (circa 200 CE). A time of political turmoil, philosophical debate, and the rise of powerful warlords.
+
+player_character: >
+  Li Wei (李威): A human male Scholar-Warrior, age 32. Average height with a wiry, toned build from years of martial arts training. Has intelligent, dark eyes and a neatly trimmed beard. Wears simple but elegant robes befitting a scholar, with hidden armor underneath. Carries a jian (double-edged straight sword) and a set of scrolls containing both philosophical writings and martial arts techniques. Known for his sharp mind, skill with the sword, and ability to quote Confucian classics in the heat of battle.
+
+companions:
+  - Mei Ling (梅玲): A human female Wu Xia (martial artist), age 29. Lithe and graceful, with long black hair often tied in a high ponytail. Dresses in practical, dark-colored clothing suitable for both stealth and combat. Wields a pair of butterfly swords and is skilled in acrobatics. Despite her serious demeanor, she has a dry sense of humor and a strong sense of justice.
+
+location: >
+  A remote Taoist monastery in the Wudang Mountains, known for its martial arts and mystical practices.
+
+story_summary: >
+  The year is 200 CE, and the Han Dynasty is in decline. Li Wei, a scholar-warrior trained in both Confucian classics and martial arts, finds himself embroiled in a plot that could determine the fate of the empire. Accompanied by Mei Ling, a skilled Wu Xia with her own mysterious past, Li Wei must use both his mind and his sword to navigate the dangerous political landscape, uncover ancient secrets, and perhaps save China from descending into chaos.
+
+important_events:
+  - The Yellow Turban Rebellion, which shook the foundations of the Han Dynasty
+  - Li Wei's expulsion from the Imperial Academy due to his controversial ideas
+  - The first meeting between Li Wei and Mei Ling during a bandit attack
+
+active_quests:
+  - Decode an ancient text that may predict the fall of the Han Dynasty
+  - Investigate rumors of a powerful artifact hidden in the Wudang Mountains
+  - Prevent an assassination attempt on a key political figure
+
+key_npcs:
+  - Master Chen: The enigmatic head of the Taoist monastery
+  - Cao Cao: A cunning warlord rising to power in the fragmented empire
+  - Lady Sun: A noblewoman with hidden ties to rebel factions
+
+inventory:
+  Li Wei:
+    - Jian (double-edged straight sword)
+    - Set of philosophical and martial arts scrolls
+    - Writing kit (brushes, ink stone, and paper)
+    - Hidden light armor
+    - Medicinal herbs
+  Mei Ling:
+    - Pair of butterfly swords
+    - Rope dart
+    - Smoke pellets
+    - Climbing claws
+    - Disguise kit
+
+party_members:
+  - Li Wei
+  - Mei Ling
+
+world_state:
+  - The Han Dynasty's power is waning, with corrupt officials and warlords vying for control
+  - Philosophical debates between Confucianism, Taoism, and Legalism influence political thought
+  - The Silk Road brings new ideas and technologies from distant lands
+
+factions:
+  - Imperial Court: The weakening but still official government of the Han Dynasty
+  - Warlords: Various military leaders carving out their own territories
+  - Yellow Turbans: Remnants of the rebellion, now operating in secret
+  - Taoist Sects: Mystical groups with their own agendas and secret knowledge
+
+time_and_calendar:
+  - Current date: 15th day of the 7th month, 5th year of Jian'an (200 CE)
+  - Season: Mid-summer
+  - Time of day: Early morning, as Li Wei and Mei Ling begin their daily training
+
+relationships:
+  - Li Wei and Mei Ling are partners bound by mutual respect and shared ideals
+  - Li Wei has a complex relationship with his former mentors at the Imperial Academy
+  - Mei Ling has connections within the Wu Xia community
+
+character_details:
+  Li Wei:
+    Class: Scholar-Warrior
+    Age: 32
+    Notable features:
+      - Intelligent dark eyes
+      - Neatly trimmed beard
+      - Hidden armor under scholar's robes
+    Skills:
+      - Mastery of Confucian classics and philosophy
+      - Skilled swordsman, specializing in jian techniques
+      - Proficient in strategy and diplomacy
+
+  Mei Ling:
+    Class: Wu Xia
+    Age: 29
+    Notable features:
+      - Lithe and graceful build
+      - Long black hair in high ponytail
+      - Practical, dark-colored clothing
+    Skills:
+      - Expert in acrobatics and stealth
+      - Master of butterfly sword techniques
+      - Skilled in reading people and detecting lies

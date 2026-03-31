@@ -1,0 +1,131 @@
+setting: >
+  Night City, 2040. A sprawling metropolis on the coast of California, known for its neon-lit streets, corporate dominance, and pervasive technology.
+
+player_character: >
+  Nyx: A human female Netrunner and Tech, age 28. Slender build, 5'7", with neon blue hair styled in an undercut. Her eyes are cybernetic implants that glow a soft purple. Multiple jack ports visible along her temples and spine. Typically wears form-fitting black clothing with circuitry patterns. Quiet and analytical, with a dry sense of humor and fierce loyalty to Scarlett.
+
+companions:
+  - Scarlett: A human female Solo, age 31. Athletic build, 5'9", with short, spiky red hair and green eyes. Has a prominent facial scar running from her left temple to her jaw. Her left arm is a high-end cybernetic prosthetic. Often seen in tactical gear or leather jackets. Outgoing and charismatic, with a protective streak and quick reflexes.
+
+location: >
+  A converted warehouse loft in Night City's Northside district. The exterior is nondescript, but the interior is a blend of high-tech haven and cozy living space.
+
+story_summary: >
+  The year is 2040 in Night City. Nyx, a skilled Netrunner and Tech, and Scarlett, a formidable Solo, have carved out a life together in the dangerous urban sprawl. They've become known in certain circles as a capable team, taking on high-risk, high-reward jobs that others wouldn't dare attempt. Their story is one of survival, love, and the constant struggle to stay ahead in a city that never sleeps.
+
+important_events:
+  - Nyx's escape from corporate life at 18
+  - Scarlett leaving corporate security after uncovering corruption
+  - Nyx and Scarlett's first meeting during a high-stakes job
+  - Establishment of their shared life and home in Night City
+
+active_quests:
+  - Ongoing freelance contracts for Netrunning and security work
+  - Staying ahead of corporate hunters still looking for Nyx
+  - Navigating Night City's complex political landscape
+
+key_npcs:
+  - None specifically mentioned, but likely contacts in Night City's underground tech scene and security circles
+
+inventory:
+  Nyx:
+    - Customized cyberdeck
+    - Advanced hacking software
+    - Electronics toolkit
+    - Cybernetics maintenance equipment
+  Scarlett:
+    - High-end firearms
+    - Tactical combat gear
+    - First-aid kit specialized for combat injuries
+    - Armored clothing
+
+party_members:
+  - Nyx
+  - Scarlett
+
+world_state:
+  - Night City is dominated by powerful corporations
+  - Technology permeates every aspect of daily life
+  - The gap between the wealthy and the poor continues to widen
+  - Cybernetic enhancements and body modifications are commonplace
+
+factions:
+  - Megacorporations: Dominating forces in Night City's economy and politics
+  - Street Gangs: Various groups controlling different territories within the city
+  - Nomads: Outsider groups living on the fringes of society
+  - Fixers: Middlemen connecting clients with skilled professionals for various jobs
+
+time_and_calendar:
+  - Current date: July 15, 2040
+  - Time of day: Night, as most activities in Night City happen after dark
+
+relationships:
+  - Nyx and Scarlett are romantic partners and professional collaborators
+  - They have connections in Night City's underground tech scene and security circles
+  - Active in the local LGBTQ+ community, offering support and protection
+
+character_details:
+  Nyx:
+    Role: Netrunner/Tech
+    Age: 28
+    Notable features:
+      - Neon blue hair with an undercut
+      - Glowing purple cybernetic eyes
+      - Multiple jack ports along temples and spine
+      - Form-fitting black clothing with circuitry patterns
+    Skills:
+      - Expert Netrunner
+      - Skilled electronics engineer
+      - Cyberdeck modifier
+      - Proficient in cybernetics maintenance
+
+  Scarlett:
+    Role: Solo
+    Age: 31
+    Notable features:
+      - Short, spiky red hair
+      - Green eyes
+      - Prominent facial scar
+      - High-end cybernetic left arm
+    Skills:
+      - Expert in firearms and hand-to-hand combat
+      - Tactical planning and threat assessment
+      - Combat first-aid
+
+game_world_information:
+  Cyberpunk Red:
+    - Set in the year 2045, following the events of the Fourth Corporate War
+    - A world recovering from global catastrophe and economic collapse
+    - Technology has advanced but is less reliable due to network instability
+    - Society is rebuilding, with a mix of old and new technologies
+
+  Night City:
+    - Located on the coast of the Free State of Northern California
+    - Known as "The City of Dreams" and "The City on the Edge of Tomorrow"
+    - Population: Approximately 5 million in the greater metropolitan area
+    - Divided into distinct districts, each with its own character and dangers
+    - Home to people from diverse backgrounds and cultures
+
+  Technology:
+    - Cybernetic enhancements are commonplace, ranging from simple implants to full-body conversions
+    - The Net has been largely replaced by the more limited and secure Data Pool
+    - AI development is strictly regulated following the events of the Fourth Corporate War
+    - Flying cars (AVs) exist but are primarily used by the wealthy and powerful
+
+  Society:
+    - Extreme wealth disparity between corporate elites and the general population
+    - Strong influence of street culture, including fashion, music, and slang
+    - Constant tension between corporate interests, government entities, and various factions
+    - High crime rates, with many relying on personal weaponry and cybernetic defenses
+
+  Economy:
+    - Dominated by megacorporations that often have more power than governments
+    - Thriving black market for cybernetics, weapons, and restricted technology
+    - Many people work as freelancers or "edgerunners" to survive
+    - Cryptocurrency and corporate scrip often used alongside traditional currency
+
+  Major Issues:
+    - Environmental degradation and climate change effects
+    - Ongoing recovery from the Fourth Corporate War
+    - Cyber psychosis resulting from excessive cybernetic modification
+    - Constant power struggles between corporations, gangs, and government entities

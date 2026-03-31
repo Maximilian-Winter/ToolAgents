@@ -1,0 +1,143 @@
+setting: >
+  Ancient Israel, during the reign of King Solomon (circa 970-931 BCE). A time of peace and prosperity, but also of hidden tensions and mystical revelations.
+
+player_character: >
+  Adina bat Azriel: A human female Prophetess and Judge, age 35. Tall and statuesque with piercing hazel eyes that seem to see beyond the physical realm. Her long, dark curly hair is often covered with a simple linen head scarf. Wears modest robes befitting her role as a spiritual leader, adorned with subtle embroidery depicting holy symbols. Carries a wooden staff carved with intricate patterns, said to have been blessed by the last of the great prophets. Known for her wisdom, her ability to interpret dreams and visions, and her unwavering faith in the face of adversity.
+
+companions:
+  - Eli ben Yehuda: A human male Warrior-Scribe, age 30. Muscular build tempered by scholarly pursuits. Short brown hair and a neatly trimmed beard frame his thoughtful face. Wears light armor under his scribe's robes and carries both a sword and a set of writing implements. Skilled in combat but prefers to solve problems with words and wisdom. Has a photographic memory and can recall obscure texts at will.
+
+location: >
+  The grand city of Jerusalem, newly established as the capital of the united kingdom of Israel under King Solomon.
+
+story_summary: >
+  The year is 960 BCE, and Israel is experiencing a golden age under the rule of King Solomon. Adina bat Azriel, a prophetess and judge respected for her wisdom and spiritual insights, finds herself at the center of a divine mystery that could shape the future of the kingdom. Accompanied by Eli ben Yehuda, a warrior-scribe with his own unique gifts, Adina must navigate the complex political and spiritual landscape of ancient Israel, interpret cryptic visions, and uncover a plot that threatens not just the kingdom, but the very covenant between God and His people.
+
+important_events:
+  - The completion and dedication of the First Temple in Jerusalem
+  - Adina's first prophetic vision, which brought her to the attention of the royal court
+  - The arrival of the Queen of Sheba, bearing gifts and seeking Solomon's wisdom
+
+active_quests:
+  - Interpret a series of mysterious dreams plaguing King Solomon
+  - Investigate rumors of idol worship among some of Solomon's foreign wives
+  - Seek out and protect an ancient artifact said to date back to the time of Moses
+
+key_npcs:
+  - King Solomon: Wise ruler of Israel, known for his judgment and grand building projects
+  - High Priest Zadok: Leader of the Temple priests, guardian of sacred rituals
+  - Queen of Sheba: Enigmatic foreign ruler visiting Jerusalem
+
+inventory:
+  Adina:
+    - Carved wooden staff
+    - Scroll of prophecies
+    - Small flask of anointing oil
+    - Linen head scarf
+    - Pouch of healing herbs
+  Eli:
+    - Short sword
+    - Writing kit (parchment, ink, quills)
+    - Light armor
+    - Collection of historical scrolls
+    - Signet ring marking him as a royal scribe
+
+party_members:
+  - Adina bat Azriel
+  - Eli ben Yehuda
+
+world_state:
+  - Israel is at the height of its power and influence under King Solomon
+  - The First Temple has recently been completed, centralizing worship in Jerusalem
+  - Trade and diplomatic relations with neighboring kingdoms are flourishing
+  - Tension exists between traditional Israelite practices and foreign influences
+
+factions:
+  - Priests of the Temple: Guardians of religious law and ritual
+  - Royal Court: Advisors and officials surrounding King Solomon
+  - Prophets: Individuals claimed to be chosen by God to deliver messages
+  - Foreign Delegations: Representatives from other nations, some with hidden agendas
+
+time_and_calendar:
+  - Current date: 15th day of Tishrei, 2994 Anno Mundi (960 BCE)
+  - Season: Early autumn, during the Feast of Tabernacles
+  - Time of day: Sunset, as the city prepares for evening prayers
+
+relationships:
+  - Adina and Eli are close friends and partners in their spiritual and scholarly pursuits
+  - Adina has a complex relationship with the Temple priests, who sometimes view her prophetic gifts with suspicion
+  - Eli is trusted by King Solomon for his discretion and knowledge
+
+character_details:
+  Adina bat Azriel:
+    Class: Prophetess and Judge
+    Age: 35
+    Notable features:
+      - Piercing hazel eyes
+      - Long, dark curly hair often covered
+      - Carved wooden staff
+    Skills:
+      - Prophetic visions and dream interpretation
+      - Wisdom and judgment in settling disputes
+      - Knowledge of Jewish law and tradition
+
+  Eli ben Yehuda:
+    Class: Warrior-Scribe
+    Age: 30
+    Notable features:
+      - Muscular build with scholarly bearing
+      - Short brown hair and neat beard
+      - Carries both sword and writing implements
+    Skills:
+      - Combat proficiency, especially with the sword
+      - Photographic memory and vast knowledge of texts
+      - Skilled mediator and diplomat
+
+
+game_world_information:
+  Geography:
+    - United Monarchy of Israel: Spanning from the Euphrates to the border of Egypt
+    - Capital: Jerusalem, site of the royal palace and the Temple under construction
+    - Important cities: Megiddo, Hazor, Gezer (fortified by Solomon)
+    - Neighboring regions: Phoenicia, Philistia, Moab, Ammon, Aram-Damascus, Egypt
+
+  Culture and Society:
+    - Language: Hebrew primarily, with Aramaic used in diplomacy
+    - Religion: Worship of Yahweh centered at the Temple, but influenced by surrounding cultures
+    - Social structure: Tribal system overlaid with royal administration
+    - Economy: Based on agriculture, pastoralism, and increasingly on international trade
+
+  Political Landscape:
+    - Monarchy: Hereditary, with King Solomon as the third king of the United Monarchy
+    - Administrative districts: Twelve districts overseen by appointed governors
+    - International relations: Alliances with Phoenicia and Egypt, tributary states to the north and east
+
+  Religious Practices:
+    - Centralization of worship at the Temple in Jerusalem (under construction)
+    - Annual pilgrimages and festivals: Pesach, Shavuot, Sukkot
+    - Priesthood: Hereditary, responsible for sacrifices and Temple service
+    - Prophets: Individuals believed to be called by Yahweh, often critical of the monarchy
+
+  Intellectual and Cultural Developments:
+    - Wisdom literature: Collection and composition of proverbs, songs, and philosophical works
+    - Architecture: Significant projects including the Temple and royal buildings
+    - Craftsmanship: Advanced metalworking, woodcarving, and textile production
+    - Trade: Exchange of goods and ideas with Egypt, Phoenicia, and as far as Ophir
+
+  Challenges and Tensions:
+    - Balancing traditional Israelite culture with cosmopolitan influences
+    - Maintaining unity among the twelve tribes under centralized rule
+    - Economic strain from large-scale construction projects and lavish court life
+    - Religious syncretism vs. exclusive worship of Yahweh
+
+  Surrounding Powers:
+    - Egypt: Ancient power to the southwest, source of luxury goods and cultural influence
+    - Phoenicia: Coastal civilization known for seafaring and craftsmanship
+    - Philistine city-states: Former enemies, now subdued but maintaining distinct culture
+    - Aramean states: Emerging powers to the north, potential rivals
+
+  Mythology and Beliefs:
+    - Covenant between Yahweh and Israel
+    - Legends of the Exodus and the conquest of Canaan
+    - Belief in divine wisdom and its application in governance
+    - Concepts of ritual purity, sacrifice, and atonement

@@ -1,0 +1,93 @@
+setting: >
+  Feudal Japan, Sengoku period (1467-1615). A time of civil war, political intrigue, and legendary samurai.
+
+player_character: >
+  Akira Moonblade: A human male Samurai, age 28. Tall and lean with a graceful yet powerful build. Long black hair tied in a topknot, with piercing dark eyes that reflect both honor and inner turmoil. A prominent scar runs across his left cheek, a reminder of a duel won but at great cost. Wears traditional samurai armor adorned with his clan's mon (family crest). Carries two swords: a katana passed down through generations and a wakizashi for close combat and ritual use. Known for his exceptional swordsmanship and unwavering loyalty to his lord.
+
+companions:
+  - Yuki Shadowstep: A human female Ninja, age 25. Petite but agile, with short black hair and dark, almond-shaped eyes. Often dressed in dark, form-fitting clothes for stealth. Carries a variety of hidden weapons, including shuriken, kunai, and a short sword. Skilled in espionage, sabotage, and silent elimination. Despite her profession, she has a strong moral code and a soft spot for those in need.
+
+location: >
+  A secluded tea house in the mountain town of Tsuwano, known for its loyalty to traditional samurai values.
+
+story_summary: >
+  The year is 1575, and Japan is torn by civil war. Akira Moonblade, a skilled samurai, finds himself caught between his duty to his lord and his personal beliefs about honor and justice. Accompanied by Yuki Shadowstep, a ninja with her own mysterious agenda, Akira must navigate the treacherous political landscape of feudal Japan while uncovering a plot that threatens to plunge the country into even greater chaos.
+
+important_events:
+  - The Battle of Nagashino, where Akira's lord was defeated
+  - Akira's first encounter with Yuki during a covert mission
+  - The mysterious death of a prominent daimyo, sparking suspicion and unrest
+
+active_quests:
+  - Investigate rumors of a foreign conspiracy to destabilize Japan
+  - Protect a valuable artifact sought by multiple factions
+  - Uncover the truth behind the daimyo's death
+
+key_npcs:
+  - Lord Hideyoshi: Akira's daimyo, ambitious and cunning
+  - Master Tanaka: Akira's former sword instructor, now living as a hermit
+  - Oda Nobunaga: Powerful warlord seeking to unify Japan
+
+inventory:
+  Akira:
+    - Family heirloom katana
+    - Wakizashi
+    - Full set of samurai armor
+    - Calligraphy set
+    - Tea ceremony implements
+  Yuki:
+    - Set of throwing stars (shuriken)
+    - Kunai knives
+    - Grappling hook and rope
+    - Smoke bombs
+    - Disguise kit
+
+party_members:
+  - Akira Moonblade
+  - Yuki Shadowstep
+
+world_state:
+  - Japan is divided among warring daimyo, each vying for supremacy
+  - The arrival of European traders and missionaries is causing social upheaval
+  - Traditional samurai values clash with the changing nature of warfare
+
+factions:
+  - Oda Clan: Powerful faction led by Oda Nobunaga, seeking to unify Japan
+  - Takeda Clan: Once-powerful clan now in decline after recent defeats
+  - Iga Ninja: Secretive organization of shinobi, with their own agenda
+  - Ikko-ikki: Buddhist militant groups opposing samurai rule
+
+time_and_calendar:
+  - Current date: 7th day of the 9th month, Tensho 3 (1575)
+  - Season: Early autumn
+  - Time of day: Dusk, as Akira and Yuki prepare for a clandestine meeting
+
+relationships:
+  - Akira and Yuki are reluctant allies, their partnership born of necessity
+  - Akira feels conflicted about his loyalty to Lord Hideyoshi
+  - Yuki has connections within the Iga Ninja network
+
+character_details:
+  Akira Moonblade:
+    Class: Samurai
+    Age: 28
+    Notable features:
+      - Scar across left cheek
+      - Family mon (crest) on armor
+      - Exceptional swordsmanship skills
+    Skills:
+      - Master of iaijutsu (quick-draw technique)
+      - Skilled in bushido philosophy and etiquette
+      - Proficient in mounted combat
+
+  Yuki Shadowstep:
+    Class: Ninja
+    Age: 25
+    Notable features:
+      - Agile and acrobatic
+      - Arsenal of hidden weapons
+      - Ability to blend into shadows
+    Skills:
+      - Expert in stealth and infiltration
+      - Skilled in poison craft and use
+      - Proficient in information gathering and espionage

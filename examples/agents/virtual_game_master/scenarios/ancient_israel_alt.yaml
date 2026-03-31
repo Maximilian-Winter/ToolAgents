@@ -1,0 +1,122 @@
+setting: >
+  Ancient Israel, circa 970-931 BCE, during the reign of King Solomon. This is a time of peace and prosperity for the United Monarchy of Israel, marked by significant construction projects, international trade, and cultural development. The world is shaped by the beliefs and practices of ancient Near Eastern cultures, with the worship of Yahweh at its center in Israel.
+
+player_character: >
+  Adina, a young scribe from a respected Levite family, recently appointed to the royal court of King Solomon.
+
+companions:
+  - Zuriel: A seasoned captain in Solomon's army
+  - Tamar: A skilled artisan working on the construction of the First Temple
+  - Ehud: A merchant with connections throughout the known world
+
+location: >
+  The royal palace in Jerusalem, the capital of the United Monarchy of Israel
+
+story_summary: >
+  As a newly appointed scribe in King Solomon's court, Adina is thrust into a world of political intrigue, spiritual significance, and cultural exchange. The kingdom is at its height, with the construction of the First Temple underway and diplomatic ties extending to Egypt, Phoenicia, and beyond. However, tensions simmer beneath the surface as some question Solomon's policies and foreign influences on Israelite culture.
+
+important_events:
+  - King Solomon's ascension to the throne
+  - The beginning of the First Temple's construction
+  - Recent trade agreement with Hiram of Tyre
+  - The famous judgment of Solomon, demonstrating his wisdom
+
+active_quests:
+  - Main Quest: Assist in the compilation of Solomon's proverbs and writings
+  - Side Quest: Investigate rumors of discord among the twelve tribes
+  - Side Quest: Help acquire rare materials for the Temple's construction
+
+key_npcs:
+  - King Solomon: Ruler of Israel, known for his wisdom and diplomatic skills
+  - Bathsheba: Queen Mother, influential in court politics
+  - Hiram of Tyre: Phoenician king and ally in the Temple's construction
+  - High Priest Zadok: Leader of the religious establishment
+
+inventory:
+  - Scribal kit (parchment, inkwells, reed pens)
+  - Official seal of a royal scribe
+  - Copy of the Torah scrolls
+
+special_items:
+  - Amulet of wisdom: A gift from King Solomon, said to enhance the wearer's judgment
+  - Map of Solomon's kingdom and known world
+
+party_members:
+  - Adina (player character)
+
+world_state:
+  - Israel is at the height of its power and influence in the region
+  - The First Temple is under construction, symbolizing the nation's spiritual and political unity
+  - International trade is flourishing, bringing wealth and foreign influences
+  - Tensions exist between traditional Yahwism and exposure to foreign cultures and beliefs
+
+factions:
+  - Royal Court: King Solomon's inner circle and government officials
+  - Priesthood: Led by Zadok, responsible for religious affairs and Temple service
+  - Merchant Guild: Influential in international trade and economy
+  - Prophets: Independent spiritual leaders, sometimes critical of the monarchy
+  - Foreign Allies: Including Phoenicians, Egyptians, and other neighboring states
+
+time_and_calendar:
+  - Current date: 15th day of Ziv (2nd month), 20th year of Solomon's reign
+  - Season: Spring
+  - Time of day: Morning
+
+relationships:
+  - Adina and King Solomon: Respectful, with Adina in awe of the king's wisdom
+  - Adina and High Priest Zadok: Formal, based on Adina's Levite heritage
+  - Adina and foreign diplomats: Cautious but curious about other cultures
+
+character_details:
+  Adina:
+    - Skills: Literacy in Hebrew and Aramaic, knowledge of law and history, diplomatic etiquette
+    - Weaknesses: Inexperience in court politics, conflicted about foreign influences
+    - Goals: Serve the king faithfully, preserve Israelite traditions, expand knowledge
+
+game_world_information:
+  Geography:
+    - United Monarchy of Israel: Spanning from the Euphrates to the border of Egypt
+    - Capital: Jerusalem, site of the royal palace and the Temple under construction
+    - Important cities: Megiddo, Hazor, Gezer (fortified by Solomon)
+    - Neighboring regions: Phoenicia, Philistia, Moab, Ammon, Aram-Damascus, Egypt
+
+  Culture and Society:
+    - Language: Hebrew primarily, with Aramaic used in diplomacy
+    - Religion: Worship of Yahweh centered at the Temple, but influenced by surrounding cultures
+    - Social structure: Tribal system overlaid with royal administration
+    - Economy: Based on agriculture, pastoralism, and increasingly on international trade
+
+  Political Landscape:
+    - Monarchy: Hereditary, with King Solomon as the third king of the United Monarchy
+    - Administrative districts: Twelve districts overseen by appointed governors
+    - International relations: Alliances with Phoenicia and Egypt, tributary states to the north and east
+
+  Religious Practices:
+    - Centralization of worship at the Temple in Jerusalem (under construction)
+    - Annual pilgrimages and festivals: Pesach, Shavuot, Sukkot
+    - Priesthood: Hereditary, responsible for sacrifices and Temple service
+    - Prophets: Individuals believed to be called by Yahweh, often critical of the monarchy
+
+  Intellectual and Cultural Developments:
+    - Wisdom literature: Collection and composition of proverbs, songs, and philosophical works
+    - Architecture: Significant projects including the Temple and royal buildings
+    - Craftsmanship: Advanced metalworking, woodcarving, and textile production
+    - Trade: Exchange of goods and ideas with Egypt, Phoenicia, and as far as Ophir
+
+  Challenges and Tensions:
+    - Balancing traditional Israelite culture with cosmopolitan influences
+    - Maintaining unity among the twelve tribes under centralized rule
+    - Economic strain from large-scale construction projects and lavish court life
+    - Religious syncretism vs. exclusive worship of Yahweh
+
+  Surrounding Powers:
+    - Egypt: Ancient power to the southwest, source of luxury goods and cultural influence
+    - Phoenicia: Coastal civilization known for seafaring and craftsmanship
+    - Philistine city-states: Former enemies, now subdued but maintaining distinct culture
+    - Aramean states: Emerging powers to the north, potential rivals
+
+  Mythology and Beliefs:
+    - Covenant between Yahweh and Israel
+    - Legends of the Exodus and the conquest of Canaan
+    - Belief in divine wisdom and its application in governance
+    - Concepts of ritual purity, sacrifice, and atonement

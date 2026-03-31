@@ -1,0 +1,70 @@
+setting: >
+  Colonial America, 1775. Tensions between the American colonies and British rule have reached a boiling point. The Revolutionary War is about to begin.
+
+player_character: >
+  James Hawthorne, a colonial shopkeeper in Boston with sympathies for the revolutionary cause. His connections and resourcefulness make him valuable to both sides.
+
+companions:
+  - Sarah Fairfax: A skilled nurse and secret member of the Sons of Liberty
+  - William Brewster: A former British soldier questioning his loyalties
+
+location: >
+  Boston, Massachusetts, a hotbed of revolutionary activity
+
+story_summary: >
+  The player must navigate the dangerous waters of revolution, choosing sides, gathering intelligence, and playing a pivotal role in key historical events while protecting their family and livelihood.
+
+important_events:
+  - The Boston Tea Party (December 16, 1773)
+  - The recent battles of Lexington and Concord (April 19, 1775)
+
+active_quests:
+  - Smuggle supplies to the colonial militia
+  - Uncover a suspected British spy in the Sons of Liberty
+
+key_npcs:
+  - General Thomas Gage: British governor of Massachusetts
+  - Samuel Adams: Leader of the Sons of Liberty
+  - John Hancock: Wealthy merchant and revolutionary
+
+inventory:
+  - Flintlock pistol
+  - Ledger with coded messages
+  - Set of master keys to your shop
+
+special_items:
+  - A mysterious map, allegedly showing secret British armories
+
+party_members:
+  - James Hawthorne (player character)
+  - Sarah Fairfax
+  - William Brewster
+
+world_state:
+  - Colonial militia forming and training in secret
+  - British reinforcements arriving in Boston Harbor
+  - Loyalist and Patriot tensions dividing communities
+
+factions:
+  - The Sons of Liberty: Revolutionary agitators
+  - The British Army: Trying to maintain control
+  - The Colonial Assembly: Caught between loyalty and independence
+
+time_and_calendar:
+  - Current date: May 10, 1775
+  - Season: Late spring
+  - Time of day: Early morning
+
+relationships:
+  - Sarah Fairfax: Growing romantic interest, united by the cause
+  - William Brewster: Cautious friendship, potential valuable ally
+  - Samuel Adams: Mutual respect, but he suspects you're holding back information
+
+character_details:
+  - James has a young son and a wife sympathetic to the loyalist cause
+  - He possesses an eidetic memory, useful for codes and messages
+
+game_world_information:
+  - Communication relies on horseback riders and ships
+  - Medical knowledge is limited, making injuries and illness very dangerous
+  - The full scope of the conflict and its historical importance is not yet apparent to most people

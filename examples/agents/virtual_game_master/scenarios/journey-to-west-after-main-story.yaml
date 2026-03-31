@@ -1,0 +1,98 @@
+setting: >
+  Ancient China and the mythical realms beyond, during the Tang Dynasty (618-907 CE). A world where reality blends with legend, populated by humans, celestial beings, demons, and magical creatures. The great monk Xuanzang has already completed his journey to India and returned with the Buddhist scriptures, but his tale has inspired many to follow in his footsteps.
+
+player_character: >
+  Sun Mei: A female Monkey Spirit, age unknown (appears to be in her early 20s). A disciple of the legendary Sun Wukong, she shares his mischievous nature and incredible abilities. Sun Mei has golden fur that she can transform into human skin at will, bright amber eyes that sparkle with curiosity, and a lithe, acrobatic build. She wears a magical circlet that helps control her sometimes impulsive nature. Carries a shape-shifting staff similar to her master's Ruyi Jingu Bang. Known for her quick wit, martial prowess, and ability to cloud-somersault across vast distances.
+
+companions:
+  - Zhu Bajie Jr.: A male Pig Spirit, age 150 (young for his kind). Son of the famous Zhu Bajie, he inherited his father's appetite and charm, but strives to be more disciplined. Stout and pink-skinned in his true form, he can transform into a handsome young man. Wields a magic rake and is skilled in both combat and sweet-talking his way out of trouble.
+
+location: >
+  The base of Mount Huaguo, where Sun Wukong's Flower Fruit Mountain once stood. Now it serves as a training ground for aspiring hero-disciples seeking to emulate the great journey to the West.
+
+story_summary: >
+  In the centuries following Xuanzang's famous journey, many have sought to replicate his pilgrimage and achieve enlightenment. Sun Mei, a disciple of the legendary Monkey King, and Zhu Bajie Jr., son of Zhu Bajie, have been tasked with guiding a young monk on a perilous journey to retrieve a set of lost sutras. Their path will take them through earthly kingdoms and celestial realms, facing demons, trickster gods, and their own inner demons. As they travel, they must also uncover the truth behind a growing darkness that threatens to unbalance the harmony between Heaven and Earth.
+
+important_events:
+  - Sun Mei's training under Sun Wukong, learning the secrets of immortality and transformation
+  - Zhu Bajie Jr.'s decision to follow a righteous path, differing from his father's initial reluctance
+  - The recent disappearance of several guardian spirits from their celestial posts
+
+active_quests:
+  - Escort the young monk Mingxin to retrieve the lost Sutras of Harmony
+  - Investigate the vanishing of celestial guardians along the western heavenly gates
+  - Locate and secure the Heavenly Peach Orchard, which has mysteriously gone missing
+
+key_npcs:
+  - Mingxin: The young monk under Sun Mei and Zhu Bajie Jr.'s protection
+  - Guanyin: The Bodhisattva of Compassion, who sets the heroes on their quest
+  - The Jade Emperor: Ruler of Heaven, concerned about the growing imbalance
+
+inventory:
+  Sun Mei:
+    - Shape-shifting staff (like the Ruyi Jingu Bang)
+    - Magical circlet to control impulsive behavior
+    - Heavenly robe that grants limited invulnerability
+    - Bag of infinite holding (a gift from her master)
+    - Elixir of cloud-walking
+  Zhu Bajie Jr.:
+    - Nine-toothed rake with earth-moving powers
+    - Gourd of wine that never empties
+    - Bag of infinite snacks
+    - Disguise kit for enhanced transformations
+    - Lucky coin for making difficult decisions
+
+party_members:
+  - Sun Mei
+  - Zhu Bajie Jr.
+  - Mingxin (NPC under protection)
+
+world_state:
+  - The mortal world is largely at peace, but unaware of growing celestial troubles
+  - Demons and spirits roam the earth, some friendly, others hostile
+  - The balance between Heaven and Earth is subtly shifting, causing concern among immortals
+  - Xuanzang's journey has become legendary, inspiring many to seek spiritual enlightenment
+
+factions:
+  - Heavenly Court: The celestial bureaucracy ruling over gods and immortals
+  - Buddhist Paradise: Realm of enlightened beings, source of spiritual knowledge
+  - Demon Clans: Various groups of supernatural beings, not all of them evil
+  - Mortal Kingdoms: Human realms, often caught between celestial conflicts
+
+time_and_calendar:
+  - Current date: 15th day of the 7th lunar month, 712 CE (Tang Dynasty)
+  - Season: Mid-summer
+  - Time of day: Dawn, as the party prepares to set out on their journey
+
+relationships:
+  - Sun Mei sees Zhu Bajie Jr. as a comedic foil but trusts his heart
+  - Both feel protective of Mingxin, though Sun Mei often teases him
+  - Sun Mei has a complex relationship with her master, Sun Wukong, admiring yet trying to surpass him
+  - Zhu Bajie Jr. seeks to redeem his family name among the celestial courts
+
+character_details:
+  Sun Mei:
+    Class: Immortal Monkey Spirit
+    Age: Unknown (appears early 20s)
+    Notable features:
+      - Golden fur (in true form)
+      - Bright amber eyes
+      - Magical circlet
+    Skills:
+      - Shape-shifting (72 transformations)
+      - Cloud-somersault (fast travel)
+      - Immense strength and durability
+      - Mastery of Monkey Kung Fu
+
+  Zhu Bajie Jr.:
+    Class: Celestial Pig Spirit
+    Age: 150
+    Notable features:
+      - Stout pink-skinned pig form
+      - Handsome human transformation
+      - Disarming smile
+    Skills:
+      - Earth manipulation with magic rake
+      - Supernatural charm and persuasion
+      - Enhanced durability and strength
+      - Keen sense of smell for tracking

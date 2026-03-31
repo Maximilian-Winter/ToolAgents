@@ -1,0 +1,96 @@
+setting: >
+  Modern-day Earth, specifically centered in New York City, 2024. Beneath the surface of the mundane world lies a hidden society of mages, magical creatures, and otherworldly beings. Magic in this world is diverse and powerful, ranging from elemental manipulation to reality warping. The magical world exists in parallel to the mundane, with certain locations serving as crossover points between the two realities.
+
+player_character: >
+  Zoe Nightshade: A human female Archmage, age 28. Tall and lean with vibrant purple hair that seems to shimmer with arcane energy. Her eyes change color based on the type of magic she's channeling. Wears modern clothing with subtle magical enhancements - a leather jacket that provides magical shielding, boots that allow silent movement, and numerous enchanted rings and amulets. Carries a staff disguised as an umbrella, which acts as a focus for her spells. Known for her innovative approach to magic, blending traditional techniques with modern technology.
+
+companions:
+  - Alex Shadowborn: A male half-fae Technomancer, age 25. Slender build with silver hair and pointed ears that are usually hidden by glamour. His left eye is replaced by a magical cybernetic implant that allows him to see magical auras and interface with both mundane and magical technology. Wears smart casual attire filled with hidden gadgets. Carries a tablet that doubles as a spellbook and hacking device. Specializes in bridging the gap between magic and technology.
+
+location: >
+  The Nexus, a skyscraper in the heart of Manhattan that appears as a normal office building to mundane eyes but serves as a major hub for the magical community. It houses everything from magical research facilities to interdimensional portals.
+
+story_summary: >
+  In 2024, the delicate balance between the mundane and magical worlds is threatened by a series of reality-warping events that are causing the two to bleed into each other. Zoe Nightshade, a brilliant Archmage, and Alex Shadowborn, an innovative Technomancer, must uncover the source of these disturbances while preventing mass panic in the mundane world. Their investigation will lead them through the hidden magical underbelly of New York City, into pocket dimensions, and perhaps even to the shores of other realms. As they race against time, they must also navigate the complex politics of various magical factions, each with their own agenda for how to handle the growing crisis.
+
+important_events:
+  - The recent appearance of a dragon over Central Park, which was barely contained and covered up
+  - Zoe's groundbreaking research on blending ley line energy with modern power grids
+  - Alex's creation of a app that allows magical beings to navigate safely in the mundane world
+
+active_quests:
+  - Investigate the source of the reality-warping events threatening to expose the magical world
+  - Retrieve a powerful artifact stolen from the Nexus vault, believed to be connected to the disturbances
+  - Negotiate a treaty between warring factions of Manhattan's magical underworld to present a united front against the crisis
+
+key_npcs:
+  - Madame Vesper: The enigmatic head of the Council of Mages, who assigns missions to Zoe and Alex
+  - Dr. Elias Grimm: A brilliant but amoral thaumaturge, suspected of involvement in the reality-warping events
+  - Officer Sarah Chen: A mundane NYPD detective who's getting dangerously close to uncovering the magical world
+
+inventory:
+  Zoe:
+    - Staff disguised as an umbrella (magical focus)
+    - Enchanted leather jacket (magical shield)
+    - Boots of silent movement
+    - Rings of elemental attunement
+    - Smartphone with encrypted magical apps
+  Alex:
+    - Tablet spellbook/hacking device
+    - Magical cybernetic eye implant
+    - Techno-magical multi-tool
+    - Wand disguised as a stylus
+    - Enchanted earbuds for universal translation
+
+party_members:
+  - Zoe Nightshade
+  - Alex Shadowborn
+
+world_state:
+  - The magical world exists parallel to the mundane, with strict laws governing interaction
+  - Technology and magic are increasingly intertwined, leading to new forms of spellcasting and magical innovation
+  - Reality-warping events are causing increased instances of magical exposure to the mundane world
+  - Various magical factions vie for power and influence within the hidden society
+
+factions:
+  - Council of Mages: The governing body of the magical world, striving to maintain secrecy and order
+  - Technomancer's Guild: A progressive group pushing for greater integration of magic and technology
+  - The Veiled: A secretive organization dedicated to policing the boundary between magical and mundane
+  - Fae Courts: Ancient and powerful, the Seelie and Unseelie courts extend their influence into the modern world
+
+time_and_calendar:
+  - Current date: June 15, 2024
+  - Season: Early summer
+  - Time of day: Midnight, when magical energy is at its peak in the city
+
+relationships:
+  - Zoe and Alex are close friends and partners, their skills complementing each other
+  - Zoe has a mentor-student relationship with Madame Vesper, though she sometimes chafes under the Council's restrictions
+  - Alex has connections in both the magical and mundane tech industries, walking a fine line between two worlds
+
+character_details:
+  Zoe Nightshade:
+    Class: Archmage
+    Age: 28
+    Notable features:
+      - Vibrant purple hair shimmering with arcane energy
+      - Color-changing eyes
+      - Modern clothing with magical enhancements
+    Skills:
+      - Master of multiple schools of magic
+      - Innovative spell creation
+      - Expert in ley line manipulation
+      - Skilled in magical theory and research
+
+  Alex Shadowborn:
+    Class: Technomancer
+    Age: 25
+    Notable features:
+      - Silver hair and pointed ears (usually glamoured)
+      - Magical cybernetic left eye
+      - Smart casual attire with hidden gadgets
+    Skills:
+      - Magical-technical integration specialist
+      - Expert hacker of both mundane and magical systems
+      - Fae charm and illusion magic
+      - Inventor of techno-magical devices

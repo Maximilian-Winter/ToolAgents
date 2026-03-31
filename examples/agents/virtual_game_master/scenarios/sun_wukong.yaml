@@ -1,0 +1,161 @@
+setting: >
+  The world of Journey to the West: Ancient China during a mythical age before the Tang Dynasty. The world is filled with demons, spirits, and magical creatures, alongside mortal kingdoms. Daoist and Buddhist philosophies shape the spiritual landscape.
+
+player_character: >
+  Sun Wukong, the Monkey King, born from a stone on the Mountain of Flowers and Fruit. Recently completed his training under the Patriarch Subhuti, mastering the 72 transformations and cloud somersaulting.
+
+companions:
+  - None yet, but potential to meet and befriend various characters from Chinese mythology
+
+location: >
+  Outside the cave of the Patriarch Subhuti on the Mountain of Sloped Ears, where Sun Wukong has just completed his training
+
+story_summary: >
+  Sun Wukong, born from a stone, became king of the monkeys on the Mountain of Flowers and Fruit. Seeking immortality and power, he traveled to learn from the Patriarch Subhuti. Having mastered incredible abilities, including the 72 transformations and cloud somersaulting, Sun Wukong is now ready to return to his kingdom and explore the world with his newfound powers.
+
+important_events:
+  - Sun Wukong's birth from a stone
+  - Becoming king of the monkeys
+  - Journey to find a master
+  - Training under Patriarch Subhuti
+  - Mastery of the 72 transformations and cloud somersaulting
+
+active_quests:
+  - Main Quest: Return to the Mountain of Flowers and Fruit
+  - Side Quest: Test and explore newly acquired powers
+  - Side Quest: Seek a powerful weapon worthy of the Monkey King
+
+key_npcs:
+  - Patriarch Subhuti: Sun Wukong's Daoist teacher
+  - Elder Monkey: Caretaker of Sun Wukong's kingdom in his absence
+  - Dragon Kings of the Four Seas: Potential allies or adversaries
+
+inventory:
+  - Simple monk's robe gifted by Subhuti
+  - Bag of immortal peaches (a parting gift from Subhuti)
+
+special_items:
+  - None yet, but quest to find the Ruyi Jingu Bang (magical staff) could be imminent
+
+party_members:
+  - Sun Wukong (solo at this point)
+
+world_state:
+  - The Celestial Court is unaware of Sun Wukong's existence
+  - Balance between human world, celestial realm, and demon world is delicate
+  - Immortals and demons frequently interact with the mortal world
+
+factions:
+  - Monkey Tribe of the Mountain of Flowers and Fruit: Sun Wukong's loyal subjects
+  - Celestial Court: Ruling body of Heaven, yet to encounter Sun Wukong
+  - Various Demon Clans: Potential allies or enemies scattered across the world
+
+time_and_calendar:
+  - Current date: 15th day of the 8th month, Year of the Monkey
+  - Season: Autumn
+  - Time of day: Dawn
+
+relationships:
+  - Sun Wukong and Patriarch Subhuti: Student-teacher, respectful but now concluded
+  - Sun Wukong and Monkey Tribe: Beloved king, absent for years
+  - Sun Wukong and wider world: Largely unknown, full of potential for both alliances and conflicts
+
+character_details:
+  Sun Wukong:
+    - Abilities: 72 transformations, cloud somersaulting, superhuman strength, immortality
+    - Weaknesses: Overconfidence, inexperience with the wider world, potential for arrogance
+    - Goals: Establish himself as a great power, protect his monkey subjects, explore the limits of his abilities
+
+game_world_information:
+  Cosmic Structure:
+    - The universe is divided into three main realms: Heaven, Earth, and the Underworld
+    - These realms are interconnected, with certain locations serving as crossing points
+    - The cosmos is believed to be shaped like a giant egg, with Heaven at the top, Earth in the middle, and the Underworld at the bottom
+    - Mount Sumeru stands as the cosmic axis, connecting all realms
+
+  Earth Realm:
+    - Composed of the Four Continents surrounded by the Four Seas
+    - Penglai Island: A mystical land of immortals located in the Eastern Sea
+    - Mountains play significant roles as dwellings of immortals and demons:
+      - Mount Huaguo: Home of the Monkey Kingdom
+      - Flame Mountain: An impassable fiery mountain
+      - Mount Lingshan: The destination of the Journey to the West, where Buddha resides
+    - Various kingdoms of mortals, each with their own rulers and customs
+
+  Heavenly Realm:
+    - The Celestial Court: Bureaucratic structure governing the cosmos
+    - Thirty-Three Heavens: Different levels of Heaven, each with specific purposes
+    - Important locations:
+      - Lingxiao Palace: Residence of the Jade Emperor
+      - Tongming Palace: Where celestial meetings are held
+      - Peach Garden: Where the immortality peaches grow
+
+  Underworld:
+    - Ruled by the Ten Yama Kings, who judge the souls of the deceased
+    - The Eighteen Levels of Hell, each designed for specific punishments
+    - The River of Forgetfulness, which souls cross before reincarnation
+
+  Races and Beings:
+    Immortals:
+      - Celestial beings who have achieved immortality through cultivation or divine birth
+      - Categorized into various ranks and roles within the Celestial Court
+      - Possess magical abilities and extended lifespans
+
+    Humans:
+      - Mortal inhabitants of Earth, capable of cultivation to become immortals
+      - Diverse cultures and kingdoms across the Four Continents
+      - Some humans possess magical abilities or martial arts skills
+
+    Demons:
+      - Varied species of supernatural beings, often shapeshifters
+      - Can be benevolent or malevolent, with many seeking to cultivate immortality
+      - Some are fallen celestials, others are transformed animals or forces of nature
+
+    Animals:
+      - Many animals in this world have the potential to gain sentience and magical powers
+      - After centuries of cultivation, animals can take human form and gain immense powers
+      - Examples include Sun Wukong (monkey), Zhu Bajie (pig), and the Dragon Kings
+
+    Spirits:
+      - Ethereal beings associated with natural phenomena, objects, or deceased individuals
+      - Can range from minor nature spirits to powerful deities of mountains and rivers
+
+  Major Deities and Figures:
+    Buddhist Pantheon:
+      - Gautama Buddha: The supreme Buddha, dwells in the Western Paradise
+      - Guanyin: Bodhisattva of Compassion, often intervenes in mortal affairs
+      - Maitreya Buddha: The future Buddha, known for his jovial appearance
+
+    Daoist Pantheon:
+      - Three Pure Ones: Highest deities in Daoism
+      - Eight Immortals: Legendary figures with unique abilities
+      - Celestial Masters: Powerful Daoist cultivators and teachers
+
+    Celestial Court:
+      - Jade Emperor: Supreme ruler of Heaven
+      - Queen Mother of the West: Goddess of immortality
+      - Nezha: Powerful child deity, famous for his rebellion
+      - Erlang Shen: God of engineering and river management, nephew of the Jade Emperor
+
+    Other Significant Beings:
+      - Dragon Kings of the Four Seas: Control weather and water bodies
+      - Yama Kings: Judges of the dead in the Underworld
+      - Great Sage Equalling Heaven: Sun Wukong's future title
+
+  Magical Concepts:
+    - Qi: The fundamental energy of the universe, used in cultivation and magic
+    - Yin and Yang: The balance of opposing forces that govern the cosmos
+    - Five Elements: Wood, Fire, Earth, Metal, and Water, which form the basis of many magical systems
+    - Cultivation: The practice of refining one's essence to achieve immortality and magical powers
+
+  Artifacts and Treasures:
+    - Ruyi Jingu Bang: Sun Wukong's future weapon, currently in the Dragon King's palace
+    - Immortality Peaches: Magical fruits that grant extended life or immortality
+    - Elixir of Immortality: Refined by deities, grants eternal life
+    - Compliant Golden-Hooped Rod: Zhu Bajie's weapon
+    - Monk's Spade: Sha Wujing's weapon
+
+  Cosmic Laws:
+    - Karma and Reincarnation: Actions in one life determine future rebirths
+    - Heavenly Mandate: The right to rule granted by Heaven
+    - Cosmic Balance: Maintained by various deities and enforced by the Celestial Court

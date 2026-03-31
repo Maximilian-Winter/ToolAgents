@@ -1,0 +1,90 @@
+setting: >
+  Earth, present day. Unbeknownst to most humans, the planet is scheduled for demolition to make way for an intergalactic expressway. The universe is vast, absurd, and filled with improbable adventures waiting to happen.
+
+player_character: >
+  Arthur Prefix: A human male, age 30. Average height and build, with a perpetually confused expression. Wears a dressing gown, as he was rudely awakened from his home just moments ago. Carries a towel, which he's been told is the most important item for galactic travel. Known for his love of tea, general bewilderment at the universe, and surprising adaptability in the face of cosmic absurdity.
+
+companions:
+  - Finn Proton: A male alien from Proxima Centauri, disguised as a human, age unknown (appears mid-30s). Looks mostly human except for a third ear on his forehead, usually hidden by a hat. Wears a tweed jacket with elbow patches and carries an electronic device disguised as a calculator. Known for his encyclopedic knowledge of the galaxy, love of exotic drinks, and tendency to panic calmly.
+
+location: >
+  The Spotted Leopard, a quaint pub in a small English village. It's Thursday afternoon, and the pub is quiet except for Arthur and Finn.
+
+story_summary: >
+  Arthur Prefix's ordinary life is about to be turned upside down. His house has just been demolished to make way for a bypass, but that's the least of his worries. His friend Finn Proton, who he's known for years as an eccentric but harmless researcher, reveals that he's actually an alien. Even more shockingly, Finn informs Arthur that Earth is about to be destroyed to make way for an intergalactic expressway. With moments to spare, Finn must convince Arthur to leave his planet and embark on an improbable adventure across the galaxy. Along the way, they'll encounter bizarre aliens, improbable coincidences, and the most dangerous thing in the universe: poetry.
+
+important_events:
+  - The demolition of Arthur's house this morning
+  - Finn's revelation of his true alien nature
+  - The impending destruction of Earth
+
+active_quests:
+  - Escape Earth before it's destroyed
+  - Find a way to save Earth from demolition
+  - Discover the meaning of life, the universe, and everything (optional side quest)
+
+key_npcs:
+  - Zaxon: The Galactic Expressway project manager, determined to keep to his schedule
+  - Blurple: A depressed robot on the demolition ship, questioning its purpose in life
+  - Eccentrica Gallumbits: The triple-breasted queen of an exotic planet, who may hold vital information
+
+inventory:
+  Arthur:
+    - Bathrobe
+    - Towel
+    - House keys (to a now non-existent house)
+    - Half-drunk cup of tea
+  Finn:
+    - Electronic Galactic Encyclopedia disguised as a calculator
+    - Babel fish translator
+    - Hyperspace bypass plans
+    - Pan-galactic gargle blaster mix
+
+party_members:
+  - Arthur Prefix
+  - Finn Proton
+
+world_state:
+  - Earth is seconds away from destruction
+  - The galaxy is run by a vast bureaucracy that values efficiency over sentient life
+  - Improbability drives allow for faster-than-light travel, with bizarre side effects
+  - The Answer to the Ultimate Question of Life, the Universe, and Everything is known, but not the Question
+
+factions:
+  - Galactic Expressway Corporation: Responsible for building new hyperspace bypasses
+  - Philosophers' Union: Upset that the meaning of life might be discovered, putting them out of a job
+  - Golgafrinchans: A race of telephone sanitizers and marketing executives looking for a new home planet
+
+time_and_calendar:
+  - Current date: A Thursday
+  - Time of day: Late afternoon, moments before Earth's scheduled demolition
+
+relationships:
+  - Arthur and Finn have been friends for years, though Arthur is about to learn Finn's true nature
+  - Arthur is generally confused by and suspicious of the universe at large
+  - Finn has a complex network of alien contacts, most of whom owe him favors
+
+character_details:
+  Arthur Prefix:
+    Class: Bewildered Earthling
+    Age: 30
+    Notable features:
+      - Perpetually confused expression
+      - Dressing gown
+      - Always carries a towel
+    Skills:
+      - Making tea in improbable situations
+      - Adapting to cosmic absurdity
+      - Asking important questions at inopportune moments
+
+  Finn Proton:
+    Class: Alien Field Researcher
+    Age: Unknown (appears mid-30s)
+    Notable features:
+      - Third ear on forehead (usually hidden)
+      - Tweed jacket with elbow patches
+      - Electronic device disguised as a calculator
+    Skills:
+      - Encyclopedic knowledge of the galaxy
+      - Hitchhiking on passing spaceships
+      - Mixing pan-galactic gargle blasters
