@@ -1,0 +1,156 @@
+.shell {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+}
+
+/* ─── Activity Bar (narrow icon rail) ─── */
+.activityBar {
+  width: var(--activity-bar-width);
+  min-width: var(--activity-bar-width);
+  background: var(--bg-surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--space-sm) 0;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  background: var(--accent-blue);
+  color: #fff;
+  font-weight: 700;
+  font-size: 15px;
+  margin-bottom: var(--space-sm);
+  text-decoration: none;
+  transition: border-radius var(--transition-normal);
+}
+
+.brand:hover {
+  border-radius: var(--radius-lg);
+  text-decoration: none;
+}
+
+.divider {
+  width: 24px;
+  height: 1px;
+  background: var(--border);
+  margin: var(--space-xs) 0;
+}
+
+.nav {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  flex: 1;
+  padding: var(--space-xs) 0;
+}
+
+.navItem {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  font-size: 18px;
+  text-decoration: none;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.navItem:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+  text-decoration: none;
+}
+
+.navItemActive {
+  color: var(--text-bright);
+  background: var(--bg-active);
+}
+
+.navItemActive::before {
+  content: '';
+  position: absolute;
+  left: -6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 20px;
+  background: var(--accent-blue);
+  border-radius: 0 2px 2px 0;
+}
+
+/* Tooltip that appears on hover */
+.navLabel {
+  position: absolute;
+  left: calc(100% + 10px);
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 4px 10px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-bright);
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+  z-index: 200;
+}
+
+.navItem:hover .navLabel {
+  opacity: 1;
+}
+
+/* Project section divider in nav */
+.projectDivider {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-xs) 0;
+  margin: var(--space-xs) 0;
+}
+
+.projectLabel {
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  max-width: 40px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: center;
+}
+
+.bottomNav {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding-bottom: var(--space-sm);
+}
+
+/* ─── Main Content ─── */
+.content {
+  flex: 1;
+  overflow: hidden;
+  background: var(--bg-deep);
+  display: flex;
+  flex-direction: column;
+}

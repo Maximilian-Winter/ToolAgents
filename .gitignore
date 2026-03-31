@@ -95,3 +95,4 @@ skills_docs/adding-skills-support.md
 skills_docs/specification.md
 skills_docs/what-are-skills.md
 claude_agent_sdk/
+/examples/agents/virtual_game_master/agora.db

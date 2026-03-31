@@ -1,0 +1,43 @@
+.section {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.danger {
+  border-color: rgba(224, 96, 112, 0.3);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-md) var(--space-lg);
+  border-bottom: 1px solid var(--border);
+}
+
+.title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-bright);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.dangerTitle {
+  color: var(--accent-red);
+}
+
+.description {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.body {
+  padding: var(--space-lg);
+}

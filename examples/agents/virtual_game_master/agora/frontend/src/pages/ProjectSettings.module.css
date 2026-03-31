@@ -1,0 +1,85 @@
+.page {
+  padding: var(--space-xl) var(--space-2xl);
+  max-width: 640px;
+  overflow-y: auto;
+  height: 100%;
+}
+
+.sectionGap {
+  margin-bottom: var(--space-xl);
+}
+
+.fieldGroup {
+  margin-bottom: var(--space-lg);
+}
+
+.slugMono {
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.success {
+  color: var(--accent-green);
+  font-size: 12px;
+  padding: var(--space-sm) var(--space-md);
+  background: rgba(126, 207, 106, 0.1);
+  border-radius: var(--radius-sm);
+}
+
+.error {
+  color: var(--accent-red);
+  font-size: 12px;
+  padding: var(--space-sm) var(--space-md);
+  background: rgba(224, 96, 112, 0.1);
+  border-radius: var(--radius-sm);
+  margin-top: var(--space-sm);
+}
+
+.actions {
+  display: flex;
+  gap: var(--space-sm);
+  margin-top: var(--space-sm);
+}
+
+/* ─── Data Management ─── */
+.dataBlock {
+  margin-bottom: var(--space-lg);
+}
+
+.dataBlock:last-child {
+  margin-bottom: 0;
+}
+
+.dataTitle {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-bright);
+  margin-bottom: var(--space-xs);
+}
+
+.dataDesc {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: var(--space-sm);
+}
+
+.importRow {
+  display: flex;
+  gap: var(--space-sm);
+  align-items: center;
+}
+
+/* ─── Danger Zone ─── */
+.dangerRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-lg);
+}
+
+.dangerActions {
+  display: flex;
+  gap: var(--space-sm);
+  flex-shrink: 0;
+}

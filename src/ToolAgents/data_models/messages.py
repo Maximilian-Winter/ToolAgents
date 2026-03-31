@@ -396,6 +396,15 @@ class ChatMessage(BaseModel):
                 result.append(f"Binary Content\nMime type: {content.mime_type}")
         return "\n".join(result)
 
+    def get_role(self) -> str:
+        if self.role is ChatMessageRole.Custom:
+            if self.additional_fields["custom_role"] is not None:
+                return self.additional_fields["custom_role"]
+            else:
+                return "Custom"
+        else:
+            return self.role
+
     def set_custom_role(self, custom_role: str) -> None:
         self.role = ChatMessageRole.Custom
         self.additional_information["custom_role"] = custom_role

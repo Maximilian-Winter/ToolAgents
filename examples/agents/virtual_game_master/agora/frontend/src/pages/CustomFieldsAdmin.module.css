@@ -1,0 +1,185 @@
+.page {
+  padding: var(--space-xl) var(--space-2xl);
+  max-width: 960px;
+  margin: 0 auto;
+  height: 100%;
+  overflow-y: auto;
+}
+
+/* ─── Header ─── */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: var(--space-xl);
+}
+
+.title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-bright);
+}
+
+.subtitle {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-top: var(--space-xs);
+}
+
+/* ─── Tabs ─── */
+.tabs {
+  margin-bottom: var(--space-lg);
+}
+
+/* ─── Table ─── */
+.table {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.tableHeader,
+.fieldRow {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 2fr 1fr;
+  gap: var(--space-md);
+  align-items: center;
+  padding: var(--space-sm) var(--space-lg);
+}
+
+.tableHeader {
+  background: var(--bg-sunken);
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--text-secondary);
+}
+
+.fieldRow {
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-subtle);
+  transition: background var(--transition-fast);
+}
+
+.fieldRow:last-child {
+  border-bottom: none;
+}
+
+.fieldRow:hover {
+  background: var(--bg-hover);
+}
+
+/* ─── Columns ─── */
+.colName,
+.colType,
+.colRequired,
+.colDefault,
+.colActions {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.colActions {
+  display: flex;
+  gap: var(--space-xs);
+  justify-content: flex-end;
+  flex-shrink: 0;
+}
+
+/* ─── Field name cell ─── */
+.fieldName {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-bright);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fieldMachine {
+  display: block;
+  font-size: 11px;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ─── Default / Options cell ─── */
+.optional {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.noDefault {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.defaultCode {
+  font-size: 12px;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  color: var(--text-secondary);
+  background: var(--bg-active);
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: inline-block;
+  max-width: 100%;
+}
+
+.enumOptions {
+  font-size: 11px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+
+/* ─── Form ─── */
+.formFields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.formActions {
+  display: flex;
+  gap: var(--space-sm);
+  justify-content: flex-end;
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-size: 13px;
+  color: var(--text);
+  cursor: pointer;
+  user-select: none;
+}
+
+.checkboxLabel input[type="checkbox"] {
+  cursor: pointer;
+  width: 15px;
+  height: 15px;
+  accent-color: var(--accent-blue);
+}
+
+/* ─── Error ─── */
+.error {
+  color: var(--accent-red);
+  font-size: 12px;
+  padding: var(--space-sm) var(--space-md);
+  background: rgba(224, 96, 112, 0.1);
+  border-radius: var(--radius-sm);
+}

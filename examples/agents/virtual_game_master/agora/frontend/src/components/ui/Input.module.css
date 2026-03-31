@@ -1,0 +1,32 @@
+.input {
+  width: 100%;
+  padding: 7px 10px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: 13px;
+  transition: border-color var(--transition-fast);
+}
+
+.input::placeholder {
+  color: var(--text-muted);
+}
+
+.input:hover {
+  border-color: var(--border);
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--accent-blue);
+}
+
+.inputError {
+  border-color: var(--accent-red);
+}
+
+.sm {
+  padding: 5px 8px;
+  font-size: 12px;
+}

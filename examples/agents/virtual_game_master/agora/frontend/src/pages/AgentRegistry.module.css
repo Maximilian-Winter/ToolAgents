@@ -1,0 +1,179 @@
+.page {
+  padding: var(--space-xl) var(--space-2xl);
+  max-width: 960px;
+  margin: 0 auto;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: var(--space-xl);
+}
+
+.title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-bright);
+}
+
+.subtitle {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-top: var(--space-xs);
+}
+
+/* ─── Stats ─── */
+.statsBar {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-md);
+  margin-bottom: var(--space-xl);
+}
+
+.stat {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: var(--space-md) var(--space-lg);
+  text-align: center;
+}
+
+.statValue {
+  display: block;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-bright);
+}
+
+.statLabel {
+  font-size: 11px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+/* ─── Search ─── */
+.searchBar {
+  margin-bottom: var(--space-lg);
+}
+
+/* ─── Agent List ─── */
+.agentList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.agentCard {
+  display: flex;
+  align-items: center;
+  gap: var(--space-lg);
+  padding: var(--space-md) var(--space-lg);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  transition: border-color var(--transition-fast);
+}
+
+.agentCard:hover {
+  border-color: var(--border);
+}
+
+.agentMain {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  min-width: 250px;
+}
+
+.agentInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.agentName {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text-bright);
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.agentSlug {
+  font-size: 11px;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.agentRole {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.agentProjects {
+  flex: 1;
+  display: flex;
+  gap: var(--space-xs);
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.projectBadge {
+  display: inline-block;
+  padding: 2px 8px;
+  background: var(--bg-active);
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  color: var(--accent-blue);
+  text-decoration: none;
+  transition: background var(--transition-fast);
+}
+
+.projectBadge:hover {
+  background: var(--bg-hover);
+}
+
+.noProjects {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.agentActions {
+  display: flex;
+  gap: var(--space-xs);
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.agentCard:hover .agentActions {
+  opacity: 1;
+}
+
+/* ─── Form ─── */
+.formFields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.formActions {
+  display: flex;
+  gap: var(--space-sm);
+  justify-content: flex-end;
+}
+
+.error {
+  color: var(--accent-red);
+  font-size: 12px;
+  padding: var(--space-sm) var(--space-md);
+  background: rgba(224, 96, 112, 0.1);
+  border-radius: var(--radius-sm);
+}

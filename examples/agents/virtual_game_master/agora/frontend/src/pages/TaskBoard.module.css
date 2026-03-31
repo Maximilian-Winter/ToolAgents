@@ -1,0 +1,109 @@
+.page {
+  padding: var(--space-lg) var(--space-xl);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ─── Filter Bar ─── */
+.filterBar {
+  display: flex;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-lg);
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.filterRight {
+  margin-left: auto;
+}
+
+/* ─── Issue List ─── */
+.list {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.issueRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--bg-surface);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  color: inherit;
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+
+.issueRow:hover {
+  background: var(--bg-elevated);
+  border-color: var(--border-subtle);
+}
+
+.stateIcon {
+  font-size: 14px;
+  width: 18px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.issueNumber {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  min-width: 36px;
+  flex-shrink: 0;
+}
+
+.issueTitle {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.assignee {
+  font-size: 12px;
+  color: var(--text-secondary);
+  min-width: 60px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.commentCount {
+  font-size: 11px;
+  color: var(--text-muted);
+  min-width: 30px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* ─── Create Modal ─── */
+.formFields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.formRow {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+.formRow > * {
+  flex: 1;
+}
+
+.formActions {
+  display: flex;
+  gap: var(--space-sm);
+  justify-content: flex-end;
+}

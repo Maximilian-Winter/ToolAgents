@@ -1,0 +1,48 @@
+.wrapper {
+  position: relative;
+  display: inline-flex;
+}
+
+.tip {
+  position: absolute;
+  z-index: 100;
+  padding: 4px 8px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 11px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.wrapper:hover .tip {
+  opacity: 1;
+}
+
+/* Positions */
+.top {
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.bottom {
+  top: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.right {
+  left: calc(100% + 6px);
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.left {
+  right: calc(100% + 6px);
+  top: 50%;
+  transform: translateY(-50%);
+}

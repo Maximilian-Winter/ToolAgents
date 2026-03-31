@@ -58,6 +58,7 @@ Usage:
      Or seed only:            python example_world_engine.py --seed-only
      Or with custom starter:  python example_world_engine.py --starter game_starters/rpg_wudang.yaml
      Or with custom template: python example_world_engine.py --template gm_prompts/wuxia_gm.txt
+     Or set location window: python example_world_engine.py --location-window 5
 """
 
 import json
@@ -158,7 +159,7 @@ def _xml_to_string(root: Element) -> str:
 class XMLGameState:
     """
     Structured game state stored as an XML tree.
-    
+
     - Load initial state from a YAML game starter file
     - Load/save state from/to XML files
     - The LLM updates state by emitting XML fragments that merge in
@@ -352,11 +353,30 @@ class CoreMemory:
 # ═══════════════════════════════════════════════════════════════════
 
 class AgoraKBClient:
-    """Synchronous client for Agora's Knowledge Base REST API."""
+    """
+    Synchronous client for Agora's Knowledge Base REST API.
 
-    def __init__(self, base_url: str = "http://127.0.0.1:8321", project_slug: str = "game-world"):
+    Endpoints (from agora/api/routes/kb.py):
+      POST   /api/projects/{slug}/kb              → create or replace document (upsert)
+      GET    /api/projects/{slug}/kb              → list documents (optional ?prefix=&tag=)
+      GET    /api/projects/{slug}/kb/{path:path}  → read document (optional ?section=)
+      DELETE /api/projects/{slug}/kb/{path:path}  → delete document
+      GET    /api/projects/{slug}/kb/search?q=    → full-text search
+      GET    /api/projects/{slug}/kb/tree          → document tree
+
+    Schema: KBDocumentCreate requires { path, content, author } and optional { title, tags }.
+    Schema: KBDocumentOut returns { id, path, title, tags, content, created_by, updated_by, ... }.
+    """
+
+    def __init__(
+        self,
+        base_url: str = "http://127.0.0.1:8321",
+        project_slug: str = "game-world",
+        author: str = "game-master",
+    ):
         self.base_url = base_url.rstrip("/")
         self.project_slug = project_slug
+        self.author = author
         self.client = httpx.Client(timeout=30.0)
 
     @property
@@ -364,45 +384,66 @@ class AgoraKBClient:
         return f"{self.base_url}/api/projects/{self.project_slug}/kb"
 
     def read_document(self, path: str, section: Optional[str] = None) -> Optional[dict]:
-        url = f"{self.kb_url}/documents/{path}"
+        """GET /{path:path} — returns KBDocumentOut with 'content' field."""
+        url = f"{self.kb_url}/{path}"
         params = {"section": section} if section else {}
         try:
             resp = self.client.get(url, params=params)
-            return resp.json() if resp.status_code == 200 else None
-        except httpx.HTTPError:
+            if resp.status_code == 200:
+                return resp.json()
+            return None
+        except httpx.HTTPError as e:
+            print(f"  [KB] Read error for '{path}': {e}")
             return None
 
-    def write_document(self, path: str, title: str, body: str, tags: str = "") -> bool:
-        url = f"{self.kb_url}/documents"
+    def write_document(self, path: str, title: str, content: str, tags: str = "") -> bool:
+        """POST / — upserts a document. Uses KBDocumentCreate schema."""
+        url = self.kb_url
+        payload = {
+            "path": path,
+            "title": title,
+            "content": content,
+            "tags": tags,
+            "author": self.author,
+        }
         try:
-            resp = self.client.put(url, json={"path": path, "title": title, "body": body, "tags": tags})
+            resp = self.client.post(url, json=payload)
+            if resp.status_code not in (200, 201):
+                print(f"  [KB] Write failed for '{path}': {resp.status_code} {resp.text[:200]}")
             return resp.status_code in (200, 201)
-        except httpx.HTTPError:
+        except httpx.HTTPError as e:
+            print(f"  [KB] Write error for '{path}': {e}")
             return False
 
     def list_documents(self, prefix: str = "") -> list[dict]:
-        url = f"{self.kb_url}/documents"
+        """GET / — list documents, optional prefix filter."""
+        url = self.kb_url
         params = {"prefix": prefix} if prefix else {}
         try:
             resp = self.client.get(url, params=params)
             return resp.json() if resp.status_code == 200 else []
-        except httpx.HTTPError:
+        except httpx.HTTPError as e:
+            print(f"  [KB] List error: {e}")
             return []
 
     def search_documents(self, query: str) -> list[dict]:
+        """GET /search?q= — full-text search with BM25 ranking."""
         url = f"{self.kb_url}/search"
         try:
             resp = self.client.get(url, params={"q": query})
             return resp.json() if resp.status_code == 200 else []
-        except httpx.HTTPError:
+        except httpx.HTTPError as e:
+            print(f"  [KB] Search error: {e}")
             return []
 
     def get_tree(self) -> dict:
+        """GET /tree — nested directory tree of all documents."""
         url = f"{self.kb_url}/tree"
         try:
             resp = self.client.get(url)
             return resp.json() if resp.status_code == 200 else {}
-        except httpx.HTTPError:
+        except httpx.HTTPError as e:
+            print(f"  [KB] Tree error: {e}")
             return {}
 
     def close(self):
@@ -415,30 +456,42 @@ class AgoraKBClient:
 
 class WorldContextManager:
     """
-    Bridges the Agora KB with PromptComposer.
+    Bridges the Agora KB with PromptComposer and SmartMessageManager.
+
     When the GM changes location:
-      1. Summarizes what happened (LLM call)
-      2. Updates the old location's KB document
-      3. Loads new location + parent overview
-      4. Updates the PromptComposer location module
+      1. Summarizes what happened at the old location (LLM call)
+      2. Updates the old location's KB document with the event log
+      3. Injects the old location context as a SmartMessage with TTL
+         (rolling window — past N locations stay in conversation context)
+      4. Loads the new location + parent overview into PromptComposer
     """
 
     def __init__(
         self,
         kb_client: AgoraKBClient,
         composer: PromptComposer,
+        msg_manager: SmartMessageManager,
         summarizer_agent: Optional[ChatToolAgent] = None,
         summarizer_settings=None,
+        location_window: int = 3,
     ):
         self.kb = kb_client
         self.composer = composer
+        self.msg_manager = msg_manager
         self.summarizer_agent = summarizer_agent
         self.summarizer_settings = summarizer_settings
+        self.location_window = location_window
 
         self.current_location_path: Optional[str] = None
         self.current_location_title: str = "Unknown"
-        self.current_location_body: str = ""
+        self.current_location_content: str = ""
         self.location_history: list[str] = []
+
+        # Calculate TTL for location messages based on window size.
+        # Each location message should live long enough for N more locations
+        # to be visited before it archives. We use a multiplier so the
+        # messages don't all expire on the same turn.
+        self._location_msg_ttl = max(location_window * 4, 8)
 
     def _get_parent_overview(self, path: str) -> Optional[str]:
         parts = path.rsplit("/", 1)
@@ -457,34 +510,60 @@ class WorldContextManager:
             for d in docs if d.get("path", "").endswith(".md")
         ]
 
+    def _inject_location_as_message(self, title: str, content: str, path: str):
+        """
+        Inject a past location's context as a system message with TTL.
+        This creates the rolling window — old locations age out naturally
+        via SmartMessageManager instead of being hard-deleted.
+        """
+        location_msg = ChatMessage.create_system_message(
+            f"[Previous Location Context] {title} ({path})\n{content}"
+        )
+        self.msg_manager.add_message(
+            location_msg,
+            lifecycle=MessageLifecycle(
+                ttl=self._location_msg_ttl,
+                on_expire=ExpiryAction.ARCHIVE,
+            ),
+        )
+
     def load_location(self, path: str) -> str:
         doc = self.kb.read_document(path)
         if not doc:
             return f"Error: Location '{path}' not found in knowledge base."
 
+        # Before replacing, inject the OLD location into the message stream
+        # so it persists as a rolling window SmartMessage
+        if self.current_location_path and self.current_location_content:
+            self._inject_location_as_message(
+                self.current_location_title,
+                self.current_location_content,
+                self.current_location_path,
+            )
+
         self.current_location_path = path
         self.current_location_title = doc.get("title", "Unknown")
-        self.current_location_body = doc.get("body", "")
+        self.current_location_content = doc.get("content", "")
 
-        # Build layered context
+        # Build layered context for the PromptComposer module
         context_parts = []
 
-        # Parent overview
+        # Parent overview for broader spatial awareness
         parent_path = self._get_parent_overview(path)
         if parent_path and parent_path != path:
             parent = self.kb.read_document(parent_path)
             if parent:
                 context_parts.append(
-                    f"## Area: {parent.get('title', 'Unknown')}\n{parent.get('body', '')}"
+                    f"## Area: {parent.get('title', 'Unknown')}\n{parent.get('content', '')}"
                 )
 
-        # Current location
+        # Current location (full detail)
         context_parts.append(
             f"## Current Location: {self.current_location_title}\n"
-            f"Path: {path}\n\n{self.current_location_body}"
+            f"Path: {path}\n\n{self.current_location_content}"
         )
 
-        # Nearby locations
+        # Nearby locations (siblings in the same directory)
         area = self._get_area_prefix(path)
         siblings = self.list_locations(area)
         nearby = [s for s in siblings if s["path"] != path and not s["path"].endswith("overview.md")]
@@ -494,6 +573,7 @@ class WorldContextManager:
 
         full_context = "\n\n---\n\n".join(context_parts)
 
+        # Update the PromptComposer module (always shows current location)
         self.composer.update_module(
             "location_context",
             content=full_context,
@@ -505,6 +585,13 @@ class WorldContextManager:
         return f"Arrived at: {self.current_location_title}"
 
     def summarize_and_depart(self, recent_messages: list[ChatMessage]) -> str:
+        """
+        Before leaving a location:
+          1. Summarize what happened (LLM call)
+          2. Append the summary to the location's KB document
+        The old location context is preserved via the rolling window
+        (handled in load_location when the new location loads).
+        """
         if not self.current_location_path or not self.summarizer_agent:
             return ""
 
@@ -542,11 +629,11 @@ class WorldContextManager:
             timestamp = dt.datetime.now().strftime("%Y-%m-%d %H:%M")
             doc = self.kb.read_document(self.current_location_path)
             if doc:
-                updated_body = doc.get("body", "") + f"\n\n### Event Log — {timestamp}\n{summary}"
+                updated_content = doc.get("content", "") + f"\n\n### Event Log — {timestamp}\n{summary}"
                 self.kb.write_document(
                     path=self.current_location_path,
                     title=doc.get("title", self.current_location_title),
-                    body=updated_body,
+                    content=updated_content,
                     tags=doc.get("tags", ""),
                 )
 
@@ -678,9 +765,9 @@ class ReadDocument(BaseModel):
         if not doc:
             return f"Document not found: '{self.path}'"
         title = doc.get("title", "Untitled")
-        body = doc.get("body", "")
+        content = doc.get("content", "")
         header = f"## {title} — Section: {self.section}" if self.section else f"## {title}"
-        return f"{header}\n\n{body}"
+        return f"{header}\n\n{content}"
 
 
 class UpdateGameState(BaseModel):
@@ -689,7 +776,7 @@ class UpdateGameState(BaseModel):
     The fragment MUST be wrapped in <game-state>...</game-state>.
     It merges into the existing state tree — matching elements are updated,
     new elements are appended.
-    
+
     Example:
       <game-state>
         <inventory><Li-Wei><item>Ancient scroll</item></Li-Wei></inventory>
@@ -741,7 +828,7 @@ def seed_wudang_world(kb: AgoraKBClient):
             "path": "worlds/han-dynasty/overview.md",
             "title": "Han Dynasty China — World Overview",
             "tags": "world,han-dynasty,china",
-            "body": (
+            "content": (
                 "# Han Dynasty China — circa 200 CE\n\n"
                 "The Han Dynasty crumbles. Emperor Xian is a puppet, controlled by\n"
                 "warlords who carve the empire into fiefdoms. The Yellow Turban\n"
@@ -762,7 +849,7 @@ def seed_wudang_world(kb: AgoraKBClient):
             "path": "worlds/han-dynasty/wudang-mountains/overview.md",
             "title": "Wudang Mountains — Region Overview",
             "tags": "region,wudang,mountains",
-            "body": (
+            "content": (
                 "# The Wudang Mountains\n\n"
                 "Sacred peaks shrouded in mist, home to Taoist monasteries and\n"
                 "martial arts schools. The mountains are both a spiritual refuge\n"
@@ -782,7 +869,7 @@ def seed_wudang_world(kb: AgoraKBClient):
             "path": "worlds/han-dynasty/wudang-mountains/monastery.md",
             "title": "Wudang Monastery — Temple of the Purple Cloud",
             "tags": "location,monastery,taoist,wudang",
-            "body": (
+            "content": (
                 "# Wudang Monastery — Temple of the Purple Cloud\n\n"
                 "A remote Taoist monastery perched on a cliff face, accessible only\n"
                 "by a narrow stone stairway carved into the mountain. Known for its\n"
@@ -809,7 +896,7 @@ def seed_wudang_world(kb: AgoraKBClient):
             "path": "worlds/han-dynasty/wudang-mountains/mountain-path.md",
             "title": "Mountain Path — The Pilgrim's Ascent",
             "tags": "location,path,wudang,travel",
-            "body": (
+            "content": (
                 "# The Pilgrim's Ascent\n\n"
                 "A winding stone path that climbs from the foothills to the\n"
                 "monastery above. Takes half a day on foot. The path passes\n"
@@ -832,7 +919,7 @@ def seed_wudang_world(kb: AgoraKBClient):
             "path": "worlds/han-dynasty/wudang-mountains/hidden-cave.md",
             "title": "Hidden Cave — The Whispering Grotto",
             "tags": "location,cave,secret,wudang",
-            "body": (
+            "content": (
                 "# The Whispering Grotto\n\n"
                 "A natural cave system behind the waterfall on the Pilgrim's Ascent.\n"
                 "Most travelers don't know it exists — the entrance is hidden behind\n"
@@ -855,7 +942,7 @@ def seed_wudang_world(kb: AgoraKBClient):
             "path": "worlds/han-dynasty/wudang-mountains/village.md",
             "title": "Foothill Village — Three Pines",
             "tags": "location,village,wudang",
-            "body": (
+            "content": (
                 "# Three Pines Village\n\n"
                 "A small farming village at the base of the Wudang Mountains.\n"
                 "Named for three ancient pine trees in the village square.\n"
@@ -882,7 +969,7 @@ def seed_wudang_world(kb: AgoraKBClient):
 
     print("Seeding Wudang / Han Dynasty world into Agora KB...")
     for doc in documents:
-        success = kb.write_document(doc["path"], doc["title"], doc["body"], doc.get("tags", ""))
+        success = kb.write_document(doc["path"], doc["title"], doc["content"], doc.get("tags", ""))
         print(f"  {'✓' if success else '✗'} {doc['path']}")
     print(f"Seeded {len(documents)} locations.\n")
 
@@ -930,6 +1017,7 @@ def main():
     starter_file = None
     template_file = None
     seed_only = False
+    location_window = 3  # default: keep last 3 locations in context
 
     args = sys.argv[1:]
     i = 0
@@ -940,6 +1028,9 @@ def main():
         elif args[i] == "--template" and i + 1 < len(args):
             template_file = args[i + 1]
             i += 2
+        elif args[i] == "--location-window" and i + 1 < len(args):
+            location_window = int(args[i + 1])
+            i += 2
         elif args[i] == "--seed-only":
             seed_only = True
             i += 1
@@ -949,6 +1040,7 @@ def main():
     # ── Configuration ──
     AGORA_URL = os.getenv("AGORA_URL", "http://127.0.0.1:8321")
     PROJECT_SLUG = os.getenv("GAME_PROJECT", "game-world")
+    LOCATION_HISTORY_WINDOW = location_window
 
     # ── KB Client ──
     _kb_client = AgoraKBClient(base_url=AGORA_URL, project_slug=PROJECT_SLUG)
@@ -963,11 +1055,11 @@ def main():
     #    api_key=os.getenv("GROQ_API_KEY"),
     #    model="llama-3.3-70b-versatile",
     #)
-    # Alternative: OpenRouter
+    #Alternative: OpenRouter
     api = OpenAIChatAPI(
         api_key=os.getenv("OPENROUTER_API_KEY"),
         base_url="https://openrouter.ai/api/v1",
-        model="openai/gpt-4o-mini",
+        model="xiaomi/mimo-v2-pro",
     )
 
     agent = ChatToolAgent(chat_api=api)
@@ -1100,8 +1192,10 @@ def main():
     _world_ctx = WorldContextManager(
         kb_client=_kb_client,
         composer=composer,
+        msg_manager=_msg_manager,
         summarizer_agent=agent,
         summarizer_settings=summarizer_settings,
+        location_window=LOCATION_HISTORY_WINDOW,
     )
 
     # ── Tool Registry ──
@@ -1146,18 +1240,21 @@ def main():
     print("=" * 64)
     print("  ⚔️  Virtual Game Master — Han Dynasty / Wudang Mountains")
     print("  ToolAgents + Agora KB + PromptComposer + XMLGameState")
+    print(f"  Location history window: {LOCATION_HISTORY_WINDOW} past locations")
     print("=" * 64)
     print()
     print("Commands:")
     print("  quit           — End the session")
     print("  /state         — Show game state (XML)")
     print("  /party         — Show party from game state")
-    print("  /location      — Show current location")
+    print("  /location      — Show current location + history")
     print("  /notes         — Show GM notes")
     print("  /archive       — Show archived messages")
     print("  /status        — Show system status")
     print("  /save [name]   — Save session")
     print("  /seed          — Re-seed world data")
+    print()
+    print("CLI flags: --starter <file> --template <file> --location-window <n>")
     print()
 
     while True:

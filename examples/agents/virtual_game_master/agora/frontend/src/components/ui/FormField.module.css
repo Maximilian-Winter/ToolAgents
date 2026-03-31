@@ -1,0 +1,23 @@
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.hint {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.error {
+  font-size: 11px;
+  color: var(--accent-red);
+}

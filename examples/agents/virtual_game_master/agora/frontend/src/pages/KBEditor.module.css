@@ -1,0 +1,32 @@
+.form { max-width: 900px; padding: 16px 24px; }
+.form h2 { margin: 0 0 16px; font-size: 1.1rem; }
+.row { display: flex; gap: 12px; margin-bottom: 12px; }
+.field { flex: 1; margin-bottom: 12px; }
+.fieldLabel { display: block; font-size: 0.7rem; color: #999; margin-bottom: 4px; }
+.input { width: 100%; padding: 6px 10px; font-size: 0.85rem; border: 1px solid var(--border, #333); border-radius: 4px; background: var(--bg-input, #111); color: inherit; }
+.input:disabled { opacity: 0.5; }
+
+.tags { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.tagChip { font-size: 0.7rem; background: #1e3a5f; color: #60a5fa; padding: 3px 8px; border-radius: 3px; display: flex; align-items: center; gap: 4px; }
+.tagRemove { cursor: pointer; opacity: 0.6; }
+.tagRemove:hover { opacity: 1; }
+.tagInput { padding: 3px 8px; font-size: 0.75rem; border: 1px solid var(--border, #333); border-radius: 4px; background: var(--bg-input, #111); color: inherit; width: 100px; }
+
+.editorSection { margin-bottom: 16px; }
+.editorHeader { display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.03); padding: 6px 10px; border: 1px solid var(--border, #333); border-bottom: none; border-radius: 6px 6px 0 0; }
+.editorTabs { display: flex; gap: 2px; }
+.tab { font-size: 0.75rem; padding: 4px 10px; border: none; background: none; color: #999; cursor: pointer; border-radius: 3px; }
+.tabActive { background: var(--border, #333); color: #fff; }
+.toolbar { display: flex; gap: 2px; }
+.toolBtn { font-size: 0.8rem; padding: 2px 8px; border: none; background: none; color: #666; cursor: pointer; }
+.toolBtn:hover { color: #ccc; }
+
+.textarea { width: 100%; min-height: 300px; padding: 12px; font-family: monospace; font-size: 0.85rem; line-height: 1.7; border: 1px solid var(--border, #333); border-radius: 0 0 6px 6px; background: var(--bg-input, #111); color: inherit; resize: vertical; }
+.preview { padding: 12px; border: 1px solid var(--border, #333); border-radius: 0 0 6px 6px; min-height: 300px; font-size: 0.85rem; line-height: 1.7; white-space: pre-wrap; }
+
+.actions { display: flex; justify-content: flex-end; gap: 8px; }
+.cancelBtn { font-size: 0.8rem; padding: 6px 16px; border: 1px solid var(--border, #333); border-radius: 4px; background: none; color: #999; cursor: pointer; }
+.cancelBtn:hover { background: rgba(255,255,255,0.05); }
+.saveBtn { font-size: 0.8rem; padding: 6px 16px; border: none; border-radius: 4px; background: #22c55e; color: #000; cursor: pointer; }
+.saveBtn:hover { background: #16a34a; }
+.saveBtn:disabled { opacity: 0.5; cursor: not-allowed; }

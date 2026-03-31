@@ -1,0 +1,105 @@
+.page {
+  padding: var(--space-xl) var(--space-2xl);
+  max-width: 800px;
+  overflow-y: auto;
+  height: 100%;
+}
+
+.statGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-md);
+}
+
+.statCard {
+  background: var(--bg-elevated);
+  border-radius: var(--radius-md);
+  padding: var(--space-lg) var(--space-xl);
+  text-align: center;
+}
+
+.statValue {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-bright);
+}
+
+.statLabel {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-top: var(--space-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.infoRow {
+  display: flex;
+  gap: var(--space-lg);
+  margin-bottom: var(--space-sm);
+  font-size: 13px;
+}
+
+.infoLabel {
+  color: var(--text-muted);
+  min-width: 100px;
+  font-weight: 500;
+}
+
+.infoValue {
+  color: var(--text-primary);
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 12px;
+}
+
+.agentRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--bg-elevated);
+  border-radius: var(--radius-sm);
+  margin-bottom: var(--space-xs);
+}
+
+.agentName {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text-bright);
+}
+
+.agentMeta {
+  font-size: 12px;
+  color: var(--text-secondary);
+  flex: 1;
+}
+
+.quickLinks {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-md);
+}
+
+.quickLink {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-md) var(--space-lg);
+  background: var(--bg-elevated);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  text-decoration: none;
+  color: var(--text-primary);
+  font-weight: 500;
+  font-size: 13px;
+  transition: border-color var(--transition-fast), background var(--transition-fast);
+}
+
+.quickLink:hover {
+  border-color: var(--accent-blue);
+  background: var(--bg-hover);
+  text-decoration: none;
+}
+
+.sectionGap {
+  margin-bottom: var(--space-xl);
+}
