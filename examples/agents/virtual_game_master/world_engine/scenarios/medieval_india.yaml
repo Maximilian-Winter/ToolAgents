@@ -1,0 +1,365 @@
+setting: >
+  Northern India and the legendary kingdom of Oḍḍiyāna (Udyana), circa 1020 CE. The Pala Dynasty
+  rules over Magadha and Bengal, patronizing the great Buddhist universities of Nalanda and
+  Vikramashila. This is the golden age of Vajrayana Buddhism — the eighty-four Mahasiddhas walk
+  the earth as wandering yogis, performing miracles, singing spontaneous songs of realization,
+  and transmitting the most secret teachings in charnel grounds, fish markets, and wine shops.
+  Hindu tantra and Buddhist tantra coexist and compete. Orthodox Brahmanical scholars debate
+  radical tantric practitioners at the great universities. And beyond the mountains to the
+  northwest lies Oḍḍiyāna — the legendary Dakini City, birthplace of tantra itself, where
+  enlightened women rule the marketplaces and sacred texts grow on trees made of light.
+  The Islamic invasions loom on the horizon, though few yet sense the coming destruction.
+  Every encounter may be a test. Every beggar may be a buddha. Every woman selling fish
+  may be Vajrayogini herself.
+
+player_character: >
+  Padma Dorje (पद्म दोर्जे): A human male tantric practitioner (sādhaka), age 26. Lean and
+  weathered from years of wandering, with intense dark eyes that hold both scholarly sharpness
+  and something wilder — the look of someone who has spent too many nights in charnel grounds.
+  His head is shaved in the manner of a Buddhist monk, but he wears the bone ornaments and
+  tiger-skin wrap of a tantric yogin, marking him as something between monk and madman.
+  Recently expelled from Vikramashila University for performing a cakra-pūjā (tantric feast
+  offering) in the main debate hall. Carries a kapāla (skull cup), a kaṇṭhikā (bone rosary),
+  and a tattered manuscript of the Hevajra Tantra missing its final chapters. Known for his
+  brilliant philosophical mind, his reckless devotion, and his unfortunate habit of quoting
+  the Dohākośa at inappropriate moments. Seeks the complete transmission of Mahāmudrā, which
+  he has heard can only be received from the mysterious fisherman-yogin called Tilopa.
+
+companions:
+  - >
+    Sukhasiddhi (सुखसिद्धि): A human female yoginī, age indeterminate (appears 40, claims 400).
+    Dark-skinned with silver-streaked hair worn loose and wild. Wears simple white cotton robes
+    and an apron of bone ornaments. Her eyes have the unsettling quality of looking through you
+    rather than at you. Claims to be a former beer-seller from Kashmir who achieved realization
+    through the practice of Cakrasaṃvara. Carries a curved knife (kartikā) tucked into her
+    belt, a small drum (ḍamaru), and an inexhaustible supply of rice beer that she offers to
+    everyone. Speaks in riddles, laughs at funerals, and weeps at weddings. May or may not be
+    an actual historical Mahasiddhi. Definitely knows more than she reveals. Her cooking is
+    terrible but allegedly transforms consciousness.
+
+location: >
+  The ruins of a small vihāra (Buddhist monastery) on the outskirts of Nālandā, where Padma
+  Dorje has been camping since his expulsion from Vikramashila. The great university of
+  Nālandā is visible in the distance — its red brick walls glowing in the morning sun,
+  smoke rising from the kitchens that feed ten thousand scholar-monks. The air smells of
+  incense, cooking fires, and the nearby Pañcāna river.
+
+story_summary: >
+  The year is 1020 CE. Padma Dorje, a brilliant but reckless tantric practitioner, has been
+  expelled from Vikramashila University for his unorthodox practices. Carrying an incomplete
+  manuscript of the Hevajra Tantra, he seeks the legendary fisherman-yogin Tilopa, who is
+  said to possess the complete Mahāmudrā transmission. Accompanied by the enigmatic yoginī
+  Sukhasiddhi — who appeared uninvited at his campfire one evening and simply never left —
+  Padma Dorje must journey from the scholarly world of Nālandā through the wild tantric
+  landscape of medieval India, into the charnel grounds where the real teachings are given,
+  and ultimately to the legendary kingdom of Oḍḍiyāna — the Dakini City beyond the
+  mountains — where the lost chapters of his manuscript are said to originate. Along the
+  way, he will face philosophical debates that could cost him his tongue, dakini tests that
+  could cost him his mind, and the growing shadow of invasion that could cost the Buddhist
+  world everything. The question is not whether he will find Tilopa — Tilopa has a way of
+  finding you when you are ready. The question is whether Padma Dorje can survive what
+  Tilopa will demand of him.
+
+important_events:
+  - Padma Dorje's expulsion from Vikramashila for performing tantric rites in the debate hall
+  - His discovery of the incomplete Hevajra Tantra manuscript in a ruined stūpa
+  - A vision of Vajrayoginī during a charnel ground practice, pointing northwest toward Oḍḍiyāna
+  - Sukhasiddhi's mysterious appearance at his campfire, offering rice beer and unsolicited wisdom
+  - Rumors that Naropa, the great scholar of Nālandā, has recently abandoned his position to seek Tilopa
+
+active_quests:
+  - Find the fisherman-yogin Tilopa and receive the Mahāmudrā transmission
+  - Recover the missing final chapters of the Hevajra Tantra manuscript
+  - Journey to Oḍḍiyāna, the legendary Dakini City, and survive its tests
+  - Investigate the disappearance of several tantric masters along the northwestern trade routes
+  - Resolve the incomplete empowerment that haunts Padma Dorje's practice — something is blocked
+
+key_npcs:
+  - >
+    Tilopa (तिलोपा): The legendary Mahasiddha, master of Mahāmudrā. Works as a fisherman
+    and sesame-seed grinder by day. Appears as a disheveled old man smelling of fish. His
+    eyes hold the light of a thousand suns compressed into two dark points. Teaches through
+    seemingly absurd demands — "Jump off this cliff," "Steal that man's wife," "Sit in this
+    beehive." Each demand is a transmission in disguise. Finding him is easy. Recognizing
+    him is hard. Surviving his teaching is harder.
+  - >
+    Naropa (नारोपा): The former head scholar (mahāpaṇḍita) of Nālandā, who recently
+    abandoned his prestigious position after a vision of an old woman who told him he
+    understood the words of dharma but not their meaning. Now wandering India looking for
+    Tilopa, enduring horrific trials. Padma Dorje may encounter Naropa during his own
+    journey — a fellow seeker, but one whose suffering and dedication are on another level
+    entirely. Age 40, gaunt, haunted, but with an intellectual brilliance that still flashes
+    through his exhaustion.
+  - >
+    Ḍākinī Niguma (निगुमा): A female Mahasiddhi, possibly Naropa's sister or wife (accounts
+    differ). Teaches in the charnel grounds at night. Her body appears to be made of rainbow
+    light. She offers the Six Yogas — but only to those who can see her, and she is visible
+    only to those whose obscurations are sufficiently purified. Encountering her is the
+    game's hidden quest.
+  - >
+    Mahāpaṇḍita Ratnākaraśānti: The current abbot of Vikramashila. Brilliant, orthodox, and
+    the one who signed Padma Dorje's expulsion order. Not evil — genuinely concerned that
+    tantric practices performed without proper authorization endanger both the practitioner
+    and the university's reputation. May become an ally if approached with humility.
+  - >
+    The Ḍākinī of the Crossroads: An unnamed woman who appears at major decision points in
+    the journey. Sometimes old, sometimes young. Sometimes a merchant, sometimes a beggar.
+    Always offering something — food, directions, a cryptic verse. Always a test. She may
+    be Vajrayoginī herself, or one of her emanations.
+
+inventory:
+  Padma Dorje:
+    - Kapāla (skull cup) — used for tantric offerings and drinking
+    - Kaṇṭhikā (bone rosary of 108 beads) — for mantra recitation
+    - Incomplete manuscript of the Hevajra Tantra (missing chapters 9-12)
+    - Small bronze vajra (ritual scepter)
+    - Ghaṇṭā (ritual bell)
+    - Tattered tiger-skin meditation seat
+    - Pouch of medicinal herbs and sindūra (vermillion powder)
+    - Writing implements (palm leaf, stylus, ink)
+    - Three copper coins (nearly destitute)
+  Sukhasiddhi:
+    - Kartikā (curved knife) — allegedly cuts delusion, definitely cuts vegetables
+    - Ḍamaru (small ritual drum) — makes sounds that shouldn't be possible from its size
+    - Clay pot of inexhaustible rice beer
+    - Bundle of dried herbs and roots (for cooking and medicine, indistinguishable)
+    - A single peacock feather (significance unknown)
+    - Worn cloth bag containing "nothing important" (she refuses to open it)
+
+party_members:
+  - Padma Dorje
+  - Sukhasiddhi
+
+world_state:
+  - The Pala Dynasty rules Magadha and Bengal, patronizing Buddhist universities
+  - Nālandā houses approximately 10,000 scholar-monks and is the intellectual center of Asia
+  - Vikramashila specializes in tantric studies and is more exclusive than Nālandā
+  - Tension between orthodox scholarly Buddhism (sūtrayāna) and radical tantric practice (vajrayāna)
+  - The Chola Dynasty in the south has recently raided and damaged Buddhist sites in Sri Lanka
+  - Mahmud of Ghazni has been raiding northwestern India — the shadow of destruction approaches
+  - The Mahasiddhas wander freely, recognized by some as supreme masters and by others as madmen
+  - Charnel grounds serve as open-air tantric practice sites, feared by ordinary people
+  - Oḍḍiyāna exists in legend as the birthplace of tantra, but few living travelers have reached it
+  - The monsoon season approaches, which will make travel difficult but charnel ground practice potent
+
+factions:
+  - >
+    Nālandā Mahāvihāra: The great university. Ten thousand monks. Massive library.
+    Orthodox Buddhist scholarship with some tantric elements. Open to debate with anyone.
+    Political ally of the Pala court. Concerned about the growing influence of heterodox tantra.
+  - >
+    Vikramashila Mahāvihāra: The tantric university. More elite, more secretive. Specializes
+    in Vajrayāna practice and initiation. Strict hierarchy of empowerments. Currently led by
+    Ratnākaraśānti, who expelled Padma Dorje.
+  - >
+    The Mahasiddha Lineages: Not a formal organization but a loose network of realized masters
+    and their students. Tilopa, Naropa, Virupa, Saraha, Lūipa, and others. They recognize each
+    other but have no central authority. Their authority comes from realization, not institution.
+  - >
+    The Ḍākinī Sangha: The community of female tantric practitioners. Some are human yoginīs,
+    some are enlightened ḍākinīs manifesting in human form. Strongest in Oḍḍiyāna but present
+    everywhere — in charnel grounds, at crossroads, in marketplaces. They test practitioners
+    and transmit teachings to those who pass. Offending them is extremely dangerous.
+  - >
+    Śaiva Tantrikas: Hindu tantric practitioners, devotees of Śiva and Śakti. Competitors and
+    sometimes collaborators with Buddhist tantrikas. Share many practices but differ on
+    philosophical foundations. The Kāpālika sect is especially radical — skull-bearing ascetics
+    who haunt charnel grounds alongside Buddhist yogins.
+  - >
+    Pala Royal Court: Buddhist rulers of Magadha and Bengal. Patrons of Nālandā and Vikramashila.
+    Currently under Mahīpala I. Politically weakening, which makes the universities vulnerable.
+  - >
+    Ghaznavid Raiders: Islamic military forces under Mahmud of Ghazni, raiding from the northwest.
+    Have already destroyed temples and monasteries in Gandhāra. Their advance threatens
+    Oḍḍiyāna and eventually all of Buddhist India. Most people do not yet understand the
+    scale of this threat.
+
+time_and_calendar:
+  - "Current date: Pūrṇimā (full moon) of Āśvina month, 1020 CE (Śaka era 942)"
+  - "Season: Late monsoon, transitioning to autumn. The rains are ending, rivers are swollen."
+  - "Time of day: Dawn. The sun rises over Nālandā's walls as Padma Dorje performs his morning sādhana."
+  - "Lunar phase: Full moon — auspicious for tantric practice, especially Cakrasaṃvara and Vajrayoginī sādhanas."
+
+relationships:
+  - >
+    Padma Dorje and Sukhasiddhi: She appeared at his fire uninvited and stayed. He suspects
+    she is testing him but cannot figure out the test. She treats him like a slightly slow
+    younger brother. He respects her but finds her maddening. She finds him earnest and
+    therefore hilarious.
+  - >
+    Padma Dorje and Vikramashila: Expelled but not hated. Ratnākaraśānti sees potential in
+    him but believes he needs discipline. Some junior monks secretly admire his rebellion.
+    He could return — but only with humility he does not yet possess.
+  - >
+    Padma Dorje and Naropa: They have not yet met, but their paths run parallel. Both seek
+    Tilopa. Both have abandoned institutional Buddhism for the wild path. If they meet,
+    it could be as allies, rivals, or mirrors of each other.
+  - >
+    Padma Dorje and Vajrayoginī: He had a vision of her pointing toward Oḍḍiyāna. Whether
+    this was genuine divine communication or a fever dream from too many nights in charnel
+    grounds is the central question of his spiritual life.
+
+character_details:
+  Padma Dorje:
+    Class: Tantric Sādhaka (practitioner)
+    Age: 26
+    Notable features:
+      - Shaved head with bone ornaments
+      - Tiger-skin wrap over simple robes
+      - Intense dark eyes, slightly wild
+      - Smells of incense and charnel ground smoke
+    Skills:
+      - Tantric visualization and mantra recitation
+      - Buddhist philosophy and debate (trained at Vikramashila)
+      - Sanskrit literacy (reads and composes in Devanāgarī)
+      - Charnel ground practice (can remain calm among corpses)
+      - Basic martial arts (vajra-muṣṭi, the thunderbolt fist)
+      - Herbal medicine and basic alchemy
+    Weaknesses:
+      - Reckless devotion — will take risks others would refuse
+      - Pride in his intellectual abilities
+      - Incomplete empowerment — something in his practice is blocked
+      - Nearly penniless
+    Mantras known:
+      - "ॐ मणि पद्मे हूँ (Oṃ maṇi padme hūṃ) — Avalokiteśvara"
+      - "ॐ वज्रयोगिनी हूँ फट् स्वाहा (Oṃ vajrayoginī hūṃ phaṭ svāhā) — Vajrayoginī"
+      - "ॐ श्री वज्रहे हे रु रु कं हूँ फट् (Oṃ śrī vajra he he ru ru kaṃ hūṃ phaṭ) — Hevajra"
+
+  Sukhasiddhi:
+    Class: Yoginī / possible Mahāsiddhā
+    Age: Indeterminate
+    Notable features:
+      - Dark skin, silver-streaked wild hair
+      - White cotton robes with bone apron
+      - Eyes that look through rather than at you
+      - Perpetual faint smile
+    Skills:
+      - Complete mastery of Cakrasaṃvara practices (allegedly)
+      - Brewing intoxicants that may or may not be sacramental
+      - Reading people with terrifying accuracy
+      - Cooking (badly, but with transformative effect)
+      - Singing dohās (spontaneous realization songs)
+      - Disappearing when you need her most and appearing when you least expect her
+    Weaknesses:
+      - Refuses to explain anything directly
+      - Her cooking
+      - May have her own agenda that does not align with Padma Dorje's
+
+game_world_information:
+  Geography:
+    - >
+      Magadha (Bihar): Heartland of Buddhism. Home to Nālandā, Vikramashila, Odantapurī,
+      and Somapura mahāvihāras. Flat river plains, fertile, hot and humid.
+    - >
+      Oḍḍiyāna (Swat Valley): The legendary Dakini City, located in what is now northwestern
+      Pakistan/Afghanistan. Reached by traveling northwest through Gandhāra. A kingdom where
+      tantric Buddhism flourished in its most radical forms. Said to be the birthplace of
+      Padmasambhava and the origin point of many tantric lineages. Increasingly threatened
+      by Ghaznavid raids.
+    - >
+      Bodh Gayā: The site of the Buddha's enlightenment. The Mahābodhi Temple stands here.
+      A pilgrimage destination and site of profound practice.
+    - >
+      Vārāṇasī (Benares): The holy city of Śiva, on the banks of the Gaṅgā. Hindu and
+      Buddhist practitioners coexist here. The great charnel ground Śmaśāna is nearby.
+    - >
+      Gandhāra: The northwestern region, once a great center of Buddhist art and learning.
+      Now under severe threat from Ghaznavid invasions. The route to Oḍḍiyāna passes through here.
+
+  Sacred Sites:
+    - "Nālandā Mahāvihāra: The great university — library, debate halls, meditation caves"
+    - "Vikramashila Mahāvihāra: The tantric university — initiation halls, secret libraries"
+    - "Śītavana Śmaśāna: The Cool Grove charnel ground near Bodh Gayā — primary tantric practice site"
+    - "Bodh Gayā and the Vajrāsana: The diamond throne of enlightenment"
+    - "The charnel grounds (śmaśāna): Eight great charnel grounds mentioned in tantric texts"
+    - "Oḍḍiyāna: The entire kingdom is considered a sacred maṇḍala"
+
+  Culture and Society:
+    - "Language: Sanskrit for scholarly and liturgical use, Prākrit and Apabhraṃśa for common speech"
+    - "Script: Siddhaṃ script for mantras, Nāgarī (Devanāgarī) for Sanskrit texts"
+    - "Religion: Buddhism (Mahāyāna and Vajrayāna), Hinduism (Śaiva, Vaiṣṇava, Śākta), Jainism"
+    - "Social structure: Caste system with tantric practitioners deliberately transgressing caste boundaries"
+    - "Economy: Agriculture, trade along the Silk Road remnants, patronage of monasteries by royalty"
+    - "Education: The mahāvihāras function as universities — students from Tibet, China, Southeast Asia"
+
+  Tantric Practice:
+    - >
+      Empowerment (abhiṣeka): Ritual initiation required before practicing specific tantric
+      methods. Four levels — vase, secret, wisdom-knowledge, and word. Without proper
+      empowerment, practice is considered dangerous and ineffective.
+    - >
+      Sādhana: Daily meditation practice involving visualization of a deity, mantra recitation,
+      and dissolution into emptiness. Each deity has specific practices, mantras, and mudrās.
+    - >
+      Cakra-pūjā (gaṇacakra): Tantric feast offering. Involves ritual consumption of meat
+      and alcohol (the five meats and five nectars), singing, dancing, and offerings.
+      Considered highly transgressive by orthodox Buddhists.
+    - >
+      Charnel ground practice (śmaśāna-sādhana): Meditation among corpses and cremation
+      remains. Confronts the practitioner with impermanence, overcomes fear, and is said
+      to attract ḍākinīs who test and teach those with sufficient courage.
+    - >
+      Inner yoga: Practices involving the subtle body — channels (nāḍī), winds (prāṇa),
+      and drops (bindu). Includes tummo (inner fire), which generates bliss-heat.
+
+  The Mahasiddha Tradition:
+    - >
+      The eighty-four Mahāsiddhas are realized masters who achieved enlightenment through
+      unconventional means. They come from all castes and walks of life — kings, scholars,
+      fishermen, arrow-makers, washerwomen, wine-sellers. Their stories emphasize that
+      realization is available to anyone, regardless of social position.
+    - >
+      Key Mahāsiddhas active in this period:
+        Tilopa — fisherman and sesame grinder, master of Mahāmudrā
+        Naropa — former scholar of Nālandā, Tilopa's student
+        Virupa — expelled from Nālandā for drinking alcohol, stopped the sun
+        Saraha — the arrow-maker, composer of the Dohākośa
+        Lūipa — the fish-gut eater, practices at the banks of the Gaṅgā
+        Ghaṇṭāpa — the bell-ringer, lives with an outcaste woman
+        Kukkuripa — lives with dogs, practices in the charnel ground
+    - >
+      Transmission: Mahāsiddhas transmit teachings through direct pointing-out instructions,
+      symbolic gestures, songs (dohā), and seemingly absurd demands that shatter the
+      student's conceptual framework.
+
+  Philosophical Schools:
+    - >
+      Mādhyamaka: The Middle Way philosophy founded by Nāgārjuna. Emphasizes emptiness
+      (śūnyatā) of all phenomena. Dominant at Nālandā.
+    - >
+      Yogācāra: The Mind-Only school. Emphasizes consciousness and its transformations.
+      Important for understanding tantric visualization practices.
+    - >
+      Tantric Hermeneutics: How to interpret tantric texts, which operate on multiple
+      levels — literal, symbolic, inner (relating to the subtle body), and ultimate
+      (relating to realization). Misreading the level leads to serious errors.
+
+  Threats and Dangers:
+    - "Ghaznavid raids from the northwest — Mahmud of Ghazni has already destroyed Buddhist sites in Gandhāra"
+    - "Bandits on trade routes between the universities"
+    - "Wild animals in forests and mountain passes — tigers, elephants, cobras"
+    - "Malevolent spirits (bhūta, preta) in charnel grounds — real or projections of mind?"
+    - "Tantric practitioners with hostile intent (abhicāra — harmful ritual magic)"
+    - "Orthodox authorities who view tantric practice as dangerous heresy"
+    - "The tests of the ḍākinīs themselves — which may appear as obstacles but are teachings"
+
+  The Dakini Principle:
+    - >
+      Ḍākinīs (མཁའ་འགྲོ་མ, khandro-ma) are feminine embodiments of enlightened wisdom.
+      In the human realm, they may appear as ordinary women — vendors, beggars, outcaste
+      women, prostitutes, queens. Recognizing a ḍākinī is itself a test of realization.
+      Failing to recognize one — or worse, disrespecting one — brings severe consequences.
+    - >
+      Oḍḍiyāna is called the Ḍākinī City because it is said that the entire kingdom
+      is a maṇḍala where ḍākinīs walk openly. The marketplace of Oḍḍiyāna is the most
+      famous test — every vendor sells something that is simultaneously mundane and
+      a transmission of dharma. Buying fish from the right woman might grant you
+      Mahāmudrā. Refusing her offering might cost you lifetimes.
+    - >
+      The four classes of ḍākinī: Padma (lotus), Vajra (diamond), Ratna (jewel), Karma (action).
+      Each tests and transmits differently. Each has a different temperament — from fierce
+      to playful to utterly terrifying.
+    - >
+      ॐ वज्रयोगिनी हूँ फट् स्वाहा — The root mantra. Those who recite it with genuine
+      devotion may receive visions, encounters, and transmissions. Those who recite it
+      carelessly may receive... corrections.

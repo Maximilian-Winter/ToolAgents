@@ -1,0 +1,317 @@
+setting: >
+  Los Alamos, New Mexico, 1943-1945. A secret military research facility built on a remote mesa 
+  in the New Mexico desert, codenamed "Site Y" of the Manhattan Project. The facility is a 
+  hastily constructed town of wooden buildings, laboratories, and living quarters, surrounded 
+  by barbed wire and guarded by military police. Here, some of the brightest minds in physics 
+  are working to build the world's first atomic bomb before Nazi Germany can complete their own.
+
+player_character: >
+  Dr. Katherine Müller: A human female Theoretical Physicist, age 29. German-Jewish refugee who 
+  escaped Berlin in 1938. Tall and slender with dark, intelligent eyes that miss nothing. Her 
+  brown hair is usually pulled back in a practical bun. Wears simple, practical clothing - 
+  usually trousers and a blouse (scandalous to some, practical for lab work). Carries a worn 
+  leather notebook containing her calculations, and a security badge marked "WHITE" (mid-level 
+  clearance). Known for her work on neutron transport theory and her ability to spot errors in 
+  complex calculations. Speaks with a slight German accent. Has a PhD from Göttingen, studied 
+  under Max Born before fleeing Germany.
+
+companions:
+  - Richard Feynman: Male theoretical physicist, age 25. Junior group leader in Hans Bethe's
+    division. Brilliant, irreverent, picks locks for fun, plays bongo drums, and has an 
+    uncanny ability to simplify complex problems. His wife Arline is ill in a nearby sanatorium. 
+    Wears casual clothes, often disheveled. Known for bypassing security protocols "to prove a point."
+  - Dr. Robert Serber: Male theoretical physicist, age 33. Oppenheimer's former student and
+    close confidant. Gave the initial orientation lectures to arriving scientists (the "Los Alamos 
+    Primer"). Quiet, methodical, deeply knowledgeable about the project's entire scope. One of 
+    the few who sees the full picture.
+  - Captain James Nolan: Male military intelligence officer, age 31. Army Counter-Intelligence
+    Corps. Responsible for security and counterespionage. Suspicious of everyone, especially 
+    foreign-born scientists. Professional, thorough, but not unreasonable. Keeps detailed files 
+    on all personnel.
+
+location: >
+  Fuller Lodge, the main administrative and social center of Los Alamos. Originally a boys' 
+  school dining hall, now converted to a cafeteria and meeting space. You've just arrived on 
+  the mesa after a long train journey and a confusing drive up the dirt road in an Army vehicle 
+  with covered windows.
+
+story_summary: >
+  Dr. Katherine Müller has just arrived at Los Alamos, recruited for her expertise in neutron 
+  transport theory. She knows only that it's "important war work" - the full scope of the 
+  project will be revealed gradually as she gains clearance and trust. As a German-Jewish refugee, 
+  she faces additional scrutiny from security. She must navigate the complex social and scientific 
+  landscape of Los Alamos: proving her worth, gaining clearance to access critical information, 
+  building relationships with key scientists, and contributing to the project while grappling 
+  with the moral weight of creating a weapon of unprecedented destructive power. Meanwhile, she 
+  must also deal with the isolation of the mesa, the compartmentalization that keeps even 
+  brilliant scientists in the dark, and the race against time - both against Germany and against 
+  the project's own ambitious deadlines.
+
+important_events:
+  - Arrival at Los Alamos (current)
+  - Will attend Serber's orientation lectures this week
+  - First major technical conference scheduled for next month
+  - Trinity test scheduled for July 1945 (far in the future, not yet announced)
+
+active_quests:
+  - Main Quest: Gain security clearance to access classified areas of the Tech Area
+  - Main Quest: Contribute to solving the critical assembly problem
+  - Side Quest: Prove your loyalty to suspicious security officers
+  - Side Quest: Decipher what project you're actually working on (if you haven't been fully briefed)
+  - Side Quest: Help Feynman with his wife Arline's medical situation
+  - Side Quest: Navigate the social politics of living in an isolated military town
+
+key_npcs:
+  - J. Robert Oppenheimer: Director of Los Alamos, age 39. Charismatic, brilliant, chain-smoker.
+    Tall, thin, intense blue eyes. Quotes Hindu scripture and reads French poetry. Makes final 
+    decisions on all technical matters. Complex relationship with military authorities.
+  - General Leslie Groves: Military director of Manhattan Project. Demanding, skeptical of
+    scientists, obsessed with security and deadlines. Visits periodically from Washington.
+  - Hans Bethe: Head of Theoretical Division, age 37. German-born physicist, Katherine's potential
+    supervisor. Kind, methodical, politically astute. One of the most respected scientists on site.
+  - Edward Teller: Theoretical physicist, age 35. Hungarian, brilliant but difficult. Obsessed
+    with hydrogen bomb ("Super") instead of current fission bomb work. Often at odds with leadership.
+  - Enrico Fermi: Italian physicist, age 42. Nobel laureate, expert on neutron physics. Quiet
+    authority, practical experimentalist. Recently achieved first controlled nuclear chain reaction.
+  - Niels Bohr: Danish physicist (visiting under alias "Nicholas Baker"), age 58. Father figure
+    to many younger physicists. Escaped Nazi-occupied Denmark. Provides moral guidance.
+  - Klaus Fuchs: British physicist, age 32. Quiet, competent, well-liked. (Unknown to others,
+    he is a Soviet spy - this could be discovered through careful observation.)
+
+inventory:
+  - Security badge (WHITE clearance - mid-level)
+  - Leather-bound calculation notebook
+  - Slide rule
+  - Fountain pen
+  - Letter of introduction from recruitment officer
+  - Small suitcase with personal belongings
+  - Ration book
+  - Temporary housing assignment slip
+
+special_items:
+  - University of Göttingen doctoral thesis (on neutron scattering)
+  - Letter from Max Born (reference letter, also reminder of lost European academic world)
+  - Photograph of family left behind in Germany (parents, fate unknown)
+
+party_members:
+  - Dr. Katherine Müller (player character)
+
+world_state:
+  - December 1943: The project is approximately 18 months from Trinity test
+  - Germany's atomic program status is unknown, creating constant urgency
+  - The facility is still under construction - new buildings going up constantly
+  - Housing is cramped, supplies are rationed, living conditions are primitive
+  - Morale is generally high despite hardships - sense of purpose and intellectual excitement
+  - Security is intense: mail is censored, movements are tracked, visitors are forbidden
+  - The local Native American and Hispanic communities are displaced and resentful
+  - Few scientists know the full scope of the project; information is compartmentalized
+
+factions:
+  - Theoretical Division (T-Division): Hans Bethe's group, focused on calculations and physics theory
+  - Experimental Physics Division: Robert Bacher's group, building and testing components
+  - Chemistry and Metallurgy: Plutonium and uranium processing
+  - Ordnance Division: Weapon design and engineering
+  - Military Police: Security, perimeter control, counterintelligence
+  - Army Corps of Engineers: Construction and logistics
+  - British Mission: Allied scientists including Klaus Fuchs
+  - Women's Army Corps (WACs): Support staff and computation (human computers)
+  - SEDs (Special Engineer Detachment): Enlisted men with technical skills
+
+time_and_calendar:
+  - Current date: December 15, 1943
+  - Season: Winter (cold, snow on the ground)
+  - Time of day: Late afternoon, sun setting over the Jemez Mountains
+
+relationships:
+  - Katherine and Oppenheimer: Not yet met personally
+  - Katherine and Hans Bethe: Potential supervisor, hasn't made decision on her assignment yet
+  - Katherine and Richard Feynman: Just introduced, mutual respect for technical skill
+  - Katherine and Captain Nolan: Under investigation due to German birth
+  - Katherine and other refugees (Fermi, Fuchs, Teller, Bethe): Complicated solidarity
+
+character_details:
+  Dr. Katherine Müller:
+    Class: Theoretical Physicist
+    Specialty: Neutron transport theory, diffusion equations
+    Age: 29
+    Clearance: WHITE (mid-level, can access most areas with escort)
+    Notable features:
+      - German-Jewish refugee background (both asset and liability)
+      - Excellent mathematical intuition
+      - Fluent in German, English, some French
+      - Trained in Göttingen before the purges
+    Skills:
+      - Advanced mathematics (differential equations, group theory)
+      - Neutron physics and cross-section calculations
+      - Quick calculation and error-checking
+      - Scientific writing and presentation
+      - Reading German scientific literature
+    Weaknesses:
+      - Under security suspicion due to German birth
+      - No experimental experience (pure theorist)
+      - Unfamiliar with American academic culture
+      - Isolated from pre-war academic network
+      - Personal trauma from refugee experience
+    Goals:
+      - Contribute meaningfully to the project
+      - Gain full security clearance
+      - Prove loyalty to adopted country
+      - Find out fate of family in Germany
+      - Navigate moral implications of the work
+
+game_world_information:
+  Los Alamos Geography:
+    Overview: >
+      The laboratory site occupies a remote mesa at 7,300 feet elevation in the Jemez Mountains
+      of New Mexico, about 35 miles northwest of Santa Fe. Access is via a single guarded road.
+
+    Key Locations:
+      Fuller Lodge: Main social center, cafeteria, some administrative offices
+      Tech Area: Fenced compound containing laboratories (restricted access by clearance)
+      Bathtub Row: Original ranch school houses, now housing for senior scientists
+      Morganville: Hastily built apartments for married scientists
+      McKee Apartments: Housing for single women
+      Dorm System: Men's dormitories (alphabetically named)
+      PX (Post Exchange): Store for supplies and personal items
+      Hospital: Medical facility including maternity ward
+      Theater: Entertainment and lectures
+      Library: Technical references and some recreational reading
+      Pond: Small artificial pond, social gathering spot in summer
+      Stables: Horses available for recreation
+      Fence Line: Armed guards, barbed wire, forbidden to approach
+
+    Tech Area Buildings (requires clearance):
+      T-Building: Theoretical physics offices and calculation rooms
+      CM-Building: Chemistry and Metallurgy, plutonium research
+      RaLa Building: Radioactive lanthanum experiments (dangerous)
+      Van de Graaff Building: Particle accelerator
+      Omega Site: Remote test site for explosives (several miles away)
+      Machine Shops: Precision equipment manufacturing
+      Assembly Buildings: Classified weapon assembly work
+
+  Security and Clearance System:
+    Overview: >
+      Access to information and locations is strictly controlled through a clearance system.
+      Higher clearance allows access to more sensitive areas and information.
+
+    Clearance Levels:
+      WHITE Badge: Mid-level clearance, most scientists start here
+      BLUE Badge: Lower clearance, technical staff
+      UNESCORTED: Can enter Tech Area without escort
+      Q Clearance: Full access (very few people have this)
+
+    Security Measures:
+      - All mail censored (incoming and outgoing)
+      - Code names and euphemisms required in communications
+      - No mention of Los Alamos location to outsiders
+      - Births recorded as "P.O. Box 1663, Sandoval County"
+      - FBI background checks on all personnel
+      - Counter-intelligence monitoring of suspected security risks
+      - Compartmentalization: scientists told only what they "need to know"
+
+  Scientific Program:
+    Overview: >
+      The project aims to create a nuclear fission weapon before Germany. Two parallel paths
+      are being pursued: uranium-235 and plutonium-239.
+
+    Key Technical Challenges:
+      Critical Mass: How much fissile material is needed for a chain reaction?
+      Assembly Method: How to bring subcritical masses together fast enough?
+      Implosion vs Gun Design: Two competing approaches to assembly
+      Neutron Initiator: How to start the chain reaction at the right moment?
+      Tamper Design: How to reflect neutrons back and increase yield?
+      Diagnostics: How to measure what happens in microseconds?
+
+    Division Structure:
+      T-Division (Theoretical): Calculations, physics theory, bomb physics
+      E-Division (Experimental): Testing components, measuring cross-sections
+      CM-Division (Chemistry-Metallurgy): Plutonium chemistry, metallurgy
+      O-Division (Ordnance): Engineering, weapon design
+      G-Division (Gadget): Final assembly and testing coordination
+
+  Historical Context:
+    World War II Status (December 1943):
+      - Allied forces advancing in Italy
+      - Soviet Union pushing back Germany on Eastern Front
+      - Pacific: Island-hopping campaign ongoing
+      - D-Day still 6 months in the future
+      - Nazi Germany's atomic program status unknown (source of constant anxiety)
+      - Intelligence suggests Germany is behind, but uncertainty remains
+
+    Manhattan Project Status:
+      - Oak Ridge (Tennessee): Uranium enrichment in progress
+      - Hanford (Washington): Plutonium reactors under construction
+      - Los Alamos: Design and assembly, still in early stages
+      - University of Chicago: Fermi's pile achieved criticality Dec 1942
+      - Total project employs 130,000 people (mostly unaware of the goal)
+
+  Social Life at Los Alamos:
+    Daily Life:
+      - Work weeks often 6-7 days
+      - Housing cramped, sometimes multiple families per unit
+      - Limited privacy, thin walls
+      - Communal meals at Fuller Lodge
+      - Limited consumer goods (everything rationed)
+      - No telephones for personal use
+      - Censored mail only contact with outside world
+
+    Recreation:
+      - Hiking in surrounding mountains (when permitted)
+      - Horseback riding
+      - Square dances and parties
+      - Amateur theater productions
+      - Lectures on non-classified topics
+      - Sports (basketball, skiing in winter)
+      - Alcohol consumption (significant, especially among senior scientists)
+
+    Social Dynamics:
+      - Intense intellectual atmosphere, constant debates
+      - Informal hierarchy based on scientific reputation
+      - Tension between scientists and military
+      - Close-knit community due to isolation
+      - Many marriages and births during project
+      - Affairs and romances in hothouse environment
+      - Class distinctions (scientists vs technical staff vs SEDs)
+
+  Moral and Philosophical Questions:
+    The Bomb:
+      - Is it morally justified to build a weapon of mass destruction?
+      - What if Germany is defeated before the bomb is ready?
+      - Should the bomb be demonstrated first, or used without warning?
+      - What will the post-war world look like with atomic weapons?
+      - Do scientists have the right to make these decisions?
+
+    Personal Conflicts:
+      - Loyalty to adopted country vs horror at what's being created
+      - Excitement of physics breakthrough vs guilt over potential use
+      - Individual responsibility vs collective enterprise
+      - Science for knowledge vs science for warfare
+
+  Key Physics Concepts:
+    Nuclear Fission:
+      - Uranium-235 and Plutonium-239 are fissile
+      - Chain reaction: one neutron causes fission, releases 2-3 neutrons
+      - Critical mass: minimum amount for sustaining chain reaction
+      - Supercritical: chain reaction grows exponentially
+
+    Weapon Design:
+      - Gun Assembly: Shoot one subcritical mass into another (simple but needs lots of U-235)
+      - Implosion: Compress sphere of plutonium using shaped explosives (complex but efficient)
+      - Neutron initiator: Beryllium-polonium "urchin" to start reaction
+      - Tamper: Heavy metal shell to reflect neutrons and delay expansion
+
+    Calculations:
+      - Neutron transport: How neutrons diffuse through material
+      - Cross-sections: Probability of neutron interactions
+      - Hydrodynamics: How material behaves under extreme pressures
+      - Efficiency: What percentage of material actually fissions?
+
+  Potential Plot Threads:
+    - Discovering Klaus Fuchs is passing secrets to Soviets
+    - Moral debates about using the weapon on Japan
+    - Personal relationships in the isolated community
+    - Race against perceived German atomic program
+    - Conflicts between pure research and engineering
+    - Tension between civilian scientists and military authority
+    - The Trinity test and its emotional impact
+    - Post-war implications and arms race concerns
