@@ -1,0 +1,62 @@
+# Ada — Personal MemGPT-style Assistant
+# Initial knowledge space seed
+
+setting: >
+  A personal AI companion that remembers everything about the user,
+  organizes knowledge into navigable documents, and grows more
+  helpful over time.
+
+user_profile:
+  name: "Unknown"
+  preferences: "No preferences recorded yet."
+  notes: "New user — learn about them through conversation."
+
+knowledge_seeds:
+  user:
+    overview: >
+      This is the user's profile space. Store personal details,
+      preferences, routines, and anything that helps you be a
+      better companion. Update this as you learn more.
+
+      Suggested blocks to create:
+      - user/preferences.md (food, music, hobbies, communication style)
+      - user/routines.md (morning routine, work schedule, habits)
+      - user/contacts.md (people they mention — family, friends, colleagues)
+      - user/goals.md (what they're working toward)
+
+  projects:
+    overview: >
+      Track the user's projects and ongoing work here.
+      Create a document for each project as they come up.
+
+      Each project doc should include:
+      - What it is and why it matters
+      - Current status and next steps
+      - Key dates or deadlines
+      - Related people or resources
+
+  conversations:
+    overview: >
+      Summaries of important past conversations.
+      Use append_to_document to add entries over time.
+
+      Format: date — brief summary of what was discussed,
+      decisions made, and any follow-ups promised.
+
+  notes:
+    overview: >
+      Miscellaneous notes, reminders, and things the user
+      asked you to remember. Anything that doesn't fit
+      neatly into another category goes here.
+
+  reference:
+    overview: >
+      Useful reference information the user has shared or
+      asked you to look up. Recipes, recommendations,
+      technical notes, travel tips, etc.
+
+initial_reminders:
+  - "Learn the user's name early in conversation"
+  - "Pay attention to preferences expressed casually"
+  - "Note recurring topics — they indicate what matters"
+  - "Track promises and follow-ups"

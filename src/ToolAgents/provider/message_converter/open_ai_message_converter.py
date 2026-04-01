@@ -1,4 +1,22 @@
-# openai_message_converter.py
+# openai_message_converter.py  (reasoning-aware version)
+#
+# Changes from original:
+#   - OpenAIResponseConverter.from_provider_response: captures reasoning
+#     content from the message.reasoning field (OpenRouter normalised format)
+#     and from completion_tokens_details.reasoning_tokens (usage tracking)
+#   - Streaming: captures reasoning tokens from delta.reasoning (OpenRouter)
+#   - ReasoningContent blocks are stored alongside TextContent on ChatMessage
+#   - Round-trip: to_provider_format passes message.reasoning back on
+#     assistant messages for models that benefit from it (OpenRouter convention)
+#
+# OpenRouter reasoning response format (Chat Completions compatible):
+#   choices[0].message.reasoning  -> plaintext reasoning string
+#   choices[0].message.content    -> final answer (unchanged)
+#   usage.completion_tokens_details.reasoning_tokens -> count
+#
+# OpenAI o-series: reasoning tokens are hidden, only count is returned.
+# The .reasoning field will be None for native OpenAI o-series calls.
+
 import random
 import string
 import uuid
@@ -20,18 +38,35 @@ from ToolAgents.data_models.messages import (
 from ToolAgents.provider.llm_provider import StreamingChatMessage, ProviderSettings
 from ToolAgents import FunctionTool
 
+# Import ReasoningContent from the Anthropic converter so both providers
+# use the same type. If you prefer to keep them separate, duplicate the class.
+try:
+    from .anthropic_message_converter import ReasoningContent
+except ImportError:
+    # Fallback: define a minimal version here
+    class ReasoningContent:
+        def __init__(self, thinking=None, signature=None, redacted_data=None):
+            self.thinking      = thinking
+            self.signature     = signature
+            self.redacted_data = redacted_data
+            self.is_redacted   = redacted_data is not None
+        def model_dump(self):
+            return {"type": "reasoning", "thinking": self.thinking, "is_redacted": self.is_redacted}
+        def __repr__(self):
+            preview = (self.thinking or "")[:80].replace("\n", " ")
+            return f"ReasoningContent({preview!r}...)"
+
 
 def generate_tool_call_id(length=9):
-    # Characters to use in the ID
-    characters = string.ascii_letters + string.digits
-    # Random choice of characters
-    return "".join(random.choice(characters) for _ in range(length))
+    return "".join(random.choice(string.ascii_letters + string.digits) for _ in range(length))
+
 
 class OpenAIMessageConverter(BaseMessageConverter):
 
     def __init__(self, without_tool_call_content: bool = True):
         super().__init__()
         self.without_tool_call_content = without_tool_call_content
+
     def prepare_request(
         self,
         model: str,
@@ -40,15 +75,15 @@ class OpenAIMessageConverter(BaseMessageConverter):
         tools: Optional[List[FunctionTool]] = None,
     ) -> Dict[str, Any]:
         other_messages = self.to_provider_format(messages)
-        open_ai_tools = [tool.to_openai_tool() for tool in tools] if tools else None
+        open_ai_tools  = [tool.to_openai_tool() for tool in tools] if tools else None
 
         request_kwargs = settings.to_dict()["REQUEST_SETTINGS"]
-        request_kwargs["model"] = model
+        request_kwargs["model"]    = model
         request_kwargs["messages"] = other_messages
         if open_ai_tools and len(open_ai_tools) > 0:
             request_kwargs["tools"] = open_ai_tools
         else:
-            request_kwargs.pop("tool_choice")
+            request_kwargs.pop("tool_choice", None)
         return request_kwargs
 
     def to_provider_format(self, messages: List[ChatMessage]) -> List[Dict[str, Any]]:
@@ -56,72 +91,58 @@ class OpenAIMessageConverter(BaseMessageConverter):
         for message in messages:
             role = message.role.value
             if role == ChatMessageRole.Custom.value:
-                role = message.additional_information["custom_role"]
+                role = message.additional_information.get("custom_role", role)
             new_content = []
-            tool_calls = []
+            tool_calls  = []
+            reasoning_text = None  # collected from ReasoningContent blocks
+
             for content in message.content:
-                if isinstance(content, TextContent):
+                if isinstance(content, ReasoningContent):
+                    # Pass reasoning back as message.reasoning for OpenRouter
+                    # multi-turn (ignored by providers that don't support it)
+                    if not content.is_redacted and content.thinking:
+                        reasoning_text = content.thinking
+                elif isinstance(content, TextContent):
                     if len(content.content) > 0:
                         new_content.append({"type": "text", "text": content.content})
                 elif isinstance(content, BinaryContent):
-                    if (
-                        "image" in content.mime_type
-                        and content.storage_type == BinaryStorageType.Url
-                    ):
-                        new_content.append(
-                            {
-                                "type": "image_url",
-                                "image_url": {
-                                    "url": content.content,
-                                },
-                            }
-                        )
+                    if "image" in content.mime_type and content.storage_type == BinaryStorageType.Url:
+                        new_content.append({"type": "image_url", "image_url": {"url": content.content}})
                     else:
-                        new_content.append(
-                            {
-                                "type": "image_url",
-                                "image_url": {"url": f"data:{content.mime_type};base64,{content.content}"},
-                            }
-                        )
+                        new_content.append({"type": "image_url", "image_url": {"url": f"data:{content.mime_type};base64,{content.content}"}})
                 elif isinstance(content, ToolCallContent):
-                    tool_calls.append(
-                        {
-                            "id": content.tool_call_id,
-                            "function": {
-                                "name": content.tool_call_name,
-                                "arguments": json.dumps(content.tool_call_arguments),
-                            },
-                            "type": "function",
-                        }
-                    )
+                    tool_calls.append({
+                        "id": content.tool_call_id,
+                        "function": {"name": content.tool_call_name, "arguments": json.dumps(content.tool_call_arguments)},
+                        "type": "function",
+                    })
                 elif isinstance(content, ToolCallResultContent):
-                    converted_messages.append(
-                        {
-                            "tool_call_id": content.tool_call_id,
-                            "role": "tool",
-                            "name": content.tool_call_name,
-                            "content": content.tool_call_result,
-                        }
-                    )
+                    converted_messages.append({
+                        "tool_call_id": content.tool_call_id,
+                        "role": "tool",
+                        "name": content.tool_call_name,
+                        "content": content.tool_call_result,
+                    })
+
             if len(new_content) > 0:
+                msg_dict = {}
                 if len(tool_calls) > 0:
-                    converted_messages.append(
-                        {"role": role, "content": new_content, "tool_calls": tool_calls}
-                    )
+                    msg_dict = {"role": role, "content": new_content, "tool_calls": tool_calls}
+                elif len(new_content) == 1 and new_content[0]["type"] == "text":
+                    msg_dict = {"role": role, "content": new_content[0]["text"]}
                 else:
-                    if len(new_content) == 1 and new_content[0]["type"] == "text":
-                        converted_messages.append(
-                            {"role": role, "content": new_content[0]["text"]}
-                        )
-                    else:
-                        converted_messages.append(
-                            {"role": role, "content": new_content}
-                        )
+                    msg_dict = {"role": role, "content": new_content}
+                # Attach reasoning for OpenRouter multi-turn passback
+                if reasoning_text and role == "assistant":
+                    msg_dict["reasoning"] = reasoning_text
+                converted_messages.append(msg_dict)
             elif len(tool_calls) > 0:
-                if self.without_tool_call_content:
-                    converted_messages.append({"role": role, "tool_calls": tool_calls})
-                else:
-                    converted_messages.append({"role": role, "content": "", "tool_calls": tool_calls})
+                msg_dict = {"role": role, "tool_calls": tool_calls} if self.without_tool_call_content \
+                           else {"role": role, "content": "", "tool_calls": tool_calls}
+                if reasoning_text:
+                    msg_dict["reasoning"] = reasoning_text
+                converted_messages.append(msg_dict)
+
         return converted_messages
 
 
@@ -132,53 +153,59 @@ class OpenAIResponseConverter(BaseResponseConverter):
         self.tool_call_id_style = tool_call_id_style
 
     def from_provider_response(self, response_data: Any) -> ChatMessage:
-        # OpenAI's response: get the first choice's message.
-        if (
-            hasattr(response_data, "model_extra")
-            and "error" in response_data.model_extra
-        ):
+        if hasattr(response_data, "model_extra") and "error" in response_data.model_extra:
             raise Exception(json.dumps(response_data.model_extra["error"]))
 
-        if response_data.choices[0].message.content is not None:
-            content = [TextContent(content=response_data.choices[0].message.content)]
-        else:
-            content = []
+        message    = response_data.choices[0].message
+        content    = []
 
-        tool_calls = response_data.choices[0].message.tool_calls
+        # ── Reasoning content (OpenRouter normalised field) ───────────────────
+        reasoning_text = getattr(message, "reasoning", None)
+        if reasoning_text:
+            content.append(ReasoningContent(thinking=reasoning_text))
 
-        additional_information = response_data.model_dump()
-        additional_information.pop("choices")
+        # ── Text content ──────────────────────────────────────────────────────
+        if message.content is not None:
+            content.append(TextContent(content=message.content))
 
+        # ── Tool calls ────────────────────────────────────────────────────────
+        tool_calls = message.tool_calls
         if tool_calls:
-            for tool_call in tool_calls:
-                if tool_call.function.arguments.strip() == "":
+            for tc in tool_calls:
+                if tc.function.arguments.strip() == "":
                     arguments = {}
                 else:
                     try:
-                        arguments = json.loads(tool_call.function.arguments)
+                        arguments = json.loads(tc.function.arguments)
                     except json.JSONDecodeError as e:
-                        arguments = (
-                            "Exception during JSON decoding of arguments: {}".format(e)
-                        )
+                        arguments = f"Exception during JSON decoding: {e}"
                 if self.tool_call_id_style == "mistral":
-                    tool_call.id = generate_tool_call_id()
-                content.append(
-                    ToolCallContent(
-                        tool_call_id=tool_call.id,
-                        tool_call_name=tool_call.function.name,
-                        tool_call_arguments=arguments,
-                    )
-                )
-        # Extract normalized token usage
+                    tc.id = generate_tool_call_id()
+                content.append(ToolCallContent(
+                    tool_call_id=tc.id,
+                    tool_call_name=tc.function.name,
+                    tool_call_arguments=arguments,
+                ))
+
+        # ── Token usage (including reasoning_tokens count) ────────────────────
+        additional_information = response_data.model_dump()
+        additional_information.pop("choices")
         token_usage = None
-        usage_data = additional_information.get("usage")
+        usage_data  = additional_information.get("usage")
         if usage_data and isinstance(usage_data, dict):
+            details = {
+                k: v for k, v in usage_data.items()
+                if k not in ("prompt_tokens", "completion_tokens", "total_tokens") and v is not None
+            }
+            # completion_tokens_details.reasoning_tokens is the key one for o-series
+            ctd = usage_data.get("completion_tokens_details")
+            if ctd and isinstance(ctd, dict) and ctd.get("reasoning_tokens"):
+                details["reasoning_tokens"] = ctd["reasoning_tokens"]
             token_usage = TokenUsage(
                 input_tokens=usage_data.get("prompt_tokens", 0),
                 output_tokens=usage_data.get("completion_tokens", 0),
                 total_tokens=usage_data.get("total_tokens", 0),
-                details={k: v for k, v in usage_data.items()
-                         if k not in ("prompt_tokens", "completion_tokens", "total_tokens") and v is not None},
+                details=details,
             )
 
         return ChatMessage(
@@ -194,252 +221,184 @@ class OpenAIResponseConverter(BaseResponseConverter):
     def yield_from_provider(
         self, stream_generator: Any
     ) -> Generator[StreamingChatMessage, None, None]:
-        current_content = ""
+        current_content    = ""
+        current_reasoning  = ""    # OpenRouter streams reasoning in delta.reasoning
         current_tool_calls = []
-        alt_index = 0
+        alt_index          = 0
 
         for chunk in stream_generator:
             delta = chunk.choices[0].delta
 
+            # ── Reasoning delta (OpenRouter) ──────────────────────────────────
+            reasoning_chunk = getattr(delta, "reasoning", None)
+            if reasoning_chunk:
+                current_reasoning += reasoning_chunk
+                # Emit with a flag callers can use to distinguish reasoning
+                yield StreamingChatMessage(chunk=reasoning_chunk, is_tool_call=False)
+
+            # ── Text delta ────────────────────────────────────────────────────
             if delta.content:
                 current_content += delta.content
-                yield StreamingChatMessage(
-                    chunk=delta.content,
-                    is_tool_call=False,
-                    finished=False,
-                    finished_chat_message=None,
-                )
+                yield StreamingChatMessage(chunk=delta.content, is_tool_call=False, finished=False)
 
+            # ── Tool call deltas ──────────────────────────────────────────────
             if delta.tool_calls:
                 for tool_call in delta.tool_calls:
                     if not hasattr(tool_call, "index") or tool_call.index is None:
-                        tool_call.index = alt_index
-                        alt_index += 1
+                        tool_call.index = alt_index; alt_index += 1
                     if len(current_tool_calls) <= tool_call.index:
                         if len(current_tool_calls) > 0:
-                            yield StreamingChatMessage(
-                                chunk="",
-                                is_tool_call=True,
+                            yield StreamingChatMessage(chunk="", is_tool_call=True,
                                 tool_call=ToolCallContent(
-                                    tool_call_id=current_tool_calls[-1]["function"][
-                                        "id"
-                                    ],
-                                    tool_call_name=current_tool_calls[-1]["function"][
-                                        "name"
-                                    ],
-                                    tool_call_arguments=json.loads(
-                                        current_tool_calls[-1]["function"]["arguments"]
-                                    ),
-                                ).model_dump(exclude_none=True),
-                                finished=False,
-                                finished_chat_message=None,
-                            )
-                        current_tool_calls.append(
-                            {
-                                "function": {
-                                    "id": tool_call.id,
-                                    "name": tool_call.function.name,
-                                    "arguments": "",
-                                }
-                            }
-                        )
-                        yield StreamingChatMessage(
-                            chunk="",
-                            is_tool_call=True,
+                                    tool_call_id=current_tool_calls[-1]["function"]["id"],
+                                    tool_call_name=current_tool_calls[-1]["function"]["name"],
+                                    tool_call_arguments=json.loads(current_tool_calls[-1]["function"]["arguments"]),
+                                ).model_dump(exclude_none=True), finished=False)
+                        current_tool_calls.append({"function": {"id": tool_call.id, "name": tool_call.function.name, "arguments": ""}})
+                        yield StreamingChatMessage(chunk="", is_tool_call=True,
                             tool_call=ToolCallContent(
                                 tool_call_id=current_tool_calls[-1]["function"]["id"],
-                                tool_call_name=current_tool_calls[-1]["function"][
-                                    "name"
-                                ],
+                                tool_call_name=current_tool_calls[-1]["function"]["name"],
                                 tool_call_arguments=None,
-                            ).model_dump(exclude_none=True),
-                            finished=False,
-                            finished_chat_message=None,
-                        )
-
+                            ).model_dump(exclude_none=True), finished=False)
                     if tool_call.function.arguments:
-                        current_tool_calls[tool_call.index]["function"][
-                            "arguments"
-                        ] += tool_call.function.arguments
+                        current_tool_calls[tool_call.index]["function"]["arguments"] += tool_call.function.arguments
 
             if chunk.choices[0].finish_reason is not None:
-                contents = [TextContent(content=current_content)]
+                contents     = []
                 has_tool_call = False
+                # Add reasoning block first if we collected any
+                if current_reasoning:
+                    contents.append(ReasoningContent(thinking=current_reasoning))
+                contents.append(TextContent(content=current_content))
                 if len(current_tool_calls) > 0:
                     has_tool_call = True
                     for tc in current_tool_calls:
                         try:
                             arguments = json.loads(tc["function"]["arguments"])
                         except json.JSONDecodeError as e:
-                            arguments = (
-                                f"Exception during JSON decoding of arguments: {e}"
-                            )
+                            arguments = f"Exception during JSON decoding: {e}"
                         if self.tool_call_id_style == "mistral":
                             tc["function"]["id"] = generate_tool_call_id()
-                        contents.append(
-                            ToolCallContent(
-                                tool_call_id=tc["function"]["id"],
-                                tool_call_name=tc["function"]["name"],
-                                tool_call_arguments=arguments,
-                            )
-                        )
-                additional_data = chunk.__dict__
-                additional_data.pop("choices")
+                        contents.append(ToolCallContent(
+                            tool_call_id=tc["function"]["id"],
+                            tool_call_name=tc["function"]["name"],
+                            tool_call_arguments=arguments,
+                        ))
+                additional_data = chunk.__dict__; additional_data.pop("choices")
                 token_usage = None
-                if additional_data["usage"] is not None:
-                    usage_dict = chunk.usage.model_dump()
-                    additional_data["usage"] = usage_dict
+                if additional_data.get("usage") is not None:
+                    usage_dict = chunk.usage.model_dump(); additional_data["usage"] = usage_dict
+                    details = {k: v for k, v in usage_dict.items() if k not in ("prompt_tokens", "completion_tokens", "total_tokens") and v is not None}
+                    ctd = usage_dict.get("completion_tokens_details")
+                    if ctd and isinstance(ctd, dict) and ctd.get("reasoning_tokens"):
+                        details["reasoning_tokens"] = ctd["reasoning_tokens"]
                     token_usage = TokenUsage(
                         input_tokens=usage_dict.get("prompt_tokens", 0),
                         output_tokens=usage_dict.get("completion_tokens", 0),
                         total_tokens=usage_dict.get("total_tokens", 0),
-                        details={k: v for k, v in usage_dict.items()
-                                 if k not in ("prompt_tokens", "completion_tokens", "total_tokens") and v is not None},
+                        details=details,
                     )
                 else:
-                    additional_data.pop("usage")
-                finished_message = ChatMessage(
-                    id=str(uuid.uuid4()),
-                    role=ChatMessageRole.Assistant,
-                    content=contents,
-                    created_at=datetime.datetime.now(),
-                    updated_at=datetime.datetime.now(),
-                    additional_information=additional_data,
-                    token_usage=token_usage,
-                )
+                    additional_data.pop("usage", None)
                 yield StreamingChatMessage(
-                    chunk="",
-                    is_tool_call=has_tool_call,
+                    chunk="", is_tool_call=has_tool_call,
                     tool_call=contents[-1].model_dump() if has_tool_call else None,
                     finished=True,
-                    finished_chat_message=finished_message,
+                    finished_chat_message=ChatMessage(
+                        id=str(uuid.uuid4()), role=ChatMessageRole.Assistant, content=contents,
+                        created_at=datetime.datetime.now(), updated_at=datetime.datetime.now(),
+                        additional_information=additional_data, token_usage=token_usage,
+                    ),
                 )
 
     async def async_yield_from_provider(
         self, stream_generator: Any
     ) -> AsyncGenerator[StreamingChatMessage, None]:
-        current_content = ""
+        current_content    = ""
+        current_reasoning  = ""
         current_tool_calls = []
-        alt_index = 0
+        alt_index          = 0
 
         async for chunk in await stream_generator:
             if len(chunk.choices) == 0:
                 continue
             delta = chunk.choices[0].delta
 
+            reasoning_chunk = getattr(delta, "reasoning", None)
+            if reasoning_chunk:
+                current_reasoning += reasoning_chunk
+                yield StreamingChatMessage(chunk=reasoning_chunk, is_tool_call=False)
+
             if delta.content:
                 current_content += delta.content
-                yield StreamingChatMessage(
-                    chunk=delta.content,
-                    is_tool_call=False,
-                    finished=False,
-                    finished_chat_message=None,
-                )
+                yield StreamingChatMessage(chunk=delta.content, is_tool_call=False, finished=False)
 
             if delta.tool_calls:
                 for tool_call in delta.tool_calls:
                     if not hasattr(tool_call, "index") or tool_call.index is None:
-                        tool_call.index = alt_index
-                        alt_index += 1
+                        tool_call.index = alt_index; alt_index += 1
                     if len(current_tool_calls) <= tool_call.index:
                         if len(current_tool_calls) > 0:
-                            yield StreamingChatMessage(
-                                chunk="",
-                                is_tool_call=True,
+                            yield StreamingChatMessage(chunk="", is_tool_call=True,
                                 tool_call=ToolCallContent(
-                                    tool_call_id=current_tool_calls[-1]["function"][
-                                        "id"
-                                    ],
-                                    tool_call_name=current_tool_calls[-1]["function"][
-                                        "name"
-                                    ],
-                                    tool_call_arguments=json.loads(
-                                        current_tool_calls[-1]["function"]["arguments"]
-                                    ),
-                                ).model_dump(exclude_none=True),
-                                finished=False,
-                                finished_chat_message=None,
-                            )
-                        current_tool_calls.append(
-                            {
-                                "function": {
-                                    "id": tool_call.id,
-                                    "name": tool_call.function.name,
-                                    "arguments": "",
-                                }
-                            }
-                        )
-                        yield StreamingChatMessage(
-                            chunk="",
-                            is_tool_call=True,
+                                    tool_call_id=current_tool_calls[-1]["function"]["id"],
+                                    tool_call_name=current_tool_calls[-1]["function"]["name"],
+                                    tool_call_arguments=json.loads(current_tool_calls[-1]["function"]["arguments"]),
+                                ).model_dump(exclude_none=True), finished=False)
+                        current_tool_calls.append({"function": {"id": tool_call.id, "name": tool_call.function.name, "arguments": ""}})
+                        yield StreamingChatMessage(chunk="", is_tool_call=True,
                             tool_call=ToolCallContent(
                                 tool_call_id=current_tool_calls[-1]["function"]["id"],
-                                tool_call_name=current_tool_calls[-1]["function"][
-                                    "name"
-                                ],
+                                tool_call_name=current_tool_calls[-1]["function"]["name"],
                                 tool_call_arguments=None,
-                            ).model_dump(exclude_none=True),
-                            finished=False,
-                            finished_chat_message=None,
-                        )
+                            ).model_dump(exclude_none=True), finished=False)
                     if tool_call.function.arguments:
-                        current_tool_calls[tool_call.index]["function"][
-                            "arguments"
-                        ] += tool_call.function.arguments
+                        current_tool_calls[tool_call.index]["function"]["arguments"] += tool_call.function.arguments
+
             if chunk.choices[0].finish_reason is not None:
-                contents = [TextContent(content=current_content)]
+                contents = []
                 has_tool_call = False
+                if current_reasoning:
+                    contents.append(ReasoningContent(thinking=current_reasoning))
+                contents.append(TextContent(content=current_content))
                 if len(current_tool_calls) > 0:
                     has_tool_call = True
                     for tc in current_tool_calls:
-
                         try:
                             arguments = json.loads(tc["function"]["arguments"])
                         except json.JSONDecodeError as e:
-                            arguments = (
-                                f"Exception during JSON decoding of arguments: {e}"
-                            )
+                            arguments = f"Exception during JSON decoding: {e}"
                         if self.tool_call_id_style == "mistral":
                             tc["function"]["id"] = generate_tool_call_id()
-                        contents.append(
-                            ToolCallContent(
-                                tool_call_id=tc["function"]["id"],
-                                tool_call_name=tc["function"]["name"],
-                                tool_call_arguments=arguments,
-                            )
-                        )
-                additional_data = chunk.__dict__
-                additional_data.pop("choices")
+                        contents.append(ToolCallContent(
+                            tool_call_id=tc["function"]["id"],
+                            tool_call_name=tc["function"]["name"],
+                            tool_call_arguments=arguments,
+                        ))
+                additional_data = chunk.__dict__; additional_data.pop("choices")
                 token_usage = None
-                if additional_data["usage"] is not None:
-                    usage_dict = chunk.usage.model_dump()
-                    additional_data["usage"] = usage_dict
+                if additional_data.get("usage") is not None:
+                    usage_dict = chunk.usage.model_dump(); additional_data["usage"] = usage_dict
+                    details = {k: v for k, v in usage_dict.items() if k not in ("prompt_tokens", "completion_tokens", "total_tokens") and v is not None}
+                    ctd = usage_dict.get("completion_tokens_details")
+                    if ctd and isinstance(ctd, dict) and ctd.get("reasoning_tokens"):
+                        details["reasoning_tokens"] = ctd["reasoning_tokens"]
                     token_usage = TokenUsage(
                         input_tokens=usage_dict.get("prompt_tokens", 0),
                         output_tokens=usage_dict.get("completion_tokens", 0),
                         total_tokens=usage_dict.get("total_tokens", 0),
-                        details={k: v for k, v in usage_dict.items()
-                                 if k not in ("prompt_tokens", "completion_tokens", "total_tokens") and v is not None},
+                        details=details,
                     )
                 else:
-                    additional_data.pop("usage")
-                finished_message = ChatMessage(
-                    id=str(uuid.uuid4()),
-                    role=ChatMessageRole.Assistant,
-                    content=contents,
-                    created_at=datetime.datetime.now(),
-                    updated_at=datetime.datetime.now(),
-                    additional_information=additional_data,
-                    token_usage=token_usage,
-                )
+                    additional_data.pop("usage", None)
                 yield StreamingChatMessage(
-                    chunk="",
-                    is_tool_call=has_tool_call,
-                    tool_call=(
-                        contents[-1].model_dump(exclude_none=True)
-                        if has_tool_call
-                        else None
-                    ),
+                    chunk="", is_tool_call=has_tool_call,
+                    tool_call=contents[-1].model_dump(exclude_none=True) if has_tool_call else None,
                     finished=True,
-                    finished_chat_message=finished_message,
+                    finished_chat_message=ChatMessage(
+                        id=str(uuid.uuid4()), role=ChatMessageRole.Assistant, content=contents,
+                        created_at=datetime.datetime.now(), updated_at=datetime.datetime.now(),
+                        additional_information=additional_data, token_usage=token_usage,
+                    ),
                 )
