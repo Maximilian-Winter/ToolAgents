@@ -335,8 +335,319 @@ def create_provider(config: HarnessConfig):
 
 
 # ═══════════════════════════════════════════════════════════════════
-# VirtualGameMaster2
+# YAML → NavigableMemory Seeder
 # ═══════════════════════════════════════════════════════════════════
+
+def _slugify(text: str) -> str:
+    """Convert a string to a path-safe slug."""
+    import re
+    slug = text.lower().strip()
+    slug = re.sub(r"[''\"\":\(\)]", "", slug)
+    slug = re.sub(r"[^a-z0-9]+", "-", slug)
+    slug = slug.strip("-")
+    return slug
+
+
+def _dict_to_markdown(data: dict, depth: int = 2) -> str:
+    """Recursively render a dict as markdown sections."""
+    lines = []
+    heading = "#" * min(depth, 4)
+    for key, value in data.items():
+        if isinstance(value, str):
+            lines.append(f"{heading} {key}\n{value.strip()}")
+        elif isinstance(value, list):
+            items = "\n".join(f"- {item}" if isinstance(item, str) else f"- {item}" for item in value)
+            lines.append(f"{heading} {key}\n{items}")
+        elif isinstance(value, dict):
+            lines.append(f"{heading} {key}")
+            lines.append(_dict_to_markdown(value, depth + 1))
+    return "\n\n".join(lines)
+
+
+def seed_from_yaml(
+    nav_memory: NavigableMemory,
+    yaml_file: Optional[str] = None,
+    yaml_data: Optional[dict] = None,
+    world_prefix: str = "world",
+    verbose: bool = True,
+) -> int:
+    """Seed a NavigableMemory from a YAML game starter file.
+
+    Parses the YAML and creates documents in the NavigableMemory's backend
+    from structured fields like game_world_information, key_npcs, factions,
+    location, setting, etc. Handles both deeply nested YAMLs (like the
+    Candlekeep starter) and flat ones (like the Wudang starter).
+
+    The agent can also create new locations on the fly via the WriteDocument
+    tool — this just provides the initial world.
+
+    Args:
+        nav_memory: The NavigableMemory to seed documents into.
+        yaml_file: Path to a YAML file to load.
+        yaml_data: Pre-loaded YAML dict (alternative to yaml_file).
+        world_prefix: Path prefix for generated documents (default: "world").
+        verbose: Print seeded document paths.
+
+    Returns:
+        Number of documents created.
+    """
+    if yaml_file:
+        import yaml as yaml_lib
+        with open(yaml_file, "r", encoding="utf-8") as f:
+            data = yaml_lib.safe_load(f)
+    elif yaml_data:
+        data = yaml_data
+    else:
+        raise ValueError("Provide either yaml_file or yaml_data.")
+
+    count = 0
+
+    def _write(path: str, title: str, content: str, tags: Optional[List[str]] = None):
+        nonlocal count
+        nav_memory.write(path, title, content, tags)
+        count += 1
+        if verbose:
+            print(f"  ✓ {path}")
+
+    # ── Overview document from setting + story_summary ──
+    overview_parts = []
+    if "setting" in data:
+        overview_parts.append(f"## Setting\n{data['setting'].strip()}")
+    if "story_summary" in data:
+        overview_parts.append(f"## Story So Far\n{data['story_summary'].strip()}")
+    if "world_state" in data:
+        if isinstance(data["world_state"], list):
+            items = "\n".join(f"- {s}" for s in data["world_state"])
+            overview_parts.append(f"## World State\n{items}")
+        else:
+            overview_parts.append(f"## World State\n{data['world_state']}")
+    if "time_and_calendar" in data:
+        cal = data["time_and_calendar"]
+        if isinstance(cal, dict):
+            cal_lines = "\n".join(f"- **{k}**: {v}" for k, v in cal.items())
+            overview_parts.append(f"## Calendar\n{cal_lines}")
+        else:
+            overview_parts.append(f"## Calendar\n{cal}")
+
+    if overview_parts:
+        _write(
+            f"{world_prefix}/overview.md",
+            "World Overview",
+            "\n\n".join(overview_parts),
+            ["overview", "setting"],
+        )
+
+    # ── Current location ──
+    if "location" in data:
+        loc_text = data["location"].strip()
+        _write(
+            f"{world_prefix}/locations/current-location.md",
+            "Current Location",
+            f"# Current Location\n\n{loc_text}",
+            ["location", "current"],
+        )
+
+    # ── game_world_information (deep nested — Candlekeep style) ──
+    if "game_world_information" in data:
+        gwi = data["game_world_information"]
+        if isinstance(gwi, dict):
+            for location_name, location_data in gwi.items():
+                slug = _slugify(location_name)
+                if isinstance(location_data, dict):
+                    content = f"# {location_name}\n\n"
+                    content += _dict_to_markdown(location_data, depth=2)
+                    _write(
+                        f"{world_prefix}/locations/{slug}.md",
+                        location_name,
+                        content,
+                        ["location", "world-info"],
+                    )
+                elif isinstance(location_data, str):
+                    _write(
+                        f"{world_prefix}/locations/{slug}.md",
+                        location_name,
+                        f"# {location_name}\n\n{location_data.strip()}",
+                        ["location"],
+                    )
+
+    # ── Player character ──
+    if "player_character" in data:
+        pc = data["player_character"]
+        if isinstance(pc, str):
+            _write(
+                f"{world_prefix}/characters/player.md",
+                "Player Character",
+                f"# Player Character\n\n{pc.strip()}",
+                ["character", "player"],
+            )
+
+    # ── Character details (structured) ──
+    if "character_details" in data:
+        for char_name, details in data["character_details"].items():
+            slug = _slugify(char_name)
+            if isinstance(details, dict):
+                content = f"# {char_name}\n\n"
+                content += _dict_to_markdown(details, depth=2)
+            else:
+                content = f"# {char_name}\n\n{details}"
+            _write(
+                f"{world_prefix}/characters/{slug}.md",
+                char_name,
+                content,
+                ["character"],
+            )
+
+    # ── Companions ──
+    if "companions" in data:
+        companions = data["companions"]
+        if isinstance(companions, list):
+            companion_lines = "\n\n".join(
+                f"### {c}" if isinstance(c, str) else f"### Companion\n{c}"
+                for c in companions
+            )
+            _write(
+                f"{world_prefix}/characters/companions.md",
+                "Companions",
+                f"# Companions\n\n{companion_lines}",
+                ["character", "companion"],
+            )
+
+    # ── Key NPCs ──
+    if "key_npcs" in data:
+        npcs = data["key_npcs"]
+        if isinstance(npcs, list):
+            npc_lines = "\n".join(f"- {n}" for n in npcs)
+            _write(
+                f"{world_prefix}/npcs/key-npcs.md",
+                "Key NPCs",
+                f"# Key NPCs\n\n{npc_lines}",
+                ["npc"],
+            )
+        elif isinstance(npcs, dict):
+            for npc_name, npc_data in npcs.items():
+                slug = _slugify(npc_name)
+                if isinstance(npc_data, dict):
+                    content = f"# {npc_name}\n\n" + _dict_to_markdown(npc_data, depth=2)
+                else:
+                    content = f"# {npc_name}\n\n{npc_data}"
+                _write(
+                    f"{world_prefix}/npcs/{slug}.md",
+                    npc_name,
+                    content,
+                    ["npc"],
+                )
+
+    # ── Factions ──
+    if "factions" in data:
+        factions = data["factions"]
+        if isinstance(factions, list):
+            faction_lines = "\n".join(f"- {f}" for f in factions)
+            _write(
+                f"{world_prefix}/factions/overview.md",
+                "Factions",
+                f"# Factions\n\n{faction_lines}",
+                ["faction"],
+            )
+        elif isinstance(factions, dict):
+            for faction_name, faction_data in factions.items():
+                slug = _slugify(faction_name)
+                content = f"# {faction_name}\n\n{faction_data}" if isinstance(faction_data, str) else f"# {faction_name}\n\n" + _dict_to_markdown(faction_data, depth=2)
+                _write(
+                    f"{world_prefix}/factions/{slug}.md",
+                    faction_name,
+                    content,
+                    ["faction"],
+                )
+
+    # ── Active quests ──
+    if "active_quests" in data:
+        quests = data["active_quests"]
+        if isinstance(quests, list):
+            quest_lines = "\n".join(f"- {q}" for q in quests)
+            _write(
+                f"{world_prefix}/quests/active.md",
+                "Active Quests",
+                f"# Active Quests\n\n{quest_lines}",
+                ["quest", "active"],
+            )
+
+    # ── Important events ──
+    if "important_events" in data:
+        events = data["important_events"]
+        if isinstance(events, list):
+            event_lines = "\n".join(f"- {e}" for e in events)
+            _write(
+                f"{world_prefix}/events/history.md",
+                "Important Events",
+                f"# Important Events\n\n{event_lines}",
+                ["event", "history"],
+            )
+
+    # ── Inventory ──
+    if "inventory" in data:
+        inv = data["inventory"]
+        if isinstance(inv, dict):
+            content = "# Inventory\n\n"
+            for owner, items in inv.items():
+                content += f"## {owner}\n"
+                if isinstance(items, list):
+                    content += "\n".join(f"- {item}" for item in items) + "\n\n"
+                else:
+                    content += f"{items}\n\n"
+        elif isinstance(inv, list):
+            items = "\n".join(f"- {item}" for item in inv)
+            content = f"# Inventory\n\n{items}"
+        else:
+            content = f"# Inventory\n\n{inv}"
+        _write(
+            f"{world_prefix}/party/inventory.md",
+            "Inventory",
+            content,
+            ["inventory", "party"],
+        )
+
+    # ── Special items ──
+    if "special_items" in data:
+        items = data["special_items"]
+        if isinstance(items, list):
+            parts = []
+            for item in items:
+                if isinstance(item, dict):
+                    name = item.get("name", "Unknown Item")
+                    desc = item.get("description", "")
+                    props = item.get("properties", [])
+                    lims = item.get("limitations", [])
+                    part = f"## {name}\n{desc}"
+                    if props:
+                        part += "\n\n**Properties:**\n" + "\n".join(f"- {p}" for p in props)
+                    if lims:
+                        part += "\n\n**Limitations:**\n" + "\n".join(f"- {l}" for l in lims)
+                    parts.append(part)
+                else:
+                    parts.append(f"- {item}")
+            _write(
+                f"{world_prefix}/party/special-items.md",
+                "Special Items",
+                "# Special Items\n\n" + "\n\n".join(parts),
+                ["item", "special"],
+            )
+
+    # ── Relationships ──
+    if "relationships" in data:
+        rels = data["relationships"]
+        if isinstance(rels, list):
+            rel_lines = "\n".join(f"- {r}" for r in rels)
+            _write(
+                f"{world_prefix}/party/relationships.md",
+                "Relationships",
+                f"# Relationships\n\n{rel_lines}",
+                ["relationship", "party"],
+            )
+
+    if verbose:
+        print(f"  Seeded {count} documents from YAML.")
+
+    return count
 
 class VirtualGameMaster2:
     """
