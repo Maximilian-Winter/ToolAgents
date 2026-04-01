@@ -34,50 +34,11 @@ from ToolAgents.data_models.messages import (
     BinaryStorageType,
     ToolCallResultContent,
     TokenUsage,
+    ReasoningContent,
 )
 from ToolAgents.provider.llm_provider import StreamingChatMessage, ProviderSettings
 from ToolAgents import FunctionTool
 
-
-# ─── Reasoning content block (new) ────────────────────────────────────────────
-
-class ReasoningContent:
-    """Holds a thinking/reasoning block from a model response."""
-
-    def __init__(
-        self,
-        thinking: Optional[str] = None,
-        signature: Optional[str] = None,
-        redacted_data: Optional[str] = None,
-    ):
-        self.thinking      = thinking       # plaintext reasoning (may be None if redacted)
-        self.signature     = signature      # Anthropic verification signature
-        self.redacted_data = redacted_data  # opaque data for redacted_thinking blocks
-        self.is_redacted   = redacted_data is not None
-
-    def to_anthropic_block(self) -> Dict[str, Any]:
-        """Round-trip back to Anthropic API format for multi-turn."""
-        if self.is_redacted:
-            return {"type": "redacted_thinking", "data": self.redacted_data}
-        block = {"type": "thinking", "thinking": self.thinking or ""}
-        if self.signature:
-            block["signature"] = self.signature
-        return block
-
-    def model_dump(self) -> Dict[str, Any]:
-        return {
-            "type":         "redacted_thinking" if self.is_redacted else "thinking",
-            "thinking":     self.thinking,
-            "signature":    self.signature,
-            "redacted_data":self.redacted_data,
-            "is_redacted":  self.is_redacted,
-        }
-
-    def __repr__(self):
-        if self.is_redacted:
-            return "ReasoningContent(redacted)"
-        preview = (self.thinking or "")[:80].replace("\n", " ")
-        return f"ReasoningContent({preview!r}...)"
 
 
 def prepare_messages(messages: List[Dict[str, str]]) -> tuple:

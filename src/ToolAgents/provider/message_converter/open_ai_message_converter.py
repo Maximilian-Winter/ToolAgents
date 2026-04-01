@@ -34,27 +34,10 @@ from ToolAgents.data_models.messages import (
     BinaryStorageType,
     ToolCallResultContent,
     TokenUsage,
+    ReasoningContent,
 )
 from ToolAgents.provider.llm_provider import StreamingChatMessage, ProviderSettings
 from ToolAgents import FunctionTool
-
-# Import ReasoningContent from the Anthropic converter so both providers
-# use the same type. If you prefer to keep them separate, duplicate the class.
-try:
-    from .anthropic_message_converter import ReasoningContent
-except ImportError:
-    # Fallback: define a minimal version here
-    class ReasoningContent:
-        def __init__(self, thinking=None, signature=None, redacted_data=None):
-            self.thinking      = thinking
-            self.signature     = signature
-            self.redacted_data = redacted_data
-            self.is_redacted   = redacted_data is not None
-        def model_dump(self):
-            return {"type": "reasoning", "thinking": self.thinking, "is_redacted": self.is_redacted}
-        def __repr__(self):
-            preview = (self.thinking or "")[:80].replace("\n", " ")
-            return f"ReasoningContent({preview!r}...)"
 
 
 def generate_tool_call_id(length=9):
