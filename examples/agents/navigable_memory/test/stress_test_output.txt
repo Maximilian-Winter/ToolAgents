@@ -1,0 +1,149 @@
+H:\Dev42\.venv314\Scripts\python.exe H:\Dev42\ToolAgentsDev\examples\agents\navigable_memory\test\test_stress.py
+============================================================
+  Stress Test Suite
+  NavigableMemory + SmartMessages + PromptComposer
+============================================================
+
+── Test 1: Deep navigation chains ──
+  Seeded 48 documents into Obsidian Forge knowledge base.
+  ✅ navigation depth
+  ✅ departure count
+  ✅ current location
+  ✅ current title
+  ✅ first departure
+  ✅ last departure
+  ✅ context has current doc
+  ✅ context has phase info
+  ✅ history has recent entry
+
+── Test 2: Sibling and parent context ──
+  Seeded 48 documents into Obsidian Forge knowledge base.
+  ✅ sibling: Ashen Guardian
+  ✅ sibling: Void Lord
+  ✅ parent: Boss Design
+
+── Test 3: Departure → SmartMessage injection ──
+  Seeded 48 documents into Obsidian Forge knowledge base.
+  ✅ departure messages
+  ✅ active after 4 ticks
+  ✅ archived count
+  ✅ archive has studio overview
+  ✅ archive has ashenmoor
+
+── Test 4: Concurrent TTL stress ──
+  ✅ initial count
+  ✅ tick 1 expirations
+  ✅ tick 2 expirations
+  ✅ total expired after 5 ticks
+  ✅ remaining after 5 ticks
+  ✅ tick 6 (empty) expirations
+  ✅ archived count
+
+── Test 5: Mixed message types ──
+  ✅ initial count
+  ✅ after tick 1
+  ✅ after tick 2 (ephemeral + custom gone)
+  ✅ custom callback fired
+  ✅ custom callback content
+  ✅ after tick 3 (archival gone)
+  ✅ archive has 1
+  ✅ archived content
+  ✅ after 13 ticks total
+  ✅ permanent survives
+  ✅ pinned survives
+
+── Test 6: PromptComposer dynamic recompilation ──
+  ✅ compile 1 has instructions
+  ✅ compile 1 has location nowhere
+  ✅ compile 1 has turn 0
+  ✅ compile 1 has state tags
+  ✅ compile 1 has tools
+  ✅ compile 2 has new location
+  ✅ compile 2 has turn 5
+  ✅ compile 3 no tools
+  ✅ compile 3 still has state
+  ✅ ordering: instructions < memory < state
+  ✅ updated: old content gone
+  ✅ updated: new content present
+  ✅ removed: memory gone
+  ✅ enabled module count after remove
+
+── Test 7: Persistence — save and restore ──
+  Seeded 48 documents into Obsidian Forge knowledge base.
+  ✅ save file created
+  ✅ save file non-empty
+  ✅ restored location
+  ✅ restored history length
+  ✅ restored doc count
+  ✅ restored active msg count
+  ✅ restored archive count
+  ✅ restored tick count
+  ✅ msg TTL is int or None: 2
+  ✅ msg turns_alive is int: 3
+  ✅ msg TTL is int or None: 2
+  ✅ msg turns_alive is int: 3
+  ✅ msg TTL is int or None: None
+  ✅ msg turns_alive is int: 3
+  ✅ msg TTL is int or None: 5
+  ✅ msg turns_alive is int: 3
+  ✅ core memory persona
+  ✅ core memory user_info
+  ✅ reconstructed active count
+  ✅ reconstructed manager ticks
+
+── Test 8: Large-scale TTL stress ──
+  ✅ initial 100 messages
+  ✅ all expired after 20 ticks
+  ✅ total processed
+  ✅ archive has entries
+  ✅ some were removed (not archived)
+
+── Test 9: Edge cases ──
+  ✅ TTL=1 expires on first tick
+  ✅ nothing left
+  ✅ empty tick no changes
+  Seeded 48 documents into Obsidian Forge knowledge base.
+  ✅ nonexistent nav handled
+  ✅ empty composer compile
+  ✅ duplicate module name raises ValueError
+  ✅ remove nonexistent returns None
+  ✅ summarize produced replacement
+  ✅ replacement exists
+  ✅ replacement is shorter
+
+── Test 10: Full integration ──
+  Seeded 48 documents into Obsidian Forge knowledge base.
+  ✅ turn 1: has instructions
+  ✅ turn 1: has location
+  ✅ turn 1: has memory
+  ✅ turn 2: has bugs
+  ✅ turn 2: core memory unchanged
+  ✅ turn 2b: memory updated
+  ✅ departures archived
+  ✅ archive has studio overview departure
+  ✅ pinned message count
+  ✅ active messages exist
+  ✅ final: has instructions
+  ✅ final: has current location
+
+── Test 11: Knowledge base completeness ──
+  Seeded 48 documents into Obsidian Forge knowledge base.
+  ✅ at least 40 documents
+  ✅ list all returns documents
+  ✅ search finds multiplayer bugs
+  ✅ search finds VFX backlog
+  ✅ deep navigation works
+  ✅ written doc navigable
+  ✅ written doc content
+
+── Test 12: on_tick callback stress ──
+  ✅ tick callbacks fired
+  ✅ msg 0 logged 5 times
+  ✅ msg 0 turn 1 age
+  ✅ msg 0 turn 5 age
+
+============================================================
+  Results: 107/107 passed, 0 failed
+============================================================
+
+Process finished with exit code 0

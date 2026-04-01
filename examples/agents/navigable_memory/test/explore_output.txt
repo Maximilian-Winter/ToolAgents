@@ -1,0 +1,218 @@
+H:\Dev42\.venv314\Scripts\python.exe H:\Dev42\ToolAgentsDev\examples\agents\navigable_memory\test\explore_obsidian_forge.py
+  Seeded 48 documents into Obsidian Forge knowledge base.
+
+  Restored from 2026-04-01T06:04:29.066472
+  Core memory: 3 blocks
+  Messages: 2 active, 0 archived
+  Location: Obsidian Forge Studios
+================================================================
+  🔨 Forge — Obsidian Forge Studios Manager Assistant
+  Knowledge: 48 documents
+  Session: restored
+================================================================
+
+Commands:
+  quit            — Exit (auto-saves)
+  /memory         — Show core memory
+  /location       — Current knowledge location
+  /archive        — Show archived messages
+  /status         — System status
+  /tree           — Knowledge space tree
+  /inject <msg>   — Inject ephemeral context
+  /save           — Save state
+  /clear          — Clear messages and start fresh
+
+Try: 'What are our critical bugs?'
+     'Show me the VFX backlog and who owns it'
+     'What's our financial situation?'
+
+
+🧑 You > What are our critical bugs?
+  📍 Departed: Obsidian Forge Studios
+
+🔨 Forge > Here are the current critical bugs for **Ashenmoor**:
+
+| ID | Issue | Owner | Impact | ETA |
+|----|-------|-------|--------|-----|
+| **CRIT-001** | Multiplayer phase desync | Jake Torres | Co-op unplayable for boss fights | 1 week |
+| **CRIT-002** | Memory leak in Thornheart Marsh | Priya Sharma | Crash on min-spec machines (>20 min play) | Investigating |
+| **CRIT-003** | Save corruption on faction standing overflow | Jake Torres | Save file becomes unloadable | 3 days |
+
+**Key observations:**
+- **Jake Torres** is assigned to two critical bugs — this could be a workload concern.
+- **CRIT-002** (memory leak) has no ETA yet — this is a risk for Early Access in August.
+- All three bugs are blockers for a smooth EA launch.
+
+Would you like me to:
+1. Check **Drift Protocol** for any critical issues?
+2. Pull up **Jake Torres** or **Priya Sharma's** profiles to see their current workload?
+3. Look at the **QA backlog** or **performance budget** for related context?
+
+🧑 You > Show me the VFX backlog and who owns it'
+  🗑️  1 ephemeral message(s) expired
+  📍 Departed: Critical Bugs
+
+🔨 Forge > Here's the **Ashenmoor VFX Backlog**:
+
+**Owner:** Kai (VFX Artist) — **sole artist, major bottleneck**
+
+| # | Task | Status | Priority |
+|---|------|--------|----------|
+| 1 | Thornqueen thorn rain | ⬜ Not started | 🔴 **BLOCKING boss fight** |
+| 2 | Player death dissolve | ⬜ Not started | High |
+| 3 | Marsh fog volumes (rework) | ⬜ Not started | Medium |
+| 4 | Weapon trail polish (all 6 types) | ⬜ Not started | Medium |
+| 5 | Ambient magic particles (overworld) | ⬜ Not started | Low |
+
+**⚠️ Risk flagged:** This is a single point of failure. Kai is the only VFX artist, and item #1 is blocking a boss fight. If Kai is out or overloaded, the entire VFX pipeline stalls.
+
+**Cross-reference:** CRIT-002 (memory leak in Thornheart Marsh) may relate to item #3 (Marsh fog volumes) — could be worth coordinating with Priya Sharma on that.
+
+Would you like me to:
+1. Check **Kai's profile** for their full workload?
+2. Look at the **Ashenmoor art schedule** for context?
+3. Flag this staffing risk in a document or notes?
+
+🧑 You > What's our financial situation?
+  📍 Departed: VFX Backlog
+
+🔨 Forge > Here's our **financial snapshot**:
+
+## Revenue & Runway
+| Metric | Value |
+|--------|-------|
+| Monthly burn | ~$320K |
+| Cash on hand | ~$2.1M |
+| Runway | ~6.5 months |
+| Next milestone payment | $500K (Aug 2026, Ashenmoor EA) |
+
+## Funding Status
+- Series A closed Q1 2025 — fully deployed
+- Publisher deal: milestone-based payments
+- **Next milestone tied to Ashenmoor Early Access (Aug 2026)**
+
+## Contractor Budget (Q2 2026)
+| Contractor | Role | Monthly | End Date |
+|------------|------|---------|----------|
+| Elena Vasquez | Narrative | $8,000 | Sep 2026 |
+| Mika (pixel art) | Environment art | $6,400 | Jun 2026 |
+| Jordan (music) | Soundtrack | $5,000 | May 2026 |
+| TBD (VFX) | VFX backup | ~$7,000 | TBD |
+
+- **Total contractor spend:** ~$26,400/month
+- **Q2 budget remaining:** $45,000 unallocated
+
+## ⚠️ Key Risks
+1. **Runway is tight** — 6.5 months with no revenue buffer. Ashenmoor EA *must* hit Aug 2026 for the $500K milestone.
+2. **VFX contractor hire** would consume most of remaining Q2 budget — but we need it (Kai is overloaded, see VFX backlog).
+3. **Jordan's contract ends May 2026** — soundtrack needs to be finalized soon.
+
+Would you like me to:
+1. Look at the **hiring plan** for headcount context?
+2. Check **Ashenmoor marketing plan** for launch costs?
+3. Flag the VFX budget decision as an action item?
+
+🧑 You > Show me the boss design for Act 3
+  📍 Departed: Finance
+
+🔨 Forge > Here's the **Act 3 Final Boss: The Void Lord**:
+
+---
+
+## Overview
+The Void Lord is the final boss of Ashenmoor, encountered in the **Void Wastes**. This is a multi-phase fight designed to test mastery of all combat systems.
+
+## Phase 1: The Hungering Dark
+- **HP:** 45,000
+- Arena: Collapsed cathedral, limited visibility
+- Attacks:
+  - Void Tendrils — sweeping AoE, must be dodged or parried
+  - Devour — grabs player, drains HP (breakout via mash)
+  - Shadow Clones — spawns 2 weaker copies
+- **Stagger threshold:** High (requires charged attacks)
+
+## Phase 2: Reality Fractures
+- Triggers at 50% HP
+- Arena shifts — floor breaks, revealing void below
+- New attacks:
+  - Gravity Pull — drags player toward void
+  - Fracture Slam — arena sections collapse
+  - Void Orbs — homing projectiles, must be deflected
+- **Mechanic:** Must use environmental pillars to avoid gravity pull
+
+## Phase 3: The Unraveling
+- Triggers at 15% HP — **enrage timer starts**
+- Boss becomes faster, combos chain together
+- All previous attacks + new desperation move:
+  - **Annihilation Wave** — arena-wide AoE, must hide behind debris
+- **Kill window:** 60 seconds before Annihilation Wave becomes unavoidable
+
+## ⚠️ Design Notes
+- Intended as a **10-15 minute fight** for skilled players
+- Requires mastery of **stagger system**, parrying, and environmental awareness
+- **Music:** Jordan composing a 3-phase escalating track
+
+---
+
+**Cross-references:**
+- This boss is in the **Void Wastes** (Act 3 zone) — I can pull up world design if needed
+- The stagger system is key — want me to show the **Stagger & Poise** doc?
+- **Jordan's contract ends May 2026** — the boss music needs to be finalized soon
+
+Would you like me to:
+1. Show the **Void Wastes world design**?
+2. Pull up the **stagger system** mechanics?
+3. Check **Jordan's profile** for music delivery status?
+
+🧑 You > Save a note: remind Marcus about vacation planning
+
+🔨 Forge > Done! I've saved a reminder to follow up with **Marcus Chen** about vacation planning.
+
+**Why this matters:** With Ashenmoor EA targeting **August 2026**, any extended absences during Q2/Q3 could impact delivery timelines — especially for Marcus as Studio Director.
+
+**Current priorities block now includes:**
+- Key dates: Ashenmoor EA Aug 2026, Drift Protocol E3 Jun 2026
+- **NEW:** Reminder to talk to Marcus about vacation planning
+
+Would you like me to:
+1. Pull up **Marcus's profile** for context on his current responsibilities?
+2. Check the **leadership meeting notes** for any prior discussion on this?
+3. Draft talking points for the conversation?
+
+🧑 You > Compare Ashenmoor and Drift Protocol statu
+
+🔨 Forge > Here's a side-by-side comparison:
+
+| | **Ashenmoor** | **Drift Protocol** |
+|---|---|---|
+| **Genre** | Dark fantasy action RPG | Futuristic racing/combat |
+| **Engine** | Unreal Engine 5 | Unreal Engine 5 |
+| **Team** | Ironclad (18 people) | Silverwind (12 people) |
+| **Status** | Alpha (stable) | Pre-alpha prototype |
+| **Content** | 60% complete | 3 tracks, 5 vehicles |
+| **Next Milestone** | Early Access — Aug 2026 | E3 Demo — Jun 2026 |
+| **Critical Path** | Boss fights, Act 3 zones, multiplayer | Vertical slice (May 15), E3 polish |
+
+## Key Observations
+
+**Ashenmoor** 🟡
+- Further along but has **3 critical bugs** and a **VFX bottleneck**
+- August EA is tight — Void Lord boss not started, Act 3 incomplete
+- Revenue-dependent: studio runway relies on EA sales
+
+**Drift Protocol** 🟢
+- Earlier stage but smaller scope
+- **E3 in June** is the immediate pressure — demo needs to impress
+- Smaller team = less risk but also less buffer if issues arise
+
+## ⚠️ Shared Risks
+1. **Same engine team** — engineering resources split between both projects
+2. **June is crunch month** — E3 demo + Ashenmoor final push overlap
+3. **Marcus vacation planning** — leadership availability critical during this window
+
+Would you like me to:
+1. Dive deeper into **Drift Protocol's E3 plan**?
+2. Check **engineering resource allocation** between projects?
+3. Look at the **Ashenmoor critical path** in detail?
+
+🧑 You >
