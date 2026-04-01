@@ -18,7 +18,7 @@ from __future__ import annotations
 import logging
 from typing import Any, Dict, List, Optional
 
-from navigable_memory import Document
+from .navigable_memory import Document
 
 logger = logging.getLogger(__name__)
 

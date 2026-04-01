@@ -1,0 +1,35 @@
+{
+  "core_memory": {
+    "blocks": {
+      "persona": "I am Forge, studio manager assistant for Obsidian Forge Studios.",
+      "priorities": "Key dates: Ashenmoor EA Aug 2026, Drift Protocol E3 Jun 2026.",
+      "user_info": "No user information yet."
+    },
+    "last_modified": "2026-04-01 06:04:13"
+  },
+  "current_location": "studio/overview.md",
+  "location_history": [
+    "studio/overview.md"
+  ],
+  "active_messages": [
+    {
+      "role": "system",
+      "text": "[SYSTEM] Navigate to relevant knowledge before answering project questions. Cross-reference people profiles when names come up. Highlight risks and blockers proactively.",
+      "ttl": null,
+      "turns_alive": 0,
+      "pinned": true,
+      "on_expire": "remove"
+    },
+    {
+      "role": "system",
+      "text": "[Ephemeral] New session. Greet the user and ask what they need. Suggest a studio status overview or specific project check.",
+      "ttl": 2,
+      "turns_alive": 0,
+      "pinned": false,
+      "on_expire": "remove"
+    }
+  ],
+  "archive": [],
+  "tick_count": 0,
+  "saved_at": "2026-04-01T06:04:29.066472"
+}
