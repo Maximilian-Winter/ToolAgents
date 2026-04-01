@@ -1,6 +1,6 @@
 from typing import Tuple
 
-from chat_history import ChatFormatter
+
 from command_system import CommandSystem
 
 

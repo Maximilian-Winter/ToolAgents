@@ -80,7 +80,7 @@ class HarnessBridge:
     async def send_message(self, text: str) -> None:
         """Send a user message through the harness and stream the response.
 
-        This is the main entry point. Call this from an AgentInput.Submitted handler.
+        This is the main entry point. Call this from an AgentInput.MessageSubmitted handler.
 
         Args:
             text: The user's message text.

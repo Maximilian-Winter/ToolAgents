@@ -31,7 +31,7 @@ from textual.widgets import Header, Footer
 from ToolAgents.agent_tools.coding_tools import CodingTools
 from ToolAgents.agent_harness import create_async_harness, HarnessEvent
 from ToolAgents.context_manager import ContextEvent
-from ToolAgents.provider.chat_api_provider.open_ai import AsyncOpenAIChatAPI
+from ToolAgents.provider.chat_api_provider.open_ai import AsyncOpenAIChatAPI, OpenAIChatAPI
 from ToolAgents.utilities.message_template import MessageTemplate
 
 from ToolAgents.tui import (
@@ -112,6 +112,14 @@ class CodingAgentApp(App):
         Binding("ctrl+c", "quit", "Quit"),
     ]
 
+    API = None
+    harness = None
+    bridge = None
+
+
+    def set_api(self, api):
+        self.API = api
+
     def compose(self) -> ComposeResult:
         yield Header()
         with Horizontal(id="main-area"):
@@ -124,11 +132,7 @@ class CodingAgentApp(App):
     def on_mount(self) -> None:
         """Set up the harness and bridge on mount."""
         # Provider
-        api = AsyncOpenAIChatAPI(
-            api_key=os.getenv("OPENROUTER_API_KEY"),
-            model="anthropic/claude-sonnet-4",
-            base_url="https://openrouter.ai/api/v1",
-        )
+        api = self.API
 
         # Tools
         coding_tools = CodingTools(working_directory=WORKING_DIRECTORY)
@@ -176,7 +180,7 @@ class CodingAgentApp(App):
         # Focus input
         self.query_one("#input", AgentInput).focus()
 
-    async def on_agent_input_submitted(self, event: AgentInput.Submitted) -> None:
+    async def on_agent_input_submitted(self, event: AgentInput.MessageSubmitted) -> None:
         """Handle user message submission."""
         await self.bridge.send_message(event.text)
 
@@ -201,4 +205,9 @@ class CodingAgentApp(App):
 
 if __name__ == "__main__":
     app = CodingAgentApp()
+    app.set_api(OpenAIChatAPI(
+        api_key=os.getenv("OPENROUTER_API_KEY"),
+        model="xiaomi/mimo-v2-pro",
+        base_url="https://openrouter.ai/api/v1",
+    ))
     app.run()

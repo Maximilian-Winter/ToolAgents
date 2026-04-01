@@ -1,12 +1,10 @@
 ﻿from ToolAgents.agents.chat_tool_agent import AsyncChatToolAgent, ChatToolAgent
-from ToolAgents.agents.structured_output_agent import StructuredOutputAgent
 
 __all__ = [
     'AdvancedAgent',
     'AgentConfig',
     'AsyncChatToolAgent',
     'ChatToolAgent',
-    'StructuredOutputAgent',
 ]
 
 

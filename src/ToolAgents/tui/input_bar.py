@@ -1,7 +1,7 @@
 """
 Agent input bar for the TUI.
 
-A text input widget that posts a custom Submitted message and clears itself.
+A text input widget that posts a custom MessageSubmitted message and clears itself.
 Can be disabled during agent processing.
 """
 
@@ -12,7 +12,7 @@ from textual.widgets import Input
 class AgentInput(Input):
     """Text input for sending messages to the agent.
 
-    Posts AgentInput.Submitted when the user presses Enter.
+    Posts AgentInput.MessageSubmitted when the user presses Enter.
     Automatically clears the input after submission.
     Can be disabled/enabled to prevent input during agent processing.
 
@@ -21,7 +21,7 @@ class AgentInput(Input):
         yield AgentInput(placeholder="Type a message...")
 
         # Handle submission:
-        def on_agent_input_submitted(self, event: AgentInput.Submitted):
+        def on_agent_input_message_submitted(self, event: AgentInput.MessageSubmitted):
             print(event.text)
     """
 
@@ -36,7 +36,7 @@ class AgentInput(Input):
     }
     """
 
-    class Submitted(Message):
+    class MessageSubmitted(Message):
         """Posted when the user submits a message.
 
         Attributes:
@@ -55,13 +55,13 @@ class AgentInput(Input):
         super().__init__(placeholder=placeholder, **kwargs)
 
     def on_input_submitted(self, event: Input.Submitted) -> None:
-        """Handle Enter key — post our custom Submitted message."""
+        """Handle Enter key — post our custom MessageSubmitted message."""
         event.stop()
         text = self.value.strip()
         if not text:
             return
         self.clear()
-        self.post_message(self.Submitted(text))
+        self.post_message(self.MessageSubmitted(text))
 
     def disable_input(self) -> None:
         """Disable input during agent processing."""

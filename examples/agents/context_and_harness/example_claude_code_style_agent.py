@@ -44,14 +44,14 @@ WORKING_DIRECTORY = os.getcwd()
 # OpenRouter
 api = OpenAIChatAPI(
     api_key=os.getenv("OPENROUTER_API_KEY"),
-    model="anthropic/claude-sonnet-4",
+    model="xiaomi/mimo-v2-pro",
     base_url="https://openrouter.ai/api/v1",
 )
 
 # Sub-agent provider (can be a different/cheaper model)
 sub_agent_api = OpenAIChatAPI(
     api_key=os.getenv("OPENROUTER_API_KEY"),
-    model="anthropic/claude-sonnet-4",
+    model="xiaomi/mimo-v2-pro",
     base_url="https://openrouter.ai/api/v1",
 )
 
