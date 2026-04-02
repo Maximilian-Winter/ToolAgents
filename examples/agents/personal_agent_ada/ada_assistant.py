@@ -41,6 +41,8 @@ import yaml
 from dotenv import load_dotenv
 
 from ToolAgents.agent_memory.navigable_memory import NavigableMemory, InMemoryBackend
+from ToolAgents.agent_tools.coding_tools import CodingTools
+from ToolAgents.provider import OpenAIChatAPI
 from ToolAgents.utilities.message_template import MessageTemplate
 
 # Import harness
@@ -111,7 +113,7 @@ def main():
     # ── Parse arguments ──
     use_persist = "--persist" in sys.argv
     do_resume = "--resume" in sys.argv
-
+    working_directory = "./"
     # ── Determine paths ──
     script_dir = os.path.dirname(os.path.abspath(__file__))
     starter_file = os.path.join(script_dir, "ada_starter.yaml")
@@ -151,16 +153,16 @@ def main():
     config = HarnessConfig()
 
     # Provider — edit these or use .env
-    config.API_TYPE = os.getenv("API_TYPE", "groq")
-    config.API_KEY = os.getenv("API_KEY") or os.getenv("GROQ_API_KEY")
-    config.API_URL = os.getenv("API_URL", "")
-    config.MODEL = os.getenv("MODEL", "llama-3.3-70b-versatile")
+    #config.API_TYPE = os.getenv("API_TYPE", "groq")
+    #config.API_KEY = os.getenv("API_KEY") or os.getenv("GROQ_API_KEY")
+    #.API_URL = os.getenv("API_URL", "")
+    #config.MODEL = os.getenv("MODEL", "llama-3.3-70b-versatile")
 
     # For OpenRouter, uncomment:
-    # config.API_TYPE = "openrouter"
-    # config.API_KEY = os.getenv("OPENROUTER_API_KEY")
-    # config.API_URL = "https://openrouter.ai/api/v1"
-    # config.MODEL = "openai/gpt-4o-mini"
+    config.API_TYPE = "openrouter"
+    config.API_KEY = os.getenv("OPENROUTER_API_KEY")
+    config.API_URL = "https://openrouter.ai/api/v1"
+    config.MODEL = "xiaomi/mimo-v2-pro"
 
     config.TEMPERATURE = 0.45
     config.TOP_P = 1.0
@@ -171,12 +173,17 @@ def main():
 
     # ── System prompt template ──
     system_template = MessageTemplate.from_file(prompt_file)
+    coding_tools = CodingTools(working_directory=working_directory)
+
+    # Get the base tools (bash, read, write, edit, glob, grep, list_directory, diff_files)
+    extra_tools = coding_tools.get_tools()
 
     # ── Build harness ──
     harness = VirtualGameMaster2(
         config=config,
         nav_memory=nav,
         system_template=system_template,
+        extra_tools=extra_tools,
         initial_core_memory={
             "persona": (
                 "I am Ada, a personal AI companion with persistent memory. "
