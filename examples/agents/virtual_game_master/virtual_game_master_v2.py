@@ -800,7 +800,7 @@ class VirtualGameMaster2:
             composer.add_module(
                 name="app_state",
                 position=5,
-                content_fn=lambda: self.app_state.get_state_string(),
+                content_fn=lambda: self.app_state.get_app_state_string(),
                 prefix="### Application State",
                 suffix="### End Application State",
             )
@@ -1299,7 +1299,7 @@ def run_cli(
             continue
 
         elif user_input.lower() == "/state" and harness.app_state:
-            print(f"\n📜 Application State:\n{harness.app_state.get_state_string()}")
+            print(f"\n📜 Application State:\n{harness.app_state.get_app_state_string()}")
             continue
 
         # ── Agent response ──

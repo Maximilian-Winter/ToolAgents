@@ -8,32 +8,12 @@ Core insight: don't make the LLM search — make the LLM NAVIGATE.
 When the agent moves to a new location, relevant context loads
 automatically. When the agent departs, what happened gets written back.
 
-This module is backend-agnostic. It defines a StorageBackend protocol
-and ships with an InMemoryBackend for testing. Plug in your Agora KB,
-SQLite knowledge base, or any other storage that speaks paths.
-
 Architecture:
     NavigableMemory
       ├── StorageBackend (read/write/list/search by path)
       ├── LocationState (current position + history)
       ├── PromptComposer integration (content_fn for auto-loading)
       └── SmartMessageManager integration (TTL-based location history)
-
-Usage with ToolAgents harness:
-    memory = NavigableMemory(backend=AgoraBackend(client))
-
-    # Register as a PromptComposer module
-    harness.prompt_composer.add_module(
-        "location_context", position=10,
-        content_fn=memory.build_context,
-        prefix="<context>", suffix="</context>",
-    )
-
-    # Give the LLM navigation tools
-    harness.add_tools(memory.create_tools())
-
-    # The LLM calls navigate("projects/vr-platform")
-    # → context loads automatically on next turn
 """
 
 from __future__ import annotations
