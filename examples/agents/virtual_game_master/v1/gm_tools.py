@@ -183,6 +183,14 @@ class GMToolkit:
         return "\n".join(lines)
 
     @staticmethod
+    def _fmt_world_lore(entry: dict) -> str:
+        cat = f" [{entry['category']}]" if entry.get("category") else ""
+        secret = " [SECRET]" if entry.get("is_secret") else ""
+        lines = [f"**{entry['topic']}**{cat}{secret} (id={entry['id']})"]
+        lines.append(entry["content"])
+        return "\n".join(lines)
+
+    @staticmethod
     def _fmt_note(note: dict) -> str:
         title = note.get("title") or "(untitled)"
         secret = " [SECRET]" if note.get("is_secret") else ""
@@ -206,6 +214,88 @@ class GMToolkit:
             for note in session["notes"]:
                 lines.append(f"    - {note.get('title', '(untitled)')}: {note['content'][:100]}")
         return "\n".join(lines)
+
+    # ------------------------------------------------------------------
+    # YAML Importer — seed world lore from scenario files
+    # ------------------------------------------------------------------
+
+    def import_world_lore_from_yaml(
+        self,
+        yaml_path: str,
+        category: str | None = None,
+    ) -> list[dict]:
+        """
+        Import ``game_world_information`` from a scenario YAML file
+        into the WorldLore table for the current campaign.
+
+        Each top-level key under ``game_world_information`` becomes one
+        lore article.  Nested dicts/lists are rendered as readable markdown.
+
+        Args:
+            yaml_path: Path to the scenario YAML file.
+            category:  Optional category to assign to all imported entries.
+
+        Returns:
+            List of created lore entries (as dicts from the API).
+        """
+        import yaml  # local import — only needed for this method
+
+        with open(yaml_path, "r", encoding="utf-8") as f:
+            data = yaml.safe_load(f)
+
+        world_info = data.get("game_world_information", {})
+        if not world_info:
+            print(f"  No 'game_world_information' key found in {yaml_path}")
+            return []
+
+        created = []
+        for topic, sections in world_info.items():
+            content = self._render_lore_content(topic, sections)
+            body: dict = {"topic": topic, "content": content}
+            if category:
+                body["category"] = category
+            try:
+                entry = self._post(self._base("world-lore") + "/", body)
+                created.append(entry)
+                print(f"  + {topic} (id={entry['id']})")
+            except httpx.HTTPStatusError as e:
+                if e.response.status_code == 409:
+                    print(f"  ~ {topic} (already exists, skipped)")
+                else:
+                    print(f"  ! {topic} — error: {e}")
+            except Exception as e:
+                print(f"  ! {topic} — error: {e}")
+
+        print(f"  Imported {len(created)} world lore articles.")
+        return created
+
+    @staticmethod
+    def _render_lore_content(topic: str, sections) -> str:
+        """Render a YAML world-info entry into readable markdown."""
+        if isinstance(sections, str):
+            return sections.strip()
+
+        if not isinstance(sections, dict):
+            return str(sections)
+
+        lines = [f"# {topic}", ""]
+        for section_name, section_body in sections.items():
+            lines.append(f"## {section_name}")
+            if isinstance(section_body, str):
+                lines.append(section_body.strip())
+            elif isinstance(section_body, list):
+                for item in section_body:
+                    lines.append(f"- {item}")
+            elif isinstance(section_body, dict):
+                for k, v in section_body.items():
+                    if isinstance(v, list):
+                        lines.append(f"**{k}:**")
+                        for item in v:
+                            lines.append(f"- {item}")
+                    else:
+                        lines.append(f"**{k}:** {v}")
+            lines.append("")
+        return "\n".join(lines).strip()
 
     # ------------------------------------------------------------------
     # Tool factory
@@ -630,6 +720,100 @@ class GMToolkit:
                     return f"Error: {e}"
 
         # ==============================================================
+        # WORLD LORE TOOLS — Structured world knowledge
+        # ==============================================================
+
+        class SearchWorldLore(BaseModel):
+            """Search world lore articles by topic name or content.
+            Use to find background information about the game world —
+            geography, magic, factions, history, threats, etc."""
+
+            query: str = Field(..., description="Search term (matches topic names and content).")
+
+            def run(self) -> str:
+                try:
+                    data = tk._get(tk._base("world-lore") + "/search", {"q": self.query})
+                except Exception as e:
+                    return f"Error: {e}"
+                if not data:
+                    return f"No world lore found matching '{self.query}'."
+                return "\n\n".join(tk._fmt_world_lore(entry) for entry in data)
+
+        class GetWorldLore(BaseModel):
+            """Get a specific world lore article by ID. Returns the full content."""
+
+            lore_id: int = Field(..., description="The world lore article's database ID.")
+
+            def run(self) -> str:
+                try:
+                    entry = tk._get(f"{tk._base('world-lore')}/{self.lore_id}")
+                except Exception as e:
+                    return f"Error: {e}"
+                if not entry:
+                    return f"World lore {self.lore_id} not found."
+                return tk._fmt_world_lore(entry)
+
+        class ListWorldLore(BaseModel):
+            """List all world lore topics in the campaign.
+            Optionally filter by category."""
+
+            category: Optional[str] = Field(
+                None, description="Filter by category (e.g. 'geography', 'magic', 'factions')."
+            )
+
+            def run(self) -> str:
+                try:
+                    data = tk._get(tk._base("world-lore") + "/", {"category": self.category})
+                except Exception as e:
+                    return f"Error: {e}"
+                if not data:
+                    return "No world lore articles in this campaign."
+                lines = []
+                for entry in data:
+                    cat = f" [{entry['category']}]" if entry.get("category") else ""
+                    secret = " [SECRET]" if entry.get("is_secret") else ""
+                    lines.append(f"- [{entry['id']}] {entry['topic']}{cat}{secret}")
+                return "\n".join(lines)
+
+        class CreateWorldLore(BaseModel):
+            """Create a new world lore article. Use to add background knowledge
+            about the game world — places, magic systems, factions, history, etc."""
+
+            topic: str = Field(..., description="Topic name (e.g. 'The Weave', 'Cult of the Dragon').")
+            content: str = Field(..., description="Full article content (markdown supported).")
+            category: Optional[str] = Field(
+                None, description="Category for organization (e.g. 'geography', 'magic', 'factions', 'threats')."
+            )
+            is_secret: bool = Field(False, description="Mark as GM-only secret lore.")
+
+            def run(self) -> str:
+                body = self.model_dump(exclude_none=True)
+                try:
+                    entry = tk._post(tk._base("world-lore") + "/", body)
+                    return f"Created world lore: '{entry['topic']}' (id={entry['id']})"
+                except Exception as e:
+                    return f"Error creating world lore: {e}"
+
+        class UpdateWorldLore(BaseModel):
+            """Update an existing world lore article. Only provide fields to change."""
+
+            lore_id: int = Field(..., description="The world lore article's database ID.")
+            topic: Optional[str] = Field(None, description="New topic name.")
+            content: Optional[str] = Field(None, description="Updated content.")
+            category: Optional[str] = Field(None, description="Updated category.")
+            is_secret: Optional[bool] = Field(None, description="Update secret status.")
+
+            def run(self) -> str:
+                fields = self.model_dump(exclude={"lore_id"}, exclude_none=True)
+                if not fields:
+                    return "No fields to update."
+                try:
+                    entry = tk._patch(f"{tk._base('world-lore')}/{self.lore_id}", fields)
+                    return f"Updated world lore: '{entry['topic']}' (id={entry['id']})"
+                except Exception as e:
+                    return f"Error updating world lore: {e}"
+
+        # ==============================================================
         # Assemble and return
         # ==============================================================
 
@@ -647,6 +831,9 @@ class GMToolkit:
             SearchNotes,
             GetSessionInfo,
             ListSessions,
+            SearchWorldLore,
+            GetWorldLore,
+            ListWorldLore,
             # Write
             CreateNPC,
             UpdateNPC,
@@ -657,6 +844,8 @@ class GMToolkit:
             CreateSession,
             AddNPCRelationship,
             ConnectLocations,
+            CreateWorldLore,
+            UpdateWorldLore,
         ]
 
         return [FunctionTool(cls) for cls in tool_classes]

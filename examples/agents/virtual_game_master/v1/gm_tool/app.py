@@ -10,7 +10,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from database import init_db
-from routers import campaigns, locations, notes, npcs, player_characters, sessions, tags
+from routers import campaigns, locations, notes, npcs, player_characters, sessions, tags, world_lore
 
 
 @asynccontextmanager
@@ -34,6 +34,7 @@ app.include_router(player_characters.router)
 app.include_router(sessions.router)
 app.include_router(notes.router)
 app.include_router(tags.router)
+app.include_router(world_lore.router)
 
 
 @app.get("/", tags=["root"])

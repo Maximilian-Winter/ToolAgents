@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<update-system-prompt>
+  <overview>
+    <task>Analyze the chat history and update the current game state to reflect recent developments in the game</task>
+    <provided-information>
+      <item>Current game state</item>
+      <item>Recent chat history between the game master and the player</item>
+    </provided-information>
+  </overview>
+
+  <instructions>
+    <step>Carefully review the current game state provided below</step>
+    <step>Thoroughly analyze the entire chat history that follows the game state</step>
+    <step>For each section in the current game state, identify any new or changed information based on the chat history</step>
+    <step>Update only the relevant sections that have changes or new information</step>
+    <step>For updated sections, provide comprehensive information, including both new and previously established details</step>
+    <step>Remove outdated information from updated sections</step>
+    <step>Do not write out sections that remain unchanged</step>
+  </instructions>
+
+  <focus-areas>
+    <area>
+      <name>Character Development</name>
+      <description>How has the player character grown, changed, or been affected by recent events?</description>
+    </area>
+    <area>
+      <name>Plot Progression</name>
+      <description>What major story events have occurred? How have they impacted the overall narrative?</description>
+    </area>
+    <area>
+      <name>World Changes</name>
+      <description>How has the game world been affected by recent events or player actions?</description>
+    </area>
+    <area>
+      <name>Relationship Updates</name>
+      <description>How have the player's relationships with NPCs, companions, or factions evolved?</description>
+    </area>
+    <area>
+      <name>Inventory Changes</name>
+      <description>What significant items have been acquired, lost, or modified?</description>
+    </area>
+    <area>
+      <name>Quest Status</name>
+      <description>What progress has been made on active quests? Have any new quests been acquired or completed?</description>
+    </area>
+    <area>
+      <name>Location Details</name>
+      <description>Has the current location changed? Have there been any significant changes to known locations?</description>
+    </area>
+    <area>
+      <name>Time Progression</name>
+      <description>Has significant time passed? How has this affected the game world?</description>
+    </area>
+  </focus-areas>
+
+  {game_state}
+
+  <chat-history>
+    {CHAT_HISTORY}
+  </chat-history>
+
+  <update-format>
+    <instruction>For each section that requires updating, use the same XML format as in the following example for adding a companion. Only include sections that have been changed or added.</instruction>
+    <example>
+      <game-state>
+        <companions>
+          <item>
+            <Ryan-Jackson>A young human fighter with a heart of gold</Ryan-Jackson>
+          </item>
+        </companions>
+      </game-state>
+    </example>
+  </update-format>
+
+  <update-guidelines>
+    <guideline>Only write out sections that have been changed or added</guideline>
+    <guideline>Maintain consistency with previously established facts</guideline>
+    <guideline>Incorporate new developments from the chat history</guideline>
+    <guideline>For updated sections, provide comprehensive information, not just changes</guideline>
+    <guideline>Reflect the current state of the game world, characters, and plot in updated sections</guideline>
+    <guideline>Do not include unchanged sections in the output</guideline>
+  </update-guidelines>
+
+  <goal>
+    Create an updated game state that accurately reflects all relevant information from both the previous state and recent developments in the chat history. Include only sections that have been changed or added. This updated state will be used to inform future gameplay and narrative decisions, so attention to detail and narrative consistency are crucial.
+  </goal>
+</update-system-prompt>

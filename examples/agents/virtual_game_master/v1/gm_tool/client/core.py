@@ -30,6 +30,7 @@ from .models import (
     SpecialItem,
     Tag,
     TagAssociation,
+    WorldLore,
 )
 
 
@@ -578,6 +579,64 @@ class TagClient(_BaseClient):
         return [TagAssociation(**a) for a in data]
 
 
+class WorldLoreClient(_BaseClient):
+
+    def _base(self, campaign_id: int) -> str:
+        return f"/campaigns/{campaign_id}/world-lore"
+
+    async def list(
+        self, campaign_id: int, *, category: str | None = None
+    ) -> list[WorldLore]:
+        data = await self._get(
+            self._base(campaign_id) + "/", {"category": category}
+        )
+        return [WorldLore(**l) for l in data]
+
+    async def get(self, campaign_id: int, lore_id: int) -> WorldLore:
+        data = await self._get(f"{self._base(campaign_id)}/{lore_id}")
+        return WorldLore(**data)
+
+    async def get_by_slug(self, campaign_id: int, slug: str) -> WorldLore:
+        data = await self._get(f"{self._base(campaign_id)}/by-slug/{slug}")
+        return WorldLore(**data)
+
+    async def create(
+        self,
+        campaign_id: int,
+        topic: str,
+        content: str,
+        category: str | None = None,
+        slug: str | None = None,
+        is_secret: bool = False,
+    ) -> WorldLore:
+        body: dict[str, Any] = {
+            "topic": topic,
+            "content": content,
+            "is_secret": is_secret,
+        }
+        if category is not None:
+            body["category"] = category
+        if slug is not None:
+            body["slug"] = slug
+        data = await self._request("POST", self._base(campaign_id) + "/", json=body)
+        return WorldLore(**data)
+
+    async def update(self, campaign_id: int, lore_id: int, **fields) -> WorldLore:
+        data = await self._patch(
+            f"{self._base(campaign_id)}/{lore_id}", **fields
+        )
+        return WorldLore(**data)
+
+    async def delete(self, campaign_id: int, lore_id: int) -> None:
+        await self._delete(f"{self._base(campaign_id)}/{lore_id}")
+
+    async def search(self, campaign_id: int, query: str) -> list[WorldLore]:
+        data = await self._get(
+            self._base(campaign_id) + "/search", {"q": query}
+        )
+        return [WorldLore(**l) for l in data]
+
+
 # ---------------------------------------------------------------------------
 # Main client
 # ---------------------------------------------------------------------------
@@ -792,6 +851,7 @@ class GMClient:
         self.sessions = SessionClient(self._http)
         self.notes = NoteClient(self._http)
         self.tags = TagClient(self._http)
+        self.world_lore = WorldLoreClient(self._http)
 
     async def __aenter__(self) -> GMClient:
         return self

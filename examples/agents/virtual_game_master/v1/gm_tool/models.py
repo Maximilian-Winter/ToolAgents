@@ -163,6 +163,10 @@ class Campaign(Base):
         back_populates="campaign",
         cascade="all, delete-orphan",
     )
+    world_lore: Mapped[list[WorldLore]] = relationship(
+        back_populates="campaign",
+        cascade="all, delete-orphan",
+    )
 
     def __repr__(self) -> str:
         return f"<Campaign {self.id}: {self.name!r}>"
@@ -971,6 +975,77 @@ class TagAssociation(Base):
 
     def __repr__(self) -> str:
         return f"<TagAssociation tag={self.tag_id} → {self.target_type.value}/{self.target_id}>"
+
+
+# ---------------------------------------------------------------------------
+# WorldLore (structured world knowledge from scenario YAML etc.)
+# ---------------------------------------------------------------------------
+
+
+class WorldLore(Base):
+    """
+    A piece of world knowledge — geography, magic systems, factions,
+    threats, history, etc.  Imported from scenario YAML or created
+    during gameplay.
+
+    Each entry is a self-contained article on a *topic* (e.g. "Candlekeep",
+    "Spelljamming", "Threats and Conflicts") with its full rendered content.
+    """
+
+    __tablename__ = "world_lore"
+    __table_args__ = (
+        UniqueConstraint("campaign_id", "slug", name="uq_world_lore_slug"),
+        Index("ix_world_lore_campaign", "campaign_id"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    campaign_id: Mapped[int] = mapped_column(ForeignKey("campaigns.id"))
+
+    topic: Mapped[str] = mapped_column(index=True)
+    slug: Mapped[str] = mapped_column(index=True)
+    category: Mapped[Optional[str]] = mapped_column(default=None)
+    content: Mapped[str] = mapped_column(Text)
+    is_secret: Mapped[bool] = mapped_column(default=False)
+
+    created_at: Mapped[datetime] = mapped_column(
+        default=lambda: datetime.now(timezone.utc)
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
+
+    # relationships
+    campaign: Mapped[Campaign] = relationship(back_populates="world_lore")
+
+    @staticmethod
+    async def search(
+        session: AsyncSession,
+        campaign_id: int,
+        query: str,
+    ) -> list[WorldLore]:
+        """Search lore by topic and content (case-insensitive partial match)."""
+        stmt = (
+            select(WorldLore)
+            .where(
+                WorldLore.campaign_id == campaign_id,
+                (WorldLore.topic.ilike(f"%{query}%"))
+                | (WorldLore.content.ilike(f"%{query}%")),
+            )
+            .order_by(WorldLore.topic)
+        )
+        result = await session.execute(stmt)
+        return list(result.scalars().all())
+
+    def __repr__(self) -> str:
+        return f"<WorldLore {self.id}: {self.topic!r}>"
+
+
+# auto-generate slug for world lore
+@event.listens_for(WorldLore, "before_insert")
+def _world_lore_before_insert(_mapper, _connection, target: WorldLore):
+    if not target.slug and target.topic:
+        target.slug = slugify(target.topic)
 
 
 # ---------------------------------------------------------------------------

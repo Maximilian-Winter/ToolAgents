@@ -88,6 +88,18 @@ if __name__ == "__main__":
     if "--gm-tools" in sys.argv:
         tool_registry = build_gm_tool_registry(gm_base_url, gm_campaign_id)
 
+        # Import world lore from scenario YAML if --import-lore is passed
+        if tool_registry and "--import-lore" in sys.argv:
+            from gm_tools import GMToolkit
+            toolkit = GMToolkit(base_url=gm_base_url, campaign_id=gm_campaign_id)
+            scenario_path = config.INITIAL_GAME_STATE
+            if scenario_path:
+                print(f"  [GM Tools] Importing world lore from {scenario_path}...")
+                toolkit.import_world_lore_from_yaml(scenario_path)
+                toolkit.close()
+            else:
+                print("  [GM Tools] No INITIAL_GAME_STATE configured, skipping lore import.")
+
     vgm_app = VirtualGameMaster(
         config, api, debug_mode=True, tool_registry=tool_registry
     )

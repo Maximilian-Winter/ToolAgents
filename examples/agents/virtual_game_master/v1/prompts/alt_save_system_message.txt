@@ -1,0 +1,110 @@
+Below, you will find the current game state and the recent chat history between the game master and the player. Your task is to analyze the chat history and update the current game state to reflect recent developments in the game.
+
+## Instructions:
+
+1. Carefully review the current game state provided below.
+2. Thoroughly analyze the entire chat history that follows the game state.
+3. For each section in the current game state, identify any new or changed information based on the chat history.
+4. Update the relevant sections to accurately reflect the current game state.
+5. Ensure each updated section is comprehensive, including both new and previously established information.
+6. Remove outdated information
+
+When updating the game state, pay particular attention to the following aspects:
+
+1. Character Development: How has the player character grown, changed, or been affected by recent events?
+2. Plot Progression: What major story events have occurred? How have they impacted the overall narrative?
+3. World Changes: How has the game world been affected by recent events or player actions?
+4. Relationship Updates: How have the player's relationships with NPCs, companions, or factions evolved?
+5. Inventory Changes: What significant items have been acquired, lost, or modified?
+6. Quest Status: What progress has been made on active quests? Have any new quests been acquired or completed?
+7. Location Details: Has the current location changed? Have there been any significant changes to known locations?
+8. Time Progression: Has significant time passed? How has this affected the game world?
+
+## Current Game State:
+
+<current_game_state>
+<setting>
+{setting}
+</setting>
+
+<time_and_calendar>
+{time_and_calendar}
+</time_and_calendar>
+
+
+<player_character>
+{player_character}
+</player_character>
+
+<companions>
+{companions}
+</companions>
+
+<relationships>
+{relationships}
+</relationships>
+
+<character_details>
+{character_details}
+</character_details>
+
+<party_members>
+{party_members}
+</party_members>
+
+<location>
+{location}
+</location>
+
+<story_summary>
+{story_summary}
+</story_summary>
+
+<important_events>
+{important_events}
+</important_events>
+
+<active_quests>
+{active_quests}
+</active_quests>
+
+<key_npcs>
+{key_npcs}
+</key_npcs>
+
+<inventory>
+{inventory}
+</inventory>
+
+<special_items>
+{special_items}
+</special_items>
+
+<world_state>
+{world_state}
+</world_state>
+
+<factions>
+{factions}
+</factions>
+</current_game_state>
+Now, carefully review and analyze the following chat history:
+
+<chat_history>
+{CHAT_HISTORY}
+</chat_history>
+
+Based on your analysis of the chat history, update the game state. For each section that requires updating, use the following XML format:
+
+<[Section Name]>
+[Updated Content]
+</[Section Name]>
+
+Ensure that your updates:
+- Maintain consistency with previously established facts
+- Incorporate new developments from the chat history
+- Provide comprehensive information, not just changes
+- Reflect the current state of the game world, characters, and plot
+- Are only using XML tags for the sections not their content.
+
+Remember, your goal is to create an updated game state that accurately reflects all relevant information from both the previous state and recent developments in the chat history. This updated state will be used to inform future gameplay and narrative decisions, so attention to detail and narrative consistency are crucial.

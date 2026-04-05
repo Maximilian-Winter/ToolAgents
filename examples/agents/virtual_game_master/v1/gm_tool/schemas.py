@@ -611,6 +611,55 @@ class TagAssociationRead(BaseModel):
 
 
 # ---------------------------------------------------------------------------
+# WorldLore
+# ---------------------------------------------------------------------------
+
+
+class WorldLoreCreate(BaseModel):
+    topic: str = Field(..., min_length=1, max_length=200)
+    slug: Optional[str] = Field(default=None, max_length=200)
+    category: Optional[str] = Field(default=None, max_length=100)
+    content: str = Field(..., min_length=1)
+    is_secret: bool = False
+
+    @model_validator(mode="after")
+    def ensure_slug(self):
+        if self.slug:
+            self.slug = slugify(self.slug)
+        else:
+            self.slug = slugify(self.topic)
+        return self
+
+
+class WorldLoreUpdate(BaseModel):
+    topic: Optional[str] = Field(default=None, min_length=1, max_length=200)
+    slug: Optional[str] = Field(default=None, max_length=200)
+    category: Optional[str] = Field(default=None, max_length=100)
+    content: Optional[str] = Field(default=None, min_length=1)
+    is_secret: Optional[bool] = None
+
+    @model_validator(mode="after")
+    def normalize_slug(self):
+        if self.slug:
+            self.slug = slugify(self.slug)
+        return self
+
+
+class WorldLoreRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    campaign_id: int
+    topic: str
+    slug: str
+    category: Optional[str]
+    content: str
+    is_secret: bool
+    created_at: datetime
+    updated_at: datetime
+
+
+# ---------------------------------------------------------------------------
 # Rebuild forward refs for recursive / cross-referencing models
 # ---------------------------------------------------------------------------
 

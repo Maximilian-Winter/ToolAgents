@@ -296,6 +296,25 @@ class PCRelationship(BaseModel):
     is_secret: bool = False
 
 
+# ---------------------------------------------------------------------------
+# WorldLore
+# ---------------------------------------------------------------------------
+
+
+class WorldLore(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+
+    id: int
+    campaign_id: int
+    topic: str
+    slug: str
+    category: Optional[str] = None
+    content: str
+    is_secret: bool = False
+    created_at: datetime
+    updated_at: datetime
+
+
 class PlayerCharacterFull(PlayerCharacter):
     companions: list[Companion] = []
     inventory_items: list[InventoryItem] = []
