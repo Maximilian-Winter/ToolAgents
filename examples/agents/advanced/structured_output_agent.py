@@ -5,7 +5,7 @@ from enum import Enum
 from typing import List
 
 from dotenv import load_dotenv
-from mistralai import Mistral
+
 from pydantic import BaseModel, Field
 
 from ToolAgents.agents import ChatToolAgent
@@ -56,7 +56,6 @@ settings.response_format = Book
 api_key = os.environ["MISTRAL_API_KEY"]
 model = "ministral-8b-latest"
 
-client = Mistral(api_key=api_key)
 messages = [
     ChatMessage.create_system_message(
         f"""You are an advanced information extraction system designed to extract structured data from unstructured or semi-structured input. Your task is to extract user information based on a provided JSON schema and format it according to that schema.

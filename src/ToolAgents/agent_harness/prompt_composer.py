@@ -1,24 +1,3 @@
-# prompt_composer.py — Modular system prompt composition for the AgentHarness.
-#
-# Replaces a monolithic system_prompt string with ordered, named modules
-# that can be added, removed, updated, and toggled at runtime. Modules
-# can hold static content or a callable that regenerates content each turn
-# (e.g. reading from a core memory manager).
-#
-# Usage:
-#     composer = PromptComposer()
-#     composer.add_module("instructions", position=0, content="You are a helpful assistant.")
-#     composer.add_module("core_memory", position=10, content_fn=lambda: memory.get_state())
-#     composer.add_module("tools_doc", position=20, content="Available tools: ...")
-#
-#     # Each turn:
-#     system_prompt = composer.compile()
-#
-#     # Runtime modifications:
-#     composer.update_module("core_memory", content_fn=new_memory_fn)
-#     composer.disable_module("tools_doc")
-#     composer.remove_module("tools_doc")
-
 from __future__ import annotations
 
 import logging

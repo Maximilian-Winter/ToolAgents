@@ -49,7 +49,7 @@ class Document:
 class StorageBackend(Protocol):
     """Protocol for knowledge storage backends.
 
-    Implement this to plug in Agora KB, SQLite knowledge base,
+    Implement this to plug SQLite knowledge base,
     filesystem, or any other document store.
     """
 
@@ -198,7 +198,7 @@ class NavigableMemory:
     storage that implements the StorageBackend protocol.
 
     Usage:
-        backend = InMemoryBackend()  # or AgoraBackend, SQLiteBackend, etc.
+        backend = InMemoryBackend()  # or SQLiteBackend, etc.
         memory = NavigableMemory(backend)
 
         # Seed some content

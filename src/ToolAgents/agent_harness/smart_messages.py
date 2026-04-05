@@ -1,38 +1,3 @@
-# smart_messages.py — Lifecycle-aware messages for the AgentHarness.
-#
-# Wraps ChatMessage instances with lifecycle metadata: TTL (turns to live),
-# expiry actions, and per-turn callbacks. The SmartMessageManager processes
-# these lifecycles each turn, independently of context trimming.
-#
-# Key concepts:
-#   - TTL: Number of turns a message stays active. None = permanent.
-#   - ExpiryAction: What happens when TTL reaches 0 (remove, summarize, archive, custom).
-#   - on_tick: Optional callback fired every turn (e.g. for decay or logging).
-#   - on_expire: Optional callback fired when the message expires.
-#   - Pinned messages are exempt from both expiry AND context trimming.
-#
-# Usage:
-#     manager = SmartMessageManager()
-#
-#     # Permanent message (normal behavior)
-#     manager.add_message(ChatMessage.create_user_message("Hello"))
-#
-#     # Ephemeral message that disappears after 3 turns
-#     manager.add_message(
-#         ChatMessage.create_system_message("Temporary context"),
-#         lifecycle=MessageLifecycle(ttl=3, on_expire=ExpiryAction.REMOVE)
-#     )
-#
-#     # Message that gets archived when it expires
-#     manager.add_message(
-#         msg,
-#         lifecycle=MessageLifecycle(ttl=5, on_expire=ExpiryAction.ARCHIVE)
-#     )
-#
-#     # Each turn in the harness:
-#     expired = manager.tick()  # increments turns, collects expired
-#     active_messages = manager.get_active_messages()
-
 from __future__ import annotations
 
 import logging
@@ -40,8 +5,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Callable, Dict, List, Optional, TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from ToolAgents.data_models.messages import ChatMessage
+from ToolAgents.data_models.messages import ChatMessage
 
 logger = logging.getLogger(__name__)
 
