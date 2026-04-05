@@ -1,5 +1,5 @@
 ﻿from ToolAgents.agent_memory.context_app_state import ContextAppState
-from ToolAgents.agent_memory.xml_game_state import XMLAppState
+from ToolAgents.agent_memory.xml_game_state import X
 from ToolAgents.agent_memory.navigable_memory import NavigableMemory, SQLiteBackend
 from ToolAgents.agents import ChatToolAgent
 from ToolAgents.data_models.messages import ChatMessage

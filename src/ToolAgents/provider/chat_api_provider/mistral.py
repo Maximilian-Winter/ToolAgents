@@ -1,7 +1,7 @@
 import copy
 from typing import List, Dict, Optional, Any, Generator, AsyncGenerator
 
-from mistralai.client import Mistral
+from mistralai import Mistral
 
 from ToolAgents import FunctionTool
 from ToolAgents.provider.message_converter.mistral_message_converter import (

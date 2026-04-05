@@ -216,6 +216,8 @@ class ProviderSettings:
             self.set_value(name, value)
         else:
             object.__setattr__(self, name, value)
+
+
 # Convenience function for creating common settings
 def create_standard_settings() -> ProviderSettings:
     """Create standard LLM settings used by most providers."""

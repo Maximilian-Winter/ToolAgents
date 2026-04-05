@@ -1,4 +1,4 @@
-from duckduckgo_search import DDGS
+from ddgs import DDGS
 
 from ToolAgents.knowledge.web_search.web_search import WebSearchProvider
 
