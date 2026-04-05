@@ -6,6 +6,7 @@ from typing import Any, Tuple, Generator, Dict, Optional
 from dotenv import load_dotenv
 from pathlib import Path
 
+from ToolAgents import ToolRegistry
 from ToolAgents.agent_memory.context_app_state import ContextAppState
 from ToolAgents.agents import ChatToolAgent
 from ToolAgents.data_models.chat_history import ChatHistory
@@ -97,10 +98,17 @@ class VirtualGameMasterConfig:
 
 
 class VirtualGameMaster:
-    def __init__(self, config: VirtualGameMasterConfig, tool_agent: ChatToolAgent, debug_mode: bool = False):
+    def __init__(
+        self,
+        config: VirtualGameMasterConfig,
+        tool_agent: ChatToolAgent,
+        debug_mode: bool = False,
+        tool_registry: Optional[ToolRegistry] = None,
+    ):
         self.config = config
         CommandSystem.command_prefix = self.config.COMMAND_PREFIX
         self.tool_agent = tool_agent
+        self.tool_registry = tool_registry
         self.system_message_template = MessageTemplate.from_file(
             config.SYSTEM_MESSAGE_FILE
         )
@@ -128,14 +136,25 @@ class VirtualGameMaster:
 
     def get_response(self, user_input: str) -> str:
         history = self.pre_response(user_input)
-        response = self.tool_agent.get_response(history)
+        if self.tool_registry:
+            response = self.tool_agent.get_response(
+                history, tool_registry=self.tool_registry
+            )
+        else:
+            response = self.tool_agent.get_response(history)
         self.post_response(response.response.strip())
         return response.response.strip()
 
     def get_streaming_response(self, user_input: str) -> Generator[str, None, None]:
         history = self.pre_response(user_input)
+        if self.tool_registry:
+            response_gen = self.tool_agent.get_streaming_response(
+                history, tool_registry=self.tool_registry
+            )
+        else:
+            response_gen = self.tool_agent.get_streaming_response(history)
         full_response = ""
-        for response_chunk in self.tool_agent.get_streaming_response(history):
+        for response_chunk in response_gen:
             full_response += response_chunk.chunk
             yield response_chunk.chunk
         self.post_response(full_response)
