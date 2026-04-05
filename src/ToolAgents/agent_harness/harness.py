@@ -1,9 +1,4 @@
 # harness.py — Core AgentHarness wrapping ChatToolAgent + ContextManager.
-#
-# Updated to integrate:
-#   - PromptComposer: modular system prompt assembly
-#   - SmartMessageManager: lifecycle-aware messages
-#
 # Turn cycle order:
 #   1. PromptComposer.compile() → system message
 #   2. SmartMessageManager.tick() → process lifecycles, expire messages
