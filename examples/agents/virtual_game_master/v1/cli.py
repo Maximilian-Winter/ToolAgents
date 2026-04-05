@@ -1,6 +1,7 @@
 import sys
 
 from ToolAgents import ToolRegistry
+from ToolAgents.agents import ChatToolAgent
 
 from virtual_game_master import VirtualGameMasterConfig, VirtualGameMaster
 from chat_api_selector import VirtualGameMasterChatAPISelector
@@ -44,30 +45,38 @@ def run_cli(app: VirtualGameMaster):
             print("\n")
 
 
-def build_gm_tool_registry(
+def setup_gm_tools(
     base_url: str = "http://localhost:8000",
     campaign_id: int = 1,
+    scenario_path: str | None = None,
+    import_lore: bool = False,
 ) -> ToolRegistry | None:
     """
-    Try to connect to the GM Tool API and build a ToolRegistry.
-    Returns None if the server is not reachable.
+    Set up GM Tool integration. Returns a ToolRegistry with the 2 read
+    tools, or None if the server is unavailable.
     """
     try:
         from gm_tools import GMToolkit
     except ImportError:
-        print("  [GM Tools] gm_tools module not found, running without campaign database.")
+        print("  [GM Tools] gm_tools module not found.")
         return None
 
     toolkit = GMToolkit(base_url=base_url, campaign_id=campaign_id)
     if not toolkit.is_available():
-        print(f"  [GM Tools] Server at {base_url} not reachable, running without campaign database.")
+        print(f"  [GM Tools] Server at {base_url} not reachable.")
         print(f"  [GM Tools] Start it with: cd gm_tool && uvicorn app:app --port 8000")
         toolkit.close()
         return None
 
     print(f"  [GM Tools] Connected to {base_url}, campaign #{campaign_id}")
+
+    if import_lore and scenario_path:
+        print(f"  [GM Tools] Importing world lore from {scenario_path}...")
+        toolkit.import_world_lore_from_yaml(scenario_path)
+
     registry = ToolRegistry()
-    registry.add_tools(toolkit.get_tools())
+    registry.add_tools(toolkit.get_read_tools())
+    print(f"  [GM Tools] 2 retrieval tools registered")
     return registry
 
 
@@ -79,28 +88,22 @@ if __name__ == "__main__":
     api = api_selector.get_api()
 
     # -- GM Tool integration (optional) --
-    # Set these via env or CLI args to enable campaign database tools.
-    # The GM Tool server must be running separately.
-    gm_base_url = "http://localhost:8000"
-    gm_campaign_id = 1
-
+    # --gm-tools       : enable campaign database retrieval tools
+    # --import-lore    : import world lore from the scenario YAML
     tool_registry = None
     if "--gm-tools" in sys.argv:
-        tool_registry = build_gm_tool_registry(gm_base_url, gm_campaign_id)
+        tool_registry = setup_gm_tools(
+            base_url="http://localhost:8000",
+            campaign_id=1,
+            scenario_path=config.INITIAL_GAME_STATE,
+            import_lore="--import-lore" in sys.argv,
+        )
 
-        # Import world lore from scenario YAML if --import-lore is passed
-        if tool_registry and "--import-lore" in sys.argv:
-            from gm_tools import GMToolkit
-            toolkit = GMToolkit(base_url=gm_base_url, campaign_id=gm_campaign_id)
-            scenario_path = config.INITIAL_GAME_STATE
-            if scenario_path:
-                print(f"  [GM Tools] Importing world lore from {scenario_path}...")
-                toolkit.import_world_lore_from_yaml(scenario_path)
-                toolkit.close()
-            else:
-                print("  [GM Tools] No INITIAL_GAME_STATE configured, skipping lore import.")
-
+    tool_agent = ChatToolAgent(chat_api=api)
     vgm_app = VirtualGameMaster(
-        config, api, debug_mode=True, tool_registry=tool_registry
+        config=config,
+        tool_agent=tool_agent,
+        debug_mode=True,
+        tool_registry=tool_registry,
     )
     run_cli(vgm_app)
