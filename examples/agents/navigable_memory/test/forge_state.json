@@ -2,84 +2,34 @@
   "core_memory": {
     "blocks": {
       "persona": "I am Forge, studio manager assistant for Obsidian Forge Studios.",
-      "priorities": "Key dates: Ashenmoor EA Aug 2026, Drift Protocol E3 Jun 2026.\n**REMINDER:** Talk to Marcus Chen about vacation planning (Q2/Q3 timing — Ashenmoor EA crunch period).",
+      "priorities": "Key dates: Ashenmoor EA Aug 2026, Drift Protocol E3 Jun 2026.",
       "user_info": "No user information yet."
     },
-    "last_modified": "2026-04-01 06:08:52"
+    "last_modified": "2026-04-05 11:39:34"
   },
-  "current_location": "studio/projects/ashenmoor/design/combat/boss-design/act3-voidlord.md",
+  "current_location": "studio/overview.md",
   "location_history": [
-    "studio/overview.md",
-    "studio/projects/ashenmoor/qa/critical-bugs.md",
-    "studio/projects/ashenmoor/art/vfx-backlog.md",
-    "studio/operations/finance/overview.md",
-    "studio/projects/ashenmoor/design/combat/boss-design/act3-voidlord.md"
+    "studio/overview.md"
   ],
   "active_messages": [
     {
       "role": "system",
       "text": "[SYSTEM] Navigate to relevant knowledge before answering project questions. Cross-reference people profiles when names come up. Highlight risks and blockers proactively.",
       "ttl": null,
-      "turns_alive": 6,
+      "turns_alive": 0,
       "pinned": true,
       "on_expire": "remove"
     },
     {
-      "role": "user",
-      "text": "What are our critical bugs?",
-      "ttl": 7,
-      "turns_alive": 5,
-      "pinned": false,
-      "on_expire": "archive"
-    },
-    {
       "role": "system",
-      "text": "[Previously at] Obsidian Forge Studios (studio/overview.md)\n# Obsidian Forge Studios  Mid-size game studio. Founded 2019. ~45 employees. Two active projects, strong engineering culture.  ## Departments - **Ironclad** team — working on 'Ashenmoor' (action RPG) ...",
-      "ttl": 3,
-      "turns_alive": 5,
+      "text": "[Ephemeral] New session. Greet the user and ask what they need. Suggest a studio status overview or specific project check.",
+      "ttl": 2,
+      "turns_alive": 0,
       "pinned": false,
-      "on_expire": "archive"
-    },
-    {
-      "role": "assistant",
-      "text": "Here are the current critical bugs for **Ashenmoor**:\n\n| ID | Issue | Owner | Impact | ETA |\n|----|-------|-------|--------|-----|\n| **CRIT-001** | Multiplayer phase desync | Jake Torres | Co-op unplayable for boss fights | 1 week |\n| **CRIT-002** | Memory leak in Thornheart Marsh | Priya Sharma | Crash on min-spec machines (>20 min play) | Investigating |\n| **CRIT-003** | Save corruption on faction standing overflow | Jake Torres | Save file becomes unloadable | 3 days |\n\n**Key observations:**\n- **Jake Torres** is assigned to two critical bugs — this could be a workload concern.\n- **CRIT-002** (memory leak) has no ETA yet — this is a risk for Early Access in August.\n- All three bugs are blockers for a smooth EA launch.\n\nWould you like me to:\n1. Check **Drift Protocol** for any critical issues?\n2. Pull up **Jake Torres** or **Priya Sharma's** profiles to see their current workload?\n3. Look at the **QA backlog** or **performance budget** for related context?",
-      "ttl": 7,
-      "turns_alive": 5,
-      "pinned": false,
-      "on_expire": "archive"
-    },
-    {
-      "role": "tool",
-      "text": "Tool Use: Navigate\nTool Result: Navigated to: Critical Bugs",
-      "ttl": 7,
-      "turns_alive": 5,
-      "pinned": false,
-      "on_expire": "archive"
-    },
-    {
-      "role": "tool",
-      "text": "Tool Use: ReadDocument\nTool Result: ## Critical Bugs\n\n# Critical Bugs — Ashenmoor\n\n## CRIT-001: Multiplayer phase desync\nOwner: Jake Torres (Engineering)\nRepro: Host triggers boss phase 2, client stays in phase 1.\nImpact: Co-op unplayable for boss fights.\nETA: 1 week.\n\n## CRIT-002: Memory leak in Thornheart Marsh\nOwner: Priya Sharma (Engineering)\nRepro: Play in Thornheart for >20 min, RAM climbs to 12GB+.\nImpact: Crash on min-spec machines.\nETA: investigating.\n\n## CRIT-003: Save corruption on faction standing overflow\nOwner: Jake Torres (Engineering)\nRepro: Standing exceeds 100 via quest stacking exploit.\nImpact: Save file becomes unloadable.\nETA: 3 days (needs clamp + migration script).",
-      "ttl": 7,
-      "turns_alive": 5,
-      "pinned": false,
-      "on_expire": "archive"
-    },
-    {
-      "role": "user",
-      "text": "Show me the VFX backlog and who owns it'",
-      "ttl": 8,
-      "turns_alive": 4,
-      "pinned": false,
-      "on_expire": "archive"
-    },
-    {
-      "role": "system",
-      "text": "[Previously at] Critical Bugs (studio/projects/ashenmoor/qa/critical-bugs.md)\n# Critical Bugs — Ashenmoor  ## CRIT-001: Multiplayer phase desync Owner: Jake Torres (Engineering) Repro: Host triggers boss phase 2, client stays in phase 1. Impact: Co-op unplayable for boss fights...",
-      "ttl": 4,
-      "turns_alive": 4,
-      "pinned": false,
-      "on_expire": "archive"
-    },
-    {
-      "role": "assistant",
-      "text": 
+      "on_expire": "remove"
+    }
+  ],
+  "archive": [],
+  "tick_count": 0,
+  "saved_at": "2026-04-05T11:39:48.786487"
+}

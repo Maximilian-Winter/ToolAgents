@@ -1,12 +1,6 @@
 setting: >
   
 
-player_character: >
-  Elysia Thunderscribe: A Human female Wizard and Sage of Candlekeep with expressive, indigo eyes full of knowledge and secrets. Her charcoal-black hair is streaked with silver and often loosely tied in a braid, shimmering with astral sparkles whenever she casts a spell. Even though she is in her late twenties, the look in her eyes is ageless, indicating wisdom far beyond her years. Her slender figure is draped in a celestial-blue robe adorned with runic symbols, the fabric shimmering as if dusted with stardust. She carries an ornate staff, topped with a crystal orb pulsating with arcane energy. Though her delicate features might deceive some, her aura emanates formidable power, proof of her prowess in the arcane arts and her extensive knowledge as a Candlekeep sage.
-
-companions:
-  - Zephyr: A Tiefling female Warlock (Pact of the Genie) in her late 20s. She has vibrant purple skin, spiraling horns adorned with golden rings, and eyes that swirl with gold and violet. Zephyr dresses in flowing, colorful silks that shimmer with an otherworldly quality. She carries an ornate oil lamp (her genie vessel) at her hip, which can serve as a safe haven for up to 4 people for 48 hours. Zephyr is charismatic and flamboyant, skilled in deception and persuasion.
-
 location: >
 
 
@@ -20,6 +14,13 @@ active_quests:
 
 
 key_npcs:
+
+
+player_character: >
+  Elysia Thunderscribe: A Human female Wizard and Sage of Candlekeep with expressive, indigo eyes full of knowledge and secrets. Her charcoal-black hair is streaked with silver and often loosely tied in a braid, shimmering with astral sparkles whenever she casts a spell. Even though she is in her late twenties, the look in her eyes is ageless, indicating wisdom far beyond her years. Her slender figure is draped in a celestial-blue robe adorned with runic symbols, the fabric shimmering as if dusted with stardust. She carries an ornate staff, topped with a crystal orb pulsating with arcane energy. Though her delicate features might deceive some, her aura emanates formidable power, proof of her prowess in the arcane arts and her extensive knowledge as a Candlekeep sage.
+
+companions:
+  - Zephyr: A Tiefling female Warlock (Pact of the Genie) in her late 20s. She has vibrant purple skin, spiraling horns adorned with golden rings, and eyes that swirl with gold and violet. Zephyr dresses in flowing, colorful silks that shimmer with an otherworldly quality. She carries an ornate oil lamp (her genie vessel) at her hip, which can serve as a safe haven for up to 4 people for 48 hours. Zephyr is charismatic and flamboyant, skilled in deception and persuasion.
 
 
 inventory:
@@ -63,16 +64,6 @@ party_members:
   - Elysia Thunderscribe
   - Lyra Flameheart
   - Zephyr
-
-world_state:
-
-
-factions:
-
-time_and_calendar:
-  - Current date:
-  - Season:
-  - Time of day:
 
 relationships:
   - Elysia and Zephyr are girlfriends, fellow sages, and adventuring companions.
@@ -124,3 +115,13 @@ game_world_information:
 
 
 
+
+world_state:
+
+
+factions:
+
+time_and_calendar:
+  - Current date:
+  - Season:
+  - Time of day:
