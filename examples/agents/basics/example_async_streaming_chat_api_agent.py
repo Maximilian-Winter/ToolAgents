@@ -22,8 +22,11 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Official OpenAI API
-api = AsyncOpenAIChatAPI(api_key=os.getenv("OPENAI_API_KEY"), model="gpt-4o-mini")
-
+api = AsyncOpenAIChatAPI(
+    api_key=os.getenv("OPENROUTER_API_KEY"),
+    model="qwen/qwen3.5-9b",
+    base_url="https://openrouter.ai/api/v1",
+)
 # Anthropic API
 # api = AsyncAnthropicChatAPI(api_key=os.getenv("ANTHROPIC_API_KEY"), model="claude-3-5-sonnet-20241022")
 
@@ -53,7 +56,7 @@ tool_registry = ToolRegistry()
 tool_registry.add_tools(tools)
 messages = [
     ChatMessage.create_system_message(
-        "You are a helpful assistant with tool calling capabilities. Only reply with a tool call if the function exists in the library provided by the user. Use JSON format to output your function calls. If it doesn't exist, just reply directly in natural language. When you receive a tool call response, use the output to format an answer to the original user question."
+        "You are a helpful assistant with tool calling capabilities."
     ),
     ChatMessage.create_user_message(
         "Get the weather in London and New York. Calculate 420 x 420 and retrieve the date and time in the format: %Y-%m-%d %H:%M:%S."
@@ -66,6 +69,10 @@ async def main():
         messages=messages, settings=settings, tool_registry=tool_registry
     )
     async for res in result:
+        if res.get_reasoning():
+            print()
+            print(f"<reasoning>\n{res.get_reasoning()}\n</reasoning>")
+            print()
         if res.get_tool_results():
             print()
             print(f"Tool Use: {res.get_tool_name()}")

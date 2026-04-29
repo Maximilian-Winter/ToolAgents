@@ -304,7 +304,8 @@ class VirtualGameMaster:
         full_response = ""
         for response_chunk in response_gen:
             full_response += response_chunk.chunk
-            print(response_chunk.chunk, end="", flush=True)
+            if self.debug_mode:
+                print(response_chunk.chunk, end="", flush=True)
 
         if self.debug_mode:
             print(f"Update game info:\n{full_response}")

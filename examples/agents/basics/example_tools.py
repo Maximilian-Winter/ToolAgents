@@ -57,11 +57,11 @@ class calculator(BaseModel):
 def get_current_weather(location, unit):
     """Get the current weather in a given location"""
     if "London" in location:
-        return f"Weather in {location}: {22}Â° {unit.value}"
+        return f"Weather in {location}: {22}° {unit.value}"
     elif "New York" in location:
-        return f"Weather in {location}: {24}Â° {unit.value}"
+        return f"Weather in {location}: {24}° {unit.value}"
     elif "North Pole" in location:
-        return f"Weather in {location}: {-42}Â° {unit.value}"
+        return f"Weather in {location}: {-42}° {unit.value}"
     else:
         return f"Weather in {location}: unknown"
 

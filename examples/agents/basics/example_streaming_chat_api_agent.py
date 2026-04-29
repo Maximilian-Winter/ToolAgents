@@ -29,7 +29,7 @@ load_dotenv()
 # Openrouter API
 api = OpenAIChatAPI(
     api_key=os.getenv("OPENROUTER_API_KEY"),
-    model="xiaomi/mimo-v2-pro",
+    model="qwen/qwen3.5-9b",
     base_url="https://openrouter.ai/api/v1",
 )
 # Anthropic API
@@ -73,6 +73,10 @@ result = agent.get_streaming_response(
 )
 
 for res in result:
+    if res.get_reasoning():
+        print()
+        print(f"<reasoning>\n{res.get_reasoning()}\n</reasoning>")
+        print()
     if res.get_tool_results():
         print()
         print(f"Tool Use: {res.get_tool_name()}")

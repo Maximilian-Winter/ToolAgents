@@ -142,7 +142,7 @@ class ChatToolAgent(BaseToolAgent):
         else:
             self.last_messages_buffer.append(result)
             return ChatResponse(
-                messages=self.last_messages_buffer, response=result.get_as_text()
+                messages=self.last_messages_buffer, response=result.get_text_content()
             )
 
     def get_streaming_response(
@@ -166,6 +166,7 @@ class ChatToolAgent(BaseToolAgent):
         has_tool_call = False
         tool_call = None
         finished_message = None
+        reasoning = None
         for chunk in self.stream_step(
             messages=messages,
             tool_registry=tool_registry,
@@ -174,12 +175,25 @@ class ChatToolAgent(BaseToolAgent):
         ):
             if chunk.get_finished():
                 finished_message = chunk.get_finished_chat_message()
+
+            if chunk.is_reasoning_chunk:
+                if reasoning is None:
+                    reasoning = chunk.chunk
+                else:
+                    reasoning += chunk.chunk
+
             yield ChatResponseChunk(
-                chunk=chunk.chunk,
+                chunk=chunk.chunk if not chunk.is_reasoning_chunk else "",
+                reasoning_chunk=chunk.chunk if chunk.is_reasoning_chunk else "",
+                has_reasoning_chunk=True if chunk.is_reasoning_chunk else False,
                 has_tool_call=chunk.is_tool_call,
+                has_reasoning=True if not chunk.is_reasoning_chunk and reasoning else False,
+                reasoning=reasoning if not chunk.is_reasoning_chunk and reasoning else None,
                 tool_call=chunk.tool_call,
                 finished=False,
             )
+            if not chunk.is_reasoning_chunk and reasoning:
+                reasoning = None
             has_tool_call = chunk.is_tool_call
             tool_call = chunk.tool_call
 
@@ -211,14 +225,14 @@ class ChatToolAgent(BaseToolAgent):
                 tool_call=tool_call,
                 finished_response=ChatResponse(
                     messages=self.last_messages_buffer,
-                    response=finished_message.get_as_text(),
+                    response=finished_message.get_text_content(),
                 ),
             )
 
     def get_last_response(self) -> ChatResponse:
         return ChatResponse(
             messages=self.last_messages_buffer,
-            response=self.last_messages_buffer[-1].get_as_text(),
+            response=self.last_messages_buffer[-1].get_text_content(),
         )
 
     def handle_function_calling_response(
@@ -357,7 +371,7 @@ class AsyncChatToolAgent(AsyncBaseToolAgent):
         else:
             self.last_messages_buffer.append(result)
             return ChatResponse(
-                messages=self.last_messages_buffer, response=result.get_as_text()
+                messages=self.last_messages_buffer, response=result.get_text_content()
             )
 
     async def get_streaming_response(
@@ -381,6 +395,7 @@ class AsyncChatToolAgent(AsyncBaseToolAgent):
         has_tool_call = False
         tool_call = None
         finished_message = None
+        reasoning = None
         async for chunk in self.stream_step(
             messages=messages,
             tool_registry=tool_registry,
@@ -389,12 +404,24 @@ class AsyncChatToolAgent(AsyncBaseToolAgent):
         ):
             if chunk.get_finished():
                 finished_message = chunk.get_finished_chat_message()
+            if chunk.is_reasoning_chunk:
+                if reasoning is None:
+                    reasoning = chunk.chunk
+                else:
+                    reasoning += chunk.chunk
+
             yield ChatResponseChunk(
-                chunk=chunk.chunk,
+                chunk=chunk.chunk if not chunk.is_reasoning_chunk else "",
+                reasoning_chunk=chunk.chunk if chunk.is_reasoning_chunk else "",
+                has_reasoning_chunk=True if chunk.is_reasoning_chunk else False,
                 has_tool_call=chunk.is_tool_call,
+                has_reasoning=True if not chunk.is_reasoning_chunk and reasoning else False,
+                reasoning=reasoning if not chunk.is_reasoning_chunk and reasoning else None,
                 tool_call=chunk.tool_call,
                 finished=False,
             )
+            if not chunk.is_reasoning_chunk and reasoning:
+                reasoning = None
             has_tool_call = chunk.is_tool_call
             tool_call = chunk.tool_call
 
@@ -427,14 +454,14 @@ class AsyncChatToolAgent(AsyncBaseToolAgent):
                 tool_call=tool_call,
                 finished_response=ChatResponse(
                     messages=self.last_messages_buffer,
-                    response=finished_message.get_as_text(),
+                    response=finished_message.get_text_content(),
                 ),
             )
 
     def get_last_response(self) -> ChatResponse:
         return ChatResponse(
             messages=self.last_messages_buffer,
-            response=self.last_messages_buffer[-1].get_as_text(),
+            response=self.last_messages_buffer[-1].get_text_content(),
         )
 
     async def handle_function_calling_response(

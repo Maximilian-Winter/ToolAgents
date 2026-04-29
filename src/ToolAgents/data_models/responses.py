@@ -28,7 +28,18 @@ class ChatResponseChunk(BaseModel):
     chunk: str = Field(
         default_factory=str, description="Response chunk from the agent."
     )
-
+    reasoning: str | None = Field(
+        default_factory=NoneType, description="Reasoning."
+    )
+    has_reasoning: bool = Field(
+        default_factory=bool, description="Whether the response has reasoning."
+    )
+    reasoning_chunk: str = Field(
+        default_factory=str, description="Reasoning chunk from the agent."
+    )
+    has_reasoning_chunk: bool = Field(
+        default_factory=bool, description="Whether the response has a reasoning chunk."
+    )
     has_tool_call: bool = Field(
         default_factory=bool, description="Whether the chunk has a tool call."
     )
@@ -66,6 +77,9 @@ class ChatResponseChunk(BaseModel):
             return None
         else:
             return None
+
+    def get_reasoning(self) -> Union[str, None]:
+        return self.reasoning
 
     def get_tool_results(self) -> Union[str, None]:
         if self.has_tool_call_result:

@@ -36,7 +36,7 @@ load_dotenv()
 # Openrouter API
 api = OpenAIChatAPI(
     api_key=os.getenv("OPENROUTER_API_KEY"),
-    model="mistralai/ministral-8b-2512",
+    model="qwen/qwen3.5-9b",
     base_url="https://openrouter.ai/api/v1",
 )
 
@@ -81,10 +81,15 @@ messages = [
     ),
 ]
 
+print(f"Prompt: {messages[0].get_text_content()}")
 
 chat_response = agent.get_response(
     messages=copy(messages), tool_registry=tool_registry, settings=settings
 )
 
-print(chat_response.response)
+print(f"Response: {chat_response.response}")
+
+print(f"All messages: {'\n'.join([msg.model_dump_json(indent=2) for msg in chat_response.messages])}")
+
+
 

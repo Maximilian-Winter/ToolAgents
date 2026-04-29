@@ -1,22 +1,3 @@
-# openai_message_converter.py  (reasoning-aware version)
-#
-# Changes from original:
-#   - OpenAIResponseConverter.from_provider_response: captures reasoning
-#     content from the message.reasoning field (OpenRouter normalised format)
-#     and from completion_tokens_details.reasoning_tokens (usage tracking)
-#   - Streaming: captures reasoning tokens from delta.reasoning (OpenRouter)
-#   - ReasoningContent blocks are stored alongside TextContent on ChatMessage
-#   - Round-trip: to_provider_format passes message.reasoning back on
-#     assistant messages for models that benefit from it (OpenRouter convention)
-#
-# OpenRouter reasoning response format (Chat Completions compatible):
-#   choices[0].message.reasoning  -> plaintext reasoning string
-#   choices[0].message.content    -> final answer (unchanged)
-#   usage.completion_tokens_details.reasoning_tokens -> count
-#
-# OpenAI o-series: reasoning tokens are hidden, only count is returned.
-# The .reasoning field will be None for native OpenAI o-series calls.
-
 import random
 import string
 import uuid
@@ -217,7 +198,7 @@ class OpenAIResponseConverter(BaseResponseConverter):
             if reasoning_chunk:
                 current_reasoning += reasoning_chunk
                 # Emit with a flag callers can use to distinguish reasoning
-                yield StreamingChatMessage(chunk=reasoning_chunk, is_tool_call=False)
+                yield StreamingChatMessage(chunk=reasoning_chunk, is_tool_call=False, is_reasoning_chunk=True)
 
             # ── Text delta ────────────────────────────────────────────────────
             if delta.content:
@@ -311,7 +292,7 @@ class OpenAIResponseConverter(BaseResponseConverter):
             reasoning_chunk = getattr(delta, "reasoning", None)
             if reasoning_chunk:
                 current_reasoning += reasoning_chunk
-                yield StreamingChatMessage(chunk=reasoning_chunk, is_tool_call=False)
+                yield StreamingChatMessage(chunk=reasoning_chunk, is_tool_call=False, is_reasoning_chunk=True)
 
             if delta.content:
                 current_content += delta.content

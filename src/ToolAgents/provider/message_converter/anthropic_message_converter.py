@@ -1,20 +1,3 @@
-# anthropic_message_converter.py  (reasoning-aware version)
-#
-# Changes from original:
-#   - AnthropicMessageConverter.prepare_request: accepts optional `thinking`
-#     dict in settings extra_body and passes it through to the request
-#   - AnthropicResponseConverter.from_provider_response: captures thinking
-#     blocks and stores them as ReasoningContent on the ChatMessage
-#   - Streaming: handles content_block_start/delta for type="thinking"
-#   - to_provider_format: round-trips thinking blocks back for multi-turn
-#
-# Anthropic thinking block format in responses:
-#   {"type": "thinking", "thinking": "...", "signature": "..."}
-#   {"type": "redacted_thinking", "data": "..."}  (safety-filtered)
-#
-# To enable: pass thinking={"type": "enabled", "budget_tokens": 8000}
-# as an extra setting, or set it directly on the request via extra_body.
-
 import base64
 import uuid
 import datetime
@@ -229,7 +212,7 @@ class AnthropicResponseConverter(BaseResponseConverter):
                     current_thinking_text = getattr(chunk.content_block, "thinking", "") or ""
                     current_thinking_sig  = getattr(chunk.content_block, "signature", "") or ""
                     # Emit a streaming hint (empty chunk) so callers know thinking started
-                    yield StreamingChatMessage(chunk="", is_tool_call=False)
+                    yield StreamingChatMessage(chunk="", is_tool_call=False, is_reasoning_chunk=True)
 
                 elif block_type == "redacted_thinking":
                     in_redacted_block     = True
@@ -253,7 +236,7 @@ class AnthropicResponseConverter(BaseResponseConverter):
                 if delta_type == "thinking_delta":
                     current_thinking_text += chunk.delta.thinking
                     # Optionally stream thinking text (callers can filter on is_thinking)
-                    yield StreamingChatMessage(chunk=chunk.delta.thinking, is_tool_call=False)
+                    yield StreamingChatMessage(chunk=chunk.delta.thinking, is_tool_call=False, is_reasoning_chunk=True)
 
                 elif delta_type == "signature_delta":
                     current_thinking_sig += chunk.delta.signature
@@ -355,7 +338,7 @@ class AnthropicResponseConverter(BaseResponseConverter):
                     in_thinking_block     = True
                     current_thinking_text = getattr(chunk.content_block, "thinking", "") or ""
                     current_thinking_sig  = getattr(chunk.content_block, "signature", "") or ""
-                    yield StreamingChatMessage(chunk="", is_tool_call=False)
+                    yield StreamingChatMessage(chunk="", is_tool_call=False, is_reasoning_chunk=True)
                 elif block_type == "redacted_thinking":
                     in_redacted_block     = True
                     current_redacted_data = getattr(chunk.content_block, "data", "") or ""
@@ -374,7 +357,7 @@ class AnthropicResponseConverter(BaseResponseConverter):
                 delta_type = chunk.delta.type
                 if delta_type == "thinking_delta":
                     current_thinking_text += chunk.delta.thinking
-                    yield StreamingChatMessage(chunk=chunk.delta.thinking, is_tool_call=False)
+                    yield StreamingChatMessage(chunk=chunk.delta.thinking, is_tool_call=False, is_reasoning_chunk=True)
                 elif delta_type == "signature_delta":
                     current_thinking_sig += chunk.delta.signature
                 elif delta_type == "text_delta":

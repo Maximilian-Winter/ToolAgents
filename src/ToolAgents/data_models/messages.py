@@ -238,7 +238,7 @@ class ReasoningContent(ContentBase):
     def get_as_text(self) -> str:
         if self.is_redacted:
             return ""
-        return f"<reasoning>\n{self.thinking or ''}</reasoning>"
+        return f"{self.thinking or ''}"
 
 
 class TokenUsage(BaseModel):
@@ -488,6 +488,13 @@ class ChatMessage(BaseModel):
         ]
         return "\n\n".join(parts) if parts else None
 
+    def get_text_content(self) -> str:
+        result = []
+        for content in self.content:
+            if isinstance(content, TextContent):
+                result.append(content.content)
+        return "\n".join(result)
+
     def get_as_text(self) -> str:
         result = []
         for content in self.content:
@@ -563,7 +570,8 @@ class ChatMessage(BaseModel):
                 content=base64_string,
             )
         )
-
+    class Config:
+        arbitrary_types_allowed = True  # To allow ChatMessage custom type
 
 class StreamingChatMessage(BaseModel):
     """
@@ -572,6 +580,7 @@ class StreamingChatMessage(BaseModel):
 
     chunk: str
     is_tool_call: bool = False
+    is_reasoning_chunk: bool = False
     tool_call: Optional[Dict[str, Any]] = None
     finished: bool = False
     finished_chat_message: Optional[ChatMessage] = None
