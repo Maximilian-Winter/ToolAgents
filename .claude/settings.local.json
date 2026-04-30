@@ -16,7 +16,8 @@
       "Read(//tmp/**)",
       "Bash(rm /H/Dev42/ToolAgentsDev/examples/agents/virtual_game_master/virtual_game_master_v2.py)",
       "Bash(rm /H/Dev42/ToolAgentsDev/examples/agents/virtual_game_master/VIRTUAL_GAME_MASTER_V2_README.md)",
-      "Bash(rm /H/Dev42/ToolAgentsDev/examples/agents/personal_agent_ada/virtual_game_master_v2.py)"
+      "Bash(rm /H/Dev42/ToolAgentsDev/examples/agents/personal_agent_ada/virtual_game_master_v2.py)",
+      "Bash(python *)"
     ]
   },
   "outputStyle": "費洛莊智慧機 - Feynman-Lovelace-Zhuangzi Wisdom Mechanism"

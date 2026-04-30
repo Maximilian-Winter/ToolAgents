@@ -34,15 +34,92 @@ logger = logging.getLogger(__name__)
 # Storage Backend Protocol
 # ═══════════════════════════════════════════════════════════════════
 
+# Common reference types — string constants, also extensible
+class RefType:
+    LINKS_TO = "links_to"
+    DEPENDS_ON = "depends_on"
+    SUPERSEDES = "supersedes"
+    SEE_ALSO = "see_also"
+    EMBEDS = "embeds"
+    REPLIES_TO = "replies_to"
+    DERIVED_FROM = "derived_from"
+
+
 @dataclass(frozen=True)
 class Document:
-    """A single document in the knowledge space."""
+    """A single document in the knowledge space.
+
+    A document can be either textual (mime_type starts with 'text/') or
+    binary (image/audio/etc.). For binary documents, ``content`` may hold
+    a caption or human-readable description while ``binary_data`` carries
+    the raw bytes.
+    """
     path: str
     title: str
-    content: str
+    content: str = ""
     tags: List[str] = field(default_factory=list)
     metadata: Dict[str, Any] = field(default_factory=dict)
     updated_at: Optional[str] = None
+    mime_type: str = "text/markdown"
+    binary_data: Optional[bytes] = None
+    size_bytes: int = 0
+    version: int = 1
+
+    @property
+    def is_binary(self) -> bool:
+        return not self.mime_type.startswith("text/")
+
+    @property
+    def is_image(self) -> bool:
+        return self.mime_type.startswith("image/")
+
+    @property
+    def is_audio(self) -> bool:
+        return self.mime_type.startswith("audio/")
+
+    @property
+    def human_size(self) -> str:
+        n = self.size_bytes or (len(self.binary_data) if self.binary_data else len(self.content.encode("utf-8")))
+        for unit in ("B", "KB", "MB", "GB"):
+            if n < 1024:
+                return f"{n:.0f} {unit}" if unit == "B" else f"{n:.1f} {unit}"
+            n /= 1024
+        return f"{n:.1f} TB"
+
+
+@dataclass(frozen=True)
+class DocumentVersion:
+    """A historical snapshot of a document."""
+    path: str
+    version: int
+    title: str
+    content: str = ""
+    tags: List[str] = field(default_factory=list)
+    metadata: Dict[str, Any] = field(default_factory=dict)
+    mime_type: str = "text/markdown"
+    binary_data: Optional[bytes] = None
+    size_bytes: int = 0
+    created_at: str = ""
+    author: str = ""
+    change_note: str = ""
+
+
+@dataclass(frozen=True)
+class Reference:
+    """A directed link between two documents.
+
+    Attributes:
+        from_path: Source document path.
+        to_path: Target document path.
+        ref_type: Kind of reference (see ``RefType`` for common values).
+        note: Free-form annotation, e.g. why this link exists.
+        created_at: ISO timestamp when the reference was added.
+    """
+    from_path: str
+    to_path: str
+    ref_type: str = RefType.LINKS_TO
+    note: str = ""
+    created_at: str = ""
 
 
 @runtime_checkable
@@ -76,6 +153,76 @@ class StorageBackend(Protocol):
         ...
 
 
+@runtime_checkable
+class BinaryStorage(Protocol):
+    """Optional protocol for backends that support binary blobs.
+
+    Backends implementing this can store images, audio, PDFs, and other
+    non-text data. NavigableMemory detects support via isinstance().
+    """
+
+    def write_binary(self, path: str, title: str, mime_type: str,
+                     data: bytes, caption: str = "",
+                     tags: Optional[List[str]] = None,
+                     metadata: Optional[Dict[str, Any]] = None) -> bool:
+        """Write a binary document. Returns True on success."""
+        ...
+
+    def read_binary(self, path: str) -> Optional[bytes]:
+        """Return the raw bytes of a binary document, or None."""
+        ...
+
+
+@runtime_checkable
+class VersionedStorage(Protocol):
+    """Optional protocol for backends that retain version history."""
+
+    def list_versions(self, path: str) -> List[DocumentVersion]:
+        """List all versions of a document, newest first."""
+        ...
+
+    def get_version(self, path: str, version: int) -> Optional[DocumentVersion]:
+        """Read a specific historical version."""
+        ...
+
+    def rollback(self, path: str, version: int, author: str = "",
+                 change_note: str = "") -> bool:
+        """Restore a document to a previous version (creates new version)."""
+        ...
+
+    def prune_versions(self, path: str, keep_last_n: int) -> int:
+        """Drop old versions, keeping the most recent N. Returns count removed."""
+        ...
+
+
+@runtime_checkable
+class ReferenceStorage(Protocol):
+    """Optional protocol for backends that track inter-document references."""
+
+    def add_reference(self, from_path: str, to_path: str,
+                      ref_type: str = RefType.LINKS_TO,
+                      note: str = "") -> bool:
+        """Create a reference. Idempotent (same triple = no duplicate)."""
+        ...
+
+    def remove_reference(self, from_path: str, to_path: str,
+                         ref_type: Optional[str] = None) -> int:
+        """Remove matching references. Returns count removed."""
+        ...
+
+    def list_references_from(self, path: str) -> List[Reference]:
+        """List outgoing references from a document."""
+        ...
+
+    def list_references_to(self, path: str) -> List[Reference]:
+        """List incoming references to a document."""
+        ...
+
+    def list_all_references(self) -> List[Reference]:
+        """List every reference in the store (used for migration / inspection)."""
+        ...
+
+
 # ═══════════════════════════════════════════════════════════════════
 # In-Memory Backend (for testing and lightweight use)
 # ═══════════════════════════════════════════════════════════════════
@@ -84,23 +231,56 @@ class InMemoryBackend:
     """Simple dict-based storage backend for testing.
 
     Documents are stored in memory and lost on restart.
-    Useful for unit tests and quick prototyping.
+    Implements StorageBackend, BinaryStorage, VersionedStorage,
+    and ReferenceStorage protocols. Useful for unit tests and
+    quick prototyping.
     """
 
-    def __init__(self):
+    def __init__(self, track_versions: bool = True):
         self._docs: Dict[str, Document] = {}
+        self._versions: Dict[str, List[DocumentVersion]] = {}
+        self._refs: List[Reference] = []
+        self._track_versions = track_versions
+
+    # ── Internal helpers ─────────────────────────────────────────
+
+    def _record_version(self, doc: Document, author: str = "",
+                        change_note: str = "") -> None:
+        if not self._track_versions:
+            return
+        ver = DocumentVersion(
+            path=doc.path, version=doc.version, title=doc.title,
+            content=doc.content, tags=list(doc.tags),
+            metadata=dict(doc.metadata), mime_type=doc.mime_type,
+            binary_data=doc.binary_data, size_bytes=doc.size_bytes,
+            created_at=doc.updated_at or datetime.now().isoformat(),
+            author=author, change_note=change_note,
+        )
+        self._versions.setdefault(doc.path, []).append(ver)
+
+    # ── StorageBackend ───────────────────────────────────────────
 
     def read(self, path: str) -> Optional[Document]:
         return self._docs.get(path)
 
     def write(self, path: str, title: str, content: str,
               tags: Optional[List[str]] = None,
-              metadata: Optional[Dict[str, Any]] = None) -> bool:
-        self._docs[path] = Document(
+              metadata: Optional[Dict[str, Any]] = None,
+              author: str = "", change_note: str = "") -> bool:
+        existing = self._docs.get(path)
+        next_version = (existing.version + 1) if existing else 1
+        size = len(content.encode("utf-8"))
+        doc = Document(
             path=path, title=title, content=content,
             tags=tags or [], metadata=metadata or {},
             updated_at=datetime.now().isoformat(),
+            mime_type="text/markdown",
+            binary_data=None,
+            size_bytes=size,
+            version=next_version,
         )
+        self._docs[path] = doc
+        self._record_version(doc, author=author, change_note=change_note)
         return True
 
     def list(self, prefix: str = "") -> List[Document]:
@@ -122,8 +302,115 @@ class InMemoryBackend:
     def delete(self, path: str) -> bool:
         if path in self._docs:
             del self._docs[path]
+            self._versions.pop(path, None)
+            self._refs = [
+                r for r in self._refs
+                if r.from_path != path and r.to_path != path
+            ]
             return True
         return False
+
+    # ── BinaryStorage ────────────────────────────────────────────
+
+    def write_binary(self, path: str, title: str, mime_type: str,
+                     data: bytes, caption: str = "",
+                     tags: Optional[List[str]] = None,
+                     metadata: Optional[Dict[str, Any]] = None,
+                     author: str = "", change_note: str = "") -> bool:
+        existing = self._docs.get(path)
+        next_version = (existing.version + 1) if existing else 1
+        doc = Document(
+            path=path, title=title, content=caption,
+            tags=tags or [], metadata=metadata or {},
+            updated_at=datetime.now().isoformat(),
+            mime_type=mime_type,
+            binary_data=bytes(data),
+            size_bytes=len(data),
+            version=next_version,
+        )
+        self._docs[path] = doc
+        self._record_version(doc, author=author, change_note=change_note)
+        return True
+
+    def read_binary(self, path: str) -> Optional[bytes]:
+        doc = self._docs.get(path)
+        return doc.binary_data if doc else None
+
+    # ── VersionedStorage ─────────────────────────────────────────
+
+    def list_versions(self, path: str) -> List[DocumentVersion]:
+        return list(reversed(self._versions.get(path, [])))
+
+    def get_version(self, path: str, version: int) -> Optional[DocumentVersion]:
+        for ver in self._versions.get(path, []):
+            if ver.version == version:
+                return ver
+        return None
+
+    def rollback(self, path: str, version: int, author: str = "",
+                 change_note: str = "") -> bool:
+        target = self.get_version(path, version)
+        if target is None:
+            return False
+        existing = self._docs.get(path)
+        next_version = (existing.version + 1) if existing else 1
+        note = change_note or f"Rolled back to v{version}"
+        doc = Document(
+            path=path, title=target.title, content=target.content,
+            tags=list(target.tags), metadata=dict(target.metadata),
+            updated_at=datetime.now().isoformat(),
+            mime_type=target.mime_type,
+            binary_data=target.binary_data,
+            size_bytes=target.size_bytes,
+            version=next_version,
+        )
+        self._docs[path] = doc
+        self._record_version(doc, author=author, change_note=note)
+        return True
+
+    def prune_versions(self, path: str, keep_last_n: int) -> int:
+        versions = self._versions.get(path, [])
+        if len(versions) <= keep_last_n:
+            return 0
+        removed = len(versions) - keep_last_n
+        self._versions[path] = versions[-keep_last_n:]
+        return removed
+
+    # ── ReferenceStorage ─────────────────────────────────────────
+
+    def add_reference(self, from_path: str, to_path: str,
+                      ref_type: str = RefType.LINKS_TO,
+                      note: str = "") -> bool:
+        # Idempotent: skip duplicate triples
+        for r in self._refs:
+            if (r.from_path == from_path and r.to_path == to_path
+                    and r.ref_type == ref_type):
+                return False
+        self._refs.append(Reference(
+            from_path=from_path, to_path=to_path,
+            ref_type=ref_type, note=note,
+            created_at=datetime.now().isoformat(),
+        ))
+        return True
+
+    def remove_reference(self, from_path: str, to_path: str,
+                         ref_type: Optional[str] = None) -> int:
+        before = len(self._refs)
+        self._refs = [
+            r for r in self._refs
+            if not (r.from_path == from_path and r.to_path == to_path
+                    and (ref_type is None or r.ref_type == ref_type))
+        ]
+        return before - len(self._refs)
+
+    def list_references_from(self, path: str) -> List[Reference]:
+        return [r for r in self._refs if r.from_path == path]
+
+    def list_references_to(self, path: str) -> List[Reference]:
+        return [r for r in self._refs if r.to_path == path]
+
+    def list_all_references(self) -> List[Reference]:
+        return list(self._refs)
 
     @property
     def document_count(self) -> int:
@@ -334,11 +621,21 @@ class NavigableMemory:
                 parts.append(parent_content)
 
         # Current location (full detail)
-        parts.append(
-            f"## Current: {self.location.current_title}\n"
-            f"Path: {self.location.current_path}\n\n"
-            f"{self.location.current_content}"
-        )
+        # Re-read so we get mime_type/binary metadata + version freshness
+        current_doc = self.backend.read(self.location.current_path)
+        parts.append(self._format_current_doc(current_doc))
+
+        # Outgoing references (graph edges)
+        if self._has_references_support():
+            outgoing = self.backend.list_references_from(self.location.current_path)
+            if outgoing:
+                lines = ["## References from here:"]
+                for r in outgoing:
+                    target = self.backend.read(r.to_path)
+                    label = target.title if target else r.to_path
+                    note = f" — {r.note}" if r.note else ""
+                    lines.append(f"  → [{r.ref_type}] {label} ({r.to_path}){note}")
+                parts.append("\n".join(lines))
 
         # Sibling documents (what else is nearby)
         if self.include_siblings:
@@ -350,6 +647,35 @@ class NavigableMemory:
                 parts.append(f"## Nearby:\n{listing}")
 
         return "\n\n---\n\n".join(parts)
+
+    def _format_current_doc(self, doc: Optional[Document]) -> str:
+        """Render the current location, handling binary documents gracefully."""
+        if doc is None:
+            # Backend doesn't return a doc — fall back to cached state
+            return (
+                f"## Current: {self.location.current_title}\n"
+                f"Path: {self.location.current_path}\n\n"
+                f"{self.location.current_content}"
+            )
+
+        version_tag = f" (v{doc.version})" if doc.version > 1 else ""
+        if doc.is_binary:
+            kind = "image" if doc.is_image else ("audio" if doc.is_audio else "binary")
+            header = (
+                f"## Current: {doc.title}{version_tag}\n"
+                f"Path: {doc.path}\n"
+                f"Type: {doc.mime_type} ({doc.human_size})\n\n"
+                f"[📎 {kind} attachment — bytes available via read_binary('{doc.path}')]"
+            )
+            if doc.content:
+                header += f"\n\nCaption: {doc.content}"
+            return header
+
+        return (
+            f"## Current: {doc.title}{version_tag}\n"
+            f"Path: {doc.path}\n\n"
+            f"{doc.content}"
+        )
 
     def build_history_context(self) -> str:
         """Build a summary of recently visited locations.
@@ -367,6 +693,17 @@ class NavigableMemory:
             lines.append(f"  - {dep.title} ({dep.path}): {snippet}...")
         return "\n".join(lines)
 
+    # ── Capability checks ─────────────────────────────────────────
+
+    def _has_binary_support(self) -> bool:
+        return isinstance(self.backend, BinaryStorage)
+
+    def _has_versioning_support(self) -> bool:
+        return isinstance(self.backend, VersionedStorage)
+
+    def _has_references_support(self) -> bool:
+        return isinstance(self.backend, ReferenceStorage)
+
     # ── Storage Operations (pass-through + convenience) ───────────
 
     def read(self, path: str) -> Optional[Document]:
@@ -374,9 +711,22 @@ class NavigableMemory:
         return self.backend.read(path)
 
     def write(self, path: str, title: str, content: str,
-              tags: Optional[List[str]] = None) -> bool:
-        """Write a document to storage."""
-        return self.backend.write(path, title, content, tags)
+              tags: Optional[List[str]] = None,
+              metadata: Optional[Dict[str, Any]] = None,
+              author: str = "", change_note: str = "") -> bool:
+        """Write a textual document to storage.
+
+        If the backend supports versioning, the previous content is
+        preserved as a historical version automatically.
+        """
+        # Try the extended signature first (with author/change_note)
+        try:
+            return self.backend.write(  # type: ignore[call-arg]
+                path, title, content, tags, metadata,
+                author=author, change_note=change_note,
+            )
+        except TypeError:
+            return self.backend.write(path, title, content, tags, metadata)
 
     def append(self, path: str, content: str) -> str:
         """Append content to an existing document.
@@ -389,13 +739,130 @@ class NavigableMemory:
 
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
         updated = doc.content + f"\n\n### Log — {timestamp}\n{content}"
-        self.backend.write(path, doc.title, updated, doc.tags)
+        self.write(path, doc.title, updated, doc.tags,
+                   change_note=f"append @ {timestamp}")
 
         # If we're currently AT this document, refresh the content
         if self.location.current_path == path:
             self.location.current_content = updated
 
         return f"Appended to '{doc.title}'."
+
+    # ── Binary Operations ─────────────────────────────────────────
+
+    def write_binary(self, path: str, title: str, mime_type: str,
+                     data: bytes, caption: str = "",
+                     tags: Optional[List[str]] = None,
+                     metadata: Optional[Dict[str, Any]] = None,
+                     author: str = "", change_note: str = "") -> bool:
+        """Store a binary blob (image, audio, PDF, etc.).
+
+        Args:
+            path: Document path (e.g., 'assets/diagrams/arch.png').
+            title: Human-readable title.
+            mime_type: MIME type (e.g., 'image/png', 'audio/mpeg').
+            data: The raw bytes to store.
+            caption: Optional text caption used in context display.
+            tags, metadata: Same as text documents.
+            author, change_note: Versioning context.
+
+        Raises:
+            NotImplementedError: If the backend does not support binary storage.
+        """
+        if not self._has_binary_support():
+            raise NotImplementedError(
+                f"{type(self.backend).__name__} does not implement BinaryStorage."
+            )
+        try:
+            return self.backend.write_binary(  # type: ignore[call-arg]
+                path, title, mime_type, data, caption,
+                tags, metadata, author=author, change_note=change_note,
+            )
+        except TypeError:
+            return self.backend.write_binary(  # type: ignore[attr-defined]
+                path, title, mime_type, data, caption, tags, metadata,
+            )
+
+    def read_binary(self, path: str) -> Optional[bytes]:
+        """Return the raw bytes of a binary document, or None if not found."""
+        if not self._has_binary_support():
+            return None
+        return self.backend.read_binary(path)  # type: ignore[attr-defined]
+
+    # ── Versioning Operations ─────────────────────────────────────
+
+    def list_versions(self, path: str) -> List[DocumentVersion]:
+        """List all historical versions of a document, newest first."""
+        if not self._has_versioning_support():
+            return []
+        return self.backend.list_versions(path)  # type: ignore[attr-defined]
+
+    def get_version(self, path: str, version: int) -> Optional[DocumentVersion]:
+        """Read a specific historical version."""
+        if not self._has_versioning_support():
+            return None
+        return self.backend.get_version(path, version)  # type: ignore[attr-defined]
+
+    def rollback(self, path: str, version: int, author: str = "",
+                 change_note: str = "") -> bool:
+        """Restore a document to a previous version (creating a new version)."""
+        if not self._has_versioning_support():
+            return False
+        ok = self.backend.rollback(  # type: ignore[attr-defined]
+            path, version, author=author, change_note=change_note,
+        )
+        # Refresh current content if we rolled back the active location
+        if ok and self.location.current_path == path:
+            doc = self.backend.read(path)
+            if doc is not None:
+                self.location.current_title = doc.title
+                self.location.current_content = doc.content
+        return ok
+
+    def prune_versions(self, path: str, keep_last_n: int) -> int:
+        """Drop old versions, keeping only the most recent N."""
+        if not self._has_versioning_support():
+            return 0
+        return self.backend.prune_versions(path, keep_last_n)  # type: ignore[attr-defined]
+
+    # ── Reference Operations ──────────────────────────────────────
+
+    def add_reference(self, from_path: str, to_path: str,
+                      ref_type: str = RefType.LINKS_TO,
+                      note: str = "") -> bool:
+        """Create a directed reference between two documents."""
+        if not self._has_references_support():
+            return False
+        return self.backend.add_reference(  # type: ignore[attr-defined]
+            from_path, to_path, ref_type, note,
+        )
+
+    def remove_reference(self, from_path: str, to_path: str,
+                         ref_type: Optional[str] = None) -> int:
+        """Remove a reference. Returns number of edges removed."""
+        if not self._has_references_support():
+            return 0
+        return self.backend.remove_reference(  # type: ignore[attr-defined]
+            from_path, to_path, ref_type,
+        )
+
+    def references_from(self, path: str) -> List[Reference]:
+        """List outgoing references from a document."""
+        if not self._has_references_support():
+            return []
+        return self.backend.list_references_from(path)  # type: ignore[attr-defined]
+
+    def references_to(self, path: str) -> List[Reference]:
+        """List incoming references to a document (backlinks)."""
+        if not self._has_references_support():
+            return []
+        return self.backend.list_references_to(path)  # type: ignore[attr-defined]
+
+    def all_references(self) -> List[Reference]:
+        """List every reference in the store."""
+        if not self._has_references_support():
+            return []
+        return self.backend.list_all_references()  # type: ignore[attr-defined]
 
     def list_at(self, prefix: str = "") -> List[Document]:
         """List documents under a path prefix."""
@@ -517,8 +984,197 @@ class NavigableMemory:
             def run(self) -> str:
                 return nav_memory.append(self.path, self.content)
 
-        return [Navigate, NavigateUp, ListLocations, SearchKnowledge,
-                ReadDocument, WriteDocument, AppendToDocument]
+        # ── Versioning Tools ─────────────────────────────────────
+
+        class ListVersions(BaseModel):
+            """List historical versions of a document, newest first.
+            Use to inspect change history before reading or rolling back."""
+            path: str = Field(..., description="Full document path.")
+
+            def run(self) -> str:
+                versions = nav_memory.list_versions(self.path)
+                if not versions:
+                    return (
+                        f"No version history for '{self.path}' "
+                        "(or backend does not support versioning)."
+                    )
+                lines = [f"Versions of '{self.path}':"]
+                for v in versions:
+                    note = f" — {v.change_note}" if v.change_note else ""
+                    author = f" by {v.author}" if v.author else ""
+                    lines.append(
+                        f"  v{v.version} ({v.created_at}){author}{note}"
+                    )
+                return "\n".join(lines)
+
+        class ReadVersion(BaseModel):
+            """Read a specific historical version of a document.
+            Does not navigate or change current location."""
+            path: str = Field(..., description="Full document path.")
+            version: int = Field(..., description="Version number to read.")
+
+            def run(self) -> str:
+                ver = nav_memory.get_version(self.path, self.version)
+                if ver is None:
+                    return f"Version {self.version} of '{self.path}' not found."
+                header = (
+                    f"## {ver.title} (v{ver.version})\n"
+                    f"Saved: {ver.created_at}"
+                )
+                if ver.author:
+                    header += f" by {ver.author}"
+                if ver.change_note:
+                    header += f"\nNote: {ver.change_note}"
+                if ver.mime_type and not ver.mime_type.startswith("text/"):
+                    return (
+                        f"{header}\n\n[binary {ver.mime_type}, "
+                        f"{ver.size_bytes} bytes]"
+                        + (f"\nCaption: {ver.content}" if ver.content else "")
+                    )
+                return f"{header}\n\n{ver.content}"
+
+        class RollbackToVersion(BaseModel):
+            """Restore a document to a previous version.
+            Creates a NEW version on top — history is never lost."""
+            path: str = Field(..., description="Full document path.")
+            version: int = Field(..., description="Version number to restore.")
+            reason: str = Field(
+                "", description="Optional change note explaining the rollback."
+            )
+
+            def run(self) -> str:
+                ok = nav_memory.rollback(
+                    self.path, self.version,
+                    change_note=self.reason or f"rolled back to v{self.version}",
+                )
+                if not ok:
+                    return (
+                        f"Could not rollback '{self.path}' to v{self.version} "
+                        "(version not found or backend lacks versioning)."
+                    )
+                return f"Restored '{self.path}' to v{self.version}."
+
+        # ── Reference Tools ──────────────────────────────────────
+
+        class AddReference(BaseModel):
+            """Create a directed reference between two documents.
+            Use to capture relationships: links, dependencies, supersedes, etc."""
+            from_path: str = Field(..., description="Source document path.")
+            to_path: str = Field(..., description="Target document path.")
+            ref_type: str = Field(
+                "links_to",
+                description=(
+                    "Relationship kind. Common values: 'links_to', 'depends_on', "
+                    "'supersedes', 'see_also', 'embeds', 'replies_to', 'derived_from'."
+                ),
+            )
+            note: str = Field(
+                "", description="Optional annotation explaining the link."
+            )
+
+            def run(self) -> str:
+                ok = nav_memory.add_reference(
+                    self.from_path, self.to_path, self.ref_type, self.note,
+                )
+                if not ok:
+                    return (
+                        f"Reference '{self.from_path}' →[{self.ref_type}]→ "
+                        f"'{self.to_path}' already exists or backend lacks support."
+                    )
+                return (
+                    f"Linked: '{self.from_path}' →[{self.ref_type}]→ "
+                    f"'{self.to_path}'"
+                )
+
+        class RemoveReference(BaseModel):
+            """Remove a reference between two documents."""
+            from_path: str = Field(..., description="Source document path.")
+            to_path: str = Field(..., description="Target document path.")
+            ref_type: Optional[str] = Field(
+                None,
+                description=(
+                    "If given, only remove references of this type. "
+                    "Otherwise remove all edges between the two paths."
+                ),
+            )
+
+            def run(self) -> str:
+                n = nav_memory.remove_reference(
+                    self.from_path, self.to_path, self.ref_type,
+                )
+                return f"Removed {n} reference(s)."
+
+        class ListReferences(BaseModel):
+            """List references for a document.
+            Direction: 'from' = outgoing links; 'to' = backlinks; 'both' = both."""
+            path: str = Field(..., description="Full document path.")
+            direction: str = Field(
+                "both",
+                description="Direction: 'from', 'to', or 'both'. Default 'both'.",
+            )
+
+            def run(self) -> str:
+                direction = self.direction.lower().strip()
+                lines: List[str] = []
+                if direction in ("from", "both"):
+                    out = nav_memory.references_from(self.path)
+                    if out:
+                        lines.append(f"Outgoing from '{self.path}':")
+                        for r in out:
+                            note = f" — {r.note}" if r.note else ""
+                            lines.append(
+                                f"  → [{r.ref_type}] {r.to_path}{note}"
+                            )
+                if direction in ("to", "both"):
+                    incoming = nav_memory.references_to(self.path)
+                    if incoming:
+                        lines.append(f"Backlinks to '{self.path}':")
+                        for r in incoming:
+                            note = f" — {r.note}" if r.note else ""
+                            lines.append(
+                                f"  ← [{r.ref_type}] {r.from_path}{note}"
+                            )
+                if not lines:
+                    return f"No references found for '{self.path}'."
+                return "\n".join(lines)
+
+        # ── Binary Tools ─────────────────────────────────────────
+
+        class DescribeBinary(BaseModel):
+            """Inspect a binary document's metadata (mime type, size, caption).
+            Useful before deciding whether to retrieve raw bytes."""
+            path: str = Field(..., description="Full document path.")
+
+            def run(self) -> str:
+                doc = nav_memory.read(self.path)
+                if doc is None:
+                    return f"Not found: '{self.path}'"
+                if not doc.is_binary:
+                    return f"'{self.path}' is a text document ({doc.mime_type})."
+                lines = [
+                    f"## {doc.title}",
+                    f"Path: {doc.path}",
+                    f"Type: {doc.mime_type}",
+                    f"Size: {doc.human_size}",
+                    f"Version: {doc.version}",
+                ]
+                if doc.content:
+                    lines.append(f"Caption: {doc.content}")
+                if doc.tags:
+                    lines.append(f"Tags: {', '.join(doc.tags)}")
+                return "\n".join(lines)
+
+        tools = [
+            Navigate, NavigateUp, ListLocations, SearchKnowledge,
+            ReadDocument, WriteDocument, AppendToDocument,
+        ]
+        if self._has_versioning_support():
+            tools.extend([ListVersions, ReadVersion, RollbackToVersion])
+        if self._has_references_support():
+            tools.extend([AddReference, RemoveReference, ListReferences])
+        if self._has_binary_support():
+            tools.append(DescribeBinary)
+        return tools
 
     # ── Internal Helpers ──────────────────────────────────────────
 
