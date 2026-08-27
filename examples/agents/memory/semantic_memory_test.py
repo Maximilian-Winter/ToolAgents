@@ -27,7 +27,7 @@ memory_config = semantic_memory_nomic_text_gpu_config
 memory_config.cluster_embeddings_strategy = HDBSCANClusterEmbeddingsStrategy()
 memory = SemanticMemory(memory_config)
 
-system_prompt = f"""You are are personal AI assistant. Your task is to engage in interesting conversations with the user. You have access to a memory system, which will remember information not in your current context. The most recent user message will contain additional context information from past interactions that are not part of the current context."""
+system_prompt = """You are are personal AI assistant. Your task is to engage in interesting conversations with the user. You have access to a memory system, which will remember information not in your current context. The most recent user message will contain additional context information from past interactions that are not part of the current context."""
 
 chat_history = [
     {
