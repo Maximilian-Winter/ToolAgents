@@ -36,7 +36,9 @@ agent = AsyncChatToolAgent(chat_api=async_api_provider)
 
 ## AdvancedAgent
 
-`AdvancedAgent` wraps a base tool agent and adds app-state and memory-oriented workflows.
+`AdvancedAgent` is legacy. It wraps a base tool agent and adds app-state and
+memory-oriented workflows, but new code should prefer composing `ChatToolAgent`
+with explicit memory, prompt, state, and persistence helpers.
 
 ```python
 from ToolAgents import ToolRegistry
@@ -105,4 +107,4 @@ async for chunk in agent.get_streaming_response(
 
 - Use `ChatToolAgent` for most applications.
 - Use `AsyncChatToolAgent` when the surrounding app is async.
-- Use `AdvancedAgent` when you specifically need the higher-level state/memory workflow.
+- Use `AdvancedAgent` only for compatibility with older higher-level state/memory workflows.

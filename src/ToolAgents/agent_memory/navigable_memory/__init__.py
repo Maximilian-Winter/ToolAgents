@@ -16,6 +16,7 @@ from .sqlite_backend import SQLiteBackend
 from .json_backend import JSONBackend
 from .filesystem_backend import FilesystemBackend
 from .migration import migrate, MigrationReport
+from .semantic_index import NavigableSearchResult, NavigableSemanticIndex
 
 __all__ = [
     "NavigableMemory",
@@ -35,4 +36,6 @@ __all__ = [
     "TagStorage",
     "migrate",
     "MigrationReport",
+    "NavigableSearchResult",
+    "NavigableSemanticIndex",
 ]

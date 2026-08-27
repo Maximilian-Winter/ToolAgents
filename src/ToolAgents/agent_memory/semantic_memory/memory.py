@@ -3,6 +3,7 @@ import dataclasses
 import re
 import uuid
 import json
+import warnings
 from datetime import datetime, timedelta
 from concurrent.futures import ThreadPoolExecutor
 from typing import List, Dict, Optional, Any, Mapping
@@ -394,6 +395,18 @@ class TimeBasedCleanupStrategy(CleanupStrategy):
 # =============================================================================
 
 
+def _warn_legacy(name: str) -> None:
+    warnings.warn(
+        (
+            f"{name} is legacy and retained for compatibility. Prefer "
+            "Composable ChatToolAgent workflows with NavigableMemory and "
+            "NavigableSemanticIndex for new memory features."
+        ),
+        DeprecationWarning,
+        stacklevel=3,
+    )
+
+
 @dataclasses.dataclass
 class EmbeddingsConfig:
     """
@@ -420,7 +433,11 @@ class EmbeddingsConfig:
 
 @dataclasses.dataclass
 class SemanticMemoryConfig:
-    """
+    """Legacy configuration for SemanticMemory.
+
+    Deprecated: prefer composable NavigableMemory plus optional
+    NavigableSemanticIndex for document retrieval.
+
     Configuration for the semantic memory system.
 
     Attributes:
@@ -459,6 +476,9 @@ class SemanticMemoryConfig:
     minimum_similarity_threshold: float = 0.70
     debug_mode: bool = False
 
+    def __post_init__(self):
+        _warn_legacy("SemanticMemoryConfig")
+
 
 # Example specialized embeddings configuration (e.g., for GPU-based processing)
 nomic_text_embeddings_gpu_config = EmbeddingsConfig(
@@ -480,7 +500,12 @@ semantic_memory_nomic_text_gpu_config = SemanticMemoryConfig(
 
 
 class SemanticMemory:
-    """
+    """Legacy semantic chat-memory system.
+
+    Deprecated: this class is retained for compatibility. Prefer the
+    ``ToolAgents.knowledge.vector_database`` abstractions directly, or attach a
+    ``NavigableSemanticIndex`` to ``NavigableMemory`` for document retrieval.
+
     A semantic memory system that supports storing, recalling, and consolidating memories.
 
     This class uses a sentence transformer encoder to generate embeddings for text,
@@ -488,13 +513,16 @@ class SemanticMemory:
     based on clustering strategies.
     """
 
-    def __init__(self, config: SemanticMemoryConfig = SemanticMemoryConfig()):
+    def __init__(self, config: Optional[SemanticMemoryConfig] = None):
         """
         Initialize the semantic memory system with the provided configuration.
 
         Args:
             config: An instance of SemanticMemoryConfig defining system parameters.
         """
+        _warn_legacy("SemanticMemory")
+        if config is None:
+            config = SemanticMemoryConfig()
         from sentence_transformers import SentenceTransformer
 
         # Initialize the sentence transformer encoder using the provided model configuration

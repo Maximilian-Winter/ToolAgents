@@ -2,10 +2,10 @@ import dataclasses
 import json
 import os
 import re
+import warnings
 from typing import Any
 
 from ToolAgents import ToolRegistry, FunctionTool
-from ToolAgents.agent_memory.context_app_state import ContextAppState
 
 from ToolAgents.provider.llm_provider import ProviderSettings
 from ToolAgents.agents.base_llm_agent import BaseToolAgent, ChatResponse
@@ -112,9 +112,31 @@ Please proceed with your conversation breakdown and summary of the chat message.
 )
 
 
+def _warn_legacy(name: str) -> None:
+    warnings.warn(
+        (
+            f"{name} is legacy and retained for compatibility. Prefer "
+            "composable ChatToolAgent workflows with explicit memory, prompt, "
+            "state, and persistence helpers."
+        ),
+        DeprecationWarning,
+        stacklevel=3,
+    )
+
+
+def _load_context_app_state():
+    from ToolAgents.agent_memory.context_app_state import ContextAppState
+
+    return ContextAppState
+
+
 @dataclasses.dataclass
 class AgentConfig:
-    """
+    """Legacy configuration for AdvancedAgent.
+
+    Deprecated: prefer composing ChatToolAgent directly with explicit memory,
+    prompt, state, and persistence helpers.
+
     Configuration for initializing an agent.
 
     Attributes:
@@ -136,15 +158,19 @@ class AgentConfig:
     use_semantic_chat_history_memory: bool = False
     save_on_creation: bool = False
     summarize_chat_pairs_before_storing: bool = False
-    from ToolAgents.agent_memory.semantic_memory.memory import SemanticMemoryConfig
+    semantic_chat_history_config: Any = None
 
-    semantic_chat_history_config: SemanticMemoryConfig = dataclasses.field(
-        default_factory=SemanticMemoryConfig
-    )
+    def __post_init__(self):
+        _warn_legacy("AgentConfig")
 
 
 class AdvancedAgent:
-    """
+    """Legacy higher-level agent wrapper.
+
+    Deprecated: this class is retained for compatibility. Prefer composing
+    ChatToolAgent directly with explicit memory, prompt, state, and persistence
+    helpers.
+
     An advanced agent that leverages a base language model agent along with tools,
     chat history, and optional semantic memory to have more context-aware conversations.
 
@@ -169,6 +195,7 @@ class AdvancedAgent:
             tool_registry (ToolRegistry, optional): Registry of available tools.
             agent_config (AgentConfig, optional): Configuration parameters for the agent.
         """
+        _warn_legacy("AdvancedAgent")
         # Use default configuration if none provided
         if agent_config is None:
             agent_config = AgentConfig()
@@ -231,6 +258,7 @@ class AdvancedAgent:
             # Otherwise, initialize app state from a provided file (if any)
             if initial_state_file:
                 self.has_app_state = True
+                ContextAppState = _load_context_app_state()
                 self.app_state = ContextAppState(initial_state_file)
             # Save the agent state if configured to do so on creation
             if agent_config.save_on_creation:
@@ -240,11 +268,17 @@ class AdvancedAgent:
         if self.use_semantic_memory:
             if not os.path.isdir(self.save_dir):
                 os.makedirs(self.save_dir)
+            from ToolAgents.agent_memory.semantic_memory.memory import (
+                SemanticMemory,
+                SemanticMemoryConfig,
+            )
+
+            if agent_config.semantic_chat_history_config is None:
+                agent_config.semantic_chat_history_config = SemanticMemoryConfig()
             # Set the directory where semantic memory will persist
             agent_config.semantic_chat_history_config.persist_directory = (
                 self.semantic_memory_path
             )
-            from ToolAgents.agent_memory.semantic_memory.memory import SemanticMemory
 
             self.semantic_memory = SemanticMemory(
                 agent_config.semantic_chat_history_config
@@ -401,6 +435,7 @@ class AdvancedAgent:
         self.user_name = loaded_data["user_name"]
         # If an application state is maintained, load it from the corresponding file
         if self.has_app_state:
+            ContextAppState = _load_context_app_state()
             self.app_state = ContextAppState()
             self.app_state.load_json(self.app_state_path)
 

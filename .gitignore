@@ -98,3 +98,5 @@ claude_agent_sdk/
 /examples/agents/virtual_game_master/agora.db
 /extensions/virtual-file-system
 /extensions
+examples/agents/navigable_memory/test/forge_extended_memory/obsidian_forge_memory.db-shm
+examples/agents/navigable_memory/test/forge_extended_memory/obsidian_forge_memory.db-wal

@@ -4,7 +4,9 @@ title: Advanced Agents
 
 # Advanced Agents
 
-The curated advanced examples currently focus on higher-level workflows built on top of `ChatToolAgent` and `AdvancedAgent`.
+The curated advanced examples focus on higher-level workflows built on top of
+`ChatToolAgent`. `AdvancedAgent` is legacy and retained for compatibility with
+older exploratory examples.
 
 Representative examples in the repo:
 
@@ -22,4 +24,4 @@ What these examples cover:
 Notes:
 
 - OCR-specific examples were intentionally retired from the maintained example surface.
-- Treat the examples in `examples/advanced_agent/` as exploratory unless they are explicitly referenced by the current docs.
+- Treat the examples in `examples/advanced_agent/` as legacy exploratory code.

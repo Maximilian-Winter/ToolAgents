@@ -1,4 +1,11 @@
 ﻿# This show an advanced agent that will handle all the things like chat history by itself, also contains optional memory and app state functionality.
+"""Legacy AdvancedAgent example.
+
+AdvancedAgent and SemanticMemory are retained for compatibility. New examples
+should prefer composing ChatToolAgent with explicit memory, prompt, state, and
+persistence helpers; see examples/agents/navigable_memory for the newer style.
+"""
+
 from ToolAgents.agent_memory.semantic_memory.memory import (
     semantic_memory_nomic_text_gpu_config,
     SummarizationExtractPatternStrategy,

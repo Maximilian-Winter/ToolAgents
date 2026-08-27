@@ -5,6 +5,9 @@
 from ToolAgents.agent_memory.semantic_memory.hdbscan_cluster_embeddings_strategy import (
     HDBSCANClusterEmbeddingsStrategy,
 )
+
+# Legacy SemanticMemory example. New document retrieval examples should use
+# NavigableMemory with an optional NavigableSemanticIndex.
 from ToolAgents.agents import ChatToolAgent
 from ToolAgents.data_models.messages import ChatMessage
 

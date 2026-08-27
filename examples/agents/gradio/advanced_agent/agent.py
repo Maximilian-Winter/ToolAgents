@@ -1,4 +1,6 @@
 ﻿from ToolAgents.agents import ChatToolAgent
+# Legacy AdvancedAgent example. New code should prefer composing ChatToolAgent
+# with explicit memory, prompt, state, and persistence helpers.
 from ToolAgents.agent_memory import (
     semantic_memory_nomic_text_gpu_config,
     SummarizationExtractPatternStrategy,

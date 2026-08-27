@@ -66,6 +66,9 @@ Current constructor parameter:
 
 ## AdvancedAgent
 
+Legacy compatibility wrapper. Prefer composing `ChatToolAgent` directly with
+explicit memory, prompt, state, and persistence helpers for new code.
+
 ```python
 from ToolAgents import ToolRegistry
 from ToolAgents.agents import AdvancedAgent, ChatToolAgent
