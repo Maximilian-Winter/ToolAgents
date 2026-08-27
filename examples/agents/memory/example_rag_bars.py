@@ -1,4 +1,7 @@
-﻿import requests
+﻿import os
+
+import requests
+from dotenv import load_dotenv
 
 from ToolAgents import ToolRegistry, FunctionTool
 from ToolAgents.agents import ChatToolAgent
@@ -13,11 +16,16 @@ from ToolAgents.knowledge.vector_database.implementations.sentence_transformer_e
     SentenceTransformerEmbeddingProvider,
 )
 from ToolAgents.data_models.messages import ChatMessage
-from ToolAgents.provider import CompletionProvider, OpenAIChatAPI
-from ToolAgents.provider.completion_provider.default_implementations import (
-    LlamaCppServer,
-)
+from ToolAgents.provider import OpenAIChatAPI
 
+
+from typing import List
+
+from pydantic import BaseModel, Field
+
+from ToolAgents.knowledge.text_processing.text_splitter import (
+    RecursiveCharacterTextSplitter,
+)
 
 def get_wikipedia_page(title: str):
     URL = "https://en.wikipedia.org/w/api.php"
@@ -39,20 +47,13 @@ def get_wikipedia_page(title: str):
     return page["extract"] if "extract" in page else None
 
 
-from typing import List
-
-from pydantic import BaseModel, Field
-
-from ToolAgents.knowledge.text_processing.text_splitter import (
-    RecursiveCharacterTextSplitter,
-)
-
 rag = RAG(
     ChromaDbVectorDatabaseProvider(
         SentenceTransformerEmbeddingProvider(device="cuda"), CrossEncoderRerankingProvider(device="cuda")
     )
 )
 
+load_dotenv()
 # Initialize a recursive character text splitter with the correct chunk size of the embedding model.
 length_function = len
 splitter = RecursiveCharacterTextSplitter(
@@ -86,8 +87,12 @@ for split in splits:
         continue
     rag.add_document(split)
 
-api = OpenAIChatAPI(api_key="<KEY>", base_url="http://127.0.0.1:8080/v1", model="gpt-4o-mini")
-
+# Openrouter API
+api = OpenAIChatAPI(
+    api_key=os.getenv("OPENROUTER_API_KEY"),
+    model="qwen/qwen3.5-9b",
+    base_url="https://openrouter.ai/api/v1",
+)
 agent = ChatToolAgent(chat_api=api, log_output=True)
 
 system_message = "You are an advanced AI assistant"

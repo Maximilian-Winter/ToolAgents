@@ -1,0 +1,45 @@
+{
+  "backend": "sqlite",
+  "core_memory": {
+    "blocks": {
+      "persona": "I am Forge, studio manager assistant for Obsidian Forge Studios.",
+      "priorities": "Key dates: Ashenmoor EA Aug 2026, Drift Protocol E3 Jun 2026.",
+      "user_info": "No user information yet."
+    },
+    "last_modified": "2026-08-27 23:43:25",
+    "block_limit": 800
+  },
+  "current_location": "studio/overview.md",
+  "location_history": [
+    "studio/overview.md"
+  ],
+  "active_messages": [
+    {
+      "role": "system",
+      "text": "[SYSTEM] Navigate to relevant knowledge before answering. Use tags, references, and version history when helpful.",
+      "ttl": null,
+      "turns_alive": 1,
+      "pinned": true,
+      "on_expire": "remove"
+    },
+    {
+      "role": "system",
+      "text": "[Ephemeral] New session. Suggest a studio status overview or specific project check.",
+      "ttl": 1,
+      "turns_alive": 1,
+      "pinned": false,
+      "on_expire": "remove"
+    },
+    {
+      "role": "user",
+      "text": "Check Thornqueen blockers and follow related references.",
+      "ttl": 12,
+      "turns_alive": 0,
+      "pinned": false,
+      "on_expire": "archive"
+    }
+  ],
+  "archive": [],
+  "tick_count": 1,
+  "saved_at": "2026-08-27T23:44:28.051337"
+}

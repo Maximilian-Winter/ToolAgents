@@ -60,10 +60,7 @@ settings = api.get_default_settings()
 # Set sampling settings
 settings.temperature = 0.3
 settings.top_p = 0.9
-
-# Add settings
-
-
+api.set_default_settings(settings)
 
 # Define the tools
 tools = [
