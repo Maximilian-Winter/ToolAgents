@@ -31,7 +31,7 @@ from typing import Any, List, Optional
 
 from .navigable_memory import (
     BinaryStorage, Document, ReferenceStorage, StorageBackend,
-    VersionedStorage,
+    TagStorage, VersionedStorage,
 )
 
 logger = logging.getLogger(__name__)
@@ -173,6 +173,7 @@ def _migrate_document(
                 ver=ver, dst=dst,
                 do_binaries=do_binaries, report=report,
             )
+        _sync_current_metadata_after_version_replay(doc=doc, dst=dst)
         # Tally the document write itself separately from the bulk version count
         if versions[-1].binary_data is not None and do_binaries:
             report.binaries += 1
@@ -251,6 +252,14 @@ def _write_version_to_dst(
                     tags=list(ver.tags), metadata=dict(ver.metadata),
                     author=ver.author,
                     change_note=(ver.change_note or f"migrated v{ver.version}"))
+
+
+def _sync_current_metadata_after_version_replay(
+    *, doc: Document, dst: StorageBackend,
+) -> None:
+    """Preserve non-versioned organizational metadata after history replay."""
+    if isinstance(dst, TagStorage):
+        dst.set_tags(doc.path, list(doc.tags))
 
 
 def _safe_write(dst: StorageBackend, **kwargs: Any) -> bool:
