@@ -18,6 +18,7 @@ Architecture:
 
 from __future__ import annotations
 
+import difflib
 import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
@@ -79,7 +80,10 @@ class Document:
 
     @property
     def human_size(self) -> str:
-        n = self.size_bytes or (len(self.binary_data) if self.binary_data else len(self.content.encode("utf-8")))
+        n = self.size_bytes or (
+            len(self.binary_data)
+            if self.binary_data else len(self.content.encode("utf-8"))
+        )
         for unit in ("B", "KB", "MB", "GB"):
             if n < 1024:
                 return f"{n:.0f} {unit}" if unit == "B" else f"{n:.1f} {unit}"
@@ -102,6 +106,30 @@ class DocumentVersion:
     created_at: str = ""
     author: str = ""
     change_note: str = ""
+
+    @property
+    def is_binary(self) -> bool:
+        return not self.mime_type.startswith("text/")
+
+    @property
+    def is_image(self) -> bool:
+        return self.mime_type.startswith("image/")
+
+    @property
+    def is_audio(self) -> bool:
+        return self.mime_type.startswith("audio/")
+
+    @property
+    def human_size(self) -> str:
+        n = self.size_bytes or (
+            len(self.binary_data)
+            if self.binary_data else len(self.content.encode("utf-8"))
+        )
+        for unit in ("B", "KB", "MB", "GB"):
+            if n < 1024:
+                return f"{n:.0f} {unit}" if unit == "B" else f"{n:.1f} {unit}"
+            n /= 1024
+        return f"{n:.1f} TB"
 
 
 @dataclass(frozen=True)
@@ -884,11 +912,137 @@ class NavigableMemory:
             return []
         return self.backend.list_versions(path)  # type: ignore[attr-defined]
 
+    def list_history(
+        self, path: str, include_current: bool = False,
+    ) -> List[DocumentVersion]:
+        """List old versions of a document, newest first.
+
+        ``list_versions`` exposes the backend's raw snapshot list, which
+        includes the current version for versioned backends in this package.
+        This helper is aimed at UI/tooling use-cases where "history" means
+        previous content only.
+        """
+        versions = self.list_versions(path)
+        if include_current:
+            return versions
+
+        current = self.read(path)
+        if current is None:
+            return versions
+        return [v for v in versions if v.version != current.version]
+
     def get_version(self, path: str, version: int) -> Optional[DocumentVersion]:
         """Read a specific historical version."""
         if not self._has_versioning_support():
             return None
         return self.backend.get_version(path, version)  # type: ignore[attr-defined]
+
+    def format_version(self, path: str, version: int) -> str:
+        """Render a saved version for display."""
+        ver = self.get_version(path, version)
+        if ver is None:
+            return f"Version {version} of '{path}' not found."
+        return self._format_document_version(ver)
+
+    def compare_versions(
+        self, path: str, from_version: int, to_version: Optional[int] = None,
+        context_lines: int = 3,
+    ) -> str:
+        """Return a unified diff between two versions or a version and current.
+
+        Args:
+            path: Document path.
+            from_version: Baseline version number.
+            to_version: Target version number. If omitted, compare to the
+                current document content.
+            context_lines: Number of unchanged context lines around each diff
+                hunk.
+        """
+        before = self.get_version(path, from_version)
+        if before is None:
+            return f"Version {from_version} of '{path}' not found."
+
+        after_label: str
+        if to_version is None:
+            current = self.read(path)
+            if current is None:
+                return f"Current document not found: '{path}'"
+            after_title = current.title
+            after_content = current.content
+            after_binary = current.is_binary
+            after_mime = current.mime_type
+            after_size = current.human_size
+            after_label = f"{path} (current v{current.version})"
+        else:
+            after = self.get_version(path, to_version)
+            if after is None:
+                return f"Version {to_version} of '{path}' not found."
+            after_title = after.title
+            after_content = after.content
+            after_binary = after.is_binary
+            after_mime = after.mime_type
+            after_size = after.human_size
+            after_label = f"{path} (v{after.version})"
+
+        before_label = f"{path} (v{before.version})"
+        if before.is_binary or after_binary:
+            lines = [
+                f"Binary comparison for '{path}':",
+                f"  {before_label}: {before.mime_type}, {before.human_size}",
+                f"  {after_label}: {after_mime}, {after_size}",
+            ]
+            if before.title != after_title:
+                lines.append(f"  title: {before.title!r} -> {after_title!r}")
+            if before.content != after_content:
+                lines.append("  caption changed")
+            return "\n".join(lines)
+
+        diff = difflib.unified_diff(
+            before.content.splitlines(),
+            after_content.splitlines(),
+            fromfile=before_label,
+            tofile=after_label,
+            lineterm="",
+            n=max(0, context_lines),
+        )
+        body = "\n".join(diff)
+        return body or f"No content changes between {before_label} and {after_label}."
+
+    def build_version_context(
+        self, path: Optional[str] = None, max_versions: int = 3,
+        include_content: bool = False, max_chars: int = 800,
+    ) -> str:
+        """Build display-ready context for old versions of a document.
+
+        This is useful as a PromptComposer module or a quick UI panel when
+        the agent should reason about previous content without rolling back.
+        """
+        target = path or self.location.current_path
+        if not target:
+            return ""
+
+        history = self.list_history(target)[:max(0, max_versions)]
+        if not history:
+            return f"## Previous versions\nNo older versions for '{target}'."
+
+        lines = [f"## Previous versions of '{target}'"]
+        for ver in history:
+            note = f" — {ver.change_note}" if ver.change_note else ""
+            author = f" by {ver.author}" if ver.author else ""
+            lines.append(f"- v{ver.version} ({ver.created_at}){author}{note}")
+            if include_content:
+                content = ver.content
+                if len(content) > max_chars:
+                    content = content[:max_chars].rstrip() + "..."
+                if ver.is_binary:
+                    lines.append(
+                        f"  [{ver.mime_type}, {ver.human_size}]"
+                        + (f" Caption: {content}" if content else "")
+                    )
+                else:
+                    snippet = content.replace("\n", " ")
+                    lines.append(f"  {snippet}")
+        return "\n".join(lines)
 
     def rollback(self, path: str, version: int, author: str = "",
                  change_note: str = "") -> bool:
@@ -1300,15 +1454,21 @@ class NavigableMemory:
         # ── Versioning Tools ─────────────────────────────────────
 
         class ListVersions(BaseModel):
-            """List historical versions of a document, newest first.
+            """List previous versions of a document, newest first.
             Use to inspect change history before reading or rolling back."""
             path: str = Field(..., description="Full document path.")
+            include_current: bool = Field(
+                False,
+                description="Include the current version snapshot as well.",
+            )
 
             def run(self) -> str:
-                versions = nav_memory.list_versions(self.path)
+                versions = nav_memory.list_history(
+                    self.path, include_current=self.include_current,
+                )
                 if not versions:
                     return (
-                        f"No version history for '{self.path}' "
+                        f"No previous versions for '{self.path}' "
                         "(or backend does not support versioning)."
                     )
                 lines = [f"Versions of '{self.path}':"]
@@ -1327,24 +1487,46 @@ class NavigableMemory:
             version: int = Field(..., description="Version number to read.")
 
             def run(self) -> str:
-                ver = nav_memory.get_version(self.path, self.version)
-                if ver is None:
-                    return f"Version {self.version} of '{self.path}' not found."
-                header = (
-                    f"## {ver.title} (v{ver.version})\n"
-                    f"Saved: {ver.created_at}"
+                return nav_memory.format_version(self.path, self.version)
+
+        class CompareVersions(BaseModel):
+            """Compare an old document version with another version or current.
+            Returns a unified text diff for text documents."""
+            path: str = Field(..., description="Full document path.")
+            from_version: int = Field(
+                ..., description="Older/baseline version number."
+            )
+            to_version: Optional[int] = Field(
+                None,
+                description="Target version number. Defaults to current content.",
+            )
+            context_lines: int = Field(
+                3, description="Unchanged lines to show around each diff hunk.",
+            )
+
+            def run(self) -> str:
+                return nav_memory.compare_versions(
+                    self.path, self.from_version, self.to_version,
+                    self.context_lines,
                 )
-                if ver.author:
-                    header += f" by {ver.author}"
-                if ver.change_note:
-                    header += f"\nNote: {ver.change_note}"
-                if ver.mime_type and not ver.mime_type.startswith("text/"):
-                    return (
-                        f"{header}\n\n[binary {ver.mime_type}, "
-                        f"{ver.size_bytes} bytes]"
-                        + (f"\nCaption: {ver.content}" if ver.content else "")
-                    )
-                return f"{header}\n\n{ver.content}"
+
+        class ShowVersionContext(BaseModel):
+            """Show a compact context block of previous document versions."""
+            path: Optional[str] = Field(
+                None,
+                description="Document path. Defaults to current location.",
+            )
+            max_versions: int = Field(
+                3, description="Maximum number of previous versions to show.",
+            )
+            include_content: bool = Field(
+                False, description="Include content snippets for each version.",
+            )
+
+            def run(self) -> str:
+                return nav_memory.build_version_context(
+                    self.path, self.max_versions, self.include_content,
+                )
 
         class RollbackToVersion(BaseModel):
             """Restore a document to a previous version.
@@ -1618,7 +1800,10 @@ class NavigableMemory:
             ListTags, FindByTag, FindByTags, AddTags, RemoveTags, SetTags,
         ]
         if self._has_versioning_support():
-            tools.extend([ListVersions, ReadVersion, RollbackToVersion])
+            tools.extend([
+                ListVersions, ReadVersion, CompareVersions,
+                ShowVersionContext, RollbackToVersion,
+            ])
         if self._has_references_support():
             tools.extend([AddReference, RemoveReference, ListReferences,
                           FollowReferences])
@@ -1627,6 +1812,23 @@ class NavigableMemory:
         return tools
 
     # ── Internal Helpers ──────────────────────────────────────────
+
+    def _format_document_version(self, ver: DocumentVersion) -> str:
+        """Render a version snapshot with metadata and content."""
+        header = (
+            f"## {ver.title} (v{ver.version})\n"
+            f"Saved: {ver.created_at}"
+        )
+        if ver.author:
+            header += f" by {ver.author}"
+        if ver.change_note:
+            header += f"\nNote: {ver.change_note}"
+        if ver.is_binary:
+            return (
+                f"{header}\n\n[binary {ver.mime_type}, {ver.human_size}]"
+                + (f"\nCaption: {ver.content}" if ver.content else "")
+            )
+        return f"{header}\n\n{ver.content}"
 
     def _get_parent_prefix(self, path: str) -> Optional[str]:
         """Get the parent directory prefix for a path."""
