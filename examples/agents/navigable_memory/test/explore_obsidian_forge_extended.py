@@ -873,7 +873,7 @@ def parse_args() -> argparse.Namespace:
         help="JSON file for session/core-message state.",
     )
     parser.add_argument("--reseed", action="store_true", help="Clear and reseed knowledge.")
-    parser.add_argument("--model", default="xiaomi/mimo-v2-pro")
+    parser.add_argument("--model", default="xiaomi/mimo-v2.5-pro")
     parser.add_argument("--base-url", default="https://openrouter.ai/api/v1")
     parser.add_argument("--api-key-env", default="OPENROUTER_API_KEY")
     parser.add_argument("--temperature", type=float, default=0.35)
