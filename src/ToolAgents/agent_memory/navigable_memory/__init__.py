@@ -10,6 +10,7 @@ from .navigable_memory import (
     BinaryStorage,
     VersionedStorage,
     ReferenceStorage,
+    TagStorage,
 )
 from .sqlite_backend import SQLiteBackend
 from .json_backend import JSONBackend
@@ -31,6 +32,7 @@ __all__ = [
     "BinaryStorage",
     "VersionedStorage",
     "ReferenceStorage",
+    "TagStorage",
     "migrate",
     "MigrationReport",
 ]

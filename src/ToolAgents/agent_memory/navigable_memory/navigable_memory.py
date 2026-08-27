@@ -223,6 +223,42 @@ class ReferenceStorage(Protocol):
         ...
 
 
+@runtime_checkable
+class TagStorage(Protocol):
+    """Optional protocol for backends that support efficient tag queries.
+
+    Backends without this protocol can still store tags on documents
+    (the ``Document.tags`` field is always available) — this protocol
+    exposes specialized operations that are faster than scanning all
+    documents in NavigableMemory.
+    """
+
+    def list_tags(self) -> List[str]:
+        """Return every unique tag used across all documents, sorted."""
+        ...
+
+    def list_by_tag(self, tag: str) -> List[Document]:
+        """List documents that have a specific tag."""
+        ...
+
+    def find_by_tags(self, tags: List[str], mode: str = "any") -> List[Document]:
+        """Find documents matching a tag set.
+
+        Args:
+            tags: Tags to match.
+            mode: 'any' (OR), 'all' (AND), or 'none' (exclusion).
+        """
+        ...
+
+    def set_tags(self, path: str, tags: List[str]) -> bool:
+        """Replace a document's tag list in place.
+
+        Tag updates do NOT create a new version — tags are organizational
+        metadata, not content. Updates ``updated_at`` only.
+        """
+        ...
+
+
 # ═══════════════════════════════════════════════════════════════════
 # In-Memory Backend (for testing and lightweight use)
 # ═══════════════════════════════════════════════════════════════════
@@ -411,6 +447,57 @@ class InMemoryBackend:
 
     def list_all_references(self) -> List[Reference]:
         return list(self._refs)
+
+    # ── TagStorage ───────────────────────────────────────────────
+
+    def list_tags(self) -> List[str]:
+        all_tags: set = set()
+        for doc in self._docs.values():
+            for t in doc.tags:
+                if t:
+                    all_tags.add(t)
+        return sorted(all_tags)
+
+    def list_by_tag(self, tag: str) -> List[Document]:
+        return sorted(
+            (d for d in self._docs.values() if tag in d.tags),
+            key=lambda d: d.path,
+        )
+
+    def find_by_tags(self, tags: List[str], mode: str = "any") -> List[Document]:
+        if not tags:
+            return []
+        target = set(tags)
+        results: List[Document] = []
+        for doc in self._docs.values():
+            doc_tags = set(doc.tags)
+            if mode == "all" and target.issubset(doc_tags):
+                results.append(doc)
+            elif mode == "none" and target.isdisjoint(doc_tags):
+                results.append(doc)
+            elif mode == "any" and target & doc_tags:
+                results.append(doc)
+        results.sort(key=lambda d: d.path)
+        return results
+
+    def set_tags(self, path: str, tags: List[str]) -> bool:
+        existing = self._docs.get(path)
+        if existing is None:
+            return False
+        # Document is frozen — replace with a copy
+        self._docs[path] = Document(
+            path=existing.path,
+            title=existing.title,
+            content=existing.content,
+            tags=list(tags),
+            metadata=dict(existing.metadata),
+            updated_at=datetime.now().isoformat(),
+            mime_type=existing.mime_type,
+            binary_data=existing.binary_data,
+            size_bytes=existing.size_bytes,
+            version=existing.version,
+        )
+        return True
 
     @property
     def document_count(self) -> int:
@@ -864,6 +951,232 @@ class NavigableMemory:
             return []
         return self.backend.list_all_references()  # type: ignore[attr-defined]
 
+    # ── Tag Operations ────────────────────────────────────────────
+
+    def _has_tag_support(self) -> bool:
+        return isinstance(self.backend, TagStorage)
+
+    def list_tags(self) -> List[str]:
+        """List every unique tag in the knowledge base, sorted."""
+        if self._has_tag_support():
+            return self.backend.list_tags()  # type: ignore[attr-defined]
+        # Fallback for backends without TagStorage: scan
+        all_tags: set = set()
+        for doc in self.backend.list(""):
+            for t in doc.tags:
+                if t:
+                    all_tags.add(t)
+        return sorted(all_tags)
+
+    def list_by_tag(self, tag: str) -> List[Document]:
+        """List documents that carry the given tag."""
+        if self._has_tag_support():
+            return self.backend.list_by_tag(tag)  # type: ignore[attr-defined]
+        return [d for d in self.backend.list("") if tag in d.tags]
+
+    def find_by_tags(self, tags: List[str], mode: str = "any") -> List[Document]:
+        """Find documents matching a set of tags.
+
+        Args:
+            tags: Tags to match.
+            mode: 'any' (OR), 'all' (AND), or 'none' (exclusion).
+        """
+        if self._has_tag_support():
+            return self.backend.find_by_tags(tags, mode)  # type: ignore[attr-defined]
+        # Fallback
+        if not tags:
+            return []
+        target = set(tags)
+        results: List[Document] = []
+        for doc in self.backend.list(""):
+            doc_tags = set(doc.tags)
+            if mode == "all" and target.issubset(doc_tags):
+                results.append(doc)
+            elif mode == "none" and target.isdisjoint(doc_tags):
+                results.append(doc)
+            elif mode == "any" and target & doc_tags:
+                results.append(doc)
+        return results
+
+    def set_tags(self, path: str, tags: List[str]) -> bool:
+        """Replace a document's tag list. Does not bump version."""
+        if self._has_tag_support():
+            return self.backend.set_tags(path, list(tags))  # type: ignore[attr-defined]
+        # Fallback: read + rewrite (this DOES bump version on most backends)
+        doc = self.backend.read(path)
+        if doc is None:
+            return False
+        return self.backend.write(
+            path, doc.title, doc.content, list(tags), dict(doc.metadata),
+        )
+
+    def add_tags(self, path: str, *new_tags: str) -> bool:
+        """Add tags to a document, preserving existing ones (set semantics)."""
+        doc = self.backend.read(path)
+        if doc is None:
+            return False
+        merged = list(dict.fromkeys(list(doc.tags) + list(new_tags)))  # ordered dedup
+        return self.set_tags(path, merged)
+
+    def remove_tags(self, path: str, *tags_to_remove: str) -> bool:
+        """Remove specific tags from a document."""
+        doc = self.backend.read(path)
+        if doc is None:
+            return False
+        drop = set(tags_to_remove)
+        kept = [t for t in doc.tags if t not in drop]
+        return self.set_tags(path, kept)
+
+    # ── Reference Walking ─────────────────────────────────────────
+
+    def walk_references(
+        self,
+        start_path: str,
+        *,
+        direction: str = "outgoing",
+        max_depth: int = 2,
+        ref_types: Optional[List[str]] = None,
+        max_nodes: int = 50,
+    ) -> Dict[str, Any]:
+        """BFS walk through the reference graph from a starting document.
+
+        Args:
+            start_path: Document to start from.
+            direction: 'outgoing' (follows from→to), 'incoming' (follows
+                backlinks to→from), or 'both' (follows in either direction).
+            max_depth: How many hops away from the start to traverse.
+            ref_types: If given, only follow edges of these types.
+            max_nodes: Cap on total visited nodes (truncates BFS).
+
+        Returns:
+            A dict with:
+                - 'start': the starting path
+                - 'edges': list of {from_path, to_path, ref_type, note, depth}
+                - 'nodes': list of unique paths visited (with title + depth)
+                - 'truncated': bool, True if max_nodes was hit
+        """
+        if not self._has_references_support():
+            return {"start": start_path, "edges": [], "nodes": [], "truncated": False}
+
+        type_filter = set(ref_types) if ref_types else None
+        visited_paths: Dict[str, int] = {start_path: 0}  # path → depth first seen
+        edges: List[Dict[str, Any]] = []
+        truncated = False
+
+        # BFS queue of (path, depth)
+        queue: List[tuple] = [(start_path, 0)]
+        while queue:
+            current, depth = queue.pop(0)
+            if depth >= max_depth:
+                continue
+
+            outgoing: List[Reference] = []
+            if direction in ("outgoing", "both"):
+                outgoing.extend(self.references_from(current))
+            incoming: List[Reference] = []
+            if direction in ("incoming", "both"):
+                incoming.extend(self.references_to(current))
+
+            for r in outgoing:
+                if type_filter and r.ref_type not in type_filter:
+                    continue
+                edges.append({
+                    "from_path": r.from_path, "to_path": r.to_path,
+                    "ref_type": r.ref_type, "note": r.note,
+                    "depth": depth + 1,
+                })
+                if r.to_path not in visited_paths:
+                    if len(visited_paths) >= max_nodes:
+                        truncated = True
+                        break
+                    visited_paths[r.to_path] = depth + 1
+                    queue.append((r.to_path, depth + 1))
+            if truncated:
+                break
+            for r in incoming:
+                if type_filter and r.ref_type not in type_filter:
+                    continue
+                edges.append({
+                    "from_path": r.from_path, "to_path": r.to_path,
+                    "ref_type": r.ref_type, "note": r.note,
+                    "depth": depth + 1,
+                    "incoming": True,
+                })
+                if r.from_path not in visited_paths:
+                    if len(visited_paths) >= max_nodes:
+                        truncated = True
+                        break
+                    visited_paths[r.from_path] = depth + 1
+                    queue.append((r.from_path, depth + 1))
+            if truncated:
+                break
+
+        # Collect node info with titles
+        nodes: List[Dict[str, Any]] = []
+        for path, d in visited_paths.items():
+            doc = self.backend.read(path)
+            nodes.append({
+                "path": path,
+                "title": doc.title if doc else "(missing)",
+                "depth": d,
+                "exists": doc is not None,
+            })
+        nodes.sort(key=lambda n: (n["depth"], n["path"]))
+        return {
+            "start": start_path, "edges": edges,
+            "nodes": nodes, "truncated": truncated,
+        }
+
+    def render_reference_walk(
+        self, walk: Dict[str, Any], indent: str = "  ",
+    ) -> str:
+        """Render a walk_references() result as an ASCII tree."""
+        if not walk["edges"] and not walk["nodes"]:
+            return f"No references from '{walk['start']}'."
+
+        # Build adjacency from edges, grouped by depth via parent
+        # Edge dict already includes from_path, to_path, ref_type, depth
+        # We render as a tree rooted at start_path using outgoing direction.
+        children: Dict[str, List[Dict[str, Any]]] = {}
+        for e in walk["edges"]:
+            # For incoming edges (from_path != current node), invert visually
+            parent = e["from_path"]
+            if e.get("incoming"):
+                parent = e["to_path"]
+                child = e["from_path"]
+                arrow = "←"
+            else:
+                child = e["to_path"]
+                arrow = "→"
+            children.setdefault(parent, []).append({
+                "child": child, "ref_type": e["ref_type"],
+                "note": e.get("note", ""), "arrow": arrow,
+            })
+
+        node_titles = {n["path"]: n["title"] for n in walk["nodes"]}
+        lines: List[str] = []
+        seen_in_path: set = set()
+
+        def render(path: str, depth: int) -> None:
+            title = node_titles.get(path, "?")
+            cycle = " [cycle]" if path in seen_in_path else ""
+            lines.append(f"{indent * depth}{path} ({title}){cycle}")
+            if path in seen_in_path:
+                return
+            seen_in_path.add(path)
+            for edge in children.get(path, []):
+                note = f" — {edge['note']}" if edge["note"] else ""
+                lines.append(
+                    f"{indent * (depth + 1)}{edge['arrow']}[{edge['ref_type']}]{note}"
+                )
+                render(edge["child"], depth + 2)
+            seen_in_path.discard(path)
+
+        render(walk["start"], 0)
+        if walk["truncated"]:
+            lines.append("... (truncated: max_nodes hit)")
+        return "\n".join(lines)
+
     def list_at(self, prefix: str = "") -> List[Document]:
         """List documents under a path prefix."""
         return self.backend.list(prefix)
@@ -1138,6 +1451,140 @@ class NavigableMemory:
                     return f"No references found for '{self.path}'."
                 return "\n".join(lines)
 
+        # ── Tag Tools ────────────────────────────────────────────
+
+        class ListTags(BaseModel):
+            """List every unique tag used across the knowledge base."""
+
+            def run(self) -> str:
+                tags = nav_memory.list_tags()
+                if not tags:
+                    return "No tags in use."
+                return "Tags in use:\n" + "\n".join(f"  - {t}" for t in tags)
+
+        class FindByTag(BaseModel):
+            """Find all documents that carry a specific tag."""
+            tag: str = Field(..., description="The tag to search for.")
+
+            def run(self) -> str:
+                docs = nav_memory.list_by_tag(self.tag)
+                if not docs:
+                    return f"No documents tagged '{self.tag}'."
+                lines = [f"Documents tagged '{self.tag}':"]
+                for d in docs:
+                    lines.append(f"  - {d.title} ({d.path})")
+                return "\n".join(lines)
+
+        class FindByTags(BaseModel):
+            """Find documents by combining multiple tags.
+            Mode 'any' = at least one tag matches (OR).
+            Mode 'all' = all tags must match (AND).
+            Mode 'none' = none of these tags (exclusion)."""
+            tags: List[str] = Field(..., description="Tags to match.")
+            mode: str = Field(
+                "any", description="'any' (OR), 'all' (AND), or 'none'.",
+            )
+
+            def run(self) -> str:
+                docs = nav_memory.find_by_tags(self.tags, self.mode)
+                if not docs:
+                    return f"No documents match tags={self.tags} mode={self.mode}."
+                lines = [f"Documents matching {self.tags} ({self.mode}):"]
+                for d in docs:
+                    tag_list = ", ".join(d.tags) if d.tags else "(none)"
+                    lines.append(f"  - {d.title} ({d.path}) [tags: {tag_list}]")
+                return "\n".join(lines)
+
+        class AddTags(BaseModel):
+            """Add tags to a document (existing tags are preserved)."""
+            path: str = Field(..., description="Document path.")
+            tags: List[str] = Field(..., description="Tags to add.")
+
+            def run(self) -> str:
+                if not nav_memory.add_tags(self.path, *self.tags):
+                    return f"Document not found: '{self.path}'"
+                doc = nav_memory.read(self.path)
+                current = ", ".join(doc.tags) if doc and doc.tags else "(none)"
+                return f"Tags added to '{self.path}'. Current: [{current}]"
+
+        class RemoveTags(BaseModel):
+            """Remove specific tags from a document."""
+            path: str = Field(..., description="Document path.")
+            tags: List[str] = Field(..., description="Tags to remove.")
+
+            def run(self) -> str:
+                if not nav_memory.remove_tags(self.path, *self.tags):
+                    return f"Document not found: '{self.path}'"
+                doc = nav_memory.read(self.path)
+                current = ", ".join(doc.tags) if doc and doc.tags else "(none)"
+                return f"Tags removed from '{self.path}'. Current: [{current}]"
+
+        class SetTags(BaseModel):
+            """Replace a document's entire tag list with the given tags."""
+            path: str = Field(..., description="Document path.")
+            tags: List[str] = Field(..., description="New tag list (replaces existing).")
+
+            def run(self) -> str:
+                if not nav_memory.set_tags(self.path, self.tags):
+                    return f"Document not found: '{self.path}'"
+                return f"Tags on '{self.path}' set to: [{', '.join(self.tags)}]"
+
+        # ── Reference Walking Tool ───────────────────────────────
+
+        class FollowReferences(BaseModel):
+            """Walk the reference graph from a starting document.
+            Returns a tree showing connected docs up to max_depth hops away.
+            Useful for exploring how knowledge is interconnected."""
+            path: Optional[str] = Field(
+                None,
+                description=(
+                    "Starting document path. Defaults to the current location."
+                ),
+            )
+            direction: str = Field(
+                "outgoing",
+                description=(
+                    "'outgoing' (follow links from this doc), "
+                    "'incoming' (follow backlinks to this doc), "
+                    "or 'both'. Default 'outgoing'."
+                ),
+            )
+            max_depth: int = Field(
+                2, description="How many hops to traverse. Default 2.",
+            )
+            ref_types: Optional[List[str]] = Field(
+                None,
+                description=(
+                    "Optional filter by ref_type, e.g. ['embeds', 'depends_on']. "
+                    "If omitted, all edge types are followed."
+                ),
+            )
+            max_nodes: int = Field(
+                25, description="Maximum nodes to visit before truncating.",
+            )
+
+            def run(self) -> str:
+                start = self.path or nav_memory.current_path
+                if not start:
+                    return (
+                        "No starting path: provide 'path' or navigate to a "
+                        "document first."
+                    )
+                walk = nav_memory.walk_references(
+                    start_path=start,
+                    direction=self.direction,
+                    max_depth=self.max_depth,
+                    ref_types=self.ref_types,
+                    max_nodes=self.max_nodes,
+                )
+                tree = nav_memory.render_reference_walk(walk)
+                summary = (
+                    f"Reference walk from '{start}' "
+                    f"(direction={self.direction}, depth={self.max_depth}, "
+                    f"visited {len(walk['nodes'])} nodes):"
+                )
+                return f"{summary}\n{tree}"
+
         # ── Binary Tools ─────────────────────────────────────────
 
         class DescribeBinary(BaseModel):
@@ -1167,11 +1614,14 @@ class NavigableMemory:
         tools = [
             Navigate, NavigateUp, ListLocations, SearchKnowledge,
             ReadDocument, WriteDocument, AppendToDocument,
+            # Tag operations always work (NavigableMemory has fallbacks)
+            ListTags, FindByTag, FindByTags, AddTags, RemoveTags, SetTags,
         ]
         if self._has_versioning_support():
             tools.extend([ListVersions, ReadVersion, RollbackToVersion])
         if self._has_references_support():
-            tools.extend([AddReference, RemoveReference, ListReferences])
+            tools.extend([AddReference, RemoveReference, ListReferences,
+                          FollowReferences])
         if self._has_binary_support():
             tools.append(DescribeBinary)
         return tools

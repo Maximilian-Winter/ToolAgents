@@ -580,6 +580,40 @@ class SQLiteBackend:
         ).fetchall()
         return [self._row_to_document(r) for r in rows]
 
+    def find_by_tags(self, tags: List[str], mode: str = "any") -> List[Document]:
+        """Find documents matching a set of tags (any/all/none)."""
+        if not tags:
+            return []
+        # SQL approach: filter at the DB level using LIKE patterns
+        clauses = ["',' || tags || ',' LIKE ?" for _ in tags]
+        params = [f"%,{t},%" for t in tags]
+        if mode == "all":
+            where = " AND ".join(clauses)
+        elif mode == "none":
+            where = " AND ".join(f"NOT ({c})" for c in clauses)
+        else:  # 'any'
+            where = " OR ".join(clauses)
+        rows = self._conn.execute(
+            "SELECT path, title, content, tags, metadata, mime_type, "
+            "binary_data, size_bytes, version, updated_at "
+            f"FROM documents WHERE {where} ORDER BY path",
+            params,
+        ).fetchall()
+        return [self._row_to_document(r) for r in rows]
+
+    def set_tags(self, path: str, tags: List[str]) -> bool:
+        """Update tags in place — does NOT bump version."""
+        tags_str = ",".join(tags)
+        try:
+            cursor = self._conn.execute(
+                "UPDATE documents SET tags = ?, updated_at = ? WHERE path = ?",
+                (tags_str, datetime.now().isoformat(), path),
+            )
+            return cursor.rowcount > 0
+        except sqlite3.Error as e:
+            logger.error("set_tags '%s': %s", path, e)
+            return False
+
     def list_by_mime_type(self, mime_prefix: str) -> List[Document]:
         """List documents whose mime_type starts with the given prefix.
 

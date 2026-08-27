@@ -148,6 +148,10 @@ def run_suite(name: str, memory: NavigableMemory) -> None:
     assert "AddReference" in tool_names
     assert "ListReferences" in tool_names
     assert "DescribeBinary" in tool_names
+    assert "ListTags" in tool_names
+    assert "FindByTag" in tool_names
+    assert "AddTags" in tool_names
+    assert "FollowReferences" in tool_names
 
     # Exercise a tool
     AddRef = next(t for t in tools if t.__name__ == "AddReference")
@@ -165,6 +169,78 @@ def run_suite(name: str, memory: NavigableMemory) -> None:
     print(f"pruned {pruned} versions, remaining: {remaining}")
     assert pruned >= 1
     assert len(remaining) == 2
+
+    # ── Tagging ──────────────────────────────────────────────
+    assert memory.add_tags("docs/intro.md", "guide", "beginner")
+    assert memory.add_tags("docs/architecture.md", "design", "beginner")
+    assert memory.set_tags("assets/diagrams/arch.png", ["diagram", "design"])
+
+    all_tags = memory.list_tags()
+    print(f"all tags: {all_tags}")
+    assert "beginner" in all_tags
+    assert "design" in all_tags
+    assert "guide" in all_tags
+    assert "diagram" in all_tags
+
+    by_design = memory.list_by_tag("design")
+    print(f"docs tagged 'design': {[d.path for d in by_design]}")
+    assert len(by_design) == 2
+
+    any_match = memory.find_by_tags(["guide", "diagram"], mode="any")
+    all_match = memory.find_by_tags(["beginner", "design"], mode="all")
+    none_match = memory.find_by_tags(["beginner"], mode="none")
+    print(f"any[guide|diagram]: {[d.path for d in any_match]}")
+    print(f"all[beginner&design]: {[d.path for d in all_match]}")
+    print(f"none[beginner]: {[d.path for d in none_match]}")
+    assert len(any_match) == 2
+    assert any(d.path == "docs/architecture.md" for d in all_match)
+    assert all("beginner" not in d.tags for d in none_match)
+
+    # add_tags is idempotent (set semantics — duplicates dropped)
+    memory.add_tags("docs/intro.md", "guide")
+    intro = memory.read("docs/intro.md")
+    assert intro is not None and intro.tags.count("guide") == 1, intro.tags
+
+    memory.remove_tags("docs/intro.md", "beginner")
+    intro = memory.read("docs/intro.md")
+    assert intro is not None and "beginner" not in intro.tags
+    print(f"intro tags after remove: {intro.tags}")
+
+    # ── Reference walking ────────────────────────────────────
+    # Build a richer graph for the walk: add a chain
+    memory.write("docs/setup.md", "Setup", "How to get started.")
+    memory.add_reference(
+        "docs/architecture.md", "docs/setup.md", ref_type=RefType.DEPENDS_ON,
+    )
+    # Create a cycle: setup → intro
+    memory.add_reference(
+        "docs/setup.md", "docs/intro.md", ref_type=RefType.SEE_ALSO,
+    )
+
+    walk = memory.walk_references("docs/intro.md", max_depth=3)
+    rendered = memory.render_reference_walk(walk)
+    print("\n--- reference walk from docs/intro.md (depth=3) ---")
+    print(rendered)
+    visited_paths = {n["path"] for n in walk["nodes"]}
+    assert "docs/intro.md" in visited_paths
+    assert "assets/diagrams/arch.png" in visited_paths
+
+    # Filtered walk: only follow 'embeds' edges
+    walk_embeds = memory.walk_references(
+        "docs/intro.md", ref_types=[RefType.EMBEDS], max_depth=3,
+    )
+    embed_paths = {n["path"] for n in walk_embeds["nodes"]}
+    print(f"embeds-only walk visited: {sorted(embed_paths)}")
+    # Only the diagram is reached via embeds
+    assert "assets/diagrams/arch.png" in embed_paths
+    assert "docs/architecture.md" not in embed_paths
+
+    # FollowReferences tool
+    Follow = next(t for t in tools if t.__name__ == "FollowReferences")
+    output = Follow(path="docs/intro.md", max_depth=3).run()
+    print("\n--- FollowReferences tool output ---")
+    print(output)
+    assert "docs/intro.md" in output
 
 
 def verify_json_persistence(json_path: str) -> None:

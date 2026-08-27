@@ -569,6 +569,36 @@ class FilesystemBackend:
     def list_by_tag(self, tag: str) -> List[Document]:
         return [d for d in self.list("") if tag in d.tags]
 
+    def find_by_tags(self, tags: List[str], mode: str = "any") -> List[Document]:
+        if not tags:
+            return []
+        target = set(tags)
+        results: List[Document] = []
+        for doc in self.list(""):
+            doc_tags = set(doc.tags)
+            if mode == "all" and target.issubset(doc_tags):
+                results.append(doc)
+            elif mode == "none" and target.isdisjoint(doc_tags):
+                results.append(doc)
+            elif mode == "any" and target & doc_tags:
+                results.append(doc)
+        return results
+
+    def set_tags(self, path: str, tags: List[str]) -> bool:
+        with self._lock:
+            meta_path = self._meta_fs_path(path)
+            meta = self._read_json(meta_path)
+            if meta is None:
+                return False
+            meta["tags"] = list(tags)
+            meta["updated_at"] = datetime.now().isoformat()
+            try:
+                self._write_json(meta_path, meta)
+                return True
+            except OSError as e:
+                logger.error("set_tags '%s': %s", path, e)
+                return False
+
     def list_by_mime_type(self, mime_prefix: str) -> List[Document]:
         return [d for d in self.list("") if d.mime_type.startswith(mime_prefix)]
 

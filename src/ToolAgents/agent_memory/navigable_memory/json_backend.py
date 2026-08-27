@@ -459,6 +459,32 @@ class JSONBackend:
                 if tag in (raw.get("tags") or [])
             ]
 
+    def find_by_tags(self, tags: List[str], mode: str = "any") -> List[Document]:
+        if not tags:
+            return []
+        target = set(tags)
+        with self._lock:
+            results: List[Document] = []
+            for path, raw in sorted(self._documents.items()):
+                doc_tags = set(raw.get("tags") or [])
+                if mode == "all" and target.issubset(doc_tags):
+                    results.append(self._doc_dict_to_document(path, raw))
+                elif mode == "none" and target.isdisjoint(doc_tags):
+                    results.append(self._doc_dict_to_document(path, raw))
+                elif mode == "any" and target & doc_tags:
+                    results.append(self._doc_dict_to_document(path, raw))
+            return results
+
+    def set_tags(self, path: str, tags: List[str]) -> bool:
+        with self._lock:
+            raw = self._documents.get(path)
+            if raw is None:
+                return False
+            raw["tags"] = list(tags)
+            raw["updated_at"] = datetime.now().isoformat()
+            self._maybe_save()
+            return True
+
     def list_by_mime_type(self, mime_prefix: str) -> List[Document]:
         with self._lock:
             return [
