@@ -6,19 +6,20 @@ ToolAgents is a lightweight and flexible framework for creating function-calling
 ## Table of Contents
 
 1. [Features](#features)
-2. [Installation](#installation)
-3. [Usage](#usage)
+2. [Documentation](#documentation)
+3. [Installation](#installation)
+4. [Usage](#usage)
   - [Simple ChatToolAgent Usage](#ChatToolAgent)
   - [Using different Providers](#Different-Providers)
   - [ChatToolAgent with User Loop and Chat History](#Use-ChatToolAgent-with-ChatHistory-class)
   - [Streaming ChatToolAgent with User Loop and Chat History](#Use-Streaming-ChatToolAgent-with-ChatHistory-class)
-4. [Custom Tools](#custom-tools)
+5. [Custom Tools](#custom-tools)
   - [Pydantic Model-based Tools](#1-pydantic-model-based-tools)
   - [Function-based Tools](#2-function-based-tools)
   - [OpenAI-style Function Specifications](#3-openai-style-function-specifications)
   - [The Importance of Good Docstrings and Descriptions](#the-importance-of-good-docstrings-and-descriptions)
-5. [Contributing](#contributing)
-6. [License](#license)
+6. [Contributing](#contributing)
+7. [License](#license)
 
 ## Features
 
@@ -30,6 +31,12 @@ ToolAgents is a lightweight and flexible framework for creating function-calling
 - Easy-to-use interface for passing functions, Pydantic models, and tools to LLMs
 - Streamlined process for function calling and result handling
 - Unified Message format, making switching of providers while keeping the same chat history easy.
+
+## Documentation
+
+The full documentation is available at [maximilian-winter.github.io/ToolAgents](https://maximilian-winter.github.io/ToolAgents/).
+
+It includes installation guidance, provider setup, API references, and examples for the newer agent harness, extension, and navigable memory workflows.
 
 ## Installation
 
