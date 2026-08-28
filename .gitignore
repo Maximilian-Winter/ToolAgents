@@ -2,6 +2,7 @@
 __pycache__/
 .pytest_tmp/
 pytest_tmp/
+pytest_tmp*/
 .env
 .venv
 build
@@ -82,11 +83,20 @@ examples/low_level_abstractions/example_chat_history.json
 /src/ToolAgents/agent_context/__pycache__
 
 # Generated example outputs
+/examples/**/*.db
+/examples/**/*.db-shm
+/examples/**/*.db-wal
+/examples/**/generated_*.gv
+/examples/**/generated_*.gv.pdf
 /examples/agents/advanced/knowledge_graph*.gv
 /examples/agents/advanced/knowledge_graph*.gv.pdf
 /examples/agents/basics/chat_history_example.json
 /examples/agents/chat_history_example.json
 /examples/agents/test_tools_chat_history.json
+/examples/advanced_agent/example_agent/
+/examples/advanced_agent/test_agent/
+/examples/agents/gradio/advanced_agent/agent_data/
+/examples/agents/navigable_memory/test/*_output.txt
 /examples/agents/misc/code_agent/*.png
 /examples/agents/misc/code_agent/test_chat_history_after.json
 /examples/agents/misc/code_interpreter/*.png

@@ -4,21 +4,20 @@ title: Memory
 
 # Memory
 
-ToolAgents has optional semantic-memory and retrieval examples under `examples/agents/memory/`.
+ToolAgents has lightweight retrieval examples under `examples/agents/memory/`
+and the preferred memory-agent examples under `examples/agents/navigable_memory/`.
 
 Representative examples:
 
 - `examples/agents/memory/rag.py`
+- `examples/agents/memory/bm_25.py`
 - `examples/agents/memory/ensemble.py`
 - `examples/agents/navigable_memory/example_ingest_files.py`
 - `examples/agents/navigable_memory/example_semantic_navigable_agent.py`
-- `examples/agents/memory/context_app_state_test.py`
 
 Optional dependencies:
 
 - install `ToolAgents[memory]` for vector-store and embedding-provider support
-- install `ToolAgents[advanced]` if you also want YAML-backed app-state helpers
-
 Notes:
 
 - the memory surface is still optional and heavier than the core framework

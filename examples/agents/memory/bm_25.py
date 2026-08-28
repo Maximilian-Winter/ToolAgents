@@ -1,14 +1,25 @@
-﻿from ToolAgents.knowledge.vector_database.sentence_transformer_embeddings import SentenceTransformerEmbeddingProvider
-from ToolAgents.knowledge.vector_database.cross_encoder_reranking import CrossEncoderRerankingProvider
-from bm25_vector_database import BM25VectorDatabaseProvider
-from ToolAgents.knowledge.rag import RAG
+"""Dependency-light keyword retrieval with the BM25 vector-database provider."""
 
-emb = SentenceTransformerEmbeddingProvider()  # kept for API compatibility
-reranker = CrossEncoderRerankingProvider()
-bm25 = BM25VectorDatabaseProvider(embedding_provider=emb, reranking_provider=reranker)
+from ToolAgents.knowledge.vector_database import RAG
+from ToolAgents.knowledge.vector_database.implementations.bm25_database import (
+    BM25VectorDatabaseProvider,
+)
 
-rag = RAG(vector_database_provider=bm25)
-rag.add_document("Postgres supports full-text search with GIN indexes.", {"source": "notes"})
-res = rag.retrieve_documents("How does Postgres FTS work?", k=3)
-print(res)
+
+if __name__ == "__main__":
+    bm25 = BM25VectorDatabaseProvider(embedding_provider=None)
+    rag = RAG(vector_database_provider=bm25)
+
+    rag.add_documents(
+        [
+            "Postgres supports full-text search with GIN indexes.",
+            "SQLite can run lightweight local applications without a server.",
+            "BM25 is a sparse retrieval algorithm based on term frequency.",
+        ],
+        [{"source": "notes"}, {"source": "notes"}, {"source": "notes"}],
+    )
+
+    result = rag.retrieve_documents("How does Postgres search work?", k=2)
+    for chunk, score in zip(result.chunks, result.scores):
+        print(f"{score:.3f}: {chunk}")
 

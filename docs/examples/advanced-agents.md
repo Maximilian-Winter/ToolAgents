@@ -1,12 +1,12 @@
 ---
-title: Advanced Agents
+title: Advanced Agent Examples
 ---
 
-# Advanced Agents
+# Advanced Agent Examples
 
-The curated advanced examples focus on higher-level workflows built on top of
-`ChatToolAgent`. `AdvancedAgent` is legacy and retained for compatibility with
-older exploratory examples.
+The curated advanced examples focus on workflows built on top of
+`ChatToolAgent`. For longer-running interactive assistants, prefer the
+`AgentHarness` examples in `examples/agents/context_and_harness/`.
 
 Representative examples in the repo:
 
@@ -19,9 +19,12 @@ What these examples cover:
 
 - stateful user loops on top of the cleaned message and provider APIs
 - structured output flows
-- higher-level orchestration patterns that sit above the base chat/tool agent
+- small orchestration patterns that sit above the base chat/tool agent
 
 Notes:
 
 - OCR-specific examples were intentionally retired from the maintained example surface.
-- Treat the examples in `examples/advanced_agent/` as legacy exploratory code.
+- `AdvancedAgent` and `AgentConfig` are compatibility APIs, not the recommended
+  path for new examples.
+- Treat the examples in `examples/advanced_agent/` as legacy exploratory code
+  when that directory is present in older checkouts.
