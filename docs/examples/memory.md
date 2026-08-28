@@ -10,6 +10,7 @@ Representative examples:
 
 - `examples/agents/memory/rag.py`
 - `examples/agents/memory/ensemble.py`
+- `examples/agents/navigable_memory/example_ingest_files.py`
 - `examples/agents/navigable_memory/example_semantic_navigable_agent.py`
 - `examples/agents/memory/context_app_state_test.py`
 
@@ -22,4 +23,5 @@ Notes:
 
 - the memory surface is still optional and heavier than the core framework
 - `SemanticMemory` is legacy; prefer `NavigableMemory` with an optional semantic index for document retrieval
+- `NavigableMemory` includes helpers for ingesting local text files/directories and opt-in ingestion tools for agents
 - generated local vector-store artifacts are intentionally excluded from the maintained repo state

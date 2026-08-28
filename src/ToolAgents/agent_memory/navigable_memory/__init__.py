@@ -17,6 +17,18 @@ from .json_backend import JSONBackend
 from .filesystem_backend import FilesystemBackend
 from .migration import migrate, MigrationReport
 from .semantic_index import NavigableSearchResult, NavigableSemanticIndex
+from .ingestion import (
+    FileIngestionConfig,
+    IngestionReport,
+    IngestionResult,
+    IngestionSource,
+    create_ingestion_tools,
+    create_llm_ingestion_transformer,
+    build_navigable_memory_skill_prompt,
+    ingest_directory,
+    ingest_file,
+    normalize_memory_path,
+)
 
 __all__ = [
     "NavigableMemory",
@@ -38,4 +50,14 @@ __all__ = [
     "MigrationReport",
     "NavigableSearchResult",
     "NavigableSemanticIndex",
+    "FileIngestionConfig",
+    "IngestionReport",
+    "IngestionResult",
+    "IngestionSource",
+    "create_ingestion_tools",
+    "create_llm_ingestion_transformer",
+    "build_navigable_memory_skill_prompt",
+    "ingest_directory",
+    "ingest_file",
+    "normalize_memory_path",
 ]
