@@ -498,6 +498,11 @@ class AgentHarness:
         return self._smart_message_manager.get_active_messages()
 
     @property
+    def _messages(self) -> List[ChatMessage]:
+        """Legacy alias for the active message list."""
+        return self.messages
+
+    @property
     def prompt_composer(self) -> PromptComposer:
         """The PromptComposer for modular system prompt management."""
         return self._prompt_composer
@@ -632,6 +637,7 @@ def create_harness(
                 position=100,  # late in the prompt
                 content=catalog,
             )
+            system_prompt = prompt_composer.compile()
 
     config = HarnessConfig(
         system_prompt=system_prompt,
