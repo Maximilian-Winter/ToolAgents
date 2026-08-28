@@ -1,8 +1,6 @@
 import copy
 from typing import List, Dict, Optional, Any, Generator, AsyncGenerator
 
-from mistralai import Mistral
-
 from ToolAgents import FunctionTool
 from ToolAgents.provider.message_converter.mistral_message_converter import (
     MistralMessageConverter,
@@ -16,9 +14,37 @@ from ToolAgents.provider.llm_provider import ChatAPIProvider, StreamingChatMessa
 from ToolAgents.data_models.messages import ChatMessage
 
 
+def _get_mistral_client_class():
+    """Resolve the Mistral SDK client across supported mistralai versions."""
+    try:
+        from mistralai import Mistral
+
+        return Mistral
+    except (ImportError, AttributeError):
+        pass
+
+    try:
+        from mistralai.client import Mistral
+
+        return Mistral
+    except (ImportError, AttributeError):
+        pass
+
+    try:
+        from mistralai.client import MistralClient
+
+        return MistralClient
+    except (ImportError, AttributeError) as exc:
+        raise ImportError(
+            "Could not import a Mistral client from the installed `mistralai` "
+            "package. Install a supported mistralai version or use another "
+            "chat provider."
+        ) from exc
+
+
 class MistralChatAPI(ChatAPIProvider):
     def __init__(self, api_key: str, model: str):
-        self.client = Mistral(api_key=api_key)
+        self.client = _get_mistral_client_class()(api_key=api_key)
         self.model = model
         self.settings = ProviderSettings([
             LLMSetting("temperature", default_value=1.0, neutral_value=1.0, level=SettingLevel.REQUEST),
@@ -76,7 +102,7 @@ class MistralChatAPI(ChatAPIProvider):
 
 class AsyncMistralChatAPI(AsyncChatAPIProvider):
     def __init__(self, api_key: str, model: str):
-        self.client = Mistral(api_key=api_key)
+        self.client = _get_mistral_client_class()(api_key=api_key)
         self.model = model
         self.settings = ProviderSettings([
             LLMSetting("temperature", default_value=1.0, neutral_value=1.0, level=SettingLevel.REQUEST),

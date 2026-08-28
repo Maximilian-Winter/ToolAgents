@@ -1,3 +1,6 @@
+import subprocess
+import sys
+import textwrap
 from pathlib import Path
 
 from ToolAgents.data_models.chat_history import ChatHistory
@@ -48,3 +51,30 @@ def test_llama_cpp_settings_are_instantiable_and_flattened():
     assert payload['n_predict'] == 1024
     assert payload['stop'] == ['assistant']
     assert payload['mirostat'] == 2
+
+
+def test_completion_provider_import_does_not_require_mistral_client():
+    code = textwrap.dedent(
+        """
+        import types
+        import sys
+
+        sys.modules['mistralai'] = types.ModuleType('mistralai')
+
+        from ToolAgents.provider.completion_provider.default_implementations import (
+            LlamaCppProviderSettings,
+        )
+
+        assert LlamaCppProviderSettings is not None
+        assert 'ToolAgents.provider.chat_api_provider.mistral' not in sys.modules
+        """
+    )
+
+    result = subprocess.run(
+        [sys.executable, '-c', code],
+        cwd=TEST_ROOT.parent,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 0, result.stderr
