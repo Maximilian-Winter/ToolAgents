@@ -27,7 +27,6 @@ class AgentInput(Input):
 
     DEFAULT_CSS = """
     AgentInput {
-        dock: bottom;
         margin: 0 1;
         padding: 0;
     }

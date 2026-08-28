@@ -62,6 +62,9 @@ search = [
 mcp = [
     "mcp[cli]",
 ]
+tui = [
+    "textual",
+]
 all = [
     "PyMuPDF",
     "PyYAML",
@@ -80,6 +83,7 @@ all = [
     "pytesseract",
     "sentence-transformers",
     "sentencepiece",
+    "textual",
     "torch",
     "transformers",
     "trafilatura",

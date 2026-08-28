@@ -18,7 +18,7 @@ class UserMessage(Static):
 
     DEFAULT_CSS = """
     UserMessage {
-        margin: 1 1 0 8;
+        margin: 1 1 0 4;
         padding: 1 2;
         background: $primary 15%;
         color: $text;
@@ -38,7 +38,7 @@ class AssistantMessage(Markdown):
 
     DEFAULT_CSS = """
     AssistantMessage {
-        margin: 1 8 0 1;
+        margin: 1 4 0 1;
         padding: 1 2 0 2;
         background: $success 8%;
         color: $text;

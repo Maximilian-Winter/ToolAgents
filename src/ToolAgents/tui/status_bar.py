@@ -12,7 +12,6 @@ class StatusBar(Static):
     """Status bar showing agent session metrics.
 
     Displays turn count, context token usage, and total tokens.
-    Docked to the bottom above the input bar.
 
     Usage:
         status = self.query_one(StatusBar)
@@ -21,7 +20,6 @@ class StatusBar(Static):
 
     DEFAULT_CSS = """
     StatusBar {
-        dock: bottom;
         height: 1;
         background: $primary 20%;
         color: $text-muted;
@@ -66,7 +64,7 @@ class StatusBar(Static):
     def set_processing(self, processing: bool = True) -> None:
         """Show/hide processing indicator."""
         if processing:
-            self._status_text = "⏳ Processing..."
+            self._status_text = "Processing..."
         else:
             self._status_text = ""
         self._refresh_display()
@@ -88,5 +86,5 @@ class StatusBar(Static):
         if self._status_text:
             parts.append(self._status_text)
 
-        display = " │ ".join(parts) if parts else "Ready"
+        display = " | ".join(parts) if parts else "Ready"
         self.update(display)

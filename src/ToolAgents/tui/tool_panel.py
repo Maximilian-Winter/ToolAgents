@@ -45,7 +45,7 @@ class ToolCallEntry(Collapsible):
         self._start_time = time.monotonic()
 
         super().__init__(
-            title=f"⚙ {tool_name}",
+            title=f"[tool] {tool_name}",
             collapsed=True,
             **kwargs,
         )
@@ -54,7 +54,7 @@ class ToolCallEntry(Collapsible):
         """Override compose to add result and status widgets."""
         args_text = self._format_args(self._tool_args)
         yield Static(args_text, classes="tool-args")
-        self._status_widget = Static("⏳ Running...", classes="tool-status")
+        self._status_widget = Static("Running...", classes="tool-status")
         yield self._status_widget
         self._result_widget = Static("", classes="tool-result")
         yield self._result_widget
@@ -81,13 +81,13 @@ class ToolCallEntry(Collapsible):
             display_result = result
 
         if self._status_widget is not None:
-            self._status_widget.update(f"✓ Done ({elapsed:.1f}s)")
+            self._status_widget.update(f"Done ({elapsed:.1f}s)")
             self._status_widget.add_class("tool-done")
         if self._result_widget is not None:
             self._result_widget.update(display_result)
 
         # Update title with timing
-        self.title = f"✓ {self._tool_name} ({elapsed:.1f}s)"
+        self.title = f"[done] {self._tool_name} ({elapsed:.1f}s)"
 
 
 class ToolPanel(VerticalScroll):
@@ -99,8 +99,8 @@ class ToolPanel(VerticalScroll):
 
     DEFAULT_CSS = """
     ToolPanel {
-        dock: right;
-        width: 45;
+        width: 38;
+        min-width: 28;
         background: $surface;
         border-left: tall $primary 30%;
         padding: 0 1;

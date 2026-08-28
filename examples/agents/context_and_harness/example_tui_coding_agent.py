@@ -13,25 +13,34 @@ Features:
 - Toggle tool panel with Ctrl+T
 
 Usage:
-    pip install textual
+    pip install "ToolAgents[tui]"
     python example_tui_coding_agent.py
+
+On Windows, run this in Windows Terminal or a regular PowerShell terminal for
+best results. IDE embedded terminals may not handle Textual's full-screen mode,
+alternate screen buffer, or key input consistently.
 """
 
 import datetime
 import os
 import platform
+import sys
 
-from dotenv import load_dotenv
+try:
+    from dotenv import load_dotenv
+except ImportError:
+    def load_dotenv() -> bool:
+        return False
 
 from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal
 from textual.widgets import Header, Footer
 
-from ToolAgents.agent_tools.coding_tools import CodingTools
+from ToolAgents.agent_tools.async_coding_tools import AsyncCodingTools
 from ToolAgents.agent_harness import create_async_harness, HarnessEvent
 from ToolAgents.context_manager import ContextEvent
-from ToolAgents.provider.chat_api_provider.open_ai import AsyncOpenAIChatAPI, OpenAIChatAPI
+from ToolAgents.provider.chat_api_provider.open_ai import AsyncOpenAIChatAPI
 from ToolAgents.utilities.message_template import MessageTemplate
 
 from ToolAgents.tui import (
@@ -105,6 +114,12 @@ class CodingAgentApp(App):
     #chat {
         width: 1fr;
     }
+    #tools {
+        display: none;
+    }
+    #tools.visible {
+        display: block;
+    }
     """
 
     BINDINGS = [
@@ -135,8 +150,7 @@ class CodingAgentApp(App):
         api = self.API
 
         # Tools
-        coding_tools = CodingTools(working_directory=WORKING_DIRECTORY)
-        # Use sync FunctionTools — the async harness handles execution
+        coding_tools = AsyncCodingTools(working_directory=WORKING_DIRECTORY)
         all_tools = coding_tools.get_tools()
 
         # Settings
@@ -174,8 +188,14 @@ class CodingAgentApp(App):
         # Welcome message
         chat = self.query_one("#chat", ChatView)
         chat.add_system_message(
-            f"ToolAgents Coding Agent — {platform.system()} — {WORKING_DIRECTORY}"
+            f"ToolAgents Coding Agent - {platform.system()} - {WORKING_DIRECTORY}"
         )
+        if platform.system() == "Windows" and os.getenv("PYCHARM_HOSTED"):
+            chat.add_system_message(
+                "PyCharm's embedded terminal can render Textual apps poorly on Windows. "
+                "Use Windows Terminal if the screen or key handling looks wrong."
+            )
+        chat.add_system_message("Press Ctrl+T to show or hide tool activity.")
 
         # Focus input
         self.query_one("#input", AgentInput).focus()
@@ -196,7 +216,7 @@ class CodingAgentApp(App):
 
     def action_toggle_tools(self) -> None:
         """Toggle the tool panel sidebar."""
-        self.query_one("#tools", ToolPanel).toggle()
+        self.query_one("#tools", ToolPanel).toggle_class("visible")
 
 
 # ============================================================
@@ -204,10 +224,19 @@ class CodingAgentApp(App):
 # ============================================================
 
 if __name__ == "__main__":
+    if not sys.stdin.isatty() or not sys.stdout.isatty():
+        raise SystemExit("This Textual example must be run in an interactive terminal.")
+
+    api_key = os.getenv("OPENROUTER_API_KEY")
+    if not api_key:
+        raise SystemExit("Set OPENROUTER_API_KEY to run this example.")
+
     app = CodingAgentApp()
-    app.set_api(OpenAIChatAPI(
-        api_key=os.getenv("OPENROUTER_API_KEY"),
-        model="xiaomi/mimo-v2-pro",
-        base_url="https://openrouter.ai/api/v1",
-    ))
+    app.set_api(
+        AsyncOpenAIChatAPI(
+            api_key=api_key,
+            model=os.getenv("OPENROUTER_MODEL", "xiaomi/mimo-v2-pro"),
+            base_url=os.getenv("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1"),
+        )
+    )
     app.run()
