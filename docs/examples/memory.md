@@ -18,9 +18,11 @@ Representative examples:
 Optional dependencies:
 
 - install `ToolAgents[memory]` for vector-store and embedding-provider support
+
 Notes:
 
 - the memory surface is still optional and heavier than the core framework
-- `SemanticMemory` is legacy; prefer `NavigableMemory` with an optional semantic index for document retrieval
+- legacy `SemanticMemory` and `ContextAppState` examples were removed from the maintained examples tree
+- prefer `NavigableMemory` with an optional semantic index for document retrieval
 - `NavigableMemory` includes helpers for ingesting local text files/directories and opt-in ingestion tools for agents
 - generated local vector-store artifacts are intentionally excluded from the maintained repo state

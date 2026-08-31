@@ -6,6 +6,6 @@ Current examples in this directory:
 - `bm_25.py`: dependency-light keyword retrieval.
 - `ensemble.py`: hybrid dense and sparse retrieval with optional memory extras.
 
-For agent memory, prefer `../navigable_memory/`. `SemanticMemory` and
-`ContextAppState` are legacy compatibility APIs; old scripts that use them are
-not part of the maintained example path.
+For agent memory, prefer `../navigable_memory/`. Legacy `SemanticMemory` and
+`ContextAppState` scripts were removed from this directory; older release tags
+and source archives still contain them if compatibility references are needed.

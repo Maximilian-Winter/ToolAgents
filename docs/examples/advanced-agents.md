@@ -26,5 +26,6 @@ Notes:
 - OCR-specific examples were intentionally retired from the maintained example surface.
 - `AdvancedAgent` and `AgentConfig` are compatibility APIs, not the recommended
   path for new examples.
-- Treat the examples in `examples/advanced_agent/` as legacy exploratory code
-  when that directory is present in older checkouts.
+- Legacy `examples/advanced_agent/` scripts were removed from the maintained
+  examples tree. Use older release tags or source archives for historical
+  compatibility references.

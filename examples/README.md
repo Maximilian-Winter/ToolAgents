@@ -16,16 +16,20 @@ The maintained examples are grouped by the current APIs they demonstrate.
 - `agents/mem_gpt_like/`: exploratory memory-agent pattern.
 - `agents/personal_agent_ada/`: larger personal-agent demo.
 - `agents/pipeline/`: provider-specific pipeline sketches.
-- `agents/virtual_game_master/`: large application demo with its own local service and data model.
 
 ## Legacy Surface
 
 Old `AdvancedAgent`, `AgentConfig`, `SemanticMemory`, and `ContextAppState`
-examples are kept only as compatibility references when they are still present
-in the tree. They are not part of the maintained example path. New examples
-should use explicit
-`ChatToolAgent` or `AgentHarness` composition plus `NavigableMemory` where
-memory is needed.
+examples have been removed from the maintained examples tree. They remain
+available from older release tags and source archives for users who still need
+the historical compatibility examples.
+
+`agents/virtual_game_master/` is an archived large demo that still references
+legacy state APIs. It is kept as historical application code, not as a
+recommended example to copy.
+
+New examples should use explicit `ChatToolAgent` or `AgentHarness` composition
+plus `NavigableMemory` where memory is needed.
 
 Generated local outputs such as chat histories, vector-store databases, graph
 renderings, and `__pycache__` directories should stay untracked.
