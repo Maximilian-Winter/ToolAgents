@@ -27,13 +27,16 @@ This installs the core framework and the built-in chat providers.
 
 ToolAgents now groups optional functionality by feature area so you only install what you need.
 
-### Advanced Agent App State
+### YAML-Based Extensions
 
-For `ContextAppState` and YAML-backed agent state files:
+For YAML-backed skill and extension metadata:
 
 ```bash
 pip install ToolAgents[advanced]
 ```
+
+The extra keeps its historical name for compatibility; it does not install the
+removed `AdvancedAgent` API.
 
 This installs:
 
@@ -51,9 +54,10 @@ This installs:
 
 - `SQLAlchemy`
 
-### Semantic Memory and Vector Search
+### Vector Search and Semantic Indexes
 
-For semantic memory, Chroma-backed storage, and sentence-transformer embeddings:
+For Chroma-backed vector storage, sentence-transformer embeddings, and
+NavigableMemory semantic indexes:
 
 ```bash
 pip install ToolAgents[memory]
@@ -62,7 +66,6 @@ pip install ToolAgents[memory]
 This installs:
 
 - `chromadb`
-- `hdbscan`
 - `numpy`
 - `sentence-transformers`
 - `torch`

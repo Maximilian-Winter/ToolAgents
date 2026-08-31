@@ -9,3 +9,4 @@ Current examples in this directory:
 For agent memory, prefer `../navigable_memory/`. Legacy `SemanticMemory` and
 `ContextAppState` scripts were removed from this directory; older release tags
 and source archives still contain them if compatibility references are needed.
+See `../../../docs/removed-legacy.md` for current replacement guidance.

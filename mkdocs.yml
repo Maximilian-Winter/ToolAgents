@@ -36,6 +36,7 @@ nav:
   - Getting Started:
     - Installation: getting-started/installation.md
     - Quick Start: getting-started/quick-start.md
+    - Removed Legacy APIs: removed-legacy.md
   - Guides:
     - Basic Usage: guides/basic-usage.md
     - Custom Tools: guides/custom-tools.md

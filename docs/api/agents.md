@@ -64,33 +64,6 @@ Current constructor parameter:
 
 - `chat_api`: `AsyncChatAPIProvider`
 
-## AdvancedAgent
-
-Legacy compatibility wrapper. Prefer composing `ChatToolAgent` directly with
-explicit memory, prompt, state, and persistence helpers for new code.
-
-```python
-from ToolAgents import ToolRegistry
-from ToolAgents.agents import AdvancedAgent, ChatToolAgent
-from ToolAgents.agents.advanced_agent import AgentConfig
-
-base_agent = ChatToolAgent(chat_api=api_provider)
-advanced_agent = AdvancedAgent(
-    agent=base_agent,
-    tool_registry=ToolRegistry(),
-    agent_config=AgentConfig(),
-)
-```
-
-Constructor parameters:
-
-- `agent`: base `BaseToolAgent` implementation
-- `tool_registry`: optional `ToolRegistry`
-- `agent_config`: optional `AgentConfig`
-- `user_name`: optional display name for the user
-- `assistant_name`: optional display name for the assistant
-- `debug_mode`: enable verbose agent internals
-
 ## Response Types
 
 ### ChatResponse

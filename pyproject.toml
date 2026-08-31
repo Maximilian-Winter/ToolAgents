@@ -36,7 +36,6 @@ storage = [
 ]
 memory = [
     "chromadb",
-    "hdbscan",
     "numpy",
     "sentence-transformers",
     "torch",
@@ -73,7 +72,6 @@ all = [
     "camoufox",
     "chromadb",
     "googlesearch-python",
-    "hdbscan",
     "html5lib",
     "joblib",
     "mcp[cli]",

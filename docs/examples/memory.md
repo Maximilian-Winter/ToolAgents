@@ -22,7 +22,7 @@ Optional dependencies:
 Notes:
 
 - the memory surface is still optional and heavier than the core framework
-- legacy `SemanticMemory` and `ContextAppState` examples were removed from the maintained examples tree
+- legacy `SemanticMemory` and `ContextAppState` examples were removed from the maintained examples tree; see [Removed Legacy APIs](../removed-legacy.md)
 - prefer `NavigableMemory` with an optional semantic index for document retrieval
 - `NavigableMemory` includes helpers for ingesting local text files/directories and opt-in ingestion tools for agents
 - generated local vector-store artifacts are intentionally excluded from the maintained repo state

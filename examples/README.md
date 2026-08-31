@@ -22,7 +22,8 @@ The maintained examples are grouped by the current APIs they demonstrate.
 Old `AdvancedAgent`, `AgentConfig`, `SemanticMemory`, and `ContextAppState`
 examples have been removed from the maintained examples tree. They remain
 available from older release tags and source archives for users who still need
-the historical compatibility examples.
+the historical compatibility examples. See the docs page
+`docs/removed-legacy.md` for the current replacement guidance.
 
 `agents/virtual_game_master/` is an archived large demo that still references
 legacy state APIs. It is kept as historical application code, not as a

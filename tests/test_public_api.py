@@ -1,3 +1,4 @@
+import importlib
 import subprocess
 import sys
 import textwrap
@@ -78,3 +79,23 @@ def test_completion_provider_import_does_not_require_mistral_client():
     )
 
     assert result.returncode == 0, result.stderr
+
+
+def test_removed_legacy_modules_are_not_public_api():
+    import ToolAgents.agent_memory as agent_memory
+    import ToolAgents.agents as agents
+
+    assert "AdvancedAgent" not in agents.__all__
+    assert "AgentConfig" not in agents.__all__
+    assert "SemanticMemory" not in agent_memory.__all__
+    assert "ContextAppState" not in agent_memory.__all__
+
+    for module_name in (
+        "ToolAgents.agents.advanced_agent",
+        "ToolAgents.agent_memory.semantic_memory",
+    ):
+        try:
+            importlib.import_module(module_name)
+        except ModuleNotFoundError:
+            continue
+        raise AssertionError(f"{module_name} should not be importable")

@@ -1,5 +1,4 @@
 from types import SimpleNamespace
-import warnings
 
 from ToolAgents.agent_memory.navigable_memory import (
     InMemoryBackend,
@@ -175,13 +174,3 @@ def test_generated_semantic_tools_are_conditional():
     output = tool_map["SemanticSearchKnowledge"](query="navigation").run()
     assert "docs/concept.md" in output
     assert "Navigate to: docs/concept.md" in output
-
-
-def test_legacy_agent_config_emits_deprecation_warning_without_memory_deps():
-    from ToolAgents.agents.advanced_agent import AgentConfig
-
-    with warnings.catch_warnings(record=True) as caught:
-        warnings.simplefilter("always")
-        AgentConfig()
-
-    assert any(item.category is DeprecationWarning for item in caught)
