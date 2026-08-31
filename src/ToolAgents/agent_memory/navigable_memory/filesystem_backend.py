@@ -42,9 +42,7 @@ import threading
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from .navigable_memory import (
-    Document, DocumentVersion, Reference, RefType,
-)
+from .models import Document, DocumentVersion, Reference, RefType
 
 logger = logging.getLogger(__name__)
 

@@ -1,16 +1,12 @@
-from .navigable_memory import (
-    NavigableMemory,
-    InMemoryBackend,
-    DepartureRecord,
-    Document,
-    DocumentVersion,
-    Reference,
-    RefType,
-    StorageBackend,
+from .core import NavigableMemory
+from .in_memory_backend import InMemoryBackend
+from .models import DepartureRecord, Document, DocumentVersion, Reference, RefType
+from .protocols import (
     BinaryStorage,
-    VersionedStorage,
     ReferenceStorage,
+    StorageBackend,
     TagStorage,
+    VersionedStorage,
 )
 from .sqlite_backend import SQLiteBackend
 from .json_backend import JSONBackend

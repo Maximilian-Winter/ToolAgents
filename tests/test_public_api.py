@@ -25,6 +25,47 @@ def test_public_api_imports_are_available():
     assert RecursiveCharacterTextSplitter is not None
 
 
+def test_navigable_memory_import_compatibility():
+    from ToolAgents.agent_memory.navigable_memory import (
+        BinaryStorage,
+        Document,
+        DocumentVersion,
+        InMemoryBackend,
+        NavigableMemory,
+        Reference,
+        ReferenceStorage,
+        RefType,
+        StorageBackend,
+        TagStorage,
+        VersionedStorage,
+    )
+    from ToolAgents.agent_memory.navigable_memory.navigable_memory import (
+        BinaryStorage as ShimBinaryStorage,
+        Document as ShimDocument,
+        DocumentVersion as ShimDocumentVersion,
+        InMemoryBackend as ShimInMemoryBackend,
+        NavigableMemory as ShimNavigableMemory,
+        Reference as ShimReference,
+        ReferenceStorage as ShimReferenceStorage,
+        RefType as ShimRefType,
+        StorageBackend as ShimStorageBackend,
+        TagStorage as ShimTagStorage,
+        VersionedStorage as ShimVersionedStorage,
+    )
+
+    assert NavigableMemory is ShimNavigableMemory
+    assert InMemoryBackend is ShimInMemoryBackend
+    assert Document is ShimDocument
+    assert DocumentVersion is ShimDocumentVersion
+    assert Reference is ShimReference
+    assert RefType is ShimRefType
+    assert StorageBackend is ShimStorageBackend
+    assert BinaryStorage is ShimBinaryStorage
+    assert VersionedStorage is ShimVersionedStorage
+    assert ReferenceStorage is ShimReferenceStorage
+    assert TagStorage is ShimTagStorage
+
+
 def test_chat_history_json_roundtrip():
     history = ChatHistory()
     history.add_system_message('You are helpful.')

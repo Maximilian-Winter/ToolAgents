@@ -29,9 +29,9 @@ import logging
 from dataclasses import dataclass, field
 from typing import Any, List, Optional
 
-from .navigable_memory import (
-    BinaryStorage, Document, ReferenceStorage, StorageBackend,
-    TagStorage, VersionedStorage,
+from .models import Document
+from .protocols import (
+    BinaryStorage, ReferenceStorage, StorageBackend, TagStorage, VersionedStorage,
 )
 
 logger = logging.getLogger(__name__)

@@ -20,7 +20,7 @@ from ToolAgents.knowledge.text_processing.text_splitter import (
 )
 
 if TYPE_CHECKING:
-    from .navigable_memory import Document
+    from .models import Document
 
 logger = logging.getLogger(__name__)
 

@@ -1,6 +1,7 @@
 from types import SimpleNamespace
 
 from ToolAgents.agent_memory.navigable_memory import (
+    Document,
     InMemoryBackend,
     NavigableMemory,
     NavigableSemanticIndex,
@@ -51,6 +52,42 @@ class FakeVectorProvider:
             embeddings=[],
             metadata=list(self.metadata),
         )
+
+
+class BasicBackend:
+    def __init__(self):
+        self.docs = {}
+
+    def read(self, path):
+        return self.docs.get(path)
+
+    def write(self, path, title, content, tags=None, metadata=None):
+        self.docs[path] = Document(
+            path=path,
+            title=title,
+            content=content,
+            tags=tags or [],
+            metadata=metadata or {},
+        )
+        return True
+
+    def list(self, prefix=""):
+        return [
+            doc for path, doc in sorted(self.docs.items())
+            if path.startswith(prefix)
+        ]
+
+    def search(self, query):
+        query = query.lower()
+        return [
+            doc for doc in self.docs.values()
+            if query in doc.title.lower()
+            or query in doc.content.lower()
+            or any(query in tag.lower() for tag in doc.tags)
+        ]
+
+    def delete(self, path):
+        return self.docs.pop(path, None) is not None
 
 
 def make_memory(include_binary_captions=False):
@@ -174,3 +211,53 @@ def test_generated_semantic_tools_are_conditional():
     output = tool_map["SemanticSearchKnowledge"](query="navigation").run()
     assert "docs/concept.md" in output
     assert "Navigate to: docs/concept.md" in output
+
+
+def test_create_tools_names_match_backend_capabilities():
+    base_tools = {
+        "Navigate",
+        "NavigateUp",
+        "ListLocations",
+        "SearchKnowledge",
+        "ReadDocument",
+        "WriteDocument",
+        "AppendToDocument",
+        "ListTags",
+        "FindByTag",
+        "FindByTags",
+        "AddTags",
+        "RemoveTags",
+        "SetTags",
+    }
+    storage_tools = {
+        "ListVersions",
+        "ReadVersion",
+        "CompareVersions",
+        "ShowVersionContext",
+        "RollbackToVersion",
+        "AddReference",
+        "RemoveReference",
+        "ListReferences",
+        "FollowReferences",
+        "DescribeBinary",
+    }
+    semantic_tools = {
+        "SemanticSearchKnowledge",
+        "HybridSearchKnowledge",
+    }
+
+    basic_names = {
+        tool.__name__
+        for tool in NavigableMemory(BasicBackend()).create_tools()
+    }
+    assert basic_names == base_tools
+
+    capable_names = {
+        tool.__name__
+        for tool in NavigableMemory(InMemoryBackend()).create_tools()
+    }
+    assert capable_names == base_tools | storage_tools
+
+    memory, _ = make_memory()
+    semantic_names = {tool.__name__ for tool in memory.create_tools()}
+    assert semantic_names == base_tools | storage_tools | semantic_tools

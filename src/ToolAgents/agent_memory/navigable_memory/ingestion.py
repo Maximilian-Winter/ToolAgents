@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Dict, Iterable, List, Optional, Tuple
 
 if TYPE_CHECKING:
-    from .navigable_memory import NavigableMemory
+    from .core import NavigableMemory
 
 
 DEFAULT_TEXT_EXTENSIONS: Tuple[str, ...] = (
