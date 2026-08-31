@@ -127,6 +127,9 @@ This installs:
 
 - `mcp[cli]`
 
+The generic ToolAgents tool CLI is installed with the base package as
+`toolagents-tools`. MCP client/server adapters require the `mcp` extra.
+
 ### Complete Installation
 
 To install ToolAgents with all optional dependencies:

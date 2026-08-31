@@ -264,6 +264,6 @@ if harness.turn_count > 0:
     # Add all conversation messages
     history.add_messages(harness.messages)
     history.save_to_json("coding_agent_history.json")
-    print(f"\nConversation saved to coding_agent_history.json")
+    print("\nConversation saved to coding_agent_history.json")
     print(f"Total turns: {harness.turn_count}")
     print(f"Total tokens used: {harness.context_state.total_tokens_used}")

@@ -18,7 +18,7 @@ from ToolAgents.provider import (
 
 from dotenv import load_dotenv
 
-from ToolAgents.utilities.mcp_session import MCPServerTools
+from ToolAgents.tool_adapters.mcp_client import load_mcp_tools_from_http
 
 load_dotenv()
 
@@ -52,10 +52,11 @@ settings.top_p = 1.0
 #tools = loop.run_until_complete(mcp_server_tools.load_from_stdio_server(server_params=server_params))
 #while loop.is_running():
 #    sleep(0.5)
-mcp_server_tools = MCPServerTools()
 loop = asyncio.new_event_loop()
 asyncio.set_event_loop(loop)
-tools = loop.run_until_complete(mcp_server_tools.load_from_http_server(server_kwargs={"url": "http://127.0.0.1:8042/mcp"}))
+tools = loop.run_until_complete(
+    load_mcp_tools_from_http(server_kwargs={"url": "http://127.0.0.1:8042/mcp"})
+)
 while loop.is_running():
     sleep(0.5)
 

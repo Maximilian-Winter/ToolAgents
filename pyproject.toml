@@ -95,6 +95,9 @@ email = "maximilian.winter.91@gmail.com"
 Homepage = "https://github.com/Maximilian-Winter/ToolAgents"
 "Bug Tracker" = "https://github.com/Maximilian-Winter/ToolAgents/issues"
 
+[project.scripts]
+toolagents-tools = "ToolAgents.tool_adapters.cli:main"
+
 [tool.setuptools.packages.find]
 where = ["src"]
 

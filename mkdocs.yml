@@ -45,6 +45,7 @@ nav:
   - Components:
     - Agents: components/agents.md
     - Tools: components/tools.md
+    - Tool Adapters: components/tool-adapters.md
     - Providers: components/providers.md
     - Messages: components/messages.md
   - API Reference:
