@@ -1,45 +1,30 @@
-# async_harness.py — Async version of AgentHarness wrapping AsyncChatToolAgent + ContextManager.
+# async_harness.py - Async AgentHarness wrapper around AsyncChatToolAgent.
+from __future__ import annotations
+
 import asyncio
-from typing import List, Optional, AsyncGenerator, TYPE_CHECKING
+from typing import AsyncGenerator, List, Optional, TYPE_CHECKING
 
 from ToolAgents.agents.chat_tool_agent import AsyncChatToolAgent
-from ToolAgents.context_manager.context_manager import ContextManager, create_context_manager
-from ToolAgents.context_manager.events import ContextEvent
-from ToolAgents.data_models.messages import ChatMessage, ChatMessageRole, ToolCallResultContent
+from ToolAgents.context_manager.context_manager import ContextManager
+from ToolAgents.data_models.messages import ChatMessage
 from ToolAgents.data_models.responses import ChatResponse, ChatResponseChunk
-from ToolAgents.function_tool import FunctionTool, ToolRegistry
+from ToolAgents.function_tool import FunctionTool
 from ToolAgents.provider.llm_provider import AsyncChatAPIProvider, ProviderSettings
 
 from .config import HarnessConfig
-from .events import HarnessEvent, HarnessEventData, HarnessEventBus
-from .io_handlers import IOHandler, ConsoleIOHandler
+from .events import HarnessEvent, HarnessEventBus, HarnessEventData
+from .extensions import handle_slash_command
+from .io_handlers import ConsoleIOHandler, IOHandler
+from .prompt_composer import PromptComposer
+from .runtime import HarnessRuntime
+from .smart_messages import ExpiryAction, MessageLifecycle, SmartMessageManager
 
 if TYPE_CHECKING:
     from ToolAgents.extensions.manager import ExtensionManager as _ExtensionManager
 
 
 class AsyncAgentHarness:
-    """Async version of AgentHarness — wraps AsyncChatToolAgent + ContextManager.
-
-    The async harness is the OUTER loop around the async agent. It manages:
-    - The growing message list across user turns
-    - System prompt (always prepended, never trimmed)
-    - Context window management (trim before, track after)
-    - Tool registration
-    - Turn lifecycle and event hooks
-    - Interactive async REPL or programmatic use
-
-    Usage:
-        harness = create_async_harness(provider=my_async_provider, system_prompt="You are helpful.")
-        harness.add_tool(AsyncFunctionTool(my_async_function))
-
-        # Programmatic
-        print(await harness.chat("Hello!"))
-        print(await harness.chat("Do something"))
-
-        # Or interactive REPL
-        await harness.run()
-    """
+    """Async wrapper around AsyncChatToolAgent + shared HarnessRuntime."""
 
     def __init__(
         self,
@@ -50,189 +35,97 @@ class AsyncAgentHarness:
         settings: Optional[ProviderSettings] = None,
         log_output: bool = False,
         extension_manager: Optional["_ExtensionManager"] = None,
+        prompt_composer: Optional[PromptComposer] = None,
+        smart_message_manager: Optional[SmartMessageManager] = None,
     ):
-        """Initialize the async harness.
-
-        Args:
-            provider: The async LLM provider.
-            system_prompt: System prompt for the agent. Ignored if config is provided.
-            config: Full HarnessConfig. If None, one is created from system_prompt.
-            context_manager: Optional pre-configured ContextManager.
-            settings: Provider settings (temperature, max_tokens, etc.).
-            log_output: Whether to enable agent-level logging.
-            extension_manager: Optional ExtensionManager for skill/extension support.
-        """
-        # Config
         if config is None:
             config = HarnessConfig(system_prompt=system_prompt)
-        self.config = config
 
-        # Agent (composition)
         self._agent = AsyncChatToolAgent(chat_api=provider, debug_output=log_output)
-
-        # Context manager
-        if context_manager is not None:
-            self._context_manager = context_manager
-        elif config.context_manager_config:
-            self._context_manager = create_context_manager(**config.context_manager_config)
-        else:
-            self._context_manager = create_context_manager()
-
-        # Tool registry
-        self._tool_registry = ToolRegistry()
-
-        # Provider settings
         self._settings = settings
-
-        # Conversation state
-        self._messages: List[ChatMessage] = []
-        self._turn_count: int = 0
-        self._stopped: bool = False
-        self._budget_exceeded: bool = False
-
-        # Harness event bus
-        self._events = HarnessEventBus()
-
-        # Wire up budget exceeded from context manager
-        self._context_manager.events.on(
-            ContextEvent.BUDGET_EXCEEDED,
-            self._on_budget_exceeded,
+        self._runtime = HarnessRuntime(
+            config=config,
+            context_manager=context_manager,
+            extension_manager=extension_manager,
+            prompt_composer=prompt_composer,
+            smart_message_manager=smart_message_manager,
         )
 
-        # Extension manager (optional)
-        self._extension_manager = extension_manager
+        self.config = self._runtime.config
+        self._context_manager = self._runtime.context_manager
+        self._prompt_composer = self._runtime.prompt_composer
+        self._smart_message_manager = self._runtime.smart_messages
+        self._tool_registry = self._runtime.tool_registry
+        self._events = self._runtime.events
+        self._extension_manager = self._runtime.extension_manager
 
     # --- Tool Management ---
 
     def add_tool(self, tool: FunctionTool) -> "AsyncAgentHarness":
         """Register a tool. Returns self for chaining."""
-        self._tool_registry.add_tool(tool)
+        self._runtime.add_tool(tool)
         return self
 
     def add_tools(self, tools: List[FunctionTool]) -> "AsyncAgentHarness":
         """Register multiple tools. Returns self for chaining."""
-        self._tool_registry.add_tools(tools)
+        self._runtime.add_tools(tools)
         return self
 
     def remove_tool(self, name: str) -> "AsyncAgentHarness":
         """Remove a tool by name. Returns self for chaining."""
-        self._tool_registry.remove(name)
+        self._runtime.remove_tool(name)
         return self
+
+    # --- Smart Message Convenience API ---
+
+    def add_smart_message(
+        self,
+        message: ChatMessage,
+        lifecycle: Optional[MessageLifecycle] = None,
+    ) -> None:
+        """Add a message with optional lifecycle to the conversation."""
+        self._runtime.add_smart_message(message, lifecycle)
+
+    def add_ephemeral_message(
+        self,
+        message: ChatMessage,
+        ttl: int = 3,
+        on_expire: ExpiryAction = ExpiryAction.REMOVE,
+    ) -> None:
+        """Add a message that expires after a number of turns."""
+        self._runtime.add_ephemeral_message(message, ttl=ttl, on_expire=on_expire)
+
+    def add_pinned_message(self, message: ChatMessage) -> None:
+        """Add a permanent, pinned message."""
+        self._runtime.add_pinned_message(message)
 
     # --- Core Async API ---
 
     async def chat(self, user_input: str) -> str:
-        """Send a message, get a response string. Simplest async API.
-
-        Args:
-            user_input: The user's message text.
-
-        Returns:
-            The agent's response as a string.
-        """
+        """Send a message, get a response string."""
         response = await self.chat_response(user_input)
         return response.response
 
     async def chat_response(self, user_input: str) -> ChatResponse:
-        """Send a message, get a full ChatResponse with message history.
+        """Send a message, get a full ChatResponse with message history."""
+        self._runtime.begin_turn(user_input)
+        send_messages = self._runtime.prepare_messages()
 
-        Args:
-            user_input: The user's message text.
-
-        Returns:
-            ChatResponse containing the full message list and response text.
-        """
-        self._check_stopped()
-        self._turn_count += 1
-
-        # Emit TURN_START
-        self._events.emit(
-            HarnessEvent.TURN_START,
-            HarnessEventData(
-                event=HarnessEvent.TURN_START,
-                turn_number=self._turn_count,
-                user_input=user_input,
-            ),
-        )
-
-        # Build user message and append to conversation
-        user_msg = ChatMessage.create_user_message(user_input)
-        self._messages.append(user_msg)
-        self._context_manager.notify_user_message(user_msg)
-
-        # Prepare messages: system prompt + trimmed conversation (as a COPY)
-        send_messages = self._prepare_messages()
-
-        # Call async agent — it handles tool-call loop internally
         response = await self._agent.get_response(
             messages=send_messages,
             tool_registry=self._tool_registry,
             settings=self._settings,
         )
 
-        # Post-process: walk last_messages_buffer for context tracking
-        self._process_agent_buffer(self._agent.last_messages_buffer)
-
-        # Append buffer messages to our conversation history
-        for msg in self._agent.last_messages_buffer:
-            self._messages.append(msg)
-
-        # Notify turn complete
-        self._context_manager.notify_turn_complete()
-
-        # Emit events
-        self._events.emit(
-            HarnessEvent.AGENT_RESPONSE,
-            HarnessEventData(
-                event=HarnessEvent.AGENT_RESPONSE,
-                turn_number=self._turn_count,
-                response=response,
-            ),
-        )
-        self._events.emit(
-            HarnessEvent.TURN_END,
-            HarnessEventData(
-                event=HarnessEvent.TURN_END,
-                turn_number=self._turn_count,
-                response=response,
-            ),
-        )
-
-        # Check max turns
-        if 0 < self.config.max_turns <= self._turn_count:
-            self._stopped = True
-
+        self._runtime.process_agent_buffer(self._agent.last_messages_buffer)
+        self._runtime.complete_turn(response)
         return response
 
     async def chat_stream(self, user_input: str) -> AsyncGenerator[ChatResponseChunk, None]:
-        """Send a message, yield streaming chunks.
+        """Send a message, yield streaming chunks."""
+        self._runtime.begin_turn(user_input)
+        send_messages = self._runtime.prepare_messages()
 
-        Args:
-            user_input: The user's message text.
-
-        Yields:
-            ChatResponseChunk objects. The final chunk has finished=True and
-            contains the finished_response.
-        """
-        self._check_stopped()
-        self._turn_count += 1
-
-        self._events.emit(
-            HarnessEvent.TURN_START,
-            HarnessEventData(
-                event=HarnessEvent.TURN_START,
-                turn_number=self._turn_count,
-                user_input=user_input,
-            ),
-        )
-
-        user_msg = ChatMessage.create_user_message(user_input)
-        self._messages.append(user_msg)
-        self._context_manager.notify_user_message(user_msg)
-
-        send_messages = self._prepare_messages()
-
-        # Yield all chunks from the agent's async streaming response
         finished_response = None
         async for chunk in self._agent.get_streaming_response(
             messages=send_messages,
@@ -243,43 +136,11 @@ class AsyncAgentHarness:
             if chunk.finished and chunk.finished_response is not None:
                 finished_response = chunk.finished_response
 
-        # Post-process buffer (only safe after generator is fully exhausted)
-        self._process_agent_buffer(self._agent.last_messages_buffer)
-        for msg in self._agent.last_messages_buffer:
-            self._messages.append(msg)
-
-        self._context_manager.notify_turn_complete()
-
-        if finished_response:
-            self._events.emit(
-                HarnessEvent.AGENT_RESPONSE,
-                HarnessEventData(
-                    event=HarnessEvent.AGENT_RESPONSE,
-                    turn_number=self._turn_count,
-                    response=finished_response,
-                ),
-            )
-        self._events.emit(
-            HarnessEvent.TURN_END,
-            HarnessEventData(
-                event=HarnessEvent.TURN_END,
-                turn_number=self._turn_count,
-                response=finished_response,
-            ),
-        )
-
-        if 0 < self.config.max_turns <= self._turn_count:
-            self._stopped = True
+        self._runtime.process_agent_buffer(self._agent.last_messages_buffer)
+        self._runtime.complete_turn(finished_response)
 
     async def run(self, io_handler: IOHandler = None) -> None:
-        """Start the interactive async REPL loop.
-
-        Uses asyncio.to_thread for blocking input() calls so the event
-        loop remains responsive.
-
-        Args:
-            io_handler: I/O handler for input/output. Defaults to ConsoleIOHandler.
-        """
+        """Start the interactive async REPL loop."""
         if io_handler is None:
             io_handler = ConsoleIOHandler()
 
@@ -288,29 +149,22 @@ class AsyncAgentHarness:
             HarnessEventData(event=HarnessEvent.HARNESS_START),
         )
 
-        while not self._stopped:
-            # Use asyncio.to_thread for blocking input
+        while not self._runtime.stopped:
             user_input = await asyncio.to_thread(io_handler.get_input)
             if user_input is None:
                 break
-
             if not user_input.strip():
                 continue
 
-            # Slash command interception for extensions
-            if (user_input.strip().startswith("/")
-                    and self._extension_manager is not None):
-                command = user_input.strip()[1:]
-                result = self._extension_manager.try_handle_command(command)
-                if result is not None:
-                    msg = ChatMessage.create_system_message(result.content)
-                    self._messages.append(msg)
-                    if result.pin_in_context:
-                        self._context_manager.pin_message(msg.id)
-                    if result.tools:
-                        self.add_tools(result.tools)
-                    io_handler.on_text(f"Skill '{command}' activated.")
-                    continue
+            confirmation = handle_slash_command(
+                user_input,
+                self._extension_manager,
+                self._smart_message_manager,
+                self.add_tools,
+            )
+            if confirmation is not None:
+                io_handler.on_text(confirmation)
+                continue
 
             try:
                 if self.config.streaming:
@@ -325,7 +179,7 @@ class AsyncAgentHarness:
                     HarnessEvent.ERROR,
                     HarnessEventData(
                         event=HarnessEvent.ERROR,
-                        turn_number=self._turn_count,
+                        turn_number=self._runtime.turn_count,
                         error=e,
                     ),
                 )
@@ -335,71 +189,48 @@ class AsyncAgentHarness:
             HarnessEventData(event=HarnessEvent.HARNESS_STOP),
         )
 
-    # --- Internal Methods (sync — no I/O) ---
+    # --- Compatibility helpers ---
 
     def _prepare_messages(self) -> List[ChatMessage]:
-        """Build the message list for the agent: system prompt + context-managed conversation."""
-        system_msg = ChatMessage.create_system_message(self.config.system_prompt)
-        full_messages = [system_msg] + self._messages
-
-        tools_list = list(self._tool_registry.tools.values())
-        trimmed = self._context_manager.prepare_messages(
-            full_messages, tools=tools_list
-        )
-
-        # Always return a copy — the agent mutates the list in-place
-        return list(trimmed)
+        """Build the message list for the agent."""
+        return self._runtime.prepare_messages()
 
     def _process_agent_buffer(self, buffer: List[ChatMessage]) -> None:
         """Walk the agent's last_messages_buffer and update context tracking."""
-        for msg in buffer:
-            if msg.role == ChatMessageRole.Assistant:
-                if msg.token_usage is not None:
-                    self._context_manager.on_response(msg)
-                if msg.contains_tool_call():
-                    self._context_manager.notify_tool_call(msg)
-            elif msg.role == ChatMessageRole.Tool:
-                self._context_manager.notify_tool_result(msg)
-
-                # Check for extension activation results that need pinning
-                if self._extension_manager is not None:
-                    for content in msg.content:
-                        if (isinstance(content, ToolCallResultContent)
-                                and content.tool_call_name == "activate_skill"):
-                            pending = self._extension_manager._pending_activations
-                            for act_name in list(pending.keys()):
-                                act_result = pending[act_name]
-                                if act_result.content in content.tool_call_result:
-                                    if act_result.pin_in_context:
-                                        self._context_manager.pin_message(msg.id)
-                                    if act_result.tools:
-                                        self.add_tools(act_result.tools)
-                                    del pending[act_name]
-                                    break
+        self._runtime.process_agent_buffer(buffer)
 
     def _on_budget_exceeded(self, event_data) -> None:
-        """Handler for context manager budget exceeded event."""
-        self._budget_exceeded = True
-        if self.config.stop_on_budget_exceeded:
-            self._stopped = True
+        self._runtime._on_budget_exceeded(event_data)
 
     def _check_stopped(self) -> None:
-        """Raise if the harness is stopped."""
-        if self._stopped:
-            reason = "budget exceeded" if self._budget_exceeded else "max turns reached"
-            raise RuntimeError(f"Harness is stopped ({reason}).")
+        self._runtime.check_stopped()
 
     # --- State Access ---
 
     @property
     def messages(self) -> List[ChatMessage]:
-        """Current conversation messages (copy)."""
-        return list(self._messages)
+        """Current active conversation messages."""
+        return self._runtime.messages
+
+    @property
+    def _messages(self) -> List[ChatMessage]:
+        """Legacy alias for the active message list."""
+        return self.messages
+
+    @property
+    def prompt_composer(self) -> PromptComposer:
+        """The PromptComposer for modular system prompt management."""
+        return self._prompt_composer
+
+    @property
+    def smart_messages(self) -> SmartMessageManager:
+        """The SmartMessageManager for lifecycle-aware messages."""
+        return self._smart_message_manager
 
     @property
     def turn_count(self) -> int:
-        """Number of completed user turns."""
-        return self._turn_count
+        """Number of user turns started."""
+        return self._runtime.turn_count
 
     @property
     def context_state(self):
@@ -424,21 +255,18 @@ class AsyncAgentHarness:
     @property
     def is_stopped(self) -> bool:
         """Whether the harness has been stopped."""
-        return self._stopped
+        return self._runtime.stopped
 
     def reset(self) -> None:
         """Reset conversation state for a new conversation."""
-        self._messages = []
-        self._turn_count = 0
-        self._stopped = False
-        self._budget_exceeded = False
+        self._runtime.reset()
 
     def set_system_prompt(self, prompt: str) -> None:
-        """Change the system prompt. Takes effect on the next chat() call."""
-        self.config.system_prompt = prompt
+        """Change the base instructions prompt module."""
+        self._runtime.set_system_prompt(prompt)
 
     def set_settings(self, settings: ProviderSettings) -> None:
-        """Change the provider settings (temperature, max_tokens, etc.)."""
+        """Change the provider settings."""
         self._settings = settings
 
 
@@ -453,64 +281,28 @@ def create_async_harness(
     tools: Optional[List[FunctionTool]] = None,
     log_output: bool = False,
     extension_manager=None,
+    prompt_composer: Optional[PromptComposer] = None,
+    smart_message_manager: Optional[SmartMessageManager] = None,
     **context_kwargs,
 ) -> AsyncAgentHarness:
-    """Convenience factory: create a fully configured AsyncAgentHarness in one call.
+    """Convenience factory: create a fully configured AsyncAgentHarness."""
+    from .factories import create_async_harness as _create_async_harness
 
-    Args:
-        provider: The async LLM provider.
-        system_prompt: System prompt for the agent.
-        max_context_tokens: Max context window size in tokens.
-        max_turns: Maximum user turns (-1 for unlimited).
-        streaming: Whether to stream responses by default in run().
-        total_budget_tokens: Optional hard cap on total tokens for the conversation.
-        settings: Provider settings (temperature, max_tokens, etc.).
-        tools: Optional list of FunctionTools to register.
-        log_output: Whether to enable agent-level logging.
-        extension_manager: Optional ExtensionManager for skill/extension support.
-        **context_kwargs: Additional kwargs for create_context_manager.
-
-    Returns:
-        A configured AsyncAgentHarness ready for use.
-    """
-    context_config = {
-        "max_context_tokens": max_context_tokens,
-        **context_kwargs,
-    }
-    if total_budget_tokens is not None:
-        context_config["total_budget_tokens"] = total_budget_tokens
-
-    # Append extension catalog to system prompt if extension_manager provided
-    if extension_manager is not None:
-        catalog = extension_manager.build_catalog()
-        if catalog:
-            system_prompt = system_prompt + "\n\n" + catalog
-
-    config = HarnessConfig(
+    return _create_async_harness(
+        provider=provider,
         system_prompt=system_prompt,
+        max_context_tokens=max_context_tokens,
         max_turns=max_turns,
         streaming=streaming,
-        context_manager_config=context_config,
-    )
-
-    harness = AsyncAgentHarness(
-        provider=provider,
-        config=config,
+        total_budget_tokens=total_budget_tokens,
         settings=settings,
+        tools=tools,
         log_output=log_output,
         extension_manager=extension_manager,
+        prompt_composer=prompt_composer,
+        smart_message_manager=smart_message_manager,
+        **context_kwargs,
     )
-
-    if tools:
-        harness.add_tools(tools)
-
-    # Register extension tools
-    if extension_manager is not None:
-        ext_tools = extension_manager.get_tools()
-        if ext_tools:
-            harness.add_tools(ext_tools)
-
-    return harness
 
 
 def create_async_harness_with_extensions(
@@ -520,48 +312,13 @@ def create_async_harness_with_extensions(
     scan_defaults: bool = True,
     **kwargs,
 ) -> AsyncAgentHarness:
-    """Create an async harness with extension system pre-configured.
+    """Create an async harness with extension system pre-configured."""
+    from .factories import create_async_harness_with_extensions as _create
 
-    Sets up ExtensionManager + SkillFolderHandler, scans for skills,
-    and passes everything to create_async_harness().
-
-    Args:
-        provider: The async LLM provider.
-        system_prompt: Base system prompt.
-        skill_paths: Additional directories to scan for skills.
-        scan_defaults: Whether to scan default locations (.agents/skills/).
-        **kwargs: Additional arguments passed to create_async_harness().
-
-    Returns:
-        A configured AsyncAgentHarness with extensions enabled.
-    """
-    from pathlib import Path
-    from ToolAgents.extensions import ExtensionManager, SkillFolderHandler, ExtensionScanPath
-
-    manager = ExtensionManager()
-    manager.register_handler(SkillFolderHandler())
-
-    if scan_defaults:
-        cwd = Path.cwd()
-        home = Path.home()
-        for subdir in [".agents/skills", ".claude/skills"]:
-            project_path = cwd / subdir
-            if project_path.is_dir():
-                manager.add_scan_path(ExtensionScanPath(path=project_path, scope="project", priority=10))
-        for subdir in [".agents/skills", ".claude/skills"]:
-            user_path = home / subdir
-            if user_path.is_dir():
-                manager.add_scan_path(ExtensionScanPath(path=user_path, scope="user", priority=0))
-
-    if skill_paths:
-        for sp in skill_paths:
-            manager.add_scan_path(ExtensionScanPath(path=Path(sp), scope="project", priority=10))
-
-    manager.discover()
-
-    return create_async_harness(
+    return _create(
         provider=provider,
         system_prompt=system_prompt,
-        extension_manager=manager,
+        skill_paths=skill_paths,
+        scan_defaults=scan_defaults,
         **kwargs,
     )

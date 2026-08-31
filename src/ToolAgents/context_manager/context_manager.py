@@ -1,5 +1,5 @@
 # context_manager.py — Core ContextManager orchestrating trimming, tracking, and events.
-from typing import List, Optional
+from typing import Iterable, List, Optional
 
 from ToolAgents.data_models.messages import ChatMessage
 from .models import ContextManagerConfig, ContextState
@@ -38,8 +38,8 @@ class ContextManager:
         self.config = config
         self.tracker = TokenTracker(config)
         self.events = EventBus()
-        self._strategy = self._create_strategy(config.strategy)
         self._summarizer: Optional[SummarizationProvider] = None
+        self._strategy = self._create_strategy(config.strategy)
 
     # --- Core API ---
 
@@ -64,7 +64,7 @@ class ContextManager:
             ContextEvent.PRE_REQUEST,
             EventData(
                 event=ContextEvent.PRE_REQUEST,
-                state=self.tracker.state.model_copy(),
+                state=self._state_snapshot(),
                 messages=messages,
                 metadata={"tools_count": len(tools) if tools else 0},
             ),
@@ -83,7 +83,7 @@ class ContextManager:
                 ContextEvent.MESSAGES_TRIMMED,
                 EventData(
                     event=ContextEvent.MESSAGES_TRIMMED,
-                    state=self.tracker.state.model_copy(),
+                    state=self._state_snapshot(),
                     messages=kept,
                     trimmed_messages=trimmed,
                 ),
@@ -107,7 +107,7 @@ class ContextManager:
             ContextEvent.POST_RESPONSE,
             EventData(
                 event=ContextEvent.POST_RESPONSE,
-                state=self.tracker.state.model_copy(),
+                state=self._state_snapshot(),
                 response=response,
             ),
         )
@@ -118,7 +118,7 @@ class ContextManager:
                 ContextEvent.BUDGET_EXCEEDED,
                 EventData(
                     event=ContextEvent.BUDGET_EXCEEDED,
-                    state=self.tracker.state.model_copy(),
+                    state=self._state_snapshot(),
                     response=response,
                     metadata={
                         "total_used": self.tracker.state.total_tokens_used,
@@ -131,7 +131,7 @@ class ContextManager:
                 ContextEvent.BUDGET_WARNING,
                 EventData(
                     event=ContextEvent.BUDGET_WARNING,
-                    state=self.tracker.state.model_copy(),
+                    state=self._state_snapshot(),
                     response=response,
                     metadata={
                         "total_used": self.tracker.state.total_tokens_used,
@@ -155,7 +155,7 @@ class ContextManager:
             ContextEvent.TOOL_CALL,
             EventData(
                 event=ContextEvent.TOOL_CALL,
-                state=self.tracker.state.model_copy(),
+                state=self._state_snapshot(),
                 response=message,
             ),
         )
@@ -166,7 +166,7 @@ class ContextManager:
             ContextEvent.TOOL_RESULT,
             EventData(
                 event=ContextEvent.TOOL_RESULT,
-                state=self.tracker.state.model_copy(),
+                state=self._state_snapshot(),
                 response=message,
             ),
         )
@@ -177,7 +177,7 @@ class ContextManager:
             ContextEvent.USER_MESSAGE,
             EventData(
                 event=ContextEvent.USER_MESSAGE,
-                state=self.tracker.state.model_copy(),
+                state=self._state_snapshot(),
                 response=message,
             ),
         )
@@ -188,7 +188,7 @@ class ContextManager:
             ContextEvent.TURN_COMPLETE,
             EventData(
                 event=ContextEvent.TURN_COMPLETE,
-                state=self.tracker.state.model_copy(),
+                state=self._state_snapshot(),
             ),
         )
 
@@ -205,6 +205,18 @@ class ContextManager:
     def is_pinned(self, message_id: str) -> bool:
         """Check if a message is pinned."""
         return message_id in self.tracker.state.pinned_message_ids
+
+    def set_pinned_message_ids(self, ids: Iterable[str]) -> None:
+        """Replace the set of messages that are exempt from trimming."""
+        self.tracker.state.pinned_message_ids = set(ids)
+
+    def clear_pins(self) -> None:
+        """Remove all message pins."""
+        self.tracker.state.pinned_message_ids.clear()
+
+    def reset(self) -> None:
+        """Reset token accounting, trimming counts, and pinned message state."""
+        self.tracker.state = ContextState()
 
     # --- Configuration ---
 
@@ -225,9 +237,13 @@ class ContextManager:
     @property
     def state(self) -> ContextState:
         """Current context manager state (read-only snapshot)."""
-        return self.tracker.state.model_copy()
+        return self._state_snapshot()
 
     # --- Internal ---
+
+    def _state_snapshot(self) -> ContextState:
+        """Return a deep copy of mutable context state for public/event use."""
+        return self.tracker.state.model_copy(deep=True)
 
     def _create_strategy(self, strategy_name: str) -> ContextStrategy:
         """Create a strategy instance from its name."""

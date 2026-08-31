@@ -81,9 +81,34 @@ async for chunk in agent.get_streaming_response(
     print(chunk.chunk, end="", flush=True)
 ```
 
+## AgentHarness
+
+For longer-running assistants, use `AgentHarness` instead of writing the turn
+loop yourself. It wraps `ChatToolAgent` with prompt composition, message
+lifecycle helpers, context trimming, token tracking, tools, and event hooks.
+
+```python
+from ToolAgents.agent_harness import create_harness
+
+harness = create_harness(
+    provider=api,
+    system_prompt="You are helpful.",
+    max_context_tokens=128000,
+)
+
+harness.prompt_composer.add_module(
+    "runtime_context",
+    position=10,
+    content_fn=lambda: current_state_as_text(),
+)
+
+print(harness.chat("Hello"))
+```
+
+Use `ContextManager` directly only when you need a fully custom agent loop.
+
 ## Choosing an Agent
 
 - Use `ChatToolAgent` for most applications.
 - Use `AsyncChatToolAgent` when the surrounding app is async.
-- Compose explicit harness, memory, prompt, state, and persistence helpers for
-  higher-level workflows.
+- Use `AgentHarness` or `AsyncAgentHarness` when you want a managed turn loop.

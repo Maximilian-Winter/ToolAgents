@@ -7,6 +7,8 @@ context management using the AgentHarness.
 
 The harness wraps ChatToolAgent + ContextManager so you get:
 - Automatic conversation persistence across turns
+- Prompt modules via harness.prompt_composer
+- Ephemeral or pinned messages via harness.add_ephemeral_message()
 - Context window management (trimming when approaching limits)
 - Token usage tracking
 - Interactive REPL loop
@@ -19,6 +21,7 @@ from dotenv import load_dotenv
 
 from ToolAgents.provider import OpenAIChatAPI
 from ToolAgents.agent_harness import create_harness
+from ToolAgents.data_models.messages import ChatMessage
 
 load_dotenv()
 
@@ -43,6 +46,19 @@ harness = create_harness(
     provider=api,
     system_prompt="You are a friendly and helpful assistant. Be concise in your responses.",
     max_context_tokens=128000,
+)
+
+# Optional: add dynamic prompt context that is compiled before each turn.
+harness.prompt_composer.add_module(
+    "session_style",
+    position=10,
+    content_fn=lambda: "Current session style: concise, practical answers.",
+)
+
+# Optional: inject short-lived context without manually managing message history.
+harness.add_ephemeral_message(
+    ChatMessage.create_system_message("For the next few turns, prefer examples."),
+    ttl=3,
 )
 
 # --- Run the interactive REPL ---

@@ -2,9 +2,10 @@
 Standalone Context Manager Example
 ====================================
 
-Shows how to use the ContextManager directly with a ChatToolAgent,
-WITHOUT the AgentHarness. This is useful when you want full control
-over the conversation loop but still want automatic context management.
+Advanced/manual-control example showing how to use the ContextManager
+directly with a ChatToolAgent, WITHOUT the AgentHarness. Prefer
+AgentHarness for normal applications; use this pattern only when you
+need to own every step of the conversation loop.
 
 The ContextManager sits between you and the agent:
 1. You build messages
@@ -14,7 +15,6 @@ The ContextManager sits between you and the agent:
 """
 
 import os
-from copy import copy
 
 from dotenv import load_dotenv
 
