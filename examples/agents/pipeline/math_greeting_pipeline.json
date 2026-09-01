@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "tool_plugins": [
+    {
+      "name": "math",
+      "source": "json_pipeline_math_tools:create_tools"
+    }
+  ],
+  "processes": [
+    {
+      "process_type": "sequential",
+      "process_name": "math_greeting",
+      "steps": [
+        {
+          "step_name": "math_result",
+          "system_message": "You are a math assistant that performs mathematical operations.",
+          "prompt_template": "Perform the following math operation: {operation} {num1} and {num2}",
+          "tools": [
+            {
+              "plugin": "math",
+              "tool_name": "math_operation"
+            }
+          ]
+        },
+        {
+          "step_name": "greeting",
+          "system_message": "You are a greeting assistant that generates personalized greetings.",
+          "prompt_template": "Generate a personalized greeting for a person named {name} who just received the following math result: {math_result}"
+        }
+      ]
+    }
+  ]
+}
