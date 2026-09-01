@@ -14,8 +14,11 @@ from ToolAgents.data_models.messages import ChatMessage
 
 
 class BaseToolAgent(ABC):
-    def __init__(self):
+    def __init__(
+        self, observability_handler: "AgentObservabilityHandler | None" = None
+    ):
         self.last_messages_buffer = []
+        self.observability_handler = observability_handler
 
     @abstractmethod
     def get_default_settings(self) -> ProviderSettings:
@@ -120,8 +123,11 @@ class BaseToolAgent(ABC):
 
 
 class AsyncBaseToolAgent(ABC):
-    def __init__(self):
+    def __init__(
+        self, observability_handler: "AgentObservabilityHandler | None" = None
+    ):
         self.last_messages_buffer = []
+        self.observability_handler = observability_handler
 
     @abstractmethod
     def get_default_settings(self) -> ProviderSettings:

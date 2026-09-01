@@ -3,7 +3,11 @@ import uuid
 from typing import Optional, List, Any, Generator, AsyncGenerator
 
 ToolRegistry = type
-from ToolAgents.agents.base_llm_agent import BaseToolAgent, AsyncBaseToolAgent
+from ToolAgents.agents.base_llm_agent import (
+    AgentObservabilityHandler,
+    AsyncBaseToolAgent,
+    BaseToolAgent,
+)
 from ToolAgents.data_models.responses import (
     ChatResponse,
     ChatResponseChunk,
@@ -29,8 +33,9 @@ class ChatToolAgent(BaseToolAgent):
         chat_api: ChatAPIProvider,
         log_output: bool = False,
         log_to_file: bool = False,
+        observability_handler: AgentObservabilityHandler | None = None,
     ):
-        super().__init__()
+        super().__init__(observability_handler=observability_handler)
         from ToolAgents import ToolRegistry
         self.chat_api = chat_api
         self.log_output = log_output
@@ -78,6 +83,14 @@ class ChatToolAgent(BaseToolAgent):
             )
 
         result = self.chat_api.get_response(messages, settings=settings, tools=tools)
+        if self.observability_handler:
+            self.observability_handler.on_request(
+                messages=messages,
+                tool_registry=tool_registry,
+                settings=settings,
+                reset_last_messages_buffer=reset_last_messages_buffer,
+                result_chat_message=result,
+            )
         if self.log_output:
             self.logger.info("Step Output Message:" + result.model_dump_json(indent=4))
         return result
@@ -116,6 +129,16 @@ class ChatToolAgent(BaseToolAgent):
             self.logger.info(
                 "Streaming Step Final Chunk:" + final_chunk.model_dump_json(indent=4)
             )
+        if self.observability_handler and final_chunk is not None:
+            result = final_chunk.get_finished_chat_message()
+            if result is not None:
+                self.observability_handler.on_streaming_request(
+                    messages=messages,
+                    tool_registry=tool_registry,
+                    settings=settings,
+                    reset_last_messages_buffer=reset_last_messages_buffer,
+                    result_chat_message=result,
+                )
 
     def get_response(
         self,
@@ -249,14 +272,18 @@ class ChatToolAgent(BaseToolAgent):
             if tool:
                 call_parameters = tool_call.tool_call_arguments
                 output = tool.execute(call_parameters)
-                content.append(
-                    ToolCallResultContent(
-                        tool_call_result_id=str(uuid.uuid4()),
-                        tool_call_id=tool_call.tool_call_id,
-                        tool_call_name=tool_call.tool_call_name,
-                        tool_call_result=str(output),
-                    )
+                tool_call_result = ToolCallResultContent(
+                    tool_call_result_id=str(uuid.uuid4()),
+                    tool_call_id=tool_call.tool_call_id,
+                    tool_call_name=tool_call.tool_call_name,
+                    tool_call_result=str(output),
                 )
+                content.append(tool_call_result)
+                if self.observability_handler:
+                    self.observability_handler.on_tool_call(
+                        tool_call=tool_call,
+                        tool_call_result=tool_call_result,
+                    )
         tool_message = ChatMessage(
             id=str(uuid.uuid4()),
             role=ChatMessageRole.Tool,
@@ -272,8 +299,13 @@ class ChatToolAgent(BaseToolAgent):
 
 class AsyncChatToolAgent(AsyncBaseToolAgent):
 
-    def __init__(self, chat_api: AsyncChatAPIProvider, debug_output: bool = False):
-        super().__init__()
+    def __init__(
+        self,
+        chat_api: AsyncChatAPIProvider,
+        debug_output: bool = False,
+        observability_handler: AgentObservabilityHandler | None = None,
+    ):
+        super().__init__(observability_handler=observability_handler)
         from ToolAgents.function_tool import ToolRegistry
         self.chat_api = chat_api
         self.debug_output = debug_output
@@ -310,6 +342,14 @@ class AsyncChatToolAgent(AsyncBaseToolAgent):
         result = await self.chat_api.get_response(
             messages, settings=settings, tools=tools
         )
+        if self.observability_handler:
+            self.observability_handler.on_request(
+                messages=messages,
+                tool_registry=tool_registry,
+                settings=settings,
+                reset_last_messages_buffer=reset_last_messages_buffer,
+                result_chat_message=result,
+            )
 
         return result
 
@@ -341,10 +381,23 @@ class AsyncChatToolAgent(AsyncBaseToolAgent):
                 ),
             )
 
+        final_chunk = None
         async for chunk in await self.chat_api.get_streaming_response(
             messages, settings=settings, tools=tools
         ):
             yield chunk
+            if chunk.get_finished():
+                final_chunk = chunk
+        if self.observability_handler and final_chunk is not None:
+            result = final_chunk.get_finished_chat_message()
+            if result is not None:
+                self.observability_handler.on_streaming_request(
+                    messages=messages,
+                    tool_registry=tool_registry,
+                    settings=settings,
+                    reset_last_messages_buffer=reset_last_messages_buffer,
+                    result_chat_message=result,
+                )
 
     async def get_response(
         self,
@@ -481,14 +534,18 @@ class AsyncChatToolAgent(AsyncBaseToolAgent):
                     output = await tool.execute_async(call_parameters)
                 else:
                     output = tool.execute(call_parameters)
-                content.append(
-                    ToolCallResultContent(
-                        tool_call_result_id=str(uuid.uuid4()),
-                        tool_call_id=tool_call.tool_call_id,
-                        tool_call_name=tool_call.tool_call_name,
-                        tool_call_result=str(output),
-                    )
+                tool_call_result = ToolCallResultContent(
+                    tool_call_result_id=str(uuid.uuid4()),
+                    tool_call_id=tool_call.tool_call_id,
+                    tool_call_name=tool_call.tool_call_name,
+                    tool_call_result=str(output),
                 )
+                content.append(tool_call_result)
+                if self.observability_handler:
+                    self.observability_handler.on_tool_call(
+                        tool_call=tool_call,
+                        tool_call_result=tool_call_result,
+                    )
         tool_message = ChatMessage(
             id=str(uuid.uuid4()),
             role=ChatMessageRole.Tool,
