@@ -54,6 +54,28 @@ segment as a section name.
 Set `remove_empty_template_field=False` to leave every unmatched placeholder in
 the output.
 
+!!! warning "Behaviour change"
+
+    Two things about placeholder handling changed when path support was added
+    (unreleased at time of writing; it lands in the first release after 0.3.2).
+    Neither breaks a template that was previously working, but both are worth
+    knowing before upgrading.
+
+    **Placeholder names may now contain `/`.** The pattern widened from
+    `\{(\w+)\}` to `\{([\w/]+)\}`. Text that was always literal is unaffected:
+    a placeholder containing `/` that does not resolve is left exactly as
+    written, so `{a/b}` in an existing prompt still renders as `{a/b}`.
+
+    **A `None` value now counts as absent.** Previously a field set to `None`
+    rendered the literal string `"None"` into the prompt; it is now blanked
+    like any other missing field. This is the one case where output changes for
+    an unmodified template. If you were relying on the old behaviour, pass the
+    string yourself:
+
+    ```python
+    template.generate_message_content(value="None" if value is None else value)
+    ```
+
 ::: ToolAgents.utilities.message_template.MessageTemplate
 
 ::: ToolAgents.utilities.message_template.resolve_template_path
