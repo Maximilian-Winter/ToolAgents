@@ -244,6 +244,29 @@ def parse_tool_reference(reference: Mapping[str, Any] | str) -> tuple[str | None
     return str(plugin_name) if plugin_name else None, str(parsed_tool_name)
 
 
+def _explain_empty_response(process_result: Any) -> str:
+    """Say why a step produced nothing, so the cause is actionable.
+
+    An empty response is nearly always a failure, but it is invisible: it is
+    stored like any other value, and a condition reading it just evaluates
+    false. A reasoning model that exhausts its token budget while thinking is
+    the common cause, and the fix is specific enough to name.
+    """
+
+    messages = getattr(process_result, "messages", None) or []
+    for message in reversed(messages):
+        if getattr(message, "contains_reasoning", None) and message.contains_reasoning():
+            return (
+                "The model produced reasoning but no answer, which usually "
+                "means max_tokens was consumed while thinking. Raise it, "
+                "disable reasoning, or use a non-reasoning model."
+            )
+    return (
+        "The model returned an empty message. Check the model name, the "
+        "prompt, and any max_tokens limit."
+    )
+
+
 # ---------------------------------------------------------------------------
 # Load context
 # ---------------------------------------------------------------------------
@@ -1175,12 +1198,20 @@ class SequentialProcess(Process):
                         f"step:{step.step_name}"
                     )
 
+            response_text = process_result.response or ""
             logger.info(
                 "%s / %s: %d characters",
                 self.process_name,
                 step.step_name,
-                len(process_result.response or ""),
+                len(response_text),
             )
+            if not response_text.strip():
+                logger.warning(
+                    "%s / %s returned no text. %s",
+                    self.process_name,
+                    step.step_name,
+                    _explain_empty_response(process_result),
+                )
 
             # Store step results in the outputs section, so a step can never
             # shadow a caller argument or a flow-control variable.

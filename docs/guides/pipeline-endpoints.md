@@ -111,8 +111,20 @@ providers, so it goes in `extra_settings`. Without a bound, a reasoning model
 can generate for a very long time:
 
 ```json
-{"extra_settings": {"max_tokens": 700}}
+{"extra_settings": {"max_tokens": 1200}}
 ```
+
+!!! warning "Reasoning models need room for both"
+
+    A reasoning model spends tokens thinking before it answers. Set
+    `max_tokens` too low and the budget is gone before any answer is written,
+    so the step returns an **empty string** — which is stored like any other
+    value, and a condition reading it simply evaluates false. A refine loop
+    will happily burn every iteration on nothing.
+
+    A step that returns no text now logs a warning saying so, and says
+    explicitly when the message carried reasoning but no answer. If you see
+    it, raise `max_tokens`, disable reasoning, or use a plain instruct model.
 
 ### Reading keys from a .env file
 

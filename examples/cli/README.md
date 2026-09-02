@@ -21,7 +21,13 @@ OPENROUTER_API_KEY=sk-...
 
 An exported variable wins over the file. Do not commit it.
 
-Each example sets `timeout: 120` and `max_tokens: 700` on its providers. The
+Each example uses `qwen/qwen-2.5-7b-instruct` — a plain instruct model,
+deliberately not a reasoning one. A reasoning model spends its token budget
+thinking first, and if the budget runs out before it answers the step returns
+an empty string. These examples are here to show the mechanism, not to debug a
+token budget.
+
+Each also sets `timeout: 120` and `max_tokens: 1200` on its providers. The
 SDK default is 600 seconds with two retries — half an hour per step — so an
 unbounded workflow can look like it has hung when one response stalls. Progress
 is printed to stderr as each step runs; add `--quiet` to silence it.

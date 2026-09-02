@@ -859,3 +859,66 @@ def test_progress_is_silent_unless_a_caller_asks_for_it(caplog):
         pipeline.run_pipeline()
 
     assert not [r for r in caplog.records if r.levelname == "INFO"]
+
+
+# ---------------------------------------------------------------------------
+# Empty model responses
+# ---------------------------------------------------------------------------
+
+
+class ReasoningOnlyAgent:
+    """A reasoning model that spent its whole budget thinking."""
+
+    def get_response(self, messages, tool_registry=None, **kwargs):
+        from ToolAgents.data_models.messages import ChatMessage, ReasoningContent
+
+        message = ChatMessage.create_assistant_message("")
+        message.content = [ReasoningContent(thinking="thinking at length...")]
+        return SimpleNamespace(response="", messages=[message])
+
+
+class SilentAgent:
+    def get_response(self, messages, tool_registry=None, **kwargs):
+        return SimpleNamespace(response="", messages=[])
+
+
+def test_an_empty_response_is_reported_not_silently_stored(caplog):
+    """It is stored like any value, and a condition reading it just goes false."""
+
+    process = SequentialProcess("work", agent=SilentAgent())
+    process.add_step(step("draft", "write"))
+    pipeline = Pipeline()
+    pipeline.add_process(process)
+
+    with caplog.at_level("WARNING", logger="ToolAgents.pipelines"):
+        pipeline.run_pipeline()
+
+    warnings = [r.getMessage() for r in caplog.records if r.levelname == "WARNING"]
+    assert any("work / draft returned no text" in m for m in warnings)
+
+
+def test_reasoning_without_an_answer_names_the_actual_cause(caplog):
+    """The common failure with a reasoning model, and the fix is specific."""
+
+    process = SequentialProcess("work", agent=ReasoningOnlyAgent())
+    process.add_step(step("draft", "write"))
+    pipeline = Pipeline()
+    pipeline.add_process(process)
+
+    with caplog.at_level("WARNING", logger="ToolAgents.pipelines"):
+        pipeline.run_pipeline()
+
+    warnings = [r.getMessage() for r in caplog.records if r.levelname == "WARNING"]
+    assert any("max_tokens was consumed while thinking" in m for m in warnings)
+
+
+def test_a_normal_response_warns_about_nothing(caplog):
+    process = SequentialProcess("work", agent=EchoAgent())
+    process.add_step(step("draft", "write"))
+    pipeline = Pipeline()
+    pipeline.add_process(process)
+
+    with caplog.at_level("WARNING", logger="ToolAgents.pipelines"):
+        pipeline.run_pipeline()
+
+    assert not [r for r in caplog.records if r.levelname == "WARNING"]
