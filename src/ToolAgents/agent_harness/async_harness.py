@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from typing import AsyncGenerator, List, Optional, TYPE_CHECKING
+from typing import AsyncGenerator, List, Optional, Union, TYPE_CHECKING
 
 from ToolAgents.agents.chat_tool_agent import AsyncChatToolAgent
 from ToolAgents.context_manager.context_manager import ContextManager
@@ -101,13 +101,17 @@ class AsyncAgentHarness:
 
     # --- Core Async API ---
 
-    async def chat(self, user_input: str) -> str:
+    async def chat(self, user_input: Union[str, ChatMessage]) -> str:
         """Send a message, get a response string."""
         response = await self.chat_response(user_input)
         return response.response
 
-    async def chat_response(self, user_input: str) -> ChatResponse:
-        """Send a message, get a full ChatResponse with message history."""
+    async def chat_response(self, user_input: Union[str, ChatMessage]) -> ChatResponse:
+        """Send a message, get a full ChatResponse with message history.
+
+        `user_input` may be plain text or a pre-built ChatMessage (e.g. one carrying
+        image attachments); see AgentRuntime.begin_turn.
+        """
         self._runtime.begin_turn(user_input)
         send_messages = self._runtime.prepare_messages()
 
@@ -121,8 +125,12 @@ class AsyncAgentHarness:
         self._runtime.complete_turn(response)
         return response
 
-    async def chat_stream(self, user_input: str) -> AsyncGenerator[ChatResponseChunk, None]:
-        """Send a message, yield streaming chunks."""
+    async def chat_stream(self, user_input: Union[str, ChatMessage]) -> AsyncGenerator[ChatResponseChunk, None]:
+        """Send a message, yield streaming chunks.
+
+        `user_input` may be plain text or a pre-built ChatMessage (e.g. one carrying
+        image attachments); see AgentRuntime.begin_turn.
+        """
         self._runtime.begin_turn(user_input)
         send_messages = self._runtime.prepare_messages()
 

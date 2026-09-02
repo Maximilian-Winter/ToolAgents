@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import List, Optional, TYPE_CHECKING
+from typing import List, Optional, Union, TYPE_CHECKING
 
 from ToolAgents.context_manager.context_manager import ContextManager, create_context_manager
 from ToolAgents.context_manager.events import ContextEvent
@@ -91,19 +91,34 @@ class HarnessRuntime:
     def add_pinned_message(self, message: ChatMessage) -> None:
         self.smart_messages.add_message(message, MessageLifecycle(pinned=True))
 
-    def begin_turn(self, user_input: str) -> None:
+    def begin_turn(self, user_input: Union[str, ChatMessage]) -> None:
+        """Start a turn from the user's input.
+
+        `user_input` is usually the plain text the user typed. It may also be a
+        pre-built ChatMessage, which lets a turn carry more than text -- images or
+        other BinaryContent attachments alongside the prompt -- without this layer
+        needing to know how the message was assembled. A string is wrapped into a
+        text-only user message exactly as before.
+        """
         self.check_stopped()
         self.turn_count += 1
+        message_text = (
+            user_input if isinstance(user_input, str) else user_input.get_text_content()
+        )
         self.events.emit(
             HarnessEvent.TURN_START,
             HarnessEventData(
                 event=HarnessEvent.TURN_START,
                 turn_number=self.turn_count,
-                user_input=user_input,
+                user_input=message_text,
             ),
         )
 
-        user_message = ChatMessage.create_user_message(user_input)
+        user_message = (
+            user_input
+            if isinstance(user_input, ChatMessage)
+            else ChatMessage.create_user_message(user_input)
+        )
         self.smart_messages.add_message(user_message)
         self.context_manager.notify_user_message(user_message)
 
