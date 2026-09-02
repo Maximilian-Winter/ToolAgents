@@ -54,10 +54,10 @@ segment as a section name.
 Set `remove_empty_template_field=False` to leave every unmatched placeholder in
 the output.
 
-!!! warning "Behaviour change"
+!!! warning "Behaviour change in 0.3.3"
 
-    Two things about placeholder handling changed when path support was added
-    (unreleased at time of writing; it lands in the first release after 0.3.2).
+    Two things about placeholder handling changed in 0.3.3, when path support
+    was added.
     Neither breaks a template that was previously working, but both are worth
     knowing before upgrading.
 

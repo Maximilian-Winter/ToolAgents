@@ -44,6 +44,7 @@ from ToolAgents.tool_adapters.execution import normalize_tools
 
 __all__ = [
     "DEFAULT_WORKSPACE_DIRNAME",
+    "WORKSPACE_SUBDIRS",
     "Workspace",
     "WorkspaceError",
     "WorkspaceNotFoundError",

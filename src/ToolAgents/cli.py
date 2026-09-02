@@ -22,6 +22,7 @@ from typing import Any, Mapping, Sequence
 
 from ToolAgents.workspace import (
     DEFAULT_WORKSPACE_DIRNAME,
+    WORKSPACE_SUBDIRS,
     Workspace,
     WorkspaceError,
 )
@@ -167,8 +168,10 @@ def _workspace(args: argparse.Namespace) -> Workspace:
 def _command_init(args: argparse.Namespace) -> int:
     workspace = Workspace.create(args.path)
     print(f"Created {workspace.root}")
-    for name in sorted(workspace.summary()):
-        print(f"  {name}/")
+    # The real directory names, not the summary labels: "adapters" is a
+    # heading, "adapter/input" is what is on disk.
+    for subdir in WORKSPACE_SUBDIRS:
+        print(f"  {subdir}/")
     return 0
 
 

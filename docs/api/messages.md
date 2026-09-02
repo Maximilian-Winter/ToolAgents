@@ -79,7 +79,7 @@ Unmatched placeholders behave differently by shape:
   literal — `{a/b}` — survives, and a mistyped path stays visible rather than
   vanishing.
 - A field whose value is `None` counts as absent and is blanked, rather than
-  rendering the literal string `"None"`. This is a change in behaviour — see
+  rendering the literal string `"None"`. This changed in 0.3.3 — see
   [the note in the utilities reference](utilities.md#unmatched-placeholders).
 
 See the [utilities API](utilities.md#message-template) for the full
