@@ -16,8 +16,8 @@ The maintained examples are grouped by the current APIs they demonstrate.
 - `agents/mem_gpt_like/`: exploratory memory-agent pattern.
 - `agents/personal_agent_ada/`: larger personal-agent demo.
 - `agents/pipeline/`: pipeline examples, including JSON-defined pipelines
-  with flow control (map/parallel/loop/conditional) and declarative
-  provider endpoints.
+  with flow control (map/parallel/loop/conditional), declarative provider
+  endpoints, and file/folder sources with file, stream and HTTP sinks.
 
 ## Legacy Surface
 

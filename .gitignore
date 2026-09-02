@@ -113,3 +113,4 @@ examples/agents/navigable_memory/test/forge_extended_memory/obsidian_forge_memor
 site/
 .docs-venv/
 .commitmsg
+examples/agents/pipeline/out/

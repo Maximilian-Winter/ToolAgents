@@ -277,6 +277,11 @@ class PipelineLoadContext:
     #: Name from the JSON ``default_agent`` field, if any.
     json_default_agent_name: str | None = None
 
+    #: Whether sinks loaded from this document may write files or make
+    #: requests. Off by default: reading a document should not let it reach
+    #: outside the process without the caller saying so.
+    allow_writes: bool = False
+
     #: When true, agent names declared in the JSON are ignored rather than
     #: resolved. Set by ``build_agents=False``, whose whole purpose is to
     #: ignore the ``agents`` block and take every agent from Python instead.
@@ -399,7 +404,10 @@ _PROCESS_TYPES: dict[str, type["Process"]] = {}
 
 #: Modules searched for process registrations when a type is not yet known.
 #: This keeps ``pipeline`` free of an import cycle with ``flow``.
-_PROCESS_TYPE_MODULES = ("ToolAgents.pipelines.flow",)
+_PROCESS_TYPE_MODULES = (
+    "ToolAgents.pipelines.flow",
+    "ToolAgents.pipelines.data_io",
+)
 
 
 def register_process_type(process_cls: type["Process"]) -> type["Process"]:
@@ -846,6 +854,7 @@ class Pipeline:
         step_agents: Mapping[str, BaseToolAgent] | None = None,
         load_tool_plugins: bool = True,
         build_agents: bool = True,
+        allow_writes: bool = False,
     ) -> "Pipeline":
         """Restore a pipeline from a JSON-compatible dictionary.
 
@@ -857,6 +866,11 @@ class Pipeline:
         to construct providers, reading API keys from the environment
         variables the config names. Pass ``build_agents=False`` to ignore the
         block entirely and supply every agent from Python instead.
+
+        ``allow_writes`` gates sinks that write files or make HTTP requests.
+        It is false by default: loading a document should not let it reach
+        outside the process unless the caller says so. Sources that only read
+        are always permitted.
 
         Agents injected here always win over names declared in the JSON at the
         same level of specificity; see :class:`PipelineLoadContext`.
@@ -902,6 +916,7 @@ class Pipeline:
             named_agents=named_agents,
             json_default_agent_name=json_default_agent_name,
             ignore_agent_names=not build_agents,
+            allow_writes=allow_writes,
         )
 
         pipeline = cls(
@@ -939,6 +954,7 @@ class Pipeline:
         step_agents: Mapping[str, BaseToolAgent] | None = None,
         load_tool_plugins: bool = True,
         build_agents: bool = True,
+        allow_writes: bool = False,
     ) -> "Pipeline":
         """Restore a pipeline from a JSON string."""
 
@@ -950,6 +966,7 @@ class Pipeline:
             step_agents=step_agents,
             load_tool_plugins=load_tool_plugins,
             build_agents=build_agents,
+            allow_writes=allow_writes,
         )
 
     def save_to_json(
@@ -980,6 +997,7 @@ class Pipeline:
         step_agents: Mapping[str, BaseToolAgent] | None = None,
         load_tool_plugins: bool = True,
         build_agents: bool = True,
+        allow_writes: bool = False,
     ) -> "Pipeline":
         """Load a pipeline from a JSON file."""
 
@@ -992,6 +1010,7 @@ class Pipeline:
                 step_agents=step_agents,
                 load_tool_plugins=load_tool_plugins,
                 build_agents=build_agents,
+                allow_writes=allow_writes,
             )
 
 

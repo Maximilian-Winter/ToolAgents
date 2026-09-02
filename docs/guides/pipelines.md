@@ -17,6 +17,8 @@ results are organized. Two companion pages go further:
   a list, and running branches in parallel.
 - **[Endpoints](pipeline-endpoints.md)** — declaring the providers, models and
   API keys a workflow runs against, inside the workflow file itself.
+- **[Sources and sinks](pipeline-io.md)** — reading files and folders in,
+  chunking them, and writing results out to files, streams or HTTP.
 
 Live agent objects are never serialized. You can either pass agents back in when
 loading, or declare them in the JSON as provider configuration, in which case
@@ -222,3 +224,5 @@ anything.
   processes, and the sandboxed conditions that drive them.
 - [Endpoints](pipeline-endpoints.md) — put the providers and models in the
   workflow file so it runs without an agent argument.
+- [Sources and sinks](pipeline-io.md) — read folders and files in, chunk them,
+  and write results out.

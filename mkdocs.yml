@@ -43,6 +43,7 @@ nav:
     - Pipelines: guides/pipelines.md
     - Pipeline Flow Control: guides/pipeline-flow-control.md
     - Pipeline Endpoints: guides/pipeline-endpoints.md
+    - Pipeline Sources and Sinks: guides/pipeline-io.md
     - Chat History: guides/chat-history.md
     - Streaming: guides/streaming.md
   - Components:

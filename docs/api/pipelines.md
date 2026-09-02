@@ -80,6 +80,59 @@ serialized — a config names the environment variable holding one.
 
 ::: ToolAgents.pipelines.agent_config.register_provider_spec
 
+## Sources and sinks
+
+A source loads data into the `inputs` section; a sink emits a value out of the
+results. Both are processes, so they nest inside flow control. Writing is gated
+behind `allow_writes` — see the
+[sources and sinks guide](../guides/pipeline-io.md).
+
+::: ToolAgents.pipelines.data_io.SourceProcess
+
+::: ToolAgents.pipelines.data_io.SinkProcess
+
+### Source types
+
+::: ToolAgents.pipelines.data_io.Source
+
+::: ToolAgents.pipelines.data_io.TextSource
+
+::: ToolAgents.pipelines.data_io.FileSource
+
+::: ToolAgents.pipelines.data_io.FilesSource
+
+::: ToolAgents.pipelines.data_io.FolderSource
+
+::: ToolAgents.pipelines.data_io.register_source_type
+
+### Sink types
+
+::: ToolAgents.pipelines.data_io.Sink
+
+::: ToolAgents.pipelines.data_io.StreamSink
+
+::: ToolAgents.pipelines.data_io.FileSink
+
+::: ToolAgents.pipelines.data_io.FilesSink
+
+::: ToolAgents.pipelines.data_io.HttpSink
+
+::: ToolAgents.pipelines.data_io.register_sink_type
+
+### Path placeholders
+
+::: ToolAgents.pipelines.data_io.render_path
+
+::: ToolAgents.pipelines.data_io.normalize_placeholders
+
+## Chunking
+
+::: ToolAgents.pipelines.chunking.build_splitter
+
+::: ToolAgents.pipelines.chunking.SplitterSpec
+
+::: ToolAgents.pipelines.chunking.register_splitter_spec
+
 ## Tools
 
 ::: ToolAgents.pipelines.pipeline.PipelineToolRegistry

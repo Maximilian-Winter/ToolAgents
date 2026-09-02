@@ -1,0 +1,85 @@
+{
+  "schema_version": 2,
+  "agents": [
+    {
+      "name": "summarizer",
+      "provider": {
+        "type": "openrouter",
+        "model": "qwen/qwen3.5-9b",
+        "api_key_env": "OPENROUTER_API_KEY",
+        "settings": {
+          "temperature": 0.2
+        }
+      }
+    }
+  ],
+  "default_agent": "summarizer",
+  "processes": [
+    {
+      "process_type": "source",
+      "process_name": "load_notes",
+      "source": {
+        "type": "folder",
+        "path": "{inputs/notes_dir}",
+        "glob": "*.md"
+      },
+      "splitter": {
+        "type": "recursive_character",
+        "chunk_size": 400,
+        "chunk_overlap": 40
+      },
+      "result_key": "chunks"
+    },
+    {
+      "process_type": "map",
+      "process_name": "summarize_chunks",
+      "items": "chunks",
+      "item_var": "chunk",
+      "collect": "point",
+      "result_key": "points",
+      "processes": [
+        {
+          "process_type": "sequential",
+          "process_name": "one_chunk",
+          "steps": [
+            {
+              "step_name": "point",
+              "system_message": "You reduce a passage to a single factual sentence.",
+              "prompt_template": "Reduce this to one sentence:\n\n{vars/chunk}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "process_type": "sequential",
+      "process_name": "compose",
+      "steps": [
+        {
+          "step_name": "digest",
+          "system_message": "You write short briefing notes in Markdown.",
+          "prompt_template": "Write a short briefing titled '{inputs/title}' from these points:\n\n{outputs/points}"
+        }
+      ]
+    },
+    {
+      "process_type": "sink",
+      "process_name": "write_digest",
+      "sink": {
+        "type": "file",
+        "path": "{inputs/out_dir}/digest.md"
+      },
+      "from": "outputs/digest",
+      "record_as": "digest_path"
+    },
+    {
+      "process_type": "sink",
+      "process_name": "announce",
+      "sink": {
+        "type": "stream",
+        "prefix": "wrote "
+      },
+      "from": "outputs/digest_path"
+    }
+  ]
+}
