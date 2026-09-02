@@ -261,5 +261,6 @@ Now that you've created a basic agent with ToolAgents, you can:
 
 - Learn how to [create custom tools](../guides/custom-tools.md)
 - Set up [chat history](../guides/chat-history.md) for ongoing conversations
+- Define a multi-step workflow with [pipelines](../guides/pipelines.md)
 - Explore [other LLM providers](../components/providers.md)
 - Check out [advanced agent examples](../examples/advanced-agents.md)

@@ -13,13 +13,14 @@ ToolAgents is a lightweight and flexible framework for creating function-calling
   - [Using different Providers](#Different-Providers)
   - [ChatToolAgent with User Loop and Chat History](#Use-ChatToolAgent-with-ChatHistory-class)
   - [Streaming ChatToolAgent with User Loop and Chat History](#Use-Streaming-ChatToolAgent-with-ChatHistory-class)
-5. [Custom Tools](#custom-tools)
+5. [Pipelines](#pipelines)
+6. [Custom Tools](#custom-tools)
   - [Pydantic Model-based Tools](#1-pydantic-model-based-tools)
   - [Function-based Tools](#2-function-based-tools)
   - [OpenAI-style Function Specifications](#3-openai-style-function-specifications)
   - [The Importance of Good Docstrings and Descriptions](#the-importance-of-good-docstrings-and-descriptions)
-6. [Contributing](#contributing)
-7. [License](#license)
+7. [Contributing](#contributing)
+8. [License](#license)
 
 ## Features
 
@@ -27,19 +28,21 @@ ToolAgents is a lightweight and flexible framework for creating function-calling
   - OpenAI API
   - Anthropic API
   - Mistral API
-  - OpenAI like API, like OpenRouter, VLLM, llama-cpp-server
+  - Groq API
+  - Any OpenAI-, Anthropic-, Groq- or Mistral-shaped API at a custom `base_url`
+    (OpenRouter, vLLM, llama-cpp-server, Ollama, an internal gateway)
 - Easy-to-use interface for passing functions, Pydantic models, and tools to LLMs
 - Streamlined process for function calling and result handling
 - Unified Message format, making switching of providers while keeping the same chat history easy.
-- JSON-defined pipelines with flow control (conditional, loop, map, parallel)
-  and declarative provider endpoints, so a workflow file describes both its
-  shape and the APIs it runs against.
+- [JSON-defined pipelines](#pipelines) with flow control (conditional, loop,
+  map, parallel) and declarative provider endpoints, so a workflow file
+  describes both its shape and the APIs it runs against.
 
 ## Documentation
 
 The full documentation is available at [maximilian-winter.github.io/ToolAgents](https://maximilian-winter.github.io/ToolAgents/).
 
-It includes installation guidance, provider setup, API references, and examples for the newer agent harness, extension, and navigable memory workflows.
+It includes installation guidance, provider setup, API references, and examples for the newer agent harness, extension, pipeline, and navigable memory workflows.
 
 ## Installation
 
@@ -117,10 +120,19 @@ api = OpenAIChatAPI(
 # Anthropic API
 api = AnthropicChatAPI(api_key=os.getenv("ANTHROPIC_API_KEY"), model="claude-3-5-sonnet-20241022")
 
+# Anthropic behind a gateway or proxy. Every provider takes base_url,
+# not just the OpenAI one.
+api = AnthropicChatAPI(
+    api_key=os.getenv("ANTHROPIC_API_KEY"),
+    model="claude-3-5-sonnet-20241022",
+    base_url="https://anthropic-gateway.internal/v1",
+)
+
 # Groq API
 api = GroqChatAPI(api_key=os.getenv("GROQ_API_KEY"), model="llama-3.3-70b-versatile")
 
-# Mistral API
+# Mistral API. base_url is forwarded to the SDK's server_url, so the
+# argument is named the same across every provider.
 api = MistralChatAPI(api_key=os.getenv("MISTRAL_API_KEY"), model="mistral-small-latest")
 ```
 
@@ -256,6 +268,56 @@ while True:
         else:
             raise RuntimeError("Error during response generation")
 ```
+## Pipelines
+
+A pipeline describes a multi-step workflow. The JSON holds the shape of the run
+— sequence, branching, loops, fan-out — and, optionally, the endpoints it runs
+against, so the workflow can be edited without touching Python.
+
+```json
+{
+  "schema_version": 2,
+  "agents": [
+    {
+      "name": "writer",
+      "provider": {
+        "type": "openrouter",
+        "model": "qwen/qwen3.5-9b",
+        "api_key_env": "OPENROUTER_API_KEY",
+        "settings": {"temperature": 0.3}
+      }
+    }
+  ],
+  "default_agent": "writer",
+  "processes": [
+    {
+      "process_type": "loop",
+      "process_name": "refine",
+      "mode": "until",
+      "max_iterations": 3,
+      "condition": "contains(lower(outputs['verdict']), 'approved')",
+      "processes": [ { "process_type": "sequential", "process_name": "cycle", "steps": [] } ]
+    }
+  ]
+}
+```
+
+```python
+from ToolAgents.pipelines import Pipeline
+
+pipeline = Pipeline.load_from_json("workflow.json")
+results = pipeline.run_pipeline(topic="otters")
+
+print(results["outputs/draft"])
+```
+
+API keys are never stored in the file — a provider config names the environment
+variable holding one. Conditions are sandboxed expressions, not `eval`, so a
+workflow file from disk cannot execute arbitrary code.
+
+See the [pipelines guide](https://maximilian-winter.github.io/ToolAgents/guides/pipelines/)
+and `examples/agents/pipeline/` for a runnable workflow.
+
 ## Custom Tools
 
 ToolAgents supports various ways to create custom tools, allowing you to integrate specific functionalities into your agents. Here are different approaches to creating custom tools:

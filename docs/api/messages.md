@@ -120,7 +120,7 @@ Current construction helpers:
 
 - `MessageTemplate.from_string(template_string)`
 - `MessageTemplate.from_file(template_file)`
-- `generate_message_content(template_fields=None, **kwargs)`
+- `generate_message_content(template_fields=None, remove_empty_template_field=True, **kwargs)`
 
 Example:
 
@@ -130,6 +130,30 @@ template = MessageTemplate.from_string(
 )
 content = template.generate_message_content(specialty="weather")
 ```
+
+A placeholder may also address a nested value with `/`:
+
+```python
+template = MessageTemplate.from_string("Revise {outputs/draft} for {inputs/audience}")
+content = template.generate_message_content(results)
+```
+
+!!! warning "Pass the mapping; do not unpack it"
+
+    Path resolution needs the structure intact. `generate_message_content(results)`
+    resolves `{outputs/draft}`; `generate_message_content(**results)` flattens the
+    mapping first and the path can no longer resolve. Mixing `template_fields`
+    with keyword arguments flattens too.
+
+Unmatched placeholders:
+
+- A **bare** name with no matching field is blanked, and a line containing
+  nothing else is dropped (`remove_empty_template_field=True`, the default).
+- A **path** that does not resolve is left verbatim, so text that was always
+  literal — `{a/b}` — survives, and a mistyped path stays visible rather than
+  vanishing.
+- A field whose value is `None` counts as absent, and is blanked rather than
+  rendering the literal string `"None"`.
 
 ## PromptBuilder
 

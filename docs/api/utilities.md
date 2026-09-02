@@ -150,3 +150,51 @@ Improves an existing docstring.
 
 **Returns:**
 - `str`: Improved docstring
+
+## Message Template
+
+```python
+from ToolAgents.utilities.message_template import MessageTemplate
+```
+
+Fills `{placeholder}` fields in a prompt string. Used by pipeline steps to turn
+a `prompt_template` into the actual prompt.
+
+### Constructors
+
+- `MessageTemplate.from_string(template_string)`
+- `MessageTemplate.from_file(template_file)`
+
+### Methods
+
+- `generate_message_content(template_fields=None, remove_empty_template_field=True, **kwargs)`
+
+```python
+template = MessageTemplate.from_string("Hello {name}, welcome to {place}.")
+template.generate_message_content(name="Max", place="Königswinter")
+```
+
+### Placeholder paths
+
+A placeholder may address a nested value with `/`:
+
+```python
+template = MessageTemplate.from_string("Revise {outputs/draft} for {inputs/audience}")
+template.generate_message_content(results)
+```
+
+This works against any nested mapping, and against a
+[`PipelineResults`](../guides/pipelines.md#results-sections) object, which
+resolves the first segment as a section name.
+
+Pass the mapping as the single `template_fields` argument rather than unpacking
+it — `generate_message_content(**results)` flattens the structure and loses the
+sections.
+
+### Missing placeholders
+
+By default (`remove_empty_template_field=True`) a placeholder with no matching
+field is blanked, and a line containing nothing else is dropped entirely. This
+is deliberate for optional sections of a prompt, but it means a **typo in a
+placeholder name fails silently**. Set `remove_empty_template_field=False` to
+leave unmatched placeholders in the output verbatim, which makes a typo visible.

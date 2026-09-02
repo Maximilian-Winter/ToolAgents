@@ -37,17 +37,20 @@ graph TB
 ## Key Features
 
 - **Multiple LLM Provider Support**: Easily switch between OpenAI, Anthropic, Mistral, and other providers
+- **Custom Endpoints**: Point any provider at a gateway, proxy, or self-hosted server with `base_url`
 - **Unified Message Format**: Maintain your chat history across different LLM providers
 - **Flexible Tool Creation**: Build tools using Pydantic models, functions, or OpenAI-style function specs
 - **Streaming Support**: Get streaming responses for a more responsive experience
 - **Memory Management**: Manage chat history and implement memory features
 - **Advanced Agent Capabilities**: Create multi-agent systems, research agents, and more
+- **JSON-Defined Pipelines**: Describe a multi-step workflow — including branching, loops, fan-out, and the endpoints it runs against — in a file rather than in code
 
 ## Quick Links
 
 - [Installation Guide](getting-started/installation.md) - Get started with ToolAgents
 - [Basic Usage](guides/basic-usage.md) - Learn the core concepts
 - [Custom Tools](guides/custom-tools.md) - Create your own tools
+- [Pipelines](guides/pipelines.md) - Define multi-step workflows in JSON
 - [Examples](examples/basic-agents.md) - Explore practical applications
 
 ## Community and Support

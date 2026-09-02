@@ -14,7 +14,8 @@ ToolAgents consists of several key components:
 2. **Tools**: Functions or classes that provide capabilities to agents
 3. **Providers**: Interfaces to various LLM APIs (OpenAI, Anthropic, etc.)
 4. **Messages**: Structures for chat history and communication
-5. **ToolRegistry**: Container for registering and managing tools
+5. **Pipelines**: Multi-step workflows defined in code or JSON, with branching, loops and fan-out
+6. **ToolRegistry**: Container for registering and managing tools
 
 ## Basic Agent Usage
 
@@ -174,21 +175,33 @@ You can configure various aspects of the agent's behavior:
 settings = api.get_default_settings()
 settings.temperature = 0.7
 settings.top_p = 1.0
-settings.max_tokens = 1000
-settings.presence_penalty = 0.0
-settings.frequency_penalty = 0.0
 
-# Configure Anthropic API settings
+# max_tokens, presence_penalty and frequency_penalty are not declared by the
+# OpenAI provider. Assigning them would silently do nothing, so add them as
+# request settings instead.
+settings.add_request_setting("max_tokens", 1000)
+settings.add_request_setting("presence_penalty", 0.0)
+settings.add_request_setting("frequency_penalty", 0.0)
+
+# Configure Anthropic API settings. Anthropic does declare max_tokens.
 anthropic_settings = anthropic_api.get_default_settings()
 anthropic_settings.temperature = 0.7
 anthropic_settings.max_tokens = 1000
 ```
+
+!!! warning "Check `setting_names()` before assigning"
+
+    Attribute assignment only takes effect for a setting the provider already
+    declares; anything else becomes a dead attribute with no error. Providers
+    declare different sets — see
+    [what each provider declares](../components/providers.md#what-each-provider-declares).
 
 ## Next Steps
 
 Now that you understand the basics of ToolAgents, you can move on to more advanced topics:
 
 - [Creating custom tools](custom-tools.md)
+- [Defining multi-step pipelines](pipelines.md)
 - [Managing chat history](chat-history.md)
 - [Working with streaming responses](streaming.md)
 - [Exploring the components](../components/agents.md)

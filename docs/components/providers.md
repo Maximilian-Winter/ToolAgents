@@ -18,16 +18,18 @@ Chat API providers handle communication with chat-based LLM APIs:
 2. **AnthropicChatAPI**: For Anthropic's Claude models
 3. **MistralChatAPI**: For Mistral AI's models
 4. **GroqChatAPI**: For Groq's models
-5. **OllamaChatAPI**: For local Ollama models
-6. **OpenRouterChatAPI**: For accessing multiple models through OpenRouter
+Ollama, OpenRouter, vLLM, Together and similar services speak the OpenAI API,
+so they are `OpenAIChatAPI` with a `base_url` rather than classes of their own.
+Every provider accepts `base_url`, so an Anthropic-, Groq- or Mistral-shaped API
+can likewise be reached at a custom address.
 
 ### Completion Providers
 
 For providers that use a completion-style API rather than a chat API:
 
 1. **CompletionProvider**: Base class for completion providers
-2. **HuggingFaceTransformersProvider**: For using Hugging Face models
-3. **LlamaCppPythonProvider**: For using llama.cpp models
+2. **TransformersCompletionEndpoint**: For using Hugging Face models
+3. **LlamaCppPythonEndpoint**: For using llama.cpp models
 
 ## Provider Usage
 
@@ -60,6 +62,13 @@ api = AnthropicChatAPI(
     api_key="your-anthropic-key",
     model="claude-3-5-sonnet-20241022"
 )
+
+# Optionally, point it at a gateway or proxy speaking the Anthropic API
+api = AnthropicChatAPI(
+    api_key="your-anthropic-key",
+    model="claude-3-5-sonnet-20241022",
+    base_url="https://anthropic-gateway.internal/v1"
+)
 ```
 
 ### Mistral API
@@ -70,7 +79,8 @@ from ToolAgents.provider import MistralChatAPI
 # Create the provider
 api = MistralChatAPI(
     api_key="your-mistral-key",
-    model="mistral-small-latest"
+    model="mistral-small-latest",
+    # base_url is optional; it is forwarded to the SDK's server_url
 )
 ```
 
@@ -82,32 +92,53 @@ from ToolAgents.provider import GroqChatAPI
 # Create the provider
 api = GroqChatAPI(
     api_key="your-groq-key",
-    model="llama-3.3-70b-versatile"
+    model="llama-3.3-70b-versatile",
+    # base_url is optional
 )
 ```
 
-### Ollama API
+### OpenAI-compatible endpoints
+
+There is no separate class for OpenRouter, Ollama, vLLM, Together or the rest.
+They speak the OpenAI API, so they are `OpenAIChatAPI` with a different
+`base_url`.
 
 ```python
-from ToolAgents.provider import OllamaChatAPI
+from ToolAgents.provider import OpenAIChatAPI
 
-# Create the provider (local Ollama server)
-api = OllamaChatAPI(
-    base_url="http://localhost:11434",  # Default Ollama URL
-    model="llama3"
-)
-```
-
-### OpenRouter API
-
-```python
-from ToolAgents.provider import OpenRouterChatAPI
-
-# Create the provider
-api = OpenRouterChatAPI(
+# OpenRouter
+api = OpenAIChatAPI(
     api_key="your-openrouter-key",
     model="google/gemini-2.0-pro-exp-02-05:free",
     base_url="https://openrouter.ai/api/v1"
+)
+
+# A local Ollama server. Note the /v1 suffix: that is the
+# OpenAI-compatible endpoint, not Ollama's native one. A local
+# server needs no real key, but the SDK requires the argument.
+api = OpenAIChatAPI(
+    api_key="not-required",
+    model="llama3",
+    base_url="http://localhost:11434/v1"
+)
+
+# A local vLLM server
+api = OpenAIChatAPI(
+    api_key="not-required",
+    model="meta-llama/Llama-3.1-8B-Instruct",
+    base_url="http://localhost:8000/v1"
+)
+```
+
+`provider_identifier` can be set to label which service a provider is really
+talking to:
+
+```python
+api = OpenAIChatAPI(
+    api_key="your-openrouter-key",
+    model="google/gemini-2.0-pro-exp-02-05:free",
+    base_url="https://openrouter.ai/api/v1",
+    provider_identifier="openrouter",
 )
 ```
 
@@ -121,9 +152,11 @@ Each provider has its own settings class for configuring API requests:
 # Get default settings for a provider
 settings = api.get_default_settings()
 
+# See what this provider actually declares before assigning
+print(settings.setting_names())
+
 # Configure settings
 settings.temperature = 0.7
-settings.max_tokens = 1000
 settings.top_p = 1.0
 
 # Use settings when making requests
@@ -134,16 +167,35 @@ response = agent.get_response(
 )
 ```
 
-### Common Settings
+!!! warning "Assigning an undeclared setting does nothing"
 
-While each provider has its own settings, there are common parameters across most providers:
+    Attribute assignment only takes effect for a name the provider already
+    declares. `settings.max_tokens = 1000` on an `OpenAIChatAPI` creates a dead
+    attribute and is never sent — silently, with no error. Providers declare
+    different sets, so check `settings.setting_names()` first.
 
-1. **temperature**: Controls randomness (0.0 to 1.0)
-2. **max_tokens**: Maximum number of tokens to generate
-3. **top_p**: Nucleus sampling parameter (0.0 to 1.0)
-4. **top_k**: Limits token selection to top K options (when supported)
-5. **frequency_penalty**: Reduces repetition of tokens (when supported)
-6. **presence_penalty**: Reduces repetition of topics (when supported)
+    To send a parameter a provider does not declare but the endpoint
+    understands, add it deliberately:
+
+    ```python
+    settings.add_request_setting("seed", 42)
+    ```
+
+### What each provider declares
+
+Only `temperature` and `top_p` are common to all four. The rest differ, which
+is why assignment should be checked against `setting_names()`:
+
+| Provider | Declared settings |
+| --- | --- |
+| OpenAI | `temperature`, `top_p`, `tool_choice`, `extra_body`, `response_format` |
+| Anthropic | `temperature`, `top_p`, `top_k`, `max_tokens` |
+| Groq | `temperature`, `top_p` |
+| Mistral | `temperature`, `top_p` |
+
+Anything else an endpoint accepts — `seed`, `frequency_penalty`,
+`presence_penalty`, `min_p` — is sent with `add_request_setting(name, value)`,
+or through `extra_body` on OpenAI-compatible endpoints.
 
 ## Provider-Specific Features
 
@@ -251,24 +303,27 @@ For traditional completion-based models:
 ```python
 from ToolAgents.provider.completion_provider import CompletionProvider
 from ToolAgents.provider.completion_provider.implementations import (
-    HuggingFaceTransformersProvider,
-    LlamaCppPythonProvider
+    TransformersCompletionEndpoint,
+    LlamaCppPythonEndpoint,
 )
 
 # Use Hugging Face models
-hf_provider = HuggingFaceTransformersProvider(
+hf_provider = TransformersCompletionEndpoint(
     model_name="mistralai/Mistral-7B-Instruct-v0.1"
 )
 
 # Use llama.cpp models
-llama_provider = LlamaCppPythonProvider(
+llama_provider = LlamaCppPythonEndpoint(
     model_path="/path/to/model.gguf"
 )
 ```
 
 ## Best Practices
 
-1. **API Key Management**: Store API keys securely using environment variables
+1. **API Key Management**: Store API keys securely using environment variables. A
+   [pipeline](../guides/pipelines.md#declaring-agents-and-endpoints) declares the
+   *name* of the variable holding a key, never the key itself, so a workflow file
+   can be committed safely.
 2. **Error Handling**: Implement retry logic for API failures
 3. **Model Selection**: Choose appropriate models for your use case
 4. **Rate Limiting**: Be aware of API rate limits and implement throttling
@@ -281,4 +336,5 @@ llama_provider = LlamaCppPythonProvider(
 - [Learn about different agent types](agents.md)
 - [Explore tool options](tools.md)
 - [Understand message handling](messages.md)
+- [Declare providers in a pipeline file](../guides/pipelines.md#declaring-agents-and-endpoints)
 - [See provider usage examples](../examples/basic-agents.md)

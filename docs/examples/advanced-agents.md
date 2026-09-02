@@ -14,6 +14,9 @@ Representative examples in the repo:
 - `examples/agents/advanced/example_user_loop_streaming.py`
 - `examples/agents/advanced/structured_output_agent.py`
 - `examples/agents/advanced/output_knowledge_graph.py`
+- `examples/agents/pipeline/example_flow_control_pipeline.py` and its
+  `flow_control_pipeline.json` — a workflow whose shape (map, parallel, loop,
+  conditional) and endpoints both live in the JSON
 
 What these examples cover:
 
@@ -24,7 +27,7 @@ What these examples cover:
 Notes:
 
 - OCR-specific examples were intentionally retired from the maintained example surface.
-- Legacy `AdvancedAgent`/`AgentConfig` examples were removed from the
+- Legacy `AdvancedAgent`/`advanced_agent.AgentConfig` examples were removed from the
   maintained examples tree. Use older release tags or source archives for
   historical compatibility references. See [Removed Legacy APIs](../removed-legacy.md)
   for replacement guidance.

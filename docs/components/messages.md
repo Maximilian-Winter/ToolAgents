@@ -83,6 +83,18 @@ template = MessageTemplate.from_string(
 content = template.generate_message_content(specialty="weather")
 ```
 
+A placeholder can address a nested mapping with `/`, which is how a
+[pipeline](../guides/pipelines.md#results-sections) step reads a particular
+section of its results:
+
+```python
+template = MessageTemplate.from_string("Revise {outputs/draft}")
+template.generate_message_content({"outputs": {"draft": "..."}})
+```
+
+Pass the mapping as the single argument rather than unpacking it — `**fields`
+flattens the structure and path placeholders stop resolving.
+
 ### PromptBuilder
 
 ```python
