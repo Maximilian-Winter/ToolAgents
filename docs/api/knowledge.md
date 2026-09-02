@@ -14,12 +14,13 @@ Retrieval, document ingestion, text splitting, web search and crawling.
     | Area | Extra |
     | --- | --- |
     | Chroma, sentence-transformers embeddings, cross-encoder reranking, and the `numpy` types the base classes use | `memory` |
+    | PDF text extraction | `documents` |
     | OCR PDF ingestion | `ocr` |
     | Web search and crawling | `search` |
 
-    Two imports are declared in no extra at all: `PyPDF2` (used by
-    `PDFProvider`) and `ddgs` (used by `DDGWebSearchProvider`). Install them
-    directly if you need those two.
+    Plain PDF text extraction lives in its own `documents` extra, so reading
+    a PDF's text layer does not drag in the OCR stack and its system
+    binaries.
 
 ## RAG
 
@@ -112,9 +113,8 @@ results before they return to the model.
 
 ## Web search
 
-Each provider returns a list of URLs for a query. Note that the abstract method
-is declared as `search_web(query, number_of_results)` while the implementations
-use `search_web(search_query, num_results)`.
+Each provider returns a list of URLs for a query. Fetching and extracting the
+page contents is a [crawler's](#web-crawling) job.
 
 ::: ToolAgents.knowledge.web_search.web_search.WebSearchProvider
 

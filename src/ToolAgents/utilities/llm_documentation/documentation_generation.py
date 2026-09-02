@@ -449,7 +449,7 @@ def generate_text_documentation(
     ordered_json_mode=False,
 ) -> str:
     """
-    Generate markdown documentation for a list of Pydantic models.
+    Generate plain-text documentation for a list of Pydantic models.
 
     Args:
         pydantic_models (list[type[BaseModel]]): list of Pydantic model classes.
@@ -457,6 +457,7 @@ def generate_text_documentation(
         fields_prefix (str): Prefix for the fields section.
         documentation_with_field_description (bool): Include field descriptions in the documentation.
         ordered_json_mode (bool): Add ordering prefix for JSON schemas
+
     Returns:
         str: Generated text documentation.
     """

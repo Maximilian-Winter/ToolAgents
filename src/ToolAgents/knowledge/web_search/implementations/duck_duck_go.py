@@ -5,7 +5,7 @@ from ToolAgents.knowledge.web_search.web_search import WebSearchProvider
 
 class DDGWebSearchProvider(WebSearchProvider):
 
-    def search_web(self, search_query: str, num_results: int):
+    def search_web(self, search_query: str, num_results: int) -> list[str]:
         """
         Search the web, like a google search query. Returns a list of result URLs
         Args:

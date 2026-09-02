@@ -112,3 +112,4 @@ examples/agents/navigable_memory/test/forge_extended_memory/obsidian_forge_memor
 examples/agents/navigable_memory/test/forge_extended_memory/obsidian_forge_memory.db-wal
 site/
 .docs-venv/
+.commitmsg

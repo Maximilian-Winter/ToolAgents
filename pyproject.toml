@@ -45,6 +45,9 @@ local-inference = [
     "sentencepiece",
     "transformers",
 ]
+documents = [
+    "PyPDF2",
+]
 ocr = [
     "PyMuPDF",
     "joblib",
@@ -54,6 +57,7 @@ ocr = [
 search = [
     "beautifulsoup4",
     "camoufox",
+    "ddgs",
     "googlesearch-python",
     "html5lib",
     "trafilatura",
@@ -66,11 +70,13 @@ tui = [
 ]
 all = [
     "PyMuPDF",
+    "PyPDF2",
     "PyYAML",
     "SQLAlchemy",
     "beautifulsoup4",
     "camoufox",
     "chromadb",
+    "ddgs",
     "googlesearch-python",
     "html5lib",
     "joblib",

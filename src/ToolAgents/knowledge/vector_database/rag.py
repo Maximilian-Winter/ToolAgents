@@ -4,8 +4,12 @@ from ToolAgents.knowledge.vector_database.vector_database_provider import (
 
 
 class RAG:
-    """
-    Represents a chromadb vector database with a Colbert reranker.
+    """Retrieval over any vector database provider.
+
+    A thin facade: documents go in through ``add_document`` /
+    ``add_documents`` and come back out through ``retrieve_documents``. The
+    storage, embedding and reranking strategies are whatever providers you
+    hand it, not a fixed choice.
     """
 
     def __init__(self, vector_database_provider: VectorDatabaseProvider):
