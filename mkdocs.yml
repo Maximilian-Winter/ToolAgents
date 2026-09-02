@@ -44,6 +44,7 @@ nav:
     - Pipeline Flow Control: guides/pipeline-flow-control.md
     - Pipeline Endpoints: guides/pipeline-endpoints.md
     - Pipeline Sources and Sinks: guides/pipeline-io.md
+    - The tool-agents CLI: guides/cli.md
     - Chat History: guides/chat-history.md
     - Streaming: guides/streaming.md
   - Components:
@@ -57,6 +58,7 @@ nav:
     - Tools: api/tools.md
     - Providers: api/providers.md
     - Pipelines: api/pipelines.md
+    - Workspace and CLI: api/workspace.md
     - Messages: api/messages.md
     - Knowledge: api/knowledge.md
     - Utilities: api/utilities.md

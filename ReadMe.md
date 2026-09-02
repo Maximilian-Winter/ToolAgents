@@ -13,14 +13,15 @@ ToolAgents is a lightweight and flexible framework for creating function-calling
   - [Using different Providers](#Different-Providers)
   - [ChatToolAgent with User Loop and Chat History](#Use-ChatToolAgent-with-ChatHistory-class)
   - [Streaming ChatToolAgent with User Loop and Chat History](#Use-Streaming-ChatToolAgent-with-ChatHistory-class)
-5. [Pipelines](#pipelines)
-6. [Custom Tools](#custom-tools)
+5. [Command Line](#command-line)
+6. [Pipelines](#pipelines)
+7. [Custom Tools](#custom-tools)
   - [Pydantic Model-based Tools](#1-pydantic-model-based-tools)
   - [Function-based Tools](#2-function-based-tools)
   - [OpenAI-style Function Specifications](#3-openai-style-function-specifications)
   - [The Importance of Good Docstrings and Descriptions](#the-importance-of-good-docstrings-and-descriptions)
-7. [Contributing](#contributing)
-8. [License](#license)
+8. [Contributing](#contributing)
+9. [License](#license)
 
 ## Features
 
@@ -34,6 +35,7 @@ ToolAgents is a lightweight and flexible framework for creating function-calling
 - Easy-to-use interface for passing functions, Pydantic models, and tools to LLMs
 - Streamlined process for function calling and result handling
 - Unified Message format, making switching of providers while keeping the same chat history easy.
+- A [`tool-agents` CLI](#command-line) that runs workflows from a project folder
 - [JSON-defined pipelines](#pipelines) with flow control (conditional, loop,
   map, parallel) and declarative provider endpoints, so a workflow file
   describes both its shape and the APIs it runs against.
@@ -268,6 +270,35 @@ while True:
         else:
             raise RuntimeError("Error during response generation")
 ```
+## Command Line
+
+`tool-agents` runs workflows from a `.tool-agents` folder committed alongside
+your code, so a workflow is a project asset rather than a script:
+
+```
+.tool-agents/
+  workflows/     *.json pipeline documents
+  tools/         *.py   modules whose tools become plugins
+  prompts/       *.md   reusable prompt text
+  providers/     *.json shared agent and endpoint declarations
+  adapter/
+    input/       *.py   custom source types
+    output/      *.py   custom sink types
+```
+
+```bash
+tool-agents init
+tool-agents list
+tool-agents show digest
+tool-agents run digest --arg topic=otters --allow-writes
+```
+
+The folder is found by walking up from the working directory, the way `git`
+finds `.git`. Tool inspection lives under `tool-agents tools`; the older
+`toolagents-tools` command still works and says where it moved.
+
+See the [CLI guide](https://maximilian-winter.github.io/ToolAgents/guides/cli/).
+
 ## Pipelines
 
 A pipeline describes a multi-step workflow. The JSON holds the shape of the run

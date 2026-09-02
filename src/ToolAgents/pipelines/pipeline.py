@@ -553,9 +553,24 @@ class ProcessStep:
         """Return the step name."""
         return self.step_name
 
-    def get_system_message(self) -> str:
-        """Return the system message for this step."""
-        return self.system_message
+    def get_system_message(
+        self,
+        fields: "PipelineResults | Mapping[str, Any] | None" = None,
+    ) -> str:
+        """Return the system message, with any placeholders filled in.
+
+        A system message is a prompt as much as ``prompt_template`` is, so it
+        is rendered against the same results. That is what lets a shared
+        prompt file be addressed as ``{prompts/reviewer}`` in either field.
+
+        Args:
+            fields: A results mapping. Omit it to get the raw template.
+        """
+        if fields is None:
+            return self.system_message
+        return MessageTemplate.from_string(
+            self.system_message
+        ).generate_message_content(fields)
 
     def get_prompt(
         self,
@@ -813,7 +828,16 @@ class Pipeline:
         it replaced — ``results["greeting"]`` resolves by scope order — so
         existing calling code is unaffected.
         """
-        results = PipelineResults(inputs=kwargs)
+        return self.run(PipelineResults(inputs=kwargs))
+
+    def run(self, results: PipelineResults) -> PipelineResults:
+        """Execute every process against an existing results object.
+
+        ``run_pipeline`` is the usual entry point; this one is for a caller
+        that needs to seed a section other than ``inputs`` -- shared prompt
+        text, for instance -- before the run begins.
+        """
+
         for process in self.processes:
             results = process.run_process(results)
         return results
@@ -1115,7 +1139,9 @@ class SequentialProcess(Process):
 
             # Prepare messages for the step
             messages = [
-                ChatMessage.create_system_message(step.get_system_message()),
+                ChatMessage.create_system_message(
+                    step.get_system_message(results)
+                ),
                 ChatMessage.create_user_message(step.get_prompt(results)),
             ]
 

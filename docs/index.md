@@ -43,6 +43,7 @@ graph TB
 - **Streaming Support**: Get streaming responses for a more responsive experience
 - **Memory Management**: Manage chat history and implement memory features
 - **Advanced Agent Capabilities**: Create multi-agent systems, research agents, and more
+- **A Project CLI**: `tool-agents` runs workflows from a `.tool-agents` folder holding the workflows, tools, prompts, providers and adapters a project needs
 - **JSON-Defined Pipelines**: Describe a multi-step workflow — including branching, loops, fan-out, and the endpoints it runs against — in a file rather than in code
 
 ## Quick Links
@@ -51,6 +52,7 @@ graph TB
 - [Basic Usage](guides/basic-usage.md) - Learn the core concepts
 - [Custom Tools](guides/custom-tools.md) - Create your own tools
 - [Pipelines](guides/pipelines.md) - Define multi-step workflows in JSON
+- [The tool-agents CLI](guides/cli.md) - Run workflows from a project folder
 - [Examples](examples/basic-agents.md) - Explore practical applications
 
 ## Community and Support

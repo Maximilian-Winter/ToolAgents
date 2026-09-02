@@ -81,9 +81,17 @@ def _print_tool_list(tools: ToolCollection) -> None:
         print(f"{tool.model.__name__}{summary}")
 
 
+DEPRECATION_NOTICE = (
+    "note: 'toolagents-tools' is deprecated and will be removed in a future "
+    "release. The same commands live under 'tool-agents tools', which can "
+    "also read tool modules from a .tool-agents workspace."
+)
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
+    print(DEPRECATION_NOTICE, file=sys.stderr)
 
     try:
         tools = load_tools_from_spec(args.module)

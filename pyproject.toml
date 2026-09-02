@@ -102,6 +102,7 @@ Homepage = "https://github.com/Maximilian-Winter/ToolAgents"
 "Bug Tracker" = "https://github.com/Maximilian-Winter/ToolAgents/issues"
 
 [project.scripts]
+tool-agents = "ToolAgents.cli:main"
 toolagents-tools = "ToolAgents.tool_adapters.cli:main"
 
 [tool.setuptools.packages.find]

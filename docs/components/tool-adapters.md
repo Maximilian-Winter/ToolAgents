@@ -55,9 +55,9 @@ def create_tools():
 Then list, inspect, and call the tools:
 
 ```bash
-toolagents-tools list --module my_tools:create_tools
-toolagents-tools schema greet --module my_tools:create_tools
-toolagents-tools call greet --module my_tools:create_tools --json "{\"name\":\"Ada\"}"
+tool-agents tools list --module my_tools:create_tools
+tool-agents tools schema greet --module my_tools:create_tools
+tool-agents tools call greet --module my_tools:create_tools --json "{\"name\":\"Ada\"}"
 ```
 
 The CLI accepts any zero-argument factory that returns a list of `FunctionTool`
