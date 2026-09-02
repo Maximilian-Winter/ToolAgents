@@ -99,7 +99,7 @@ system_message = "You are an advanced AI assistant"
 
 
 settings = api.get_default_settings()
-settings.neutralize_all_samplers()
+settings.neutralize_all()
 settings.temperature = 0.75
 
 api.set_default_settings(settings)

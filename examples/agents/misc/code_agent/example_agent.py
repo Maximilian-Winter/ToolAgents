@@ -27,9 +27,9 @@ api = OpenAIChatAPI(
 settings = api.get_default_settings()
 agent = ChatToolAgent(chat_api=api, log_output=True)
 
-settings.neutralize_all_samplers()
+settings.neutralize_all()
 settings.temperature = 0.1
-settings.set_max_new_tokens(4096)
+settings.add_request_setting("max_tokens", 4096)
 
 python_code_executor = PythonExecutor(
     predefined_types=[unit, MathOperation],

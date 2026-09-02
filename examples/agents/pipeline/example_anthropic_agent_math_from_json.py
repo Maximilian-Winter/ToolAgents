@@ -5,22 +5,25 @@ from dotenv import load_dotenv
 
 from ToolAgents.agents import ChatToolAgent
 from ToolAgents.pipelines import Pipeline
-from ToolAgents.provider.chat_api_provider.anthropic import AnthropicChatAPI
-
+from ToolAgents.provider.chat_api_provider.open_ai import OpenAIChatAPI
 
 load_dotenv()
 
-api = AnthropicChatAPI(
-    api_key=os.getenv("ANTHROPIC_API_KEY"),
-    model="claude-3-5-sonnet-20241022",
+# Openrouter API
+api = OpenAIChatAPI(
+    api_key=os.getenv("OPENROUTER_API_KEY"),
+    model="qwen/qwen3.5-9b",
+    base_url="https://openrouter.ai/api/v1",
 )
-
 agent = ChatToolAgent(chat_api=api)
 
+
+# Create a samplings settings object
 settings = api.get_default_settings()
-settings.neutralize_all_samplers()
+
+# Set sampling settings
 settings.temperature = 0.3
-settings.set_max_new_tokens(4096)
+settings.top_p = 0.9
 api.set_default_settings(settings)
 
 pipeline_path = Path(__file__).with_name("math_greeting_pipeline.json")
