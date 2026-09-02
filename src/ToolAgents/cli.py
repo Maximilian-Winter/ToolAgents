@@ -88,6 +88,12 @@ def build_parser() -> argparse.ArgumentParser:
         help=f"Path to a {DEFAULT_WORKSPACE_DIRNAME} folder. Defaults to the "
         "nearest one at or above the working directory.",
     )
+    parser.add_argument(
+        "--traceback",
+        action="store_true",
+        help="On an unexpected error, print the full traceback instead of a "
+        "one-line message. Useful when debugging a workflow or a workspace module.",
+    )
     commands = parser.add_subparsers(dest="command", required=True)
 
     init = commands.add_parser("init", help="Create a workspace folder.")
@@ -218,8 +224,10 @@ def _command_show(args: argparse.Namespace) -> int:
 
     referenced = sorted(_referenced_inputs(document))
     print("\ninputs referenced")
-    for name in referenced or ["  <none found>"]:
-        print(f"  {name}" if referenced else name)
+    if not referenced:
+        print("  <none found>")
+    for name in referenced:
+        print(f"  {name}")
     return 0
 
 
@@ -356,9 +364,13 @@ def main(argv: list[str] | None = None) -> int:
     try:
         return handler(args)
     except WorkspaceError as exc:
+        # A controlled, user-facing message (missing workflow, bad JSON): stays a
+        # clean line even under --traceback, since its traceback tells you nothing.
         print(str(exc), file=sys.stderr)
         return 2
     except Exception as exc:
+        if args.traceback:
+            raise
         print(f"{type(exc).__name__}: {exc}", file=sys.stderr)
         return 1
 

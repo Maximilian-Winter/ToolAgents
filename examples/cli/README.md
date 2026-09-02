@@ -35,6 +35,11 @@ is printed to stderr as each step runs; add `--quiet` to silence it.
 The workspace is found by walking up from the working directory, so `cd` into an
 example and run — no paths to pass.
 
+**A note on trust.** A workspace's `tools/` and `adapter/` modules are Python that
+runs when you run a workflow — imported before `--allow-writes` is even consulted. So
+that flag guards what a workflow *writes*, not what its code can *do*: only run
+workspaces you trust, the same way you would only run a checked-out repo's build.
+
 ---
 
 ## 01-hello — the smallest thing that runs
