@@ -26,14 +26,22 @@ class OpenAIChatAPI(ChatAPIProvider):
         api_key: str,
         model: str,
         base_url: str = "https://api.openai.com/v1",
+        timeout: float = None,
+        max_retries: int = None,
         provider_identifier: str = "openai",
         message_converter: BaseMessageConverter = OpenAIMessageConverter(),
         response_converter: BaseResponseConverter = OpenAIResponseConverter(),
         debug_mode: bool = False,
     ):
-        self.client = OpenAI(api_key=api_key, base_url=base_url)
+        client_kwargs = {"api_key": api_key, "base_url": base_url}
+        if timeout is not None:
+            client_kwargs["timeout"] = timeout
+        if max_retries is not None:
+            client_kwargs["max_retries"] = max_retries
+        self.client = OpenAI(**client_kwargs)
         self.model = model
         self.base_url = base_url
+        self.timeout = timeout
         self.settings = ProviderSettings([
             LLMSetting("temperature", default_value=1.0, neutral_value=1.0, level=SettingLevel.REQUEST),
             LLMSetting("top_p", default_value=1.0, neutral_value=1.0, level=SettingLevel.REQUEST),
@@ -103,14 +111,22 @@ class AsyncOpenAIChatAPI(AsyncChatAPIProvider):
         api_key: str,
         model: str,
         base_url: str = "https://api.openai.com/v1",
+        timeout: float = None,
+        max_retries: int = None,
         provider_identifier: str = "openai",
         message_converter: BaseMessageConverter = OpenAIMessageConverter(),
         response_converter: BaseResponseConverter = OpenAIResponseConverter(),
         debug_mode: bool = False,
     ):
-        self.client = AsyncOpenAI(api_key=api_key, base_url=base_url)
+        client_kwargs = {"api_key": api_key, "base_url": base_url}
+        if timeout is not None:
+            client_kwargs["timeout"] = timeout
+        if max_retries is not None:
+            client_kwargs["max_retries"] = max_retries
+        self.client = AsyncOpenAI(**client_kwargs)
         self.model = model
         self.base_url = base_url
+        self.timeout = timeout
 
         self.settings = ProviderSettings([
             LLMSetting("temperature", default_value=1.0, neutral_value=1.0, level=SettingLevel.REQUEST),

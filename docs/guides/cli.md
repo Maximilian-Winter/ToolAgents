@@ -216,6 +216,21 @@ integer, `flag=true` a boolean and `tags=["a","b"]` a list, while
 `topic=otters` stays the string it looks like. All three sources merge, with
 `--arg` winning.
 
+Progress is reported to stderr while the run proceeds, naming each step as it
+calls the model:
+
+```
+  first_draft / draft: calling model
+  first_draft / draft: 412 characters
+  refine: iteration 1 of at most 3
+  cycle / verdict: calling model
+```
+
+Silence it with `--quiet`. It goes to stderr, so piping stdout is unaffected.
+A model call can take minutes, and without this a run is indistinguishable from
+a hang — see [timeouts](pipeline-endpoints.md#timeouts) for bounding how long a
+single step may take.
+
 Output control:
 
 | Flag | Prints |

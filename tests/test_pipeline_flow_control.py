@@ -764,3 +764,98 @@ def test_env_file_round_trips(tmp_path):
         {"type": "openai", "model": "m", "env_file": ".env"}
     )
     assert config.to_dict()["env_file"] == ".env"
+
+
+# ---------------------------------------------------------------------------
+# Timeouts and retries
+# ---------------------------------------------------------------------------
+
+
+def test_a_provider_config_can_set_a_timeout(api_key_env):
+    """Without one the SDK waits 600s and retries twice: half an hour silent."""
+
+    from ToolAgents.pipelines import ProviderConfig
+
+    provider = ProviderConfig.from_dict(
+        {
+            "type": "openrouter",
+            "model": "qwen/qwen3.5-9b",
+            "timeout": 30,
+            "max_retries": 0,
+        }
+    ).build()
+
+    assert provider.client.timeout == 30
+    assert provider.client.max_retries == 0
+
+
+def test_timeout_and_retries_round_trip():
+    from ToolAgents.pipelines import ProviderConfig
+
+    config = ProviderConfig.from_dict(
+        {"type": "openai", "model": "m", "timeout": 45, "max_retries": 2}
+    )
+    data = config.to_dict()
+
+    assert data["timeout"] == 45
+    assert data["max_retries"] == 2
+
+
+def test_omitting_a_timeout_leaves_the_sdk_default(api_key_env):
+    from ToolAgents.pipelines import ProviderConfig
+
+    provider = ProviderConfig.from_dict(
+        {"type": "openrouter", "model": "qwen/qwen3.5-9b"}
+    ).build()
+
+    assert provider.timeout is None
+
+
+# ---------------------------------------------------------------------------
+# Progress reporting
+# ---------------------------------------------------------------------------
+
+
+def test_a_run_reports_each_step_it_starts(caplog):
+    """A model call can take minutes; silence is indistinguishable from a hang."""
+
+    process = SequentialProcess("work", agent=EchoAgent())
+    process.add_step(step("draft", "write"))
+    pipeline = Pipeline()
+    pipeline.add_process(process)
+
+    with caplog.at_level("INFO", logger="ToolAgents.pipelines"):
+        pipeline.run_pipeline()
+
+    messages = [record.getMessage() for record in caplog.records]
+    assert any("work / draft: calling model" in m for m in messages)
+
+
+def test_a_loop_reports_which_iteration_it_is_on(caplog):
+    process = LoopProcess(
+        max_iterations=2, process_name="refine", agent=EchoAgent(),
+        steps=[step("out", "go")],
+    )
+    pipeline = Pipeline()
+    pipeline.add_process(process)
+
+    with caplog.at_level("INFO", logger="ToolAgents.pipelines"):
+        pipeline.run_pipeline()
+
+    messages = [record.getMessage() for record in caplog.records]
+    assert any("refine: iteration 1 of at most 2" in m for m in messages)
+    assert any("refine: iteration 2 of at most 2" in m for m in messages)
+
+
+def test_progress_is_silent_unless_a_caller_asks_for_it(caplog):
+    """The library logs; it never prints. Only the CLI turns it on."""
+
+    process = SequentialProcess("work", agent=EchoAgent())
+    process.add_step(step("draft", "write"))
+    pipeline = Pipeline()
+    pipeline.add_process(process)
+
+    with caplog.at_level("WARNING", logger="ToolAgents.pipelines"):
+        pipeline.run_pipeline()
+
+    assert not [r for r in caplog.records if r.levelname == "INFO"]

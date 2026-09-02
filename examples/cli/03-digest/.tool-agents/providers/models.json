@@ -8,6 +8,11 @@
         "api_key_env": "OPENROUTER_API_KEY",
         "settings": {
           "temperature": 0.2
+        },
+        "timeout": 120,
+        "max_retries": 1,
+        "extra_settings": {
+          "max_tokens": 700
         }
       }
     },
@@ -19,6 +24,11 @@
         "api_key_env": "OPENROUTER_API_KEY",
         "settings": {
           "temperature": 0.8
+        },
+        "timeout": 120,
+        "max_retries": 1,
+        "extra_settings": {
+          "max_tokens": 700
         }
       }
     }

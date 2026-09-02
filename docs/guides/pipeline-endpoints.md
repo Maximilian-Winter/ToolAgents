@@ -84,6 +84,36 @@ a message naming the variable to set. Agents are built on first reference, so a
 document that merely *declares* an endpoint it never uses will not demand that
 endpoint's key.
 
+### Timeouts
+
+!!! warning "Set one for anything unattended"
+
+    The provider SDKs default to a **600 second read timeout with two
+    retries** — up to half an hour on a single step, with no output. A
+    workflow of seven steps can therefore appear to hang for hours when one
+    upstream response stalls.
+
+```json
+{
+  "provider": {
+    "type": "openrouter",
+    "model": "qwen/qwen3.5-9b",
+    "timeout": 120,
+    "max_retries": 1
+  }
+}
+```
+
+Both are omitted by default, leaving the SDK's behaviour untouched.
+
+Note that `max_tokens` is **not** a declared setting on OpenAI-shaped
+providers, so it goes in `extra_settings`. Without a bound, a reasoning model
+can generate for a very long time:
+
+```json
+{"extra_settings": {"max_tokens": 700}}
+```
+
 ### Reading keys from a .env file
 
 `env_file` names a file to read before the variable is looked up:

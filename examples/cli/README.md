@@ -21,6 +21,11 @@ OPENROUTER_API_KEY=sk-...
 
 An exported variable wins over the file. Do not commit it.
 
+Each example sets `timeout: 120` and `max_tokens: 700` on its providers. The
+SDK default is 600 seconds with two retries — half an hour per step — so an
+unbounded workflow can look like it has hung when one response stalls. Progress
+is printed to stderr as each step runs; add `--quiet` to silence it.
+
 The workspace is found by walking up from the working directory, so `cd` into an
 example and run — no paths to pass.
 

@@ -28,6 +28,7 @@ from __future__ import annotations
 
 import abc
 import json
+import logging
 import os
 import re
 import sys
@@ -66,6 +67,8 @@ __all__ = [
     "sink_from_config",
     "source_from_config",
 ]
+
+logger = logging.getLogger("ToolAgents.pipelines")
 
 #: Guard against a mistyped glob pulling in a whole filesystem.
 DEFAULT_MAX_FILES = 1000
@@ -776,6 +779,13 @@ class SourceProcess(Process):
                         chunked.append({**record, "content": chunk, "chunk_index": index})
                 value = chunked
 
+        logger.info(
+            "%s: loaded %s into %s/%s",
+            self.process_name,
+            f"{len(value)} items" if isinstance(value, list) else "text",
+            self.section,
+            self.result_key,
+        )
         results.section(self.section, create=True)[self.result_key] = value
         return results
 
@@ -893,6 +903,7 @@ class SinkProcess(Process):
                 f"{', '.join(sorted(results.outputs)) or '<none>'}."
             )
 
+        logger.info("%s: emitting to %s", self.process_name, self.sink.sink_type)
         emitted = self.sink.emit(value, results)
         if self.record_as:
             results.outputs[self.record_as] = emitted

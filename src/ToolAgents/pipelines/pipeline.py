@@ -4,6 +4,7 @@ import abc
 import importlib
 import inspect
 import json
+import logging
 from dataclasses import dataclass, field, replace as dataclass_replace
 from os import PathLike
 from typing import Any, Iterable, Mapping, Sequence
@@ -28,6 +29,10 @@ from ToolAgents.pipelines.agent_config import (
 #: Version 2 adds flow-control processes (conditional/loop/map/parallel), the
 #: optional ``agents`` block, and per-step/per-process ``agent`` references.
 #: It is a strict superset of version 1, so version 1 documents still load.
+#: Progress is reported here rather than printed, so a library caller can
+#: route it and the CLI can show it. A long step otherwise looks like a hang.
+logger = logging.getLogger("ToolAgents.pipelines")
+
 PIPELINE_SCHEMA_VERSION = 2
 
 #: Schema versions this module can read.
@@ -1149,6 +1154,8 @@ class SequentialProcess(Process):
             if tool_registry is not None:
                 tool_registry.add_tools(step.get_tools())
 
+            logger.info("%s / %s: calling model", self.process_name, step.step_name)
+
             # Execute step with appropriate agent
             if step.get_agent() is not None:
                 # Use step-specific agent if available
@@ -1167,6 +1174,13 @@ class SequentialProcess(Process):
                         f"No agent defined for process '{self.process_name}', "
                         f"step:{step.step_name}"
                     )
+
+            logger.info(
+                "%s / %s: %d characters",
+                self.process_name,
+                step.step_name,
+                len(process_result.response or ""),
+            )
 
             # Store step results in the outputs section, so a step can never
             # shadow a caller argument or a flow-control variable.

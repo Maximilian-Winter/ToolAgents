@@ -201,6 +201,11 @@ class ProviderConfig:
         env_file: Optional ``.env`` file read before the API key is looked up.
             Variables already set in the environment win, so the file supplies
             a default rather than an override.
+        timeout: Seconds to wait for a response before giving up. The SDKs
+            default to 600 with two retries, so a stalled request can hang for
+            half an hour looking like a crash; set this for anything running
+            unattended.
+        max_retries: How many times to retry a failed request.
     """
 
     provider_type: str
@@ -211,6 +216,8 @@ class ProviderConfig:
     settings: dict[str, Any] = field(default_factory=dict)
     extra_settings: dict[str, Any] = field(default_factory=dict)
     env_file: str | None = None
+    timeout: float | None = None
+    max_retries: int | None = None
 
     # -- resolution --------------------------------------------------------
 
@@ -279,6 +286,10 @@ class ProviderConfig:
         }
         if base_url is not None:
             kwargs["base_url"] = base_url
+        if self.timeout is not None:
+            kwargs["timeout"] = self.timeout
+        if self.max_retries is not None:
+            kwargs["max_retries"] = self.max_retries
         if self.provider_identifier is not None:
             if not spec.supports_provider_identifier:
                 raise AgentConfigurationError(
@@ -350,6 +361,10 @@ class ProviderConfig:
             data["extra_settings"] = dict(self.extra_settings)
         if self.env_file is not None:
             data["env_file"] = self.env_file
+        if self.timeout is not None:
+            data["timeout"] = self.timeout
+        if self.max_retries is not None:
+            data["max_retries"] = self.max_retries
         return data
 
     @classmethod
@@ -382,6 +397,10 @@ class ProviderConfig:
             settings=dict(data.get("settings") or {}),
             extra_settings=dict(data.get("extra_settings") or {}),
             env_file=_optional_str(data.get("env_file")),
+            timeout=None if data.get("timeout") is None else float(data["timeout"]),
+            max_retries=(
+                None if data.get("max_retries") is None else int(data["max_retries"])
+            ),
         )
 
 

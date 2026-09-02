@@ -43,7 +43,14 @@ def _get_mistral_client_class():
 
 
 class MistralChatAPI(ChatAPIProvider):
-    def __init__(self, api_key: str, model: str, base_url: str = None):
+    def __init__(
+        self,
+        api_key: str,
+        model: str,
+        base_url: str = None,
+        timeout: float = None,
+        max_retries: int = None,
+    ):
         """Create the provider.
 
         Args:
@@ -56,9 +63,14 @@ class MistralChatAPI(ChatAPIProvider):
         client_kwargs = {"api_key": api_key}
         if base_url is not None:
             client_kwargs["server_url"] = base_url
+        if timeout is not None:
+            client_kwargs["timeout"] = timeout
+        if max_retries is not None:
+            client_kwargs["max_retries"] = max_retries
         self.client = _get_mistral_client_class()(**client_kwargs)
         self.model = model
         self.base_url = base_url
+        self.timeout = timeout
         self.settings = ProviderSettings([
             LLMSetting("temperature", default_value=1.0, neutral_value=1.0, level=SettingLevel.REQUEST),
             LLMSetting("top_p", default_value=1.0, neutral_value=1.0, level=SettingLevel.REQUEST),
@@ -114,7 +126,14 @@ class MistralChatAPI(ChatAPIProvider):
 
 
 class AsyncMistralChatAPI(AsyncChatAPIProvider):
-    def __init__(self, api_key: str, model: str, base_url: str = None):
+    def __init__(
+        self,
+        api_key: str,
+        model: str,
+        base_url: str = None,
+        timeout: float = None,
+        max_retries: int = None,
+    ):
         """Create the provider.
 
         Args:
@@ -127,9 +146,14 @@ class AsyncMistralChatAPI(AsyncChatAPIProvider):
         client_kwargs = {"api_key": api_key}
         if base_url is not None:
             client_kwargs["server_url"] = base_url
+        if timeout is not None:
+            client_kwargs["timeout"] = timeout
+        if max_retries is not None:
+            client_kwargs["max_retries"] = max_retries
         self.client = _get_mistral_client_class()(**client_kwargs)
         self.model = model
         self.base_url = base_url
+        self.timeout = timeout
         self.settings = ProviderSettings([
             LLMSetting("temperature", default_value=1.0, neutral_value=1.0, level=SettingLevel.REQUEST),
             LLMSetting("top_p", default_value=1.0, neutral_value=1.0, level=SettingLevel.REQUEST),

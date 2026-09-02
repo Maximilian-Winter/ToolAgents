@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import logging
 import sys
 from pathlib import Path
 from typing import Any, Mapping, Sequence
@@ -125,6 +126,11 @@ def build_parser() -> argparse.ArgumentParser:
         help="Print only this results path, such as outputs/draft.",
     )
     run.add_argument(
+        "--quiet",
+        action="store_true",
+        help="Do not report progress while running.",
+    )
+    run.add_argument(
         "--json-output",
         action="store_true",
         help="Print the whole results object as JSON instead of a summary.",
@@ -233,6 +239,16 @@ def _referenced_inputs(document: Any) -> set[str]:
 
 
 def _command_run(args: argparse.Namespace) -> int:
+    # A model call can take minutes. Without progress the run is
+    # indistinguishable from a hang, so it is on unless silenced, and goes to
+    # stderr so piping stdout still works.
+    if not args.quiet:
+        handler = logging.StreamHandler(sys.stderr)
+        handler.setFormatter(logging.Formatter("  %(message)s"))
+        pipeline_logger = logging.getLogger("ToolAgents.pipelines")
+        pipeline_logger.addHandler(handler)
+        pipeline_logger.setLevel(logging.INFO)
+
     workspace = _workspace(args)
     arguments = collect_arguments(args.arg, args.json, args.json_file)
     results = workspace.run_workflow(

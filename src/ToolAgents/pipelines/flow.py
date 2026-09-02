@@ -14,6 +14,7 @@ Importing this module registers the four process types, which is why
 
 from __future__ import annotations
 
+import logging
 import re
 import warnings
 from collections import Counter
@@ -48,6 +49,8 @@ __all__ = [
     "MapProcess",
     "ParallelProcess",
 ]
+
+logger = logging.getLogger("ToolAgents.pipelines")
 
 #: Hard ceiling on loop iterations, so a malformed condition cannot spin
 #: forever burning API credit.
@@ -475,6 +478,12 @@ class LoopProcess(FlowProcess):
                     satisfied = True
                     break
 
+            logger.info(
+                "%s: iteration %d of at most %d",
+                self.process_name,
+                index + 1,
+                self.max_iterations,
+            )
             results.vars[self.iteration_var] = index
             results = self.run_child_processes(self.processes, results)
             iterations = index + 1
@@ -676,7 +685,9 @@ class MapProcess(FlowProcess):
         values = list(values)
 
         collected: list[Any] = []
+        logger.info("%s: mapping over %d items", self.process_name, len(values))
         for index, item in enumerate(values):
+            logger.info("%s: item %d of %d", self.process_name, index + 1, len(values))
             scope = results.copy()
             scope.vars[self.item_var] = item
             scope.vars[self.index_var] = index
@@ -857,6 +868,12 @@ class ParallelProcess(FlowProcess):
             return index, branch.run_process(base.copy())
 
         workers = self.max_workers or len(self.branches)
+        logger.info(
+            "%s: running %d branches on %d workers",
+            self.process_name,
+            len(self.branches),
+            workers,
+        )
         with ThreadPoolExecutor(max_workers=workers) as executor:
             outcomes = list(executor.map(run_branch, enumerate(self.branches)))
 

@@ -17,7 +17,14 @@ from ToolAgents.data_models.messages import ChatMessage
 
 
 class GroqChatAPI(ChatAPIProvider):
-    def __init__(self, api_key: str, model: str, base_url: str = None):
+    def __init__(
+        self,
+        api_key: str,
+        model: str,
+        base_url: str = None,
+        timeout: float = None,
+        max_retries: int = None,
+    ):
         """Create the provider.
 
         Args:
@@ -29,9 +36,14 @@ class GroqChatAPI(ChatAPIProvider):
         client_kwargs = {"api_key": api_key}
         if base_url is not None:
             client_kwargs["base_url"] = base_url
+        if timeout is not None:
+            client_kwargs["timeout"] = timeout
+        if max_retries is not None:
+            client_kwargs["max_retries"] = max_retries
         self.client = Groq(**client_kwargs)
         self.model = model
         self.base_url = base_url
+        self.timeout = timeout
         self.settings = ProviderSettings([
             LLMSetting("temperature", default_value=1.0, neutral_value=1.0, level=SettingLevel.REQUEST),
             LLMSetting("top_p", default_value=1.0, neutral_value=1.0, level=SettingLevel.REQUEST),
@@ -91,7 +103,14 @@ class GroqChatAPI(ChatAPIProvider):
 
 
 class AsyncGroqChatAPI(AsyncChatAPIProvider):
-    def __init__(self, api_key: str, model: str, base_url: str = None):
+    def __init__(
+        self,
+        api_key: str,
+        model: str,
+        base_url: str = None,
+        timeout: float = None,
+        max_retries: int = None,
+    ):
         """Create the provider.
 
         Args:
@@ -103,9 +122,14 @@ class AsyncGroqChatAPI(AsyncChatAPIProvider):
         client_kwargs = {"api_key": api_key}
         if base_url is not None:
             client_kwargs["base_url"] = base_url
+        if timeout is not None:
+            client_kwargs["timeout"] = timeout
+        if max_retries is not None:
+            client_kwargs["max_retries"] = max_retries
         self.client = AsyncGroq(**client_kwargs)
         self.model = model
         self.base_url = base_url
+        self.timeout = timeout
         self.settings = ProviderSettings([
             LLMSetting("temperature", default_value=1.0, neutral_value=1.0, level=SettingLevel.REQUEST),
             LLMSetting("top_p", default_value=1.0, neutral_value=1.0, level=SettingLevel.REQUEST),
