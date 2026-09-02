@@ -224,6 +224,19 @@ tool-agents tools call AddNumbers --plugin math --json '{"a": 2, "b": 3}'
     at `tool-agents tools`. It will be removed in a future release; the notice
     goes to stderr, so piping stdout is unaffected in the meantime.
 
+## Worked examples
+
+Three runnable workspaces live in `examples/cli/`, building on each other:
+
+| Example | Shows |
+| --- | --- |
+| `01-hello` | one workflow, one provider, printed to stdout |
+| `02-review` | prompt files, two models, a refine loop, a branch on the outcome |
+| `03-digest` | every folder at once: tools, a custom sink adapter, a folder source with chunking, map, parallel, file and stream sinks |
+
+`cd` into one and run — the workspace is found by walking up, so there are no
+paths to pass.
+
 ## From Python
 
 The workspace is usable without the CLI:

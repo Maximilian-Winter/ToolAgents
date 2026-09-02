@@ -1,0 +1,113 @@
+{
+  "schema_version": 2,
+  "processes": [
+    {
+      "process_type": "source",
+      "process_name": "load_notes",
+      "source": {
+        "type": "folder",
+        "path": "{inputs/notes_dir}",
+        "glob": "*.md"
+      },
+      "splitter": {
+        "type": "recursive_character",
+        "chunk_size": 400,
+        "chunk_overlap": 40
+      },
+      "result_key": "chunks"
+    },
+    {
+      "process_type": "map",
+      "process_name": "reduce_each",
+      "items": "chunks",
+      "item_var": "chunk",
+      "collect": "point",
+      "result_key": "points",
+      "steps": [
+        {
+          "step_name": "point",
+          "system_message": "{prompts/reducer}",
+          "prompt_template": "Reduce to one sentence:\n\n{vars/chunk}"
+        }
+      ]
+    },
+    {
+      "process_type": "parallel",
+      "process_name": "shape",
+      "max_workers": 2,
+      "on_conflict": "section",
+      "branches": [
+        {
+          "process_type": "sequential",
+          "process_name": "title_branch",
+          "steps": [
+            {
+              "step_name": "title",
+              "system_message": "{prompts/titler}",
+              "prompt_template": "Title a briefing covering:\n\n{outputs/points}"
+            }
+          ],
+          "agent": "stylist"
+        },
+        {
+          "process_type": "sequential",
+          "process_name": "body_branch",
+          "steps": [
+            {
+              "step_name": "body",
+              "system_message": "{prompts/briefer}",
+              "prompt_template": "Write the bullets for a briefing aimed at {inputs/audience}:\n\n{outputs/points}",
+              "tools": [
+                {
+                  "plugin": "text_stats",
+                  "tool_name": "ReadingMinutes"
+                }
+              ]
+            }
+          ],
+          "agent": "worker"
+        }
+      ]
+    },
+    {
+      "process_type": "sequential",
+      "process_name": "assemble",
+      "steps": [
+        {
+          "step_name": "digest",
+          "system_message": "{prompts/briefer}",
+          "prompt_template": "# {outputs/title}\n\n{outputs/body}\n\nReturn this unchanged."
+        }
+      ]
+    },
+    {
+      "process_type": "sink",
+      "process_name": "write_digest",
+      "sink": {
+        "type": "file",
+        "path": "{inputs/out_dir}/digest.md"
+      },
+      "from": "outputs/digest",
+      "record_as": "digest_path"
+    },
+    {
+      "process_type": "sink",
+      "process_name": "log_points",
+      "sink": {
+        "type": "jsonl",
+        "path": "{inputs/out_dir}/points.jsonl"
+      },
+      "from": "outputs/points",
+      "record_as": "points_logged"
+    },
+    {
+      "process_type": "sink",
+      "process_name": "announce",
+      "sink": {
+        "type": "stream",
+        "prefix": "wrote "
+      },
+      "from": "outputs/digest_path"
+    }
+  ]
+}

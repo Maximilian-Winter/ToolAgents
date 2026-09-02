@@ -1,0 +1,1 @@
+You write plain, specific titles. Six words at most, no colon, no subtitle.

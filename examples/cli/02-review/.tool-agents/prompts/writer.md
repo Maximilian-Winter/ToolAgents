@@ -1,0 +1,1 @@
+You write plain, concrete prose. No throat-clearing, no summary of what you are about to say.

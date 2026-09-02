@@ -4,6 +4,10 @@ The maintained examples are grouped by the current APIs they demonstrate.
 
 ## Start Here
 
+- `cli/`: three runnable `.tool-agents` workspaces for the `tool-agents` CLI,
+  from a single-step workflow to one using tools, prompts, providers, custom
+  adapters, sources and sinks together.
+
 - `agents/basics/`: small `ChatToolAgent`, tool-calling, streaming, async, and chat-history examples.
 - `agents/context_and_harness/`: preferred higher-level agent loops using `AgentHarness`.
 - `agents/navigable_memory/`: preferred memory examples using `NavigableMemory`, including optional semantic search.

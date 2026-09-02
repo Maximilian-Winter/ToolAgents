@@ -1,0 +1,27 @@
+{
+  "agents": [
+    {
+      "name": "worker",
+      "provider": {
+        "type": "openrouter",
+        "model": "qwen/qwen3.5-9b",
+        "api_key_env": "OPENROUTER_API_KEY",
+        "settings": {
+          "temperature": 0.2
+        }
+      }
+    },
+    {
+      "name": "stylist",
+      "provider": {
+        "type": "openrouter",
+        "model": "qwen/qwen3.5-9b",
+        "api_key_env": "OPENROUTER_API_KEY",
+        "settings": {
+          "temperature": 0.8
+        }
+      }
+    }
+  ],
+  "default_agent": "worker"
+}

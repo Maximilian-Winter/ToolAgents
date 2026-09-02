@@ -114,3 +114,4 @@ site/
 .docs-venv/
 .commitmsg
 examples/agents/pipeline/out/
+examples/cli/*/out/

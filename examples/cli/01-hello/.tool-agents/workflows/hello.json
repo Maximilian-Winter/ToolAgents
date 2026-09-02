@@ -1,0 +1,24 @@
+{
+  "schema_version": 2,
+  "processes": [
+    {
+      "process_type": "sequential",
+      "process_name": "greet",
+      "steps": [
+        {
+          "step_name": "greeting",
+          "system_message": "You are warm and brief.",
+          "prompt_template": "Write a one-sentence greeting for {inputs/name}, who is curious about {inputs/topic}."
+        }
+      ]
+    },
+    {
+      "process_type": "sink",
+      "process_name": "show",
+      "sink": {
+        "type": "stream"
+      },
+      "from": "outputs/greeting"
+    }
+  ]
+}

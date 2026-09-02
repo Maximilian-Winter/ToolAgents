@@ -1,0 +1,71 @@
+{
+  "schema_version": 2,
+  "processes": [
+    {
+      "process_type": "sequential",
+      "process_name": "first_draft",
+      "steps": [
+        {
+          "step_name": "draft",
+          "system_message": "{prompts/writer}",
+          "prompt_template": "Write a short paragraph about {inputs/topic} for {inputs/audience}."
+        }
+      ]
+    },
+    {
+      "process_type": "loop",
+      "process_name": "refine",
+      "mode": "until",
+      "max_iterations": 3,
+      "condition": "contains(lower(outputs['verdict']), 'approved')",
+      "processes": [
+        {
+          "process_type": "sequential",
+          "process_name": "cycle",
+          "steps": [
+            {
+              "step_name": "verdict",
+              "agent": "critic",
+              "system_message": "{prompts/editor}",
+              "prompt_template": "Revision {vars/iteration}. Judge this draft:\n\n{outputs/draft}"
+            },
+            {
+              "step_name": "draft",
+              "system_message": "{prompts/writer}",
+              "prompt_template": "Revise to address this note, returning only the paragraph.\n\nNote: {outputs/verdict}\n\nDraft: {outputs/draft}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "process_type": "conditional",
+      "process_name": "gate",
+      "condition": "contains(lower(outputs['verdict']), 'approved')",
+      "record_as": "approved",
+      "then": [
+        {
+          "process_type": "sink",
+          "process_name": "publish",
+          "sink": {
+            "type": "stream",
+            "prefix": "APPROVED:\n\n"
+          },
+          "from": "outputs/draft"
+        }
+      ],
+      "else": [
+        {
+          "process_type": "sink",
+          "process_name": "flag",
+          "sink": {
+            "type": "stream",
+            "stream": "stderr",
+            "prefix": "still unresolved after review:\n\n"
+          },
+          "from": "outputs/verdict"
+        }
+      ]
+    }
+  ]
+}

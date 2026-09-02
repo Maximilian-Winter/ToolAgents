@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import pathlib
 from types import SimpleNamespace
 
 import pytest
@@ -439,3 +440,127 @@ def test_the_old_cli_still_works_and_says_it_moved(tmp_path, capsys):
     assert "AddNumbers" in captured.out
     assert "deprecated" in captured.err
     assert "tool-agents tools" in captured.err
+
+
+# ---------------------------------------------------------------------------
+# The shipped CLI examples
+# ---------------------------------------------------------------------------
+
+EXAMPLES = pathlib.Path(__file__).resolve().parent.parent / "examples" / "cli"
+
+
+class ScriptedAgent:
+    """Echoes prompts, and approves on the second review."""
+
+    def __init__(self) -> None:
+        self.reviews = 0
+
+    def get_response(self, messages, tool_registry=None, **kwargs):
+        user = messages[-1].get_as_text()
+        if user.startswith("Revision"):
+            self.reviews += 1
+            return SimpleNamespace(
+                response="APPROVED" if self.reviews >= 2 else "Too vague."
+            )
+        return SimpleNamespace(response="<" + user.splitlines()[0][:40] + ">")
+
+
+requires_examples = pytest.mark.skipif(
+    not EXAMPLES.is_dir(), reason="CLI examples not present"
+)
+
+
+@requires_examples
+def test_every_cli_example_workspace_lists_cleanly():
+    for example in sorted(p for p in EXAMPLES.iterdir() if p.is_dir()):
+        workspace = Workspace(example / ".tool-agents")
+        summary = workspace.summary()
+        assert summary["workflows"], f"{example.name} declares no workflow"
+        assert summary["providers"], f"{example.name} declares no provider"
+
+
+@requires_examples
+def test_hello_example_runs():
+    workspace = Workspace(EXAMPLES / "01-hello" / ".tool-agents")
+    results = workspace.run_workflow(
+        "hello",
+        {"name": "Max", "topic": "otters"},
+        build_agents=False,
+        default_agent=ScriptedAgent(),
+    )
+
+    assert "Max" in results["outputs/greeting"]
+
+
+@requires_examples
+def test_review_example_loops_then_takes_the_approved_branch():
+    workspace = Workspace(EXAMPLES / "02-review" / ".tool-agents")
+    results = workspace.run_workflow(
+        "review",
+        {"topic": "otters", "audience": "curious adults"},
+        build_agents=False,
+        default_agent=ScriptedAgent(),
+    )
+
+    assert results["outputs/refine_iterations"] == 2
+    assert results["outputs/approved"] is True
+
+
+@requires_examples
+def test_digest_example_uses_every_workspace_folder(tmp_path):
+    example = EXAMPLES / "03-digest"
+    workspace = Workspace(example / ".tool-agents")
+
+    # tools/ and adapter/ are wired before the run.
+    assert workspace.build_tool_registry().get_tool("text_stats", "ReadingMinutes")
+    assert "output/jsonl" in workspace.load_adapters()
+
+    results = workspace.run_workflow(
+        "digest",
+        {
+            "notes_dir": str(example / "notes"),
+            "out_dir": str(tmp_path),
+            "audience": "curious adults",
+        },
+        build_agents=False,
+        default_agent=ScriptedAgent(),
+        allow_writes=True,
+    )
+
+    assert len(results["inputs/chunks"]) >= 2  # folder source + splitter
+    assert len(results["outputs/points"]) == len(results["inputs/chunks"])  # map
+    assert (tmp_path / "digest.md").is_file()  # file sink
+    assert (tmp_path / "points.jsonl").is_file()  # the workspace's own sink
+    assert "{prompts/" not in results["outputs/digest"]  # prompts resolved
+
+
+@requires_examples
+def test_digest_example_refuses_to_write_without_the_flag(tmp_path):
+    example = EXAMPLES / "03-digest"
+    workspace = Workspace(example / ".tool-agents")
+
+    with pytest.raises(Exception, match="allow_writes=True"):
+        workspace.run_workflow(
+            "digest",
+            {
+                "notes_dir": str(example / "notes"),
+                "out_dir": str(tmp_path),
+                "audience": "x",
+            },
+            build_agents=False,
+            default_agent=ScriptedAgent(),
+        )
+    assert not (tmp_path / "digest.md").exists()
+
+
+@requires_examples
+def test_parallel_branches_in_the_digest_example_get_distinct_agents(monkeypatch):
+    """Branches run in threads, so sharing one agent would be a race."""
+
+    monkeypatch.setenv("OPENROUTER_API_KEY", "sk-test-not-used")
+    workspace = Workspace(EXAMPLES / "03-digest" / ".tool-agents")
+    pipeline = workspace.load_pipeline("digest")
+
+    parallel = next(p for p in pipeline.processes if p.process_type == "parallel")
+    agents = [branch.agent for branch in parallel.branches]
+    assert agents[0] is not agents[1]
