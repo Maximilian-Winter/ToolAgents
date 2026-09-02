@@ -1,372 +1,137 @@
-﻿---
+---
 title: Knowledge API
 ---
 
 # Knowledge API
 
-The Knowledge module provides capabilities for working with documents, vector databases, web search, and retrieval-augmented generation (RAG).
+Retrieval, document ingestion, text splitting, web search and crawling.
 
-## RAG (Retrieval-Augmented Generation)
+!!! note "Most of this needs an optional extra"
 
-`RAG` provides interfaces for vector database retrieval and context augmentation.
+    Only the base classes, BM25 retrieval and the text splitters are pure
+    Python. The rest pull in third-party packages:
 
-```python
-from ToolAgents.knowledge.vector_database.rag import RAG
+    | Area | Extra |
+    | --- | --- |
+    | Chroma, sentence-transformers embeddings, cross-encoder reranking, and the `numpy` types the base classes use | `memory` |
+    | OCR PDF ingestion | `ocr` |
+    | Web search and crawling | `search` |
 
-rag = RAG(vector_database_provider=vector_db_provider)
-```
+    Two imports are declared in no extra at all: `PyPDF2` (used by
+    `PDFProvider`) and `ddgs` (used by `DDGWebSearchProvider`). Install them
+    directly if you need those two.
 
-### Constructor Parameters
+## RAG
 
-- `vector_database_provider` (VectorDatabaseProvider): Provider for vector database operations
-- `embedding_provider` (EmbeddingProvider, optional): Provider for generating embeddings
-- `reranking_provider` (RerankingProvider, optional): Provider for reranking results
+::: ToolAgents.knowledge.vector_database.rag.RAG
 
-### Methods
+## Vector databases
 
-#### `add_document(document, metadata=None)`
+A `VectorDatabaseProvider` stores chunks and returns the nearest matches for a
+query. `BM25VectorDatabaseProvider` is a pure-Python keyword retriever with no
+dependencies; `EnsembleVectorDatabaseProvider` fuses the scores of two
+providers, which is the usual way to combine keyword and semantic retrieval.
 
-Adds a document to the vector database.
+::: ToolAgents.knowledge.vector_database.vector_database_provider.VectorDatabaseProvider
 
-**Parameters:**
-- `document` (str): Document text
-- `metadata` (dict, optional): Additional metadata
+::: ToolAgents.knowledge.vector_database.vector_database_provider.VectorSearchResult
 
-#### `add_documents(documents, metadata=None)`
+::: ToolAgents.knowledge.vector_database.vector_database_provider.VectorCollection
 
-Adds multiple documents to the vector database.
+::: ToolAgents.knowledge.vector_database.implementations.bm25_database.BM25VectorDatabaseProvider
 
-**Parameters:**
-- `documents` (List[str]): Document texts
-- `metadata` (List[dict], optional): Additional metadata for each document
+::: ToolAgents.knowledge.vector_database.implementations.ensemble_vector_database.EnsembleVectorDatabaseProvider
 
-#### `retrieve_documents(query, k=5, filter=None)`
+::: ToolAgents.knowledge.vector_database.implementations.chroma_db_vector_database.ChromaDbVectorDatabaseProvider
 
-Retrieves relevant documents for a query.
+### Embeddings
 
-**Parameters:**
-- `query` (str): Query text
-- `k` (int): Number of documents to retrieve
-- `filter` (dict, optional): Filter criteria
+::: ToolAgents.knowledge.vector_database.embedding_provider.EmbeddingProvider
 
-**Returns:**
-- `List[dict]`: Retrieved documents with metadata and relevance scores
+::: ToolAgents.knowledge.vector_database.embedding_provider.EmbeddingTask
 
-#### `retrieve_and_rerank_documents(query, k=5, rerank_k=None, filter=None)`
+::: ToolAgents.knowledge.vector_database.embedding_provider.EmbeddingResult
 
-Retrieves and reranks documents for a query.
+::: ToolAgents.knowledge.vector_database.embedding_provider.EmbeddingPrefixConfig
 
-**Parameters:**
-- `query` (str): Query text
-- `k` (int): Number of documents to retrieve
-- `rerank_k` (int, optional): Number of documents after reranking
-- `filter` (dict, optional): Filter criteria
+::: ToolAgents.knowledge.vector_database.implementations.open_ai_embeddings.OpenAIEmbeddingProvider
 
-**Returns:**
-- `List[dict]`: Retrieved and reranked documents
+::: ToolAgents.knowledge.vector_database.implementations.sentence_transformer_embeddings.SentenceTransformerEmbeddingProvider
 
-#### `get_relevant_context(query, max_tokens=3000, k=5, rerank=False, rerank_k=None)`
+### Reranking
 
-Gets relevant context for a query, limiting by token count.
+::: ToolAgents.knowledge.vector_database.reranking_provider.RerankingProvider
 
-**Parameters:**
-- `query` (str): Query text
-- `max_tokens` (int): Maximum tokens to include
-- `k` (int): Number of documents to retrieve
-- `rerank` (bool): Whether to rerank results
-- `rerank_k` (int, optional): Number of documents after reranking
+::: ToolAgents.knowledge.vector_database.reranking_provider.RerankingResult
 
-**Returns:**
-- `str`: Combined relevant context
+::: ToolAgents.knowledge.vector_database.reranking_provider.RerankedDocument
 
-## Vector Database
+::: ToolAgents.knowledge.vector_database.implementations.cross_encoder_reranking.CrossEncoderRerankingProvider
 
-### VectorDatabaseProvider
+## Documents
 
-Abstract interface for vector database operations.
+A `Document` is a list of `DocumentChunk`s. `DocumentGenerator` turns raw text
+into one using a [text splitter](#text-splitting); a `DocumentProvider` loads
+documents from a source such as a PDF.
 
-```python
-from ToolAgents.knowledge.vector_database.vector_database_provider import VectorDatabaseProvider
-```
+::: ToolAgents.knowledge.document.document.Document
 
-#### Methods
+::: ToolAgents.knowledge.document.document.DocumentChunk
 
-##### `add_texts(texts, metadata=None, ids=None)`
+::: ToolAgents.knowledge.document.document.DocumentGenerator
 
-Adds texts to the database.
+::: ToolAgents.knowledge.document.document_provider.DocumentProvider
 
-**Parameters:**
-- `texts` (List[str]): Texts to add
-- `metadata` (List[dict], optional): Metadata for each text
-- `ids` (List[str], optional): IDs for each text
+::: ToolAgents.knowledge.document.implementations.pypdf2_pdf.PDFProvider
 
-**Returns:**
-- `List[str]`: IDs of added texts
+::: ToolAgents.knowledge.document.implementations.pytesseract_pdf.PDFOCRProvider
 
-##### `query(query_text, k=5, filter=None)`
+## Text splitting
 
-Queries for similar texts.
+::: ToolAgents.knowledge.text_processing.text_splitter.TextSplitter
 
-**Parameters:**
-- `query_text` (str): Query text
-- `k` (int): Number of results
-- `filter` (dict, optional): Filter criteria
+::: ToolAgents.knowledge.text_processing.text_splitter.RecursiveCharacterTextSplitter
 
-**Returns:**
-- `List[dict]`: Query results
+::: ToolAgents.knowledge.text_processing.text_splitter.SimpleTextSplitter
 
-### ChromaDB
+::: ToolAgents.knowledge.text_processing.text_splitter.NonTextSplitter
 
-Implementation of VectorDatabaseProvider using Chroma.
+## Text processing
 
-```python
-from ToolAgents.knowledge.vector_database.implementations.chroma_db_vector_database import ChromaDB
+`TextTransformer` runs a prompt template over a document through an agent.
+`summarize_list_of_strings` summarizes several documents at once, and
+`SummarizingFunctionToolPostProcessor` is a
+[post-processor](tools.md#pre-and-post-processors) that shrinks long tool
+results before they return to the model.
 
-vector_db = ChromaDB(
-    collection_name="your_collection",
-    persist_directory="./chroma_db"
-)
-```
+::: ToolAgents.knowledge.text_processing.text_transformer.TextTransformer
 
-### EmbeddingProvider
+::: ToolAgents.knowledge.text_processing.summarizer.summarize_list_of_strings
 
-Abstract interface for generating text embeddings.
+::: ToolAgents.knowledge.text_processing.summarizer.SummarizingFunctionToolPostProcessor
 
-```python
-from ToolAgents.knowledge.vector_database.embedding_provider import EmbeddingProvider
-```
+## Web search
 
-#### Methods
+Each provider returns a list of URLs for a query. Note that the abstract method
+is declared as `search_web(query, number_of_results)` while the implementations
+use `search_web(search_query, num_results)`.
 
-##### `get_embeddings(texts)`
+::: ToolAgents.knowledge.web_search.web_search.WebSearchProvider
 
-Generates embeddings for texts.
+::: ToolAgents.knowledge.web_search.implementations.duck_duck_go.DDGWebSearchProvider
 
-**Parameters:**
-- `texts` (List[str]): Texts to embed
+::: ToolAgents.knowledge.web_search.implementations.googlesearch.GoogleWebSearchProvider
 
-**Returns:**
-- `List[List[float]]`: Embeddings
+::: ToolAgents.knowledge.web_search.implementations.hacker_news.HackernewsWebSearchProvider
 
-### SentenceTransformerEmbeddings
+## Web crawling
 
-Implementation of EmbeddingProvider using sentence-transformers.
+::: ToolAgents.knowledge.web_crawler.web_crawler.WebCrawler
 
-```python
-from ToolAgents.knowledge.vector_database.implementations.sentence_transformer_embeddings import SentenceTransformerEmbeddings
+::: ToolAgents.knowledge.web_crawler.implementations.trafilatura.TrafilaturaWebCrawler
 
-embeddings = SentenceTransformerEmbeddings(
-    model_name="all-MiniLM-L6-v2"
-)
-```
+::: ToolAgents.knowledge.web_crawler.implementations.camoufox_crawler.CamoufoxWebCrawler
 
-### RerankingProvider
+::: ToolAgents.knowledge.web_crawler.html2markdown.HTML2Markdown
 
-Abstract interface for reranking search results.
-
-```python
-from ToolAgents.knowledge.vector_database.reranking_provider import RerankingProvider
-```
-
-#### Methods
-
-##### `rerank(query, documents, scores=None, k=None)`
-
-Reranks documents based on relevance to the query.
-
-**Parameters:**
-- `query` (str): Query text
-- `documents` (List[str]): Documents to rerank
-- `scores` (List[float], optional): Initial scores
-- `k` (int, optional): Number of results to return
-
-**Returns:**
-- `List[Tuple[str, float]]`: Reranked documents with scores
-
-### MBXAIReranking
-
-Implementation of RerankingProvider using MBXAI's reranking.
-
-```python
-from ToolAgents.knowledge.vector_database.implementations.cross_encoder_reranking import MBXAIReranking
-
-reranker = MBXAIReranking(
-    api_key="your-mbxai-key",
-    model_name="rerank-multilingual-v2.0"
-)
-```
-
-## Document Processing
-
-### Document
-
-Class representing a document.
-
-```python
-from ToolAgents.knowledge.document.document import Document
-
-document = Document(
-    content="Document content",
-    metadata={"source": "file.pdf"}
-)
-```
-
-### DocumentProvider
-
-Abstract interface for loading documents.
-
-```python
-from ToolAgents.knowledge.document.document_provider import DocumentProvider
-```
-
-#### Methods
-
-##### `load_document(file_path)`
-
-Loads a document from a file.
-
-**Parameters:**
-- `file_path` (str): Path to the document file
-
-**Returns:**
-- `Document`: Loaded document
-
-### PDFDocumentProvider
-
-Implementation of DocumentProvider for PDF files.
-
-```python
-from ToolAgents.knowledge.document.implementations.pypdf2_pdf import PyPDF2DocumentProvider
-
-pdf_provider = PyPDF2DocumentProvider()
-document = pdf_provider.load_document("document.pdf")
-```
-
-## Text Processing
-
-### TextSplitter
-
-Splits text into manageable chunks.
-
-```python
-from ToolAgents.knowledge.text_processing.text_splitter import TextSplitter
-
-splitter = TextSplitter(
-    chunk_size=1000,
-    chunk_overlap=200
-)
-
-chunks = splitter.split_text(long_text)
-```
-
-### Summarizer
-
-Generates summaries using LLMs.
-
-```python
-from ToolAgents.knowledge.text_processing.summarizer import Summarizer
-
-summarizer = Summarizer(
-    chat_api=chat_api_provider
-)
-
-summary = summarizer.summarize(long_text)
-```
-
-### TextTransformer
-
-Transforms text between different formats.
-
-```python
-from ToolAgents.knowledge.text_processing.text_transformer import TextTransformer
-
-transformer = TextTransformer()
-markdown = transformer.html_to_markdown(html_content)
-```
-
-## Web Search and Crawling
-
-### WebSearch
-
-Abstract interface for web search.
-
-```python
-from ToolAgents.knowledge.web_search.web_search import WebSearch
-```
-
-#### Methods
-
-##### `search(query, num_results=5)`
-
-Searches the web for a query.
-
-**Parameters:**
-- `query` (str): Search query
-- `num_results` (int): Number of results to return
-
-**Returns:**
-- `List[dict]`: Search results with URLs and snippets
-
-### GoogleSearch
-
-Implementation of WebSearch using Google.
-
-```python
-from ToolAgents.knowledge.web_search.implementations.googlesearch import GoogleSearch
-
-search = GoogleSearch()
-results = search.search("ToolAgents framework")
-```
-
-### DuckDuckGoSearch
-
-Implementation of WebSearch using DuckDuckGo.
-
-```python
-from ToolAgents.knowledge.web_search.implementations.duck_duck_go import DuckDuckGoSearch
-
-search = DuckDuckGoSearch()
-results = search.search("ToolAgents framework")
-```
-
-### WebCrawler
-
-Abstract interface for web crawling.
-
-```python
-from ToolAgents.knowledge.web_crawler.web_crawler import WebCrawler
-```
-
-#### Methods
-
-##### `extract_content(url)`
-
-Extracts content from a webpage.
-
-**Parameters:**
-- `url` (str): URL to crawl
-
-**Returns:**
-- `str`: Extracted content
-
-### TrafilaturaCrawler
-
-Implementation of WebCrawler using Trafilatura.
-
-```python
-from ToolAgents.knowledge.web_crawler.implementations.trafilatura import TrafilaturaCrawler
-
-crawler = TrafilaturaCrawler()
-content = crawler.extract_content("https://example.com")
-```
-
-### CamoufoxCrawler
-
-Implementation of WebCrawler using Camoufox.
-
-```python
-from ToolAgents.knowledge.web_crawler.implementations.camoufox_crawler import CamoufoxCrawler
-
-crawler = CamoufoxCrawler()
-content = crawler.extract_content("https://example.com")
-```
+::: ToolAgents.knowledge.web_crawler.html2markdown.convert_file

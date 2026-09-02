@@ -4,97 +4,36 @@ title: Agents API
 
 # Agents API
 
-## BaseToolAgent
+An agent drives the conversation loop: it sends messages to a
+[provider](providers.md), executes any tool calls the model returns, feeds the
+results back, and repeats until the model answers without calling a tool.
 
 ```python
-from ToolAgents.agents.base_llm_agent import BaseToolAgent
+from ToolAgents.agents import ChatToolAgent, AsyncChatToolAgent
 ```
-
-Main synchronous interface:
-
-- `get_default_settings()`
-- `step(messages, tool_registry=None, settings=None, reset_last_messages_buffer=True)`
-- `stream_step(messages, tool_registry=None, settings=None, reset_last_messages_buffer=True)`
-- `get_response(messages, tool_registry=None, settings=None, reset_last_messages_buffer=True)`
-- `get_streaming_response(messages, tool_registry=None, settings=None, reset_last_messages_buffer=True)`
-- `get_last_response()`
-
-## AsyncBaseToolAgent
-
-```python
-from ToolAgents.agents.base_llm_agent import AsyncBaseToolAgent
-```
-
-Main async interface:
-
-- `get_default_settings()`
-- `step(messages, tool_registry=None, settings=None, reset_last_messages_buffer=True)`
-- `stream_step(messages, tool_registry=None, settings=None, reset_last_messages_buffer=True)`
-- `get_response(messages, tool_registry=None, settings=None, reset_last_messages_buffer=True)`
-- `get_streaming_response(messages, tool_registry=None, settings=None, reset_last_messages_buffer=True)`
-- `get_last_response()`
 
 ## ChatToolAgent
 
-```python
-from ToolAgents.agents import ChatToolAgent
-
-agent = ChatToolAgent(chat_api=api_provider, log_output=False, log_to_file=False)
-```
-
-Constructor parameters:
-
-- `chat_api`: `ChatAPIProvider`
-- `log_output`: enable request/response logging
-- `log_to_file`: write logs to a timestamped file when logging is enabled
-
-Additional method:
-
-- `handle_function_calling_response(chat_message, current_messages)`
+::: ToolAgents.agents.chat_tool_agent.ChatToolAgent
 
 ## AsyncChatToolAgent
 
-```python
-from ToolAgents.agents import AsyncChatToolAgent
+::: ToolAgents.agents.chat_tool_agent.AsyncChatToolAgent
 
-agent = AsyncChatToolAgent(chat_api=async_api_provider)
-```
+## Base classes
 
-Current constructor parameter:
+Implement these to write an agent of your own.
 
-- `chat_api`: `AsyncChatAPIProvider`
+::: ToolAgents.agents.base_llm_agent.BaseToolAgent
 
-## Response Types
+::: ToolAgents.agents.base_llm_agent.AsyncBaseToolAgent
 
-### ChatResponse
+## Observability
 
-```python
-from ToolAgents.data_models.responses import ChatResponse
-```
+::: ToolAgents.agents.base_llm_agent.AgentObservabilityHandler
 
-Fields:
+## Responses
 
-- `messages`: full message list accumulated by the agent
-- `response`: final assistant text
+::: ToolAgents.data_models.responses.ChatResponse
 
-### ChatResponseChunk
-
-```python
-from ToolAgents.data_models.responses import ChatResponseChunk
-```
-
-Fields:
-
-- `chunk`
-- `has_tool_call`
-- `tool_call`
-- `has_tool_call_result`
-- `tool_call_result`
-- `finished`
-- `finished_response`
-
-Helper methods:
-
-- `get_tool_name()`
-- `get_tool_arguments()`
-- `get_tool_results()`
+::: ToolAgents.data_models.responses.ChatResponseChunk

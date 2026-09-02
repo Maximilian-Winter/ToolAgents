@@ -1,175 +1,20 @@
-﻿---
+---
 title: Utilities API
 ---
 
 # Utilities API
 
-The Utilities module provides helper functionality for working with JSON schemas, GBNF grammars, and LLM documentation generation.
-
-## JSON Schema Generator
-
-Utilities for generating JSON schemas from Python objects.
-
-```python
-from ToolAgents.utilities.json_schema_generator.schema_generator import JSONSchemaGenerator
-```
-
-### Methods
-
-#### `generate_schema(obj, title=None, description=None)`
-
-Generates a JSON schema from a Python object.
-
-**Parameters:**
-- `obj`: The Python object to generate a schema from
-- `title` (str, optional): Schema title
-- `description` (str, optional): Schema description
-
-**Returns:**
-- `dict`: JSON schema
-
-#### `generate_schema_from_type(type_obj, title=None, description=None)`
-
-Generates a JSON schema from a Python type.
-
-**Parameters:**
-- `type_obj`: The Python type to generate a schema from
-- `title` (str, optional): Schema title
-- `description` (str, optional): Schema description
-
-**Returns:**
-- `dict`: JSON schema
-
-#### `generate_schema_from_function(func, title=None, description=None)`
-
-Generates a JSON schema from a Python function.
-
-**Parameters:**
-- `func`: The Python function to generate a schema from
-- `title` (str, optional): Schema title
-- `description` (str, optional): Schema description
-
-**Returns:**
-- `dict`: JSON schema
-
-## GBNF Grammar Generator
-
-Utilities for generating GBNF grammars from Pydantic models.
-
-```python
-from ToolAgents.utilities.gbnf_grammar_generator.gbnf_grammar_from_pydantic_models import GBNFGrammarGenerator
-```
-
-### Methods
-
-#### `generate_grammar(pydantic_model, root_rule_name="root")`
-
-Generates a GBNF grammar from a Pydantic model.
-
-**Parameters:**
-- `pydantic_model`: The Pydantic model to generate a grammar from
-- `root_rule_name` (str): The name of the root rule
-
-**Returns:**
-- `str`: GBNF grammar
-
-#### `generate_grammar_from_pydantic_models(model_list, root_rule_name="root")`
-
-Generates a GBNF grammar from multiple Pydantic models.
-
-**Parameters:**
-- `model_list` (list): List of Pydantic models
-- `root_rule_name` (str): The name of the root rule
-
-**Returns:**
-- `str`: GBNF grammar
-
-## LLM Documentation
-
-Utilities for generating documentation from code using LLMs.
-
-```python
-from ToolAgents.utilities.llm_documentation.documentation_generation import DocumentationGenerator
-```
-
-### Constructor Parameters
-
-- `chat_api` (ChatAPIProvider): Provider for generating documentation
-- `settings` (ProviderSettings, optional): Provider settings
-
-### Methods
-
-#### `generate_docstring(code, classname=None)`
-
-Generates a docstring for a code snippet.
-
-**Parameters:**
-- `code` (str): The code to document
-- `classname` (str, optional): Name of the class being documented
-
-**Returns:**
-- `str`: Generated docstring
-
-#### `generate_class_documentation(code)`
-
-Generates comprehensive documentation for a class.
-
-**Parameters:**
-- `code` (str): The class code to document
-
-**Returns:**
-- `str`: Generated documentation
-
-#### `generate_function_documentation(code)`
-
-Generates comprehensive documentation for a function.
-
-**Parameters:**
-- `code` (str): The function code to document
-
-**Returns:**
-- `str`: Generated documentation
-
-#### `generate_module_documentation(code)`
-
-Generates comprehensive documentation for a module.
-
-**Parameters:**
-- `code` (str): The module code to document
-
-**Returns:**
-- `str`: Generated documentation
-
-#### `improve_docstring(code, original_docstring)`
-
-Improves an existing docstring.
-
-**Parameters:**
-- `code` (str): The code with the docstring
-- `original_docstring` (str): The original docstring
-
-**Returns:**
-- `str`: Improved docstring
+Helpers for prompt construction, JSON-schema and grammar generation, LLM-facing
+documentation, chat persistence and logging.
 
 ## Message Template
-
-```python
-from ToolAgents.utilities.message_template import MessageTemplate
-```
 
 Fills `{placeholder}` fields in a prompt string. Used by pipeline steps to turn
 a `prompt_template` into the actual prompt.
 
-### Constructors
-
-- `MessageTemplate.from_string(template_string)`
-- `MessageTemplate.from_file(template_file)`
-
-### Methods
-
-- `generate_message_content(template_fields=None, remove_empty_template_field=True, **kwargs)`
-
 ```python
+from ToolAgents.utilities.message_template import MessageTemplate
+
 template = MessageTemplate.from_string("Hello {name}, welcome to {place}.")
 template.generate_message_content(name="Max", place="Königswinter")
 ```
@@ -184,17 +29,124 @@ template.generate_message_content(results)
 ```
 
 This works against any nested mapping, and against a
-[`PipelineResults`](../guides/pipelines.md#results-sections) object, which
-resolves the first segment as a section name.
+[`PipelineResults`](pipelines.md#results) object, which resolves the first
+segment as a section name.
 
-Pass the mapping as the single `template_fields` argument rather than unpacking
-it — `generate_message_content(**results)` flattens the structure and loses the
-sections.
+!!! warning "Pass the mapping; do not unpack it"
 
-### Missing placeholders
+    Path resolution needs the structure intact.
+    `generate_message_content(results)` resolves `{outputs/draft}`;
+    `generate_message_content(**results)` flattens the mapping first and the
+    path can no longer resolve. Mixing `template_fields` with keyword arguments
+    flattens too.
 
-By default (`remove_empty_template_field=True`) a placeholder with no matching
-field is blanked, and a line containing nothing else is dropped entirely. This
-is deliberate for optional sections of a prompt, but it means a **typo in a
-placeholder name fails silently**. Set `remove_empty_template_field=False` to
-leave unmatched placeholders in the output verbatim, which makes a typo visible.
+### Unmatched placeholders
+
+- A **bare** name with no matching field is blanked, and a line containing
+  nothing else is dropped (`remove_empty_template_field=True`, the default).
+  This is deliberate for optional sections of a prompt, but it means a typo in
+  a bare placeholder fails silently.
+- A **path** that does not resolve is left verbatim, so text that was always
+  literal — `{a/b}` — survives, and a mistyped path stays visible.
+- A field whose value is `None` counts as absent and is blanked, rather than
+  rendering the literal string `"None"`.
+
+Set `remove_empty_template_field=False` to leave every unmatched placeholder in
+the output.
+
+::: ToolAgents.utilities.message_template.MessageTemplate
+
+::: ToolAgents.utilities.message_template.resolve_template_path
+
+::: ToolAgents.utilities.message_template.ChatFormatter
+
+## Prompt Builder
+
+A fluent builder for multi-part prompts.
+
+::: ToolAgents.utilities.prompt_builder.PromptBuilder
+
+::: ToolAgents.utilities.prompt_builder.PromptPart
+
+::: ToolAgents.utilities.prompt_builder.PromptVar
+
+::: ToolAgents.utilities.prompt_builder.PromptLine
+
+## JSON Schema Generation
+
+`custom_json_schema` is the entry point: it produces a fully `$ref`-resolved
+schema for a Pydantic model, which is what tool definitions are built from.
+
+::: ToolAgents.utilities.json_schema_generator.schema_generator.custom_json_schema
+
+::: ToolAgents.utilities.json_schema_generator.schema_generator.get_tools_schema
+
+::: ToolAgents.utilities.json_schema_generator.schema_generator.refine_schema
+
+::: ToolAgents.utilities.json_schema_generator.schema_generator.insert_additional_fields
+
+::: ToolAgents.utilities.json_schema_generator.schema_generator.AdditionalSchemaField
+
+::: ToolAgents.utilities.json_schema_generator.schema_generator.AdditionalFieldPosition
+
+## GBNF Grammar Generation
+
+Constrained-decoding grammars for local inference backends such as
+llama.cpp, generated from Pydantic models.
+
+::: ToolAgents.utilities.gbnf_grammar_generator.gbnf_grammar_from_pydantic_models.generate_gbnf_grammar_and_documentation
+
+::: ToolAgents.utilities.gbnf_grammar_generator.gbnf_grammar_from_pydantic_models.generate_gbnf_grammar_from_pydantic_models
+
+::: ToolAgents.utilities.gbnf_grammar_generator.gbnf_grammar_from_pydantic_models.generate_gbnf_grammar_and_documentation_from_dictionaries
+
+::: ToolAgents.utilities.gbnf_grammar_generator.gbnf_grammar_from_pydantic_models.generate_and_save_gbnf_grammar_and_documentation
+
+::: ToolAgents.utilities.gbnf_grammar_generator.gbnf_grammar_from_pydantic_models.PydanticDataType
+
+## LLM Documentation
+
+Renders Pydantic models as documentation *for the model to read*, so a tool's
+shape can be explained inside a prompt.
+
+::: ToolAgents.utilities.llm_documentation.documentation_generation.generate_markdown_documentation
+
+::: ToolAgents.utilities.llm_documentation.documentation_generation.generate_text_documentation
+
+::: ToolAgents.utilities.llm_documentation.documentation_generation.generate_type_definitions
+
+## Pydantic Helpers
+
+Note the module name is `pydantic_utilites` (the spelling in the source).
+
+::: ToolAgents.utilities.pydantic_utilites.create_dynamic_model_from_function
+
+::: ToolAgents.utilities.pydantic_utilites.pydantic_model_to_openai_function_definition
+
+## MCP Schema Conversion
+
+Turns an MCP JSON schema into a Pydantic model, so an MCP tool becomes an
+ordinary `FunctionTool`.
+
+::: ToolAgents.utilities.mcp_conversion.convert_json_schema
+
+::: ToolAgents.utilities.mcp_conversion.convert_schema_to_pydantic_model
+
+!!! note "MCP clients moved"
+
+    `ToolAgents.utilities.mcp_session` is a compatibility shim. Import MCP
+    client helpers from `ToolAgents.tool_adapters.mcp_client` instead.
+
+## Chat Persistence
+
+SQLAlchemy-backed chat storage. Requires the `storage` extra.
+
+::: ToolAgents.utilities.chat_database.ChatManager
+
+::: ToolAgents.utilities.chat_database.Chat
+
+::: ToolAgents.utilities.chat_database.ChatMessageDb
+
+## Logging
+
+::: ToolAgents.utilities.logger_utilities.EasyLogger

@@ -4,183 +4,84 @@ title: Messages API
 
 # Messages API
 
-The current message surface is centered on `ChatMessage`, `ChatHistory`, `Chats`, `MessageTemplate`, and `PromptBuilder`.
-
-## ChatMessage
+`ChatMessage` is the format every provider converts to and from, which is what
+lets a chat history move between OpenAI, Anthropic, Groq and Mistral unchanged.
 
 ```python
 from ToolAgents.data_models.messages import ChatMessage
-```
-
-`ChatMessage` is the unified message model used across providers.
-
-Common factory helpers:
-
-- `ChatMessage.create_system_message(message)`
-- `ChatMessage.create_user_message(message)`
-- `ChatMessage.create_assistant_message(message)`
-- `ChatMessage.create_custom_role_message(message, custom_role)`
-- `ChatMessage.from_dictionaries(messages)` for simple `{"role", "content"}` payloads
-
-Useful methods:
-
-- `get_as_text()`
-- `contains_tool_call()`
-- `get_tool_calls()`
-- `get_tool_call_results()`
-- `model_dump()` / `model_dump_json()` from Pydantic
-
-## ChatHistory
-
-```python
 from ToolAgents.data_models.chat_history import ChatHistory
 ```
 
-Main methods:
+## ChatMessage
 
-- `add_message(message)`
-- `add_messages(messages)`
-- `add_system_message(message)`
-- `add_user_message(message)`
-- `add_assistant_message(message)`
-- `add_message_from_dictionary(message)`
-- `add_messages_from_dictionaries(messages)`
-- `get_messages()`
-- `get_last_message()`
-- `get_last_k_messages(k)`
-- `get_message_count()`
-- `remove_last_message()`
-- `clear()`
-- `clear_history()`
-- `save_to_json(filepath)`
-- `ChatHistory.load_from_json(filepath)`
+::: ToolAgents.data_models.messages.ChatMessage
 
-Example:
+::: ToolAgents.data_models.messages.ChatMessageRole
 
-```python
-history = ChatHistory()
-history.add_system_message("You are helpful.")
-history.add_user_message("Hello")
-messages = history.get_messages()
-```
+## Message content
 
-## Chats
+A message's content is a list of typed parts, so text, reasoning, tool calls
+and binary attachments coexist in one message.
 
-```python
-from ToolAgents.data_models.chat_history import Chats
-```
+::: ToolAgents.data_models.messages.ContentType
 
-`Chats` is the JSON-serializable container for multiple `ChatHistory` objects.
+::: ToolAgents.data_models.messages.ContentBase
 
-Main methods:
+::: ToolAgents.data_models.messages.TextContent
 
-- `create_chat(title)`
-- `get_messages(chat_id)`
-- `get_last_k_messages(chat_id, k)`
-- `add_message(chat_id, message)`
-- `add_system_message(chat_id, message)`
-- `add_user_message(chat_id, message)`
-- `add_assistant_message(chat_id, message)`
-- `save_to_json(filepath)`
-- `Chats.load_from_json(filepath)`
+::: ToolAgents.data_models.messages.ReasoningContent
 
-## ChatManager
+::: ToolAgents.data_models.messages.ToolCallContent
 
-```python
-from ToolAgents.utilities.chat_database import ChatManager
-```
+::: ToolAgents.data_models.messages.ToolCallResultContent
 
-`ChatManager` is the SQLite-backed storage option.
+::: ToolAgents.data_models.messages.BinaryContent
 
-Main methods:
+::: ToolAgents.data_models.messages.BinaryStorageType
 
-- `create_chat(title=None)`
-- `add_message(chat_id, message)`
-- `get_chat(chat_id)`
-- `get_chat_messages(chat_id)`
-- `delete_chat(chat_id)`
-- `update_chat_title(chat_id, title)`
+## Streaming and usage
 
-Example:
+::: ToolAgents.data_models.messages.StreamingChatMessage
 
-```python
-chat_db = ChatManager()
-chat = chat_db.create_chat("Weather Chat")
-chat_db.add_message(chat["id"], ChatMessage.create_user_message("Hello"))
-messages = chat_db.get_chat_messages(chat["id"])
-```
+::: ToolAgents.data_models.messages.TokenUsage
 
-## MessageTemplate
+## Chat history
 
-```python
-from ToolAgents.utilities.message_template import MessageTemplate
-```
+::: ToolAgents.data_models.chat_history.ChatHistory
 
-Current construction helpers:
+::: ToolAgents.data_models.chat_history.Chats
 
-- `MessageTemplate.from_string(template_string)`
-- `MessageTemplate.from_file(template_file)`
-- `generate_message_content(template_fields=None, remove_empty_template_field=True, **kwargs)`
+## Templates and prompt construction
 
-Example:
-
-```python
-template = MessageTemplate.from_string(
-    "You are an assistant specialized in {specialty}."
-)
-content = template.generate_message_content(specialty="weather")
-```
-
-A placeholder may also address a nested value with `/`:
+`MessageTemplate` fills `{placeholder}` fields in a prompt string. A
+placeholder may address a nested value with `/`, which is how a
+[pipeline](../guides/pipelines.md#results-sections) step reads a section of its
+results:
 
 ```python
 template = MessageTemplate.from_string("Revise {outputs/draft} for {inputs/audience}")
-content = template.generate_message_content(results)
+template.generate_message_content(results)
 ```
 
 !!! warning "Pass the mapping; do not unpack it"
 
-    Path resolution needs the structure intact. `generate_message_content(results)`
-    resolves `{outputs/draft}`; `generate_message_content(**results)` flattens the
-    mapping first and the path can no longer resolve. Mixing `template_fields`
-    with keyword arguments flattens too.
+    Path resolution needs the structure intact.
+    `generate_message_content(results)` resolves `{outputs/draft}`;
+    `generate_message_content(**results)` flattens the mapping first and the
+    path can no longer resolve. Mixing `template_fields` with keyword arguments
+    flattens too.
 
-Unmatched placeholders:
+Unmatched placeholders behave differently by shape:
 
 - A **bare** name with no matching field is blanked, and a line containing
   nothing else is dropped (`remove_empty_template_field=True`, the default).
 - A **path** that does not resolve is left verbatim, so text that was always
   literal — `{a/b}` — survives, and a mistyped path stays visible rather than
   vanishing.
-- A field whose value is `None` counts as absent, and is blanked rather than
+- A field whose value is `None` counts as absent and is blanked, rather than
   rendering the literal string `"None"`.
 
-## PromptBuilder
-
-```python
-from ToolAgents.utilities.prompt_builder import PromptBuilder
-```
-
-Current builder helpers:
-
-- `add_text(text)`
-- `add_prompt_part(part)`
-- `add_file_content(file_path)`
-- `add_empty_line(n=1)`
-- `add_numbered_list(items)`
-- `add_bullet_list(items)`
-- `add_code_block(code, language="")`
-- `add_separator(char="-", length=40)`
-- `build()`
-
-Example:
-
-```python
-builder = PromptBuilder()
-prompt = (
-    builder
-    .add_text("# Weather Assistant")
-    .add_bullet_list(["Answer weather questions", "Use tools when needed"])
-    .build()
-)
-```
+See the [utilities API](utilities.md#message-template) for the full
+`MessageTemplate` reference, and
+[`PromptBuilder`](utilities.md#prompt-builder) for assembling multi-part
+prompts.
