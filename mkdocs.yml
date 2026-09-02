@@ -41,6 +41,8 @@ nav:
     - Basic Usage: guides/basic-usage.md
     - Custom Tools: guides/custom-tools.md
     - Pipelines: guides/pipelines.md
+    - Pipeline Flow Control: guides/pipeline-flow-control.md
+    - Pipeline Endpoints: guides/pipeline-endpoints.md
     - Chat History: guides/chat-history.md
     - Streaming: guides/streaming.md
   - Components:

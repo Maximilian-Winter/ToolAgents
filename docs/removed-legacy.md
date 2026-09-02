@@ -17,7 +17,7 @@ or public exports:
 
     A new, unrelated `AgentConfig` exists in `ToolAgents.pipelines`. It is a
     declarative description of a provider and model for a
-    [pipeline](guides/pipelines.md#declaring-agents-and-endpoints) — nothing to
+    [pipeline](guides/pipeline-endpoints.md) — nothing to
     do with the removed `advanced_agent.AgentConfig`.
 - `ToolAgents.agent_memory.semantic_memory`
 - public `ToolAgents.agent_memory.ContextAppState` re-export

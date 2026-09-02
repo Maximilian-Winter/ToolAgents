@@ -321,7 +321,7 @@ llama_provider = LlamaCppPythonEndpoint(
 ## Best Practices
 
 1. **API Key Management**: Store API keys securely using environment variables. A
-   [pipeline](../guides/pipelines.md#declaring-agents-and-endpoints) declares the
+   [pipeline](../guides/pipeline-endpoints.md) declares the
    *name* of the variable holding a key, never the key itself, so a workflow file
    can be committed safely.
 2. **Error Handling**: Implement retry logic for API failures
@@ -336,5 +336,5 @@ llama_provider = LlamaCppPythonEndpoint(
 - [Learn about different agent types](agents.md)
 - [Explore tool options](tools.md)
 - [Understand message handling](messages.md)
-- [Declare providers in a pipeline file](../guides/pipelines.md#declaring-agents-and-endpoints)
+- [Declare providers in a pipeline file](../guides/pipeline-endpoints.md)
 - [See provider usage examples](../examples/basic-agents.md)
