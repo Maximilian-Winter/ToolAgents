@@ -11,6 +11,8 @@ from typing import (
     Callable,
     List,
     Optional,
+    Tuple,
+    Type,
     Union,
     get_args,
     get_origin,
@@ -893,7 +895,7 @@ def remove_empty_lines(string):
 
 
 def generate_and_save_gbnf_grammar_and_documentation(
-    pydantic_model_list,
+    pydantic_model_list: List[Type[BaseModel]],
     grammar_file_path="./generated_grammar.gbnf",
     documentation_file_path="./generated_grammar_documentation.md",
     outer_object_name: str | None = None,
@@ -956,7 +958,7 @@ def generate_and_save_gbnf_grammar_and_documentation(
 
 
 def generate_gbnf_grammar_and_documentation(
-    pydantic_model_list,
+    pydantic_model_list: List[Type[BaseModel]],
     outer_object_name: str | None = None,
     outer_object_content: str | None = None,
     model_prefix: str = "Output Model",
@@ -969,7 +971,7 @@ def generate_gbnf_grammar_and_documentation(
     add_request_heartbeat: bool = False,
     request_heartbeat_field_name: str = "request_heartbeat",
     request_heartbeat_models: List[str] = None,
-):
+) -> Tuple[str, str]:
     """
     Generate GBNF grammar and documentation for a list of Pydantic models.
 
@@ -989,7 +991,7 @@ def generate_gbnf_grammar_and_documentation(
         request_heartbeat_models (List[str]): List of models that will have a request heartbeat field.
 
     Returns:
-        tuple: GBNF grammar string, documentation string.
+        Tuple[str, str]: GBNF grammar string, documentation string.
     """
     documentation = generate_text_documentation(
         copy(pydantic_model_list),
@@ -1027,7 +1029,7 @@ def generate_gbnf_grammar_and_documentation_from_dictionaries(
     add_request_heartbeat: bool = False,
     request_heartbeat_field_name: str = "request_heartbeat",
     request_heartbeat_models: List[str] = None,
-):
+) -> Tuple[str, str]:
     """
     Generate GBNF grammar and documentation from a list of dictionaries.
 
@@ -1047,7 +1049,7 @@ def generate_gbnf_grammar_and_documentation_from_dictionaries(
         request_heartbeat_models (List[str]): List of models that will have a request heartbeat field.
 
     Returns:
-        tuple: GBNF grammar string, documentation string.
+        Tuple[str, str]: GBNF grammar string, documentation string.
     """
     pydantic_model_list = create_dynamic_models_from_dictionaries(dictionaries)
     documentation = generate_markdown_documentation(

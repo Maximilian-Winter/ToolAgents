@@ -1,7 +1,6 @@
 import re
-from typing import Union, Dict, Any
-
 from collections.abc import Mapping
+from typing import Any, Dict, Union
 
 #: Placeholder names may address a section with ``/``, as in
 #: ``{outputs/draft}`` or ``{outputs/news/draft}``. A bare ``{draft}`` is
@@ -11,7 +10,7 @@ PLACEHOLDER_PATTERN = r"\{([\w/]+)\}"
 PATH_SEPARATOR = "/"
 
 
-def resolve_template_path(fields, path: str):
+def resolve_template_path(fields: Mapping, path: str) -> "tuple[bool, Any]":
     """Resolve a possibly-sectioned ``path`` against a mapping.
 
     Returns ``(found, value)``. A mapping that knows its own sections — such
@@ -36,18 +35,11 @@ def resolve_template_path(fields, path: str):
 
 
 class MessageTemplate:
-    """
-    Class representing a prompt template.
+    """A prompt template with ``{placeholder}`` fields.
 
-    Methods:
-        generate_prompt(*args, **kwargs) -> str:
-        Generate a prompt by replacing placeholders in the template with values.
-
-    Class Methods:
-        from_string(template_string: str) -> PromptTemplate:
-        Create a PromptTemplate from a string.
-        from_file(template_file: str) -> PromptTemplate:
-        Create a PromptTemplate from a file.
+    Build one with :meth:`from_string` or :meth:`from_file`, then fill it with
+    :meth:`generate_message_content`. A placeholder may address a nested value
+    with ``/``, as in ``{outputs/draft}``.
 
     Attributes:
         template (str): The template string containing placeholders.
@@ -125,7 +117,7 @@ class MessageTemplate:
         self,
         template_fields: Dict[str, Any] = None,
         remove_empty_template_field: bool = True,
-        **kwargs,
+        **kwargs: Any,
     ) -> str:
         """
         Generate a prompt by replacing placeholders in the template with values.

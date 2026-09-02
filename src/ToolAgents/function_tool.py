@@ -158,8 +158,8 @@ class FunctionTool:
     def __init__(
         self,
         function_tool: Union[BaseModel, Callable, Tuple[Dict[str, Any], Callable]],
-        pre_processors=None,
-        post_processors=None,
+        pre_processors: Union["BaseProcessor", List["BaseProcessor"], None] = None,
+        post_processors: Union["BaseProcessor", List["BaseProcessor"], None] = None,
         debug_mode: bool = False,
         require_confirmation: bool = False,
         confirmation_description: typing.Optional[str] = None,
@@ -167,7 +167,7 @@ class FunctionTool:
             Callable[[ConfirmationRequest], None]
         ] = None,
         with_execution_context: bool = False,
-        **additional_parameters,
+        **additional_parameters: Any,
     ):
         # Initialize function tool as before...
         if isinstance(function_tool, type) and issubclass(function_tool, BaseModel):
@@ -255,43 +255,45 @@ class FunctionTool:
     @staticmethod
     def from_pydantic_model_and_callable(
         pydantic_model: BaseModel, tool_function: Callable
-    ):
+    ) -> "FunctionTool":
         """
-        Converts an OpenAI tool schema and a callable function into a LlamaCppFunctionTool
+        Converts an OpenAI tool schema and a callable function into a FunctionTool
         Args:
             pydantic_model(BaseModel): Pydantic Model representing the arguments to the tool.
             tool_function(Callable): Callable function that will be invoked when the agent uses it and will be passed the fields of the pydantic model.
 
         Returns:
-            LlamaCppFunctionTool: The LlamaCppFunctionTool instance.
+            FunctionTool: The FunctionTool instance.
         """
         pydantic_model = add_run_method_to_dynamic_model(pydantic_model, tool_function)
         return FunctionTool(pydantic_model)
 
     @staticmethod
-    def from_openai_tool(openai_tool_schema: dict, tool_function: Callable):
+    def from_openai_tool(
+        openai_tool_schema: dict, tool_function: Callable
+    ) -> "FunctionTool":
         """
-        Converts an OpenAI tool schema and a callable function into a LlamaCppFunctionTool
+        Converts an OpenAI tool schema and a callable function into a FunctionTool
         Args:
             openai_tool_schema(dict): OpenAI tool description dictionary.
             tool_function(Callable): Callable function that will be invoked when the agent uses it.
 
         Returns:
-            LlamaCppFunctionTool: The LlamaCppFunctionTool instance.
+            FunctionTool: The FunctionTool instance.
         """
         models = create_dynamic_models_from_dictionaries([openai_tool_schema])
         model = add_run_method_to_dynamic_model(models[0], tool_function)
         return FunctionTool(model)
 
     @staticmethod
-    def from_llama_index_tool(llama_index_tool):
+    def from_llama_index_tool(llama_index_tool) -> "FunctionTool":
         """
-        Converts a llama-index tool into a LlamaCppFunctionTool
+        Converts a llama-index tool into a FunctionTool
         Args:
             llama_index_tool(["BaseTool"]): OpenAI tool description dictionary.
 
         Returns:
-            LlamaCppFunctionTool: The LlamaCppFunctionTool instance.
+            FunctionTool: The FunctionTool instance.
         """
         models = create_dynamic_models_from_dictionaries(
             [llama_index_tool.metadata.to_openai_tool()]
@@ -563,8 +565,8 @@ class AsyncFunctionTool(FunctionTool):
     def __init__(
         self,
         function_tool: Union[BaseModel, Callable, Tuple[Dict[str, Any], Callable]],
-        pre_processors=None,
-        post_processors=None,
+        pre_processors: Union["BaseProcessor", List["BaseProcessor"], None] = None,
+        post_processors: Union["BaseProcessor", List["BaseProcessor"], None] = None,
         debug_mode: bool = False,
         require_confirmation: bool = False,
         confirmation_description: typing.Optional[str] = None,

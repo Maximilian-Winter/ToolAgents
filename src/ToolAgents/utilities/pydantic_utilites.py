@@ -23,7 +23,7 @@ def create_dynamic_model_from_function(
     func: Callable[..., Any],
     add_inner_thoughts: bool = False,
     inner_thoughts_field_name: str = "inner_thoughts",
-):
+) -> type[BaseModel]:
     """
     Creates a dynamic Pydantic model from a given function's type hints and adds the function as a 'run' method.
 
@@ -33,7 +33,8 @@ def create_dynamic_model_from_function(
         inner_thoughts_field_name (str): Field name for inner thoughts. Default is "inner_thoughts".
 
     Returns:
-        A dynamic Pydantic model class with the provided function as a 'run' method.
+        type[BaseModel]: A dynamic Pydantic model class with the provided
+            function as a 'run' method.
     """
 
     # Get the signature of the function

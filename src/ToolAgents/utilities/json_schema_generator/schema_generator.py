@@ -377,7 +377,7 @@ def generate_outer_json_schema(outer_obj: OuterSchemaObject, allow_list=False) -
     return combined_schema
 
 
-def get_tools_schema(tool_registry):
+def get_tools_schema(tool_registry: Any) -> Dict[str, Any]:
     """
     Generate a combined schema for all tools in a tool registry.
 
@@ -385,7 +385,7 @@ def get_tools_schema(tool_registry):
         tool_registry: Object with a 'tools' dict attribute
 
     Returns:
-        Combined JSON schema for all tools as an array
+        Dict[str, Any]: Combined JSON schema for all tools as an array
     """
     tool_schema_objects = []
     for tool_name, tool in tool_registry.tools.items():

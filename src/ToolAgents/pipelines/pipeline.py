@@ -502,7 +502,8 @@ class ProcessStep:
 
     Attributes:
         step_name (str): The name identifier for the step.
-        Can be used to reference results of previous steps in the prompt template. Example: '{step_name}'
+            Can be used to reference results of previous steps in the prompt
+            template, for example ``{outputs/step_name}``.
         system_message (str): The system message to provide context to the LLM
         prompt_template (str): Template string for generating the actual prompt
         tools (list[FunctionTool]): List of tools available for this step
@@ -522,8 +523,9 @@ class ProcessStep:
         Initialize a new process step.
 
         Args:
-            step_name: Unique identifier for the step.
-            Can be used to reference results of previous steps in the prompt template. Example: '{step_name}'
+            step_name: Unique identifier for the step. Its result is written
+                to the ``outputs`` section, so a later prompt can reference it
+                as ``{outputs/step_name}``.
             system_message: Context message for the LLM
             prompt_template: Template for generating the actual prompt
             tools: Optional list of tools available for this step
@@ -547,7 +549,11 @@ class ProcessStep:
         """Return the system message for this step."""
         return self.system_message
 
-    def get_prompt(self, fields=None, **kwargs) -> str:
+    def get_prompt(
+        self,
+        fields: "PipelineResults | Mapping[str, Any] | None" = None,
+        **kwargs: Any,
+    ) -> str:
         """
         Generate the actual prompt using the template and provided parameters.
 
