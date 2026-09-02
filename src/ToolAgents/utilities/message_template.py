@@ -166,7 +166,16 @@ class MessageTemplate:
 
         def replace_placeholder(match):
             found, text = lookup(match.group(1))
-            return text if found else "__EMPTY_TEMPLATE_FIELD__"
+            if found:
+                return text
+            if PATH_SEPARATOR in match.group(1):
+                # Widening the pattern to accept "/" means text that was always
+                # literal — "{a/b}" in a prompt — would suddenly be treated as a
+                # placeholder and blanked. An unresolved *path* is left verbatim,
+                # which keeps such text intact and makes a mistyped path visible
+                # instead of silently empty. Bare names keep the old behaviour.
+                return match.group(0)
+            return "__EMPTY_TEMPLATE_FIELD__"
 
         # Initial placeholder replacement
         prompt = re.sub(PLACEHOLDER_PATTERN, replace_placeholder, self.template)

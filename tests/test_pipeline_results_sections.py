@@ -182,3 +182,50 @@ def test_map_item_lives_in_vars_and_collection_is_exact():
     ]
     assert results["inputs/draft"] == "OLD"
     assert results.vars == {}
+
+
+# -- template compatibility -------------------------------------------------
+
+
+def test_a_literal_slash_placeholder_is_left_alone():
+    """Widening the placeholder pattern must not eat text that was literal."""
+
+    rendered = MessageTemplate.from_string(
+        "Has {a/b} here"
+    ).generate_message_content({"x": 1})
+    assert rendered == "Has {a/b} here"
+
+
+def test_a_mistyped_path_stays_visible_rather_than_blanking():
+    rendered = MessageTemplate.from_string(
+        "{outputs/drafft}"
+    ).generate_message_content({"outputs": {"draft": "D"}})
+    assert rendered == "{outputs/drafft}"
+
+
+def test_a_missing_bare_name_still_blanks_as_before():
+    rendered = MessageTemplate.from_string(
+        "Value: {v}"
+    ).generate_message_content({})
+    assert rendered == "Value: "
+
+
+def test_a_none_value_renders_empty_rather_than_the_word_none():
+    """Injecting the literal string 'None' into a prompt is never wanted."""
+
+    rendered = MessageTemplate.from_string(
+        "Value: {v}"
+    ).generate_message_content({"v": None})
+    assert rendered == "Value: "
+
+
+def test_unpacking_a_results_object_loses_its_sections():
+    """Documented trap: pass the mapping, do not unpack it."""
+
+    results = PipelineResults(outputs={"draft": "D"})
+    template = MessageTemplate.from_string("{outputs/draft}")
+
+    assert template.generate_message_content(results) == "D"
+    # Unpacking flattens away the section structure, so the path cannot resolve
+    # and is left verbatim.
+    assert template.generate_message_content(**results) == "{outputs/draft}"
