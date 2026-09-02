@@ -1,7 +1,7 @@
 # harness.py — Sync AgentHarness wrapper around ChatToolAgent + HarnessRuntime.
 from __future__ import annotations
 
-from typing import Generator, List, Optional, TYPE_CHECKING
+from typing import Generator, List, Optional, Union, TYPE_CHECKING
 
 from ToolAgents.agents.chat_tool_agent import ChatToolAgent
 from ToolAgents.context_manager.context_manager import ContextManager
@@ -100,13 +100,17 @@ class AgentHarness:
 
     # --- Core API ---
 
-    def chat(self, user_input: str) -> str:
+    def chat(self, user_input: Union[str, ChatMessage]) -> str:
         """Send a message, get a response string. Simplest API."""
         response = self.chat_response(user_input)
         return response.response
 
-    def chat_response(self, user_input: str) -> ChatResponse:
-        """Send a message, get a full ChatResponse with message history."""
+    def chat_response(self, user_input: Union[str, ChatMessage]) -> ChatResponse:
+        """Send a message, get a full ChatResponse with message history.
+
+        `user_input` may be plain text or a pre-built ChatMessage (e.g. one carrying
+        image attachments); see HarnessRuntime.begin_turn.
+        """
         self._runtime.begin_turn(user_input)
         send_messages = self._runtime.prepare_messages()
 
@@ -120,8 +124,12 @@ class AgentHarness:
         self._runtime.complete_turn(response)
         return response
 
-    def chat_stream(self, user_input: str) -> Generator[ChatResponseChunk, None, None]:
-        """Send a message, yield streaming chunks."""
+    def chat_stream(self, user_input: Union[str, ChatMessage]) -> Generator[ChatResponseChunk, None, None]:
+        """Send a message, yield streaming chunks.
+
+        `user_input` may be plain text or a pre-built ChatMessage (e.g. one carrying
+        image attachments); see HarnessRuntime.begin_turn.
+        """
         self._runtime.begin_turn(user_input)
         send_messages = self._runtime.prepare_messages()
 
