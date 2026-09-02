@@ -35,6 +35,8 @@ processes hold *other processes*, so they nest freely.
 
 ::: ToolAgents.pipelines.pipeline.SequentialProcess
 
+::: ToolAgents.pipelines.pipeline.TemplateProcess
+
 ### Flow control
 
 ::: ToolAgents.pipelines.flow.FlowProcess

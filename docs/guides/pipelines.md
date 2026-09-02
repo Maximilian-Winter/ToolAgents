@@ -218,6 +218,25 @@ Only `inputs`, `outputs` and `vars` take part in bare-name resolution; a custom
 section is reached by its path, which is what keeps it from colliding with
 anything.
 
+## Composing a value without a model
+
+Joining results together is string work, not reasoning. `TemplateProcess`
+renders a template against the results and stores it, with no request:
+
+```json
+{
+  "process_type": "template",
+  "process_name": "assemble",
+  "template": "# {outputs/title}
+
+{outputs/body}",
+  "result_key": "digest"
+}
+```
+
+The alternative is asking a model to "return this unchanged", which costs a
+request, adds latency, and is not guaranteed to comply.
+
 ## Next
 
 - [Flow control](pipeline-flow-control.md) — conditional, loop, map and parallel

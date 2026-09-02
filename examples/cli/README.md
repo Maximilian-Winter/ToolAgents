@@ -89,6 +89,11 @@ writer at `0.7`. The critic step names its agent: `"agent": "critic"`.
 condition reads `outputs['verdict']`, which does not exist until the body has
 produced it. `max_iterations: 3` means an unhappy critic cannot spin forever.
 
+**A guard inside the loop.** Because the whole body runs before the test, the
+revise step sits inside a conditional on *not approved*. Without that guard the
+loop rewrites the draft its critic just approved, and publishes a revision
+nobody reviewed.
+
 **A branch on the outcome.** If the loop exited approved, the draft prints to
 stdout; if it ran out of revisions, the last complaint goes to stderr instead.
 
@@ -132,6 +137,11 @@ and an agent instance is not thread-safe.
 
 **Tools from the workspace.** `tools/text_stats.py` becomes a plugin named for
 the file, referenced as `{"plugin": "text_stats", "tool_name": "ReadingMinutes"}`.
+
+**Assembly without a model.** The title and body are joined by a `template`
+process, which renders `{outputs/title}` and `{outputs/body}` into one string.
+Concatenating two results is string work; paying a model to "return this
+unchanged" costs a request and may not comply.
 
 **A sink this project invented.** `adapter/output/jsonl.py` registers a `jsonl`
 type; the workflow then uses it exactly like a built-in. That file is worth

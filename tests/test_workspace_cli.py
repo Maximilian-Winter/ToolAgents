@@ -602,3 +602,114 @@ def test_an_explicit_env_file_overrides_the_conventional_one(
 
     pipeline = workspace.load_pipeline("digest", env_file=str(explicit))
     assert pipeline.processes[1].agent.chat_api.client.api_key == "from-explicit"
+
+
+# ---------------------------------------------------------------------------
+# Example correctness, not just "it ran"
+# ---------------------------------------------------------------------------
+
+
+class ApprovesImmediately:
+    """Approves on the first review. The revise step must not run."""
+
+    def get_response(self, messages, tool_registry=None, **kwargs):
+        text = messages[-1].get_as_text()
+        if text.startswith("Revision"):
+            return SimpleNamespace(response="APPROVED", messages=[])
+        if text.startswith("Revise"):
+            return SimpleNamespace(response="REVISED", messages=[])
+        return SimpleNamespace(response="original draft", messages=[])
+
+
+class RejectsTwice:
+    """Rejects twice, then approves."""
+
+    def __init__(self) -> None:
+        self.reviews = 0
+
+    def get_response(self, messages, tool_registry=None, **kwargs):
+        text = messages[-1].get_as_text()
+        if text.startswith("Revision"):
+            self.reviews += 1
+            return SimpleNamespace(
+                response="APPROVED" if self.reviews >= 3 else "Too vague.",
+                messages=[],
+            )
+        if text.startswith("Revise"):
+            return SimpleNamespace(response=f"revision {self.reviews}", messages=[])
+        return SimpleNamespace(response="original draft", messages=[])
+
+
+@requires_examples
+def test_an_approved_draft_is_not_then_rewritten():
+    """The loop body must not revise what the critic just approved.
+
+    Otherwise the published text is a revision nobody reviewed.
+    """
+
+    workspace = Workspace(EXAMPLES / "02-review" / ".tool-agents")
+    results = workspace.run_workflow(
+        "review",
+        {"topic": "otters", "audience": "adults"},
+        build_agents=False,
+        default_agent=ApprovesImmediately(),
+    )
+
+    assert results["outputs/draft"] == "original draft"
+    assert results["outputs/approved"] is True
+    assert results["outputs/refine_iterations"] == 1
+
+
+@requires_examples
+def test_a_rejected_draft_is_still_revised():
+    workspace = Workspace(EXAMPLES / "02-review" / ".tool-agents")
+    results = workspace.run_workflow(
+        "review",
+        {"topic": "otters", "audience": "adults"},
+        build_agents=False,
+        default_agent=RejectsTwice(),
+    )
+
+    assert results["outputs/draft"].startswith("revision")
+    assert results["outputs/refine_iterations"] == 3
+    assert results["outputs/approved"] is True
+
+
+@requires_examples
+def test_the_digest_is_assembled_without_a_model_call(tmp_path):
+    """Joining two results is string work; paying a model for it is waste."""
+
+    example = EXAMPLES / "03-digest"
+
+    class Counting:
+        def __init__(self) -> None:
+            self.calls = 0
+
+        def get_response(self, messages, tool_registry=None, **kwargs):
+            self.calls += 1
+            text = messages[-1].get_as_text()
+            if text.startswith("Title"):
+                return SimpleNamespace(response="Otters, Briefly", messages=[])
+            if text.startswith("Write the bullets"):
+                return SimpleNamespace(response="- they float", messages=[])
+            return SimpleNamespace(response="a point", messages=[])
+
+    agent = Counting()
+    workspace = Workspace(example / ".tool-agents")
+    results = workspace.run_workflow(
+        "digest",
+        {
+            "notes_dir": str(example / "notes"),
+            "out_dir": str(tmp_path),
+            "audience": "adults",
+        },
+        build_agents=False,
+        default_agent=agent,
+        allow_writes=True,
+    )
+
+    chunks = len(results["inputs/chunks"])
+    # One call per chunk, plus title and body. Assembly costs nothing.
+    assert agent.calls == chunks + 2
+    assert results["outputs/digest"].startswith("# Otters, Briefly")
+    assert "- they float" in results["outputs/digest"]

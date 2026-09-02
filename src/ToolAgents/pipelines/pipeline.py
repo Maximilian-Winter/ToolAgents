@@ -1067,6 +1067,113 @@ class Pipeline:
 
 
 @register_process_type
+class TemplateProcess(Process):
+    """Compose a value from existing results, without calling a model.
+
+    Joining two results together is string work, not reasoning. Without this
+    the only way to do it is to ask a model to "return this unchanged", which
+    costs a request, adds latency, and is not guaranteed to comply.
+
+    JSON::
+
+        {
+          "process_type": "template",
+          "process_name": "assemble",
+          "template": "# {outputs/title}
+
+{outputs/body}",
+          "result_key": "digest"
+        }
+    """
+
+    process_type = "template"
+
+    def __init__(
+        self,
+        template: str,
+        result_key: str = "text",
+        section: str = "outputs",
+        process_name: str = "TemplateProcess",
+        agent: BaseToolAgent = None,
+        agent_name: str | None = None,
+    ):
+        """Initialize a template process.
+
+        Args:
+            template: Text with ``{section/key}`` placeholders.
+            result_key: Key the rendered text is written to.
+            section: Results section written to. Defaults to ``outputs``.
+            process_name: Name identifier for the process.
+            agent: Unused; this process calls no model. Accepted so it can sit
+                anywhere a process can.
+            agent_name: Name of a declared agent, for JSON round-tripping.
+        """
+        super().__init__(process_name, agent, agent_name)
+        self.template = template
+        self.result_key = result_key
+        self.section = section
+
+    def run_process(self, results: PipelineResults) -> PipelineResults:
+        """Render the template and store the result."""
+
+        rendered = MessageTemplate.from_string(self.template).generate_message_content(
+            results, remove_empty_template_field=False
+        )
+        logger.info(
+            "%s: composed %d characters into %s/%s",
+            self.process_name,
+            len(rendered),
+            self.section,
+            self.result_key,
+        )
+        results.section(self.section, create=True)[self.result_key] = rendered
+        return results
+
+    def to_dict(
+        self,
+        tool_registry: PipelineToolRegistry | None = None,
+    ) -> dict[str, Any]:
+        """Serialize this template process."""
+
+        data: dict[str, Any] = {
+            "process_type": self.process_type,
+            "process_name": self.process_name,
+            "template": self.template,
+            "result_key": self.result_key,
+        }
+        if self.section != "outputs":
+            data["section"] = self.section
+        if self.agent_name:
+            data["agent"] = self.agent_name
+        return data
+
+    @classmethod
+    def from_dict(
+        cls,
+        data: Mapping[str, Any],
+        context: PipelineLoadContext,
+    ) -> "TemplateProcess":
+        """Restore a template process from JSON."""
+
+        process_name = str(
+            data.get("process_name", data.get("name", "TemplateProcess"))
+        )
+        if "template" not in data:
+            raise PipelineSerializationError(
+                f"Template process '{process_name}' is missing 'template'."
+            )
+        agent_name = data.get("agent")
+        return cls(
+            template=str(data["template"]),
+            result_key=str(data.get("result_key", "text")),
+            section=str(data.get("section", "outputs")),
+            process_name=process_name,
+            agent=None,
+            agent_name=str(agent_name) if agent_name else None,
+        )
+
+
+@register_process_type
 class SequentialProcess(Process):
     """
     Concrete implementation of Process that executes steps sequentially.

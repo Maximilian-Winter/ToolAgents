@@ -77,6 +77,25 @@ moved from one mode to the other:
 `mode="until", condition="approved"` and `mode="while", condition="not approved"`
 express the same loop.
 
+!!! warning "The whole body runs before the test"
+
+    A body of *judge, then act* will act even on the iteration that satisfied
+    the condition — the test only happens after both steps have run. A review
+    loop written that way rewrites the draft its critic just approved, and
+    publishes a revision nobody reviewed.
+
+    Guard the second step instead of relying on the loop to stop in time:
+
+    ```json
+    "processes": [
+      {"process_type": "sequential", "process_name": "judge", "steps": ["..."]},
+      {"process_type": "conditional",
+       "condition": "not contains(lower(outputs['verdict']), 'approved')",
+       "then": [{"process_type": "sequential", "process_name": "revise",
+                 "steps": ["..."]}]}
+    ]
+    ```
+
 ```python
 LoopProcess(
     condition="contains(lower(review), 'approved')",

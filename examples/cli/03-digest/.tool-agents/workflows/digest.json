@@ -70,15 +70,10 @@
       ]
     },
     {
-      "process_type": "sequential",
+      "process_type": "template",
       "process_name": "assemble",
-      "steps": [
-        {
-          "step_name": "digest",
-          "system_message": "{prompts/briefer}",
-          "prompt_template": "# {outputs/title}\n\n{outputs/body}\n\nReturn this unchanged."
-        }
-      ]
+      "template": "# {outputs/title}\n\n{outputs/body}\n",
+      "result_key": "digest"
     },
     {
       "process_type": "sink",

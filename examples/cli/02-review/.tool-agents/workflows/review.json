@@ -21,18 +21,31 @@
       "processes": [
         {
           "process_type": "sequential",
-          "process_name": "cycle",
+          "process_name": "judge",
           "steps": [
             {
               "step_name": "verdict",
               "agent": "critic",
               "system_message": "{prompts/editor}",
               "prompt_template": "Revision {vars/iteration}. Judge this draft:\n\n{outputs/draft}"
-            },
+            }
+          ]
+        },
+        {
+          "process_type": "conditional",
+          "process_name": "revise_if_needed",
+          "condition": "not (contains(lower(outputs['verdict']), 'approved'))",
+          "then": [
             {
-              "step_name": "draft",
-              "system_message": "{prompts/writer}",
-              "prompt_template": "Revise to address this note, returning only the paragraph.\n\nNote: {outputs/verdict}\n\nDraft: {outputs/draft}"
+              "process_type": "sequential",
+              "process_name": "revise",
+              "steps": [
+                {
+                  "step_name": "draft",
+                  "system_message": "{prompts/writer}",
+                  "prompt_template": "Revise to address this note, returning only the paragraph.\n\nNote: {outputs/verdict}\n\nDraft: {outputs/draft}"
+                }
+              ]
             }
           ]
         }
