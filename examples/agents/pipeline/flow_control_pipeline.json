@@ -1,0 +1,152 @@
+{
+  "schema_version": 2,
+  "agents": [
+    {
+      "name": "writer",
+      "provider": {
+        "type": "openrouter",
+        "model": "qwen/qwen3.5-9b",
+        "api_key_env": "OPENROUTER_API_KEY",
+        "settings": {
+          "temperature": 0.7,
+          "top_p": 0.9
+        }
+      }
+    },
+    {
+      "name": "critic",
+      "provider": {
+        "type": "openrouter",
+        "model": "qwen/qwen3.5-9b",
+        "api_key_env": "OPENROUTER_API_KEY",
+        "settings": {
+          "temperature": 0.0
+        }
+      }
+    }
+  ],
+  "default_agent": "writer",
+  "processes": [
+    {
+      "process_type": "map",
+      "process_name": "research",
+      "items": "topics",
+      "item_var": "topic",
+      "collect": "note",
+      "result_key": "notes",
+      "processes": [
+        {
+          "process_type": "sequential",
+          "process_name": "research_one",
+          "steps": [
+            {
+              "step_name": "note",
+              "system_message": "You write terse factual notes.",
+              "prompt_template": "Write three factual bullet points about: {vars/topic}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "process_type": "parallel",
+      "process_name": "shape",
+      "max_workers": 2,
+      "branches": [
+        {
+          "process_type": "sequential",
+          "process_name": "outline_branch",
+          "steps": [
+            {
+              "step_name": "outline",
+              "system_message": "You are a structural editor.",
+              "prompt_template": "Outline a short article for the audience '{inputs/audience}' using these notes:\n\n{outputs/notes}"
+            }
+          ]
+        },
+        {
+          "process_type": "sequential",
+          "process_name": "title_branch",
+          "steps": [
+            {
+              "step_name": "title",
+              "system_message": "You write headlines.",
+              "prompt_template": "Propose one headline for an article aimed at '{inputs/audience}' covering:\n\n{outputs/notes}"
+            }
+          ]
+        }
+      ],
+      "on_conflict": "section"
+    },
+    {
+      "process_type": "sequential",
+      "process_name": "first_draft",
+      "steps": [
+        {
+          "step_name": "draft",
+          "system_message": "You are a clear, concise writer.",
+          "prompt_template": "Write the article titled '{outputs/title}' following this outline:\n\n{outputs/outline}"
+        }
+      ]
+    },
+    {
+      "process_type": "loop",
+      "process_name": "refine",
+      "mode": "until",
+      "max_iterations": 3,
+      "condition": "contains(lower(outputs['verdict']), 'approved')",
+      "processes": [
+        {
+          "process_type": "sequential",
+          "process_name": "review_cycle",
+          "steps": [
+            {
+              "step_name": "verdict",
+              "agent": "critic",
+              "system_message": "You are a strict editor. Reply with APPROVED, or with the single most important problem.",
+              "prompt_template": "Revision {vars/iteration}. Judge this draft:\n\n{outputs/draft}"
+            },
+            {
+              "step_name": "draft",
+              "system_message": "You revise drafts precisely.",
+              "prompt_template": "Revise the draft to address this note. Return only the revised article.\n\nNote: {outputs/verdict}\n\nDraft: {outputs/draft}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "process_type": "conditional",
+      "process_name": "gate",
+      "condition": "contains(lower(outputs['verdict']), 'approved')",
+      "record_as": "passed_review",
+      "then": [
+        {
+          "process_type": "sequential",
+          "process_name": "finish",
+          "steps": [
+            {
+              "step_name": "summary",
+              "system_message": "You write one-line summaries.",
+              "prompt_template": "Summarize this approved article in one sentence:\n\n{outputs/draft}"
+            }
+          ]
+        }
+      ],
+      "else": [
+        {
+          "process_type": "sequential",
+          "process_name": "flag",
+          "steps": [
+            {
+              "step_name": "summary",
+              "agent": "critic",
+              "system_message": "You write handover notes for a human editor.",
+              "prompt_template": "This draft failed review {outputs/refine_iterations} times. Explain in two sentences what a human should fix.\n\nLast note: {outputs/verdict}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

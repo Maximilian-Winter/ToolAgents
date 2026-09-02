@@ -31,6 +31,9 @@ ToolAgents is a lightweight and flexible framework for creating function-calling
 - Easy-to-use interface for passing functions, Pydantic models, and tools to LLMs
 - Streamlined process for function calling and result handling
 - Unified Message format, making switching of providers while keeping the same chat history easy.
+- JSON-defined pipelines with flow control (conditional, loop, map, parallel)
+  and declarative provider endpoints, so a workflow file describes both its
+  shape and the APIs it runs against.
 
 ## Documentation
 

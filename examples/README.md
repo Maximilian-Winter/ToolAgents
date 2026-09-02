@@ -15,7 +15,9 @@ The maintained examples are grouped by the current APIs they demonstrate.
 - `agents/gradio/`: UI demos that require Gradio and provider credentials.
 - `agents/mem_gpt_like/`: exploratory memory-agent pattern.
 - `agents/personal_agent_ada/`: larger personal-agent demo.
-- `agents/pipeline/`: provider-specific pipeline sketches.
+- `agents/pipeline/`: pipeline examples, including JSON-defined pipelines
+  with flow control (map/parallel/loop/conditional) and declarative
+  provider endpoints.
 
 ## Legacy Surface
 

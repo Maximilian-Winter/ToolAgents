@@ -1,6 +1,39 @@
 import re
 from typing import Union, Dict, Any
 
+from collections.abc import Mapping
+
+#: Placeholder names may address a section with ``/``, as in
+#: ``{outputs/draft}`` or ``{outputs/news/draft}``. A bare ``{draft}`` is
+#: still resolved by scope order, so existing templates are unaffected.
+PLACEHOLDER_PATTERN = r"\{([\w/]+)\}"
+
+PATH_SEPARATOR = "/"
+
+
+def resolve_template_path(fields, path: str):
+    """Resolve a possibly-sectioned ``path`` against a mapping.
+
+    Returns ``(found, value)``. A mapping that knows its own sections — such
+    as ``PipelineResults`` — resolves the path itself; anything else is walked
+    as nested mappings, so a plain dict of dicts works too.
+    """
+
+    resolver = getattr(fields, "resolve_path", None)
+    if callable(resolver):
+        return resolver(path)
+
+    if PATH_SEPARATOR not in path:
+        return (path in fields), fields.get(path)
+
+    current = fields
+    for part in path.split(PATH_SEPARATOR):
+        if isinstance(current, Mapping) and part in current:
+            current = current[part]
+        else:
+            return False, None
+    return True, current
+
 
 class MessageTemplate:
     """
@@ -105,32 +138,38 @@ class MessageTemplate:
         Returns:
             str: The generated prompt.
         """
-        # Combine template_fields and kwargs, with kwargs taking precedence
-        all_fields = {**(template_fields or {}), **kwargs}
+        # A single mapping is used directly rather than being flattened into
+        # kwargs, so a sectioned mapping keeps its structure and paths such as
+        # {outputs/draft} can be resolved.
+        if template_fields is not None and not kwargs:
+            all_fields = template_fields
+        elif template_fields is None and kwargs:
+            all_fields = kwargs
+        else:
+            all_fields = {**(template_fields or {}), **kwargs}
 
-        cleaned_fields = {
-            key: str(value) if not isinstance(value, str) else value
-            for key, value in all_fields.items()
-        }
+        def lookup(placeholder):
+            """Return ``(found, text)`` for a placeholder name or path."""
+
+            found, value = resolve_template_path(all_fields, placeholder)
+            if not found or value is None:
+                return False, None
+            return True, value if isinstance(value, str) else str(value)
 
         if not remove_empty_template_field:
 
             def replace_placeholder(match):
-                placeholder = match.group(1)
-                return cleaned_fields.get(placeholder, match.group(0))
+                found, text = lookup(match.group(1))
+                return text if found else match.group(0)
 
-            prompt = re.sub(r"\{(\w+)\}", replace_placeholder, self.template)
-            return prompt
+            return re.sub(PLACEHOLDER_PATTERN, replace_placeholder, self.template)
 
         def replace_placeholder(match):
-            placeholder = match.group(1)
-            k = cleaned_fields.get(placeholder, None)
-            if k is not None:
-                return cleaned_fields.get(placeholder, match.group(0))
-            return "__EMPTY_TEMPLATE_FIELD__"
+            found, text = lookup(match.group(1))
+            return text if found else "__EMPTY_TEMPLATE_FIELD__"
 
         # Initial placeholder replacement
-        prompt = re.sub(r"\{(\w+)\}", replace_placeholder, self.template)
+        prompt = re.sub(PLACEHOLDER_PATTERN, replace_placeholder, self.template)
 
         return self._remove_empty_placeholders(prompt)
 

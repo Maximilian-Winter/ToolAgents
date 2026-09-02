@@ -61,7 +61,7 @@ def test_pipeline_dict_roundtrip_with_registered_tools():
 
     data = pipeline.to_dict(tool_registry=tool_registry)
     assert data == {
-        "schema_version": 1,
+        "schema_version": 2,
         "processes": [
             {
                 "process_type": "sequential",
