@@ -235,7 +235,7 @@ if __name__ == "__main__":
     app.set_api(
         AsyncOpenAIChatAPI(
             api_key=api_key,
-            model=os.getenv("OPENROUTER_MODEL", "xiaomi/mimo-v2-pro"),
+            model=os.getenv("OPENROUTER_MODEL", "xiaomi/mimo-v2.5-pro"),
             base_url=os.getenv("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1"),
         )
     )
