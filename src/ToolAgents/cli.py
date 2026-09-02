@@ -77,6 +77,11 @@ def build_parser() -> argparse.ArgumentParser:
         description="Run ToolAgents workflows from a .tool-agents folder.",
     )
     parser.add_argument(
+        "--env-file",
+        help="A .env file to read before building providers. Defaults to "
+        f"{DEFAULT_WORKSPACE_DIRNAME}/.env when it exists.",
+    )
+    parser.add_argument(
         "--workspace",
         help=f"Path to a {DEFAULT_WORKSPACE_DIRNAME} folder. Defaults to the "
         "nearest one at or above the working directory.",
@@ -231,7 +236,10 @@ def _command_run(args: argparse.Namespace) -> int:
     workspace = _workspace(args)
     arguments = collect_arguments(args.arg, args.json, args.json_file)
     results = workspace.run_workflow(
-        args.workflow, arguments=arguments, allow_writes=args.allow_writes
+        args.workflow,
+        arguments=arguments,
+        allow_writes=args.allow_writes,
+        env_file=args.env_file,
     )
 
     if args.output:

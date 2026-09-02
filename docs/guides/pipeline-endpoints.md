@@ -84,6 +84,35 @@ a message naming the variable to set. Agents are built on first reference, so a
 document that merely *declares* an endpoint it never uses will not demand that
 endpoint's key.
 
+### Reading keys from a .env file
+
+`env_file` names a file to read before the variable is looked up:
+
+```json
+{
+  "name": "writer",
+  "provider": {
+    "type": "openrouter",
+    "model": "qwen/qwen3.5-9b",
+    "api_key_env": "OPENROUTER_API_KEY",
+    "env_file": ".env"
+  }
+}
+```
+
+**A variable already exported wins over the file.** The file supplies a
+default, not an override, so a value set in the shell or by CI always takes
+precedence over one committed by accident. A named `env_file` that does not
+exist is an error — a silently ignored path would look identical to a missing
+key.
+
+Reading a `.env` file needs the `python-dotenv` package, which ToolAgents
+depends on.
+
+The [`tool-agents` CLI](cli.md) reads `.tool-agents/.env` automatically when it
+exists, so a project's keys can sit beside the workflows that need them without
+any config at all.
+
 ## Settings
 
 `settings` values must already exist on the provider; a typo raises an error

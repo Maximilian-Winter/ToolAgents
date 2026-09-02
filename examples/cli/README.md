@@ -9,6 +9,18 @@ Every workflow reaches a real model, so each needs a key:
 export OPENROUTER_API_KEY=...
 ```
 
+or put it in a `.env` file inside the workspace, which is read automatically:
+
+```
+01-hello/.tool-agents/.env
+```
+
+```
+OPENROUTER_API_KEY=sk-...
+```
+
+An exported variable wins over the file. Do not commit it.
+
 The workspace is found by walking up from the working directory, so `cd` into an
 example and run — no paths to pass.
 

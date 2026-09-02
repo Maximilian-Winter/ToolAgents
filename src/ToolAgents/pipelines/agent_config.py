@@ -33,10 +33,12 @@ from __future__ import annotations
 import importlib
 import os
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any, Mapping, Sequence
 
 __all__ = [
     "AgentConfig",
+    "load_env_file",
     "PROVIDER_SPECS",
     "ProviderConfig",
     "ProviderSpec",
@@ -48,6 +50,40 @@ __all__ = [
 
 class AgentConfigurationError(ValueError):
     """Raised when an agent or provider cannot be built from configuration."""
+
+
+def load_env_file(path: str | "os.PathLike[str]", required: bool = True) -> bool:
+    """Load environment variables from a ``.env`` file.
+
+    Values already present in the environment are left alone, so an exported
+    variable always beats a file — the file is a default, not an override.
+
+    Args:
+        path: The ``.env`` file to read.
+        required: When true, a missing file is an error. Pass false for a
+            conventional location that may simply not exist.
+
+    Returns:
+        bool: Whether a file was actually read.
+    """
+
+    resolved = Path(path).expanduser()
+    if not resolved.is_file():
+        if required:
+            raise AgentConfigurationError(f"Env file does not exist: {resolved}")
+        return False
+
+    try:
+        from dotenv import load_dotenv
+    except ImportError as exc:
+        raise AgentConfigurationError(
+            f"Reading {resolved} needs the 'python-dotenv' package, which is "
+            "not installed. Install it, or set the variables in the "
+            "environment directly."
+        ) from exc
+
+    load_dotenv(resolved, override=False)
+    return True
 
 
 @dataclass(frozen=True)
@@ -162,6 +198,9 @@ class ProviderConfig:
             must already exist on the provider, so typos are caught loudly.
         extra_settings: Additional request settings to *add*, for parameters a
             given endpoint understands but the provider does not declare.
+        env_file: Optional ``.env`` file read before the API key is looked up.
+            Variables already set in the environment win, so the file supplies
+            a default rather than an override.
     """
 
     provider_type: str
@@ -171,6 +210,7 @@ class ProviderConfig:
     provider_identifier: str | None = None
     settings: dict[str, Any] = field(default_factory=dict)
     extra_settings: dict[str, Any] = field(default_factory=dict)
+    env_file: str | None = None
 
     # -- resolution --------------------------------------------------------
 
@@ -209,6 +249,9 @@ class ProviderConfig:
 
     def resolve_api_key(self, api_key_env: str, key_optional: bool = False) -> str:
         """Read the API key from the environment, or fail with a clear message."""
+
+        if self.env_file and api_key_env not in os.environ:
+            load_env_file(self.env_file)
 
         api_key = os.environ.get(api_key_env)
         if not api_key:
@@ -305,6 +348,8 @@ class ProviderConfig:
             data["settings"] = dict(self.settings)
         if self.extra_settings:
             data["extra_settings"] = dict(self.extra_settings)
+        if self.env_file is not None:
+            data["env_file"] = self.env_file
         return data
 
     @classmethod
@@ -336,6 +381,7 @@ class ProviderConfig:
             provider_identifier=_optional_str(data.get("provider_identifier")),
             settings=dict(data.get("settings") or {}),
             extra_settings=dict(data.get("extra_settings") or {}),
+            env_file=_optional_str(data.get("env_file")),
         )
 
 

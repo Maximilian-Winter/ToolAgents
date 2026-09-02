@@ -39,6 +39,7 @@ from ToolAgents.pipelines import (
     PipelineResults,
     PipelineToolRegistry,
 )
+from ToolAgents.pipelines.agent_config import load_env_file
 from ToolAgents.tool_adapters.execution import normalize_tools
 
 __all__ = [
@@ -60,6 +61,9 @@ WORKSPACE_SUBDIRS = (
     "adapter/input",
     "adapter/output",
 )
+
+#: Conventional env file inside a workspace, loaded before agents are built.
+WORKSPACE_ENV_FILE = ".env"
 
 #: Extensions treated as prompt text.
 PROMPT_SUFFIXES = (".md", ".txt", ".prompt")
@@ -309,6 +313,22 @@ class Workspace:
 
         return agents, default_agent
 
+    def load_env(self, env_file: str | Path | None = None) -> bool:
+        """Read a ``.env`` file so provider keys can come from one.
+
+        With no argument this reads ``.tool-agents/.env`` if it exists, which
+        is where a project's keys naturally live: beside the workflows that
+        need them, and easy to gitignore as one path. Values already exported
+        in the environment are left alone.
+
+        Returns:
+            bool: Whether a file was read.
+        """
+
+        if env_file is not None:
+            return load_env_file(env_file, required=True)
+        return load_env_file(self.root / WORKSPACE_ENV_FILE, required=False)
+
     # -- running -----------------------------------------------------------
 
     def load_workflow_document(self, name: str) -> dict[str, Any]:
@@ -343,9 +363,12 @@ class Workspace:
         allow_writes: bool = False,
         build_agents: bool = True,
         default_agent: Any = None,
+        env_file: str | Path | None = None,
     ) -> Pipeline:
-        """Load one workflow with the workspace's tools and adapters."""
+        """Load one workflow with the workspace's tools, adapters and env."""
 
+        if build_agents:
+            self.load_env(env_file)
         self.load_adapters()
         document = self.load_workflow_document(name)
         return Pipeline.from_dict(
@@ -364,6 +387,7 @@ class Workspace:
         allow_writes: bool = False,
         build_agents: bool = True,
         default_agent: Any = None,
+        env_file: str | Path | None = None,
     ) -> PipelineResults:
         """Load and run one workflow, seeding the ``prompts`` section."""
 
@@ -372,6 +396,7 @@ class Workspace:
             allow_writes=allow_writes,
             build_agents=build_agents,
             default_agent=default_agent,
+            env_file=env_file,
         )
         results = PipelineResults(inputs=dict(arguments or {}))
         prompts = self.load_prompts()

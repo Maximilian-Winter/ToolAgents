@@ -128,6 +128,30 @@ API keys are still never stored: a provider config names the
 [environment variable](pipeline-endpoints.md#keys-are-never-serialized) holding
 one.
 
+### .env
+
+A `.tool-agents/.env` file is read before providers are built, so a project's
+keys sit beside the workflows that need them and one path covers them all:
+
+```
+.tool-agents/.env
+```
+
+```
+OPENROUTER_API_KEY=sk-...
+ANTHROPIC_API_KEY=sk-...
+```
+
+A variable already exported wins over the file, so CI and shell values are
+never overridden by a committed default. Point somewhere else with
+`--env-file`, or name a file per provider with
+[`env_file`](pipeline-endpoints.md#reading-keys-from-a-env-file).
+
+!!! warning "Add it to .gitignore"
+
+    `tool-agents init` does not create this file, and nothing stops it being
+    committed. `.tool-agents/.env` holds live credentials.
+
 ### adapter/
 
 Modules imported for their side effects, so a workflow can use a source or sink

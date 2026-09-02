@@ -564,3 +564,41 @@ def test_parallel_branches_in_the_digest_example_get_distinct_agents(monkeypatch
     parallel = next(p for p in pipeline.processes if p.process_type == "parallel")
     agents = [branch.agent for branch in parallel.branches]
     assert agents[0] is not agents[1]
+
+
+# ---------------------------------------------------------------------------
+# Environment files
+# ---------------------------------------------------------------------------
+
+
+def test_a_workspace_env_file_is_loaded_before_agents_are_built(
+    workspace, monkeypatch
+):
+    """Keys live beside the workflows that need them, in one gitignorable path."""
+
+    monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
+    (workspace.root / ".env").write_text(
+        "OPENROUTER_API_KEY=from-workspace-env\n", encoding="utf-8"
+    )
+
+    pipeline = workspace.load_pipeline("digest")
+    agent = pipeline.processes[1].agent
+    assert agent.chat_api.client.api_key == "from-workspace-env"
+
+
+def test_a_missing_workspace_env_file_is_not_an_error(workspace, monkeypatch):
+    monkeypatch.setenv("OPENROUTER_API_KEY", "exported")
+    assert not (workspace.root / ".env").exists()
+
+    assert workspace.load_pipeline("digest") is not None
+
+
+def test_an_explicit_env_file_overrides_the_conventional_one(
+    workspace, tmp_path, monkeypatch
+):
+    monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
+    explicit = tmp_path / "other.env"
+    explicit.write_text("OPENROUTER_API_KEY=from-explicit\n", encoding="utf-8")
+
+    pipeline = workspace.load_pipeline("digest", env_file=str(explicit))
+    assert pipeline.processes[1].agent.chat_api.client.api_key == "from-explicit"

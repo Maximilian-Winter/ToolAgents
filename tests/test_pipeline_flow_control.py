@@ -695,3 +695,72 @@ def test_shipped_example_serialization_is_idempotent():
     assert once == twice
     assert once["agents"] == document["agents"]
     assert once["default_agent"] == document["default_agent"]
+
+
+# ---------------------------------------------------------------------------
+# Reading keys from a .env file
+# ---------------------------------------------------------------------------
+
+
+def test_a_provider_can_read_its_key_from_an_env_file(tmp_path, monkeypatch):
+    monkeypatch.delenv("MY_ENV_FILE_KEY", raising=False)
+    env_file = tmp_path / "creds.env"
+    env_file.write_text("MY_ENV_FILE_KEY=from-the-file\n", encoding="utf-8")
+
+    from ToolAgents.pipelines import ProviderConfig
+
+    provider = ProviderConfig.from_dict(
+        {
+            "type": "openai",
+            "model": "gpt-4o-mini",
+            "api_key_env": "MY_ENV_FILE_KEY",
+            "env_file": str(env_file),
+        }
+    ).build()
+
+    assert provider.client.api_key == "from-the-file"
+
+
+def test_an_exported_variable_beats_the_env_file(tmp_path, monkeypatch):
+    """The file supplies a default; the environment is the override."""
+
+    env_file = tmp_path / "creds.env"
+    env_file.write_text("MY_ENV_FILE_KEY=from-the-file\n", encoding="utf-8")
+    monkeypatch.setenv("MY_ENV_FILE_KEY", "from-the-environment")
+
+    from ToolAgents.pipelines import ProviderConfig
+
+    provider = ProviderConfig.from_dict(
+        {
+            "type": "openai",
+            "model": "gpt-4o-mini",
+            "api_key_env": "MY_ENV_FILE_KEY",
+            "env_file": str(env_file),
+        }
+    ).build()
+
+    assert provider.client.api_key == "from-the-environment"
+
+
+def test_a_named_env_file_that_is_missing_is_an_error(tmp_path, monkeypatch):
+    monkeypatch.delenv("MY_ENV_FILE_KEY", raising=False)
+    from ToolAgents.pipelines import ProviderConfig
+
+    with pytest.raises(AgentConfigurationError, match="Env file does not exist"):
+        ProviderConfig.from_dict(
+            {
+                "type": "openai",
+                "model": "gpt-4o-mini",
+                "api_key_env": "MY_ENV_FILE_KEY",
+                "env_file": str(tmp_path / "absent.env"),
+            }
+        ).build()
+
+
+def test_env_file_round_trips(tmp_path):
+    from ToolAgents.pipelines import ProviderConfig
+
+    config = ProviderConfig.from_dict(
+        {"type": "openai", "model": "m", "env_file": ".env"}
+    )
+    assert config.to_dict()["env_file"] == ".env"

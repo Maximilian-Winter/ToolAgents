@@ -115,3 +115,5 @@ site/
 .commitmsg
 examples/agents/pipeline/out/
 examples/cli/*/out/
+.tool-agents/.env
+**/.tool-agents/.env

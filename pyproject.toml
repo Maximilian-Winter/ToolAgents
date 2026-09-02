@@ -24,6 +24,7 @@ dependencies = [
     "mistralai",
     "openai",
     "pydantic",
+    "python-dotenv",
     "requests",
 ]
 
