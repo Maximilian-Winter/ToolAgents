@@ -33,6 +33,7 @@ class OpenAIChatAPI(ChatAPIProvider):
     ):
         self.client = OpenAI(api_key=api_key, base_url=base_url)
         self.model = model
+        self.base_url = base_url
         self.settings = ProviderSettings([
             LLMSetting("temperature", default_value=1.0, neutral_value=1.0, level=SettingLevel.REQUEST),
             LLMSetting("top_p", default_value=1.0, neutral_value=1.0, level=SettingLevel.REQUEST),
@@ -109,6 +110,7 @@ class AsyncOpenAIChatAPI(AsyncChatAPIProvider):
     ):
         self.client = AsyncOpenAI(api_key=api_key, base_url=base_url)
         self.model = model
+        self.base_url = base_url
 
         self.settings = ProviderSettings([
             LLMSetting("temperature", default_value=1.0, neutral_value=1.0, level=SettingLevel.REQUEST),

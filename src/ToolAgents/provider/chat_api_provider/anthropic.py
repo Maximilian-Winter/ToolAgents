@@ -20,9 +20,21 @@ from ToolAgents.data_models.messages import ChatMessage
 
 class AnthropicChatAPI(ChatAPIProvider):
 
-    def __init__(self, api_key: str, model: str):
-        self.client = Anthropic(api_key=api_key)
+    def __init__(self, api_key: str, model: str, base_url: str = None):
+        """Create the provider.
+
+        Args:
+            api_key: API key for the endpoint.
+            model: Model identifier.
+            base_url: Optional endpoint override, for a gateway,
+                proxy, or self-hosted server speaking this API.
+        """
+        client_kwargs = {"api_key": api_key}
+        if base_url is not None:
+            client_kwargs["base_url"] = base_url
+        self.client = Anthropic(**client_kwargs)
         self.model = model
+        self.base_url = base_url
         self.settings = ProviderSettings([
             LLMSetting("temperature", default_value=1.0, neutral_value=1.0, level=SettingLevel.REQUEST),
             LLMSetting("top_p", default_value=1.0, neutral_value=1.0, level=SettingLevel.REQUEST),
@@ -80,9 +92,21 @@ class AnthropicChatAPI(ChatAPIProvider):
 
 class AsyncAnthropicChatAPI(AsyncChatAPIProvider):
 
-    def __init__(self, api_key: str, model: str):
-        self.client = AsyncAnthropic(api_key=api_key)
+    def __init__(self, api_key: str, model: str, base_url: str = None):
+        """Create the provider.
+
+        Args:
+            api_key: API key for the endpoint.
+            model: Model identifier.
+            base_url: Optional endpoint override, for a gateway,
+                proxy, or self-hosted server speaking this API.
+        """
+        client_kwargs = {"api_key": api_key}
+        if base_url is not None:
+            client_kwargs["base_url"] = base_url
+        self.client = AsyncAnthropic(**client_kwargs)
         self.model = model
+        self.base_url = base_url
         self.settings = ProviderSettings([
             LLMSetting("temperature", default_value=1.0, neutral_value=1.0, level=SettingLevel.REQUEST),
             LLMSetting("top_p", default_value=1.0, neutral_value=1.0, level=SettingLevel.REQUEST),

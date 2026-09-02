@@ -96,6 +96,16 @@ class ProviderSettings:
         """Get a setting object by name."""
         return self._settings.get(name)
 
+    def setting_names(self) -> List[str]:
+        """Return the names of all settings, sorted.
+
+        Useful for reporting a typo: assigning an unknown name via attribute
+        access silently creates a dead attribute instead of raising, so callers
+        that accept setting names from configuration should validate against
+        this list first.
+        """
+        return sorted(self._settings)
+
     def get_value(self, name: str) -> Any:
         """Get current value of a setting."""
         setting = self._settings.get(name)

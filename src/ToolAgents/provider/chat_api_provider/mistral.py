@@ -43,9 +43,22 @@ def _get_mistral_client_class():
 
 
 class MistralChatAPI(ChatAPIProvider):
-    def __init__(self, api_key: str, model: str):
-        self.client = _get_mistral_client_class()(api_key=api_key)
+    def __init__(self, api_key: str, model: str, base_url: str = None):
+        """Create the provider.
+
+        Args:
+            api_key: API key for the endpoint.
+            model: Model identifier.
+            base_url: Optional endpoint override. The Mistral SDK
+                names this ``server_url``; it is accepted here as
+                ``base_url`` so every provider reads the same.
+        """
+        client_kwargs = {"api_key": api_key}
+        if base_url is not None:
+            client_kwargs["server_url"] = base_url
+        self.client = _get_mistral_client_class()(**client_kwargs)
         self.model = model
+        self.base_url = base_url
         self.settings = ProviderSettings([
             LLMSetting("temperature", default_value=1.0, neutral_value=1.0, level=SettingLevel.REQUEST),
             LLMSetting("top_p", default_value=1.0, neutral_value=1.0, level=SettingLevel.REQUEST),
@@ -101,9 +114,22 @@ class MistralChatAPI(ChatAPIProvider):
 
 
 class AsyncMistralChatAPI(AsyncChatAPIProvider):
-    def __init__(self, api_key: str, model: str):
-        self.client = _get_mistral_client_class()(api_key=api_key)
+    def __init__(self, api_key: str, model: str, base_url: str = None):
+        """Create the provider.
+
+        Args:
+            api_key: API key for the endpoint.
+            model: Model identifier.
+            base_url: Optional endpoint override. The Mistral SDK
+                names this ``server_url``; it is accepted here as
+                ``base_url`` so every provider reads the same.
+        """
+        client_kwargs = {"api_key": api_key}
+        if base_url is not None:
+            client_kwargs["server_url"] = base_url
+        self.client = _get_mistral_client_class()(**client_kwargs)
         self.model = model
+        self.base_url = base_url
         self.settings = ProviderSettings([
             LLMSetting("temperature", default_value=1.0, neutral_value=1.0, level=SettingLevel.REQUEST),
             LLMSetting("top_p", default_value=1.0, neutral_value=1.0, level=SettingLevel.REQUEST),
