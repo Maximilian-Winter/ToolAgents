@@ -1,4 +1,5 @@
 import asyncio
+import inspect
 
 import typing
 from enum import auto, Enum
@@ -509,9 +510,20 @@ class FunctionTool:
                 raise
 
         # Execute function
+        #
+        # `run` is synchronous here, so calling it directly would occupy the event loop
+        # for its whole duration: a tool that spends seconds on I/O, a database, or a
+        # subprocess stalls every other task sharing that loop -- in a server, that is
+        # every other request, not just this agent's turn. It runs in a worker thread
+        # instead, which is what `execute_async` promises by being a coroutine at all.
+        # (AsyncFunctionTool overrides this method and awaits `run` directly.)
         try:
             instance = self.model(**processed_params)
-            result = instance.run(**self.additional_parameters)
+            result = await asyncio.to_thread(instance.run, **self.additional_parameters)
+            # A tool declared synchronous that nevertheless returns a coroutine would
+            # otherwise be handed back un-awaited and stringified into the transcript.
+            if inspect.isawaitable(result):
+                result = await result
         except Exception as e:
             print(f"Error in function execution: {str(e)}")
             return f"Error in function execution: {str(e)}"
