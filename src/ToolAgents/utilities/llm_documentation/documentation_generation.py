@@ -90,12 +90,14 @@ def generate_class_definition(
             field_info.description if field_info and field_info.description else ""
         )
         type_annotation = get_type_annotation(field_type)
-        if (
-            field_info.default is not PydanticUndefined
-            and field_info.default is not None
-        ):
-            continue
-        class_def += f"        {name} ({type_annotation}): {field_description}\n"
+        # An attribute with a default is optional, not undocumented: it is listed with
+        # its default rather than omitted.
+        default_note = ""
+        if field_info is not None and field_info.default is not PydanticUndefined:
+            default_note = f" (optional, defaults to {field_info.default!r})"
+        class_def += (
+            f"        {name} ({type_annotation}): {field_description}{default_note}\n"
+        )
 
         if isinstance(field_type, GenericAlias) or (
             inspect.isclass(field_type) and issubclass(field_type, Generic)

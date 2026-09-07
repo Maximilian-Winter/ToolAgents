@@ -343,12 +343,6 @@ def pydantic_model_to_openai_function_definition(pydantic_model: Type[BaseModel]
         field_description = (
             field_info.description if field_info and field_info.description else ""
         )
-        if (
-            isinstance(openai_type, dict)
-            and field_info.default is not PydanticUndefined
-            and field_info.default is not None
-        ):
-            continue
         if isinstance(openai_type, list) and len(openai_type) > 1:
             # Handling Union types specifically
             function_definition["function"]["parameters"]["properties"][prop_name] = {
@@ -374,7 +368,35 @@ def pydantic_model_to_openai_function_definition(pydantic_model: Type[BaseModel]
                     "description"
                 ] = field_description
 
+        # A parameter with a default is optional, not absent: it belongs in `properties`
+        # and is kept out of `required`, which comes from the model's own JSON schema.
+        # Publishing the default states what omitting the parameter does.
+        emitted = function_definition["function"]["parameters"]["properties"].get(
+            prop_name
+        )
+        if isinstance(emitted, dict) and field_info is not None:
+            default = field_info.default
+            if default is not PydanticUndefined and _is_json_safe(default):
+                emitted.setdefault("default", default)
+
     return function_definition
+
+
+def _is_json_safe(value) -> bool:
+    """Whether a default can be published in a JSON schema as-is.
+
+    Defaults are arbitrary Python objects; anything that is not a JSON scalar, list or
+    string-keyed dict is omitted rather than serialised.
+    """
+    if value is None or isinstance(value, (str, int, float, bool)):
+        return True
+    if isinstance(value, (list, tuple)):
+        return all(_is_json_safe(v) for v in value)
+    if isinstance(value, dict):
+        return all(
+            isinstance(k, str) and _is_json_safe(v) for k, v in value.items()
+        )
+    return False
 
 
 def add_field_to_model(
